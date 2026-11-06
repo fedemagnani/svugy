@@ -2,7 +2,7 @@
 
 *Version 1. The attribute names are spelled once, in `crates/svugy/src/render/contract.rs` (`RuntimeContract`).*
 
-The renderer (Rust) and the runtime (`runtime/svugy.js` and `runtime/svugy.css`) only talk through the `data-svugy-*` attributes in the rendered document. Both profiles emit them, so even a static file stays machine-readable; without script they do nothing. The static profile leaves out the overlays and the animated dots, because it has no entered view and no animation.
+The renderer (Rust) and the runtime (`crates/svugy/runtime/svugy.js` and `crates/svugy/runtime/svugy.css`) only talk through the `data-svugy-*` attributes in the rendered document. Both profiles emit them, so even a static file stays machine-readable; without script they do nothing. The static profile leaves out the overlays and the animated dots, because it has no entered view and no animation.
 
 Any rename, removal or change of meaning bumps the version. The runtime embedded in a file always matches that file, so the version number is really for outside readers, like a preview tool or an agent parsing rendered SVGs.
 

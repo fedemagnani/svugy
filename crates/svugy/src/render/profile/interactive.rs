@@ -22,8 +22,8 @@ const MEDIA_CLOSING: &str = "}\n";
 pub(crate) struct Interactive;
 
 impl Interactive {
-    pub(crate) const RUNTIME_SCRIPT: &'static str = include_str!("../../../../../runtime/svugy.js");
-    pub(crate) const RUNTIME_STYLE: &'static str = include_str!("../../../../../runtime/svugy.css");
+    pub(crate) const RUNTIME_SCRIPT: &'static str = include_str!("../../../runtime/svugy.js");
+    pub(crate) const RUNTIME_STYLE: &'static str = include_str!("../../../runtime/svugy.css");
 
     /// Build the style sheet: both palettes as custom properties of the root, the label font inherited from it, then the runtime's rules.
     fn style_sheet() -> StyleSheet {

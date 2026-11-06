@@ -6,4 +6,4 @@ Click a container and the view glides into it. Press Escape, or click empty canv
 
 It never builds a CSS selector from your text and never touches `innerHTML`. With script disabled, as inside an `<img>`, the top-level view still renders completely.
 
-The attributes it reads are written down in the [runtime contract](../reference/runtime-contract.md). The code is `runtime/svugy.js` and `runtime/svugy.css`, and `runtime/fixture.svg` is a hand-written document to test it against.
+The attributes it reads are written down in the [runtime contract](../reference/runtime-contract.md). The code is `crates/svugy/runtime/svugy.js` and `crates/svugy/runtime/svugy.css`, and `crates/svugy/runtime/fixture.svg` is a hand-written document to test it against.

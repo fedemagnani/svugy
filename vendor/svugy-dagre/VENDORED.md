@@ -1,8 +1,9 @@
-# Vendored dagre-dgl-rs
+# svugy-dagre
 
-- Upstream: dagre-dgl-rs 0.1.1 from crates.io (https://github.com/rinfimate/dagre-dgl-rs), MIT, LICENSE kept as shipped.
+- Upstream: dagre-dgl-rs from crates.io (https://github.com/rinfimate/dagre-dgl-rs), MIT, LICENSE kept as shipped; the version merged in is `package.metadata.upstream` in `Cargo.toml`.
 - Why vendored: svugy promises same input → same bytes, and upstream broke ties between Brandes-Köpf alignments in HashMap order and numbered dummy nodes from a process-wide counter.
-- Wiring: `[patch.crates-io]` in the root Cargo.toml (the `=0.1.1` requirement stays in `workspace.dependencies`); `workspace.exclude` keeps it out of `cargo fmt --all` and `cargo clippy --workspace`, so the code stays as upstream wrote it.
+- Wiring: a workspace member published as `svugy-dagre`, so crates.io users get the patched layout too; `rustfmt.toml` and the `[lints]` allowances keep the code as upstream wrote it, out of `cargo fmt --all` and `cargo clippy --workspace`; `lib.name` stays `dagre_dgl_rs` so upstream code and doctests merge in unchanged.
+- Resync: `just dagre-sync <version>` three-way merges upstream `<version>` into `src/` with the recorded version as base, then records `<version>`; resolve the conflicts it lists and carry over upstream's `Cargo.toml` changes by hand.
 
 ## Local patches
 
@@ -10,8 +11,8 @@
 - `graph.rs`, `util.rs`, `acyclic.rs`, `order/build_layer_graph.rs`: the unique-id counter is a field of `Graph` (`Graph::unique_id`); the static `util::unique_id` and `util::reset_id_counter` are removed.
 - `tests.rs`: the unique-id tests call `Graph::unique_id`.
 - `data/acyclic.rs`: deleted; it sat outside the module tree (`data/mod.rs` declares only `list`) and called the removed `util::unique_id`.
-- `Cargo.toml`: upstream's `Cargo.toml.orig` without `petgraph`, which no source file uses.
-- Not copied: `.cargo_vcs_info.json`, `.cargo-ok`, `Cargo.lock`, `.github/`, `.gitignore`.
+- `Cargo.toml`: upstream's `Cargo.toml.orig` renamed to `svugy-dagre` on the workspace version, without `petgraph`, which no source file uses.
+- Not copied: `.cargo_vcs_info.json`, `.cargo-ok`, `Cargo.lock`, `.github/`, `.gitignore`, `CHANGELOG.md` (release-plz writes svugy-dagre's own).
 
 ## Hash-order audit
 

@@ -2,11 +2,14 @@
 name = "svugy"
 edition.workspace = true
 version.workspace = true
+description = "Render a svugy model as an isometric, explorable SVG"
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 svugy-model.workspace = true
 ttf-parser.workspace = true
-dagre-dgl-rs.workspace = true
+svugy-dagre.workspace = true
 taffy.workspace = true
 kurbo.workspace = true
 glam.workspace = true
