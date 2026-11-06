@@ -2,6 +2,9 @@
 name = "svugy-import"
 edition.workspace = true
 version.workspace = true
+description = "Import foreign diagram languages, such as d2, into the svugy model"
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 svugy-model.workspace = true

@@ -22,7 +22,7 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Runtime syntax
-        run: node --check runtime/svugy.js
+        run: node --check crates/svugy/runtime/svugy.js
       - name: Test
         env:
           INSTA_UPDATE: new

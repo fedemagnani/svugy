@@ -2,6 +2,9 @@
 name = "svugy-model"
 edition.workspace = true
 version.workspace = true
+description = "Describe a system as a svugy model, author it through a builder or JSON, and validate it"
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 serde.workspace = true

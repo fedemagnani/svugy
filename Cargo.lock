@@ -263,13 +263,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dagre-dgl-rs"
-version = "0.1.1"
-dependencies = [
- "indexmap",
-]
-
-[[package]]
 name = "data-url"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1048,7 +1041,6 @@ dependencies = [
 name = "svugy"
 version = "0.1.0"
 dependencies = [
- "dagre-dgl-rs",
  "fontdb",
  "glam",
  "insta",
@@ -1058,6 +1050,7 @@ dependencies = [
  "roxmltree",
  "serde",
  "serde_json",
+ "svugy-dagre",
  "svugy-model",
  "taffy",
  "ttf-parser",
@@ -1075,6 +1068,13 @@ dependencies = [
  "svugy-import",
  "svugy-model",
  "thiserror",
+]
+
+[[package]]
+name = "svugy-dagre"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
 ]
 
 [[package]]

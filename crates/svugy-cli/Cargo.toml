@@ -2,6 +2,9 @@
 name = "svugy-cli"
 edition.workspace = true
 version.workspace = true
+description = "Command line for svugy: text in, an isometric SVG you can click into"
+license.workspace = true
+repository.workspace = true
 
 [[bin]]
 name = "svugy"
