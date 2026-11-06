@@ -34,6 +34,10 @@ jobs:
           name: pending-pixel-snapshots
           path: crates/svugy/tests/snapshots/*.snap.new*
           if-no-files-found: ignore
+      - name: README figure is fresh
+        run: |
+          cargo run --quiet -p svugy-cli -- render examples/svugy.d2 --profile static -o docs/svugy.svg
+          git diff --exit-code docs/svugy.svg
       - name: Wasm check
         run: cargo check -p svugy-model -p svugy-import -p svugy -p svugy-wasm --target wasm32-unknown-unknown
 
