@@ -1,0 +1,19 @@
+[package]
+name = "svugy-cli"
+edition.workspace = true
+version.workspace = true
+
+[[bin]]
+name = "svugy"
+path = "src/main.rs"
+
+[dependencies]
+svugy-model.workspace = true
+svugy.workspace = true
+svugy-import.workspace = true
+clap.workspace = true
+miette = { workspace = true, features = ["fancy"] }
+
+[dev-dependencies]
+thiserror.workspace = true
+serde_json.workspace = true

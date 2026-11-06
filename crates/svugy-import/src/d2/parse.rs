@@ -1,0 +1,451 @@
+//! Parse d2 tokens into a syntax tree of every d2 statement, recovering from each broken one.
+
+use chumsky::input::ValueInput;
+use chumsky::prelude::*;
+
+use super::ast::{EdgeOperator, KeySegment, Scalar, Span};
+use super::diagnostic::SyntaxError;
+use super::lex::Token;
+
+type ParserExtra<'tokens, 'src> = extra::Err<Rich<'tokens, Token<'src>, Span>>;
+
+/// One d2 statement as written, before the v1 subset is applied.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum SyntaxStatement {
+    Declaration(SyntaxDeclaration),
+    EdgeReference(Span),
+    Spread { value: SyntaxValue, span: Span },
+}
+
+/// A key or an edge chain, with whatever is assigned to it.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct SyntaxDeclaration {
+    pub(crate) head: SyntaxHead,
+    pub(crate) assignment: SyntaxAssignment,
+    pub(crate) span: Span,
+}
+
+/// What a declaration names: one key, or an edge chain between keys.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum SyntaxHead {
+    Key(SyntaxKey),
+    Edges {
+        source: SyntaxKey,
+        links: Vec<SyntaxLink>,
+    },
+}
+
+/// The `: value` and the `{ map }` following a declaration's head, either one optional.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct SyntaxAssignment {
+    pub(crate) value: Option<SyntaxValue>,
+    pub(crate) map: Option<Vec<SyntaxStatement>>,
+}
+
+/// One hop of an edge chain.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct SyntaxLink {
+    pub(crate) operator: EdgeOperator,
+    pub(crate) operator_span: Span,
+    pub(crate) target: SyntaxKey,
+}
+
+/// A dotted key, flagged when it carries a glob or a `&`/`!&` filter.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct SyntaxKey {
+    pub(crate) is_filtered: bool,
+    pub(crate) segments: Vec<SyntaxSegment>,
+    pub(crate) span: Span,
+}
+
+/// One key segment, flagged when it contains a `*` glob or is an unquoted `_` naming the parent scope.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct SyntaxSegment {
+    pub(crate) segment: KeySegment,
+    pub(crate) is_glob: bool,
+    pub(crate) is_parent_reference: bool,
+}
+
+/// A value as written; only `Scalar` survives the v1 subset, and an `Array` of scalars only in the `svugy` carrier.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum SyntaxValue {
+    Scalar(Scalar),
+    Null(Span),
+    BlockString(Span),
+    Import(Span),
+    Substitution(Span),
+    Array(SyntaxArray),
+    /// A `{ … }` map, which only an array holds as a value.
+    Map(Span),
+}
+
+/// A `[ … ]` array, its items as written in order.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct SyntaxArray {
+    pub(crate) items: Vec<SyntaxValue>,
+    pub(crate) span: Span,
+}
+
+impl SyntaxStatement {
+    /// Parse every statement of a token stream, keeping the valid ones and one error per broken one.
+    pub(crate) fn parse_all<'src>(
+        tokens: &[(Token<'src>, Span)],
+        source: &'src str,
+    ) -> (Vec<Self>, Vec<SyntaxError>) {
+        let end_of_input = Span::new(source.len(), source.len());
+        let input = tokens.map(end_of_input, |(token, span)| (token, span));
+        let parse_result = Self::document_parser(source).parse(input);
+        let (statements, rich_errors) = parse_result.into_output_errors();
+        let errors = rich_errors
+            .into_iter()
+            .map(SyntaxError::from_rich)
+            .collect();
+        let statements = statements.unwrap_or_default();
+        (statements, errors)
+    }
+
+    /// Parse the top-level statement list, reporting each unmatched `}` and carrying on after it.
+    fn document_parser<'tokens, 'src: 'tokens, I>(
+        source: &'src str,
+    ) -> impl Parser<'tokens, I, Vec<Self>, ParserExtra<'tokens, 'src>>
+    where
+        I: ValueInput<'tokens, Token = Token<'src>, Span = Span>,
+    {
+        let unmatched_closer = just(Token::RightBrace).validate(|_closer, extra, emitter| {
+            let closer_span = extra.span();
+            let error = Rich::custom(closer_span, "unmatched `}`");
+            emitter.emit(error);
+        });
+        Self::list_parser(source)
+            .separated_by(unmatched_closer)
+            .collect::<Vec<Vec<Self>>>()
+            .map(|lists| lists.into_iter().flatten().collect())
+            .then_ignore(end())
+    }
+
+    /// Parse statements up to the next `}` or the end, skipping each broken statement to its terminator.
+    fn list_parser<'tokens, 'src: 'tokens, I>(
+        source: &'src str,
+    ) -> Boxed<'tokens, 'tokens, I, Vec<Self>, ParserExtra<'tokens, 'src>>
+    where
+        I: ValueInput<'tokens, Token = Token<'src>, Span = Span>,
+    {
+        recursive(|statement_list| {
+            let map = statement_list.delimited_by(just(Token::LeftBrace), just(Token::RightBrace));
+            let declaration = SyntaxDeclaration::parser(source, map);
+            let edge_reference = just(Token::LeftParen)
+                .then(Token::balanced_tree_parser().repeated())
+                .to_span()
+                .map(Self::EdgeReference);
+            let spread = just(Token::Spread)
+                .ignore_then(SyntaxValue::parser(source))
+                .map_with(|value, extra| {
+                    let span = extra.span();
+                    Self::Spread { value, span }
+                });
+            let statement = choice((spread, edge_reference, declaration))
+                .then_ignore(Token::terminator_parser())
+                .map(Some)
+                .recover_with(via_parser(Self::skipped_statement_parser()));
+            let separator = choice((just(Token::Newline), just(Token::Semicolon))).to(None);
+            choice((separator, statement))
+                .repeated()
+                .collect::<Vec<Option<Self>>>()
+                .map(|statements| statements.into_iter().flatten().collect())
+        })
+        .boxed()
+    }
+
+    /// Skip a broken statement: up to its terminator when its brackets balance, otherwise to the end of its line.
+    fn skipped_statement_parser<'tokens, 'src: 'tokens, I>()
+    -> impl Parser<'tokens, I, Option<Self>, ParserExtra<'tokens, 'src>> + Clone
+    where
+        I: ValueInput<'tokens, Token = Token<'src>, Span = Span>,
+    {
+        let balanced_statement = Token::balanced_tree_parser()
+            .repeated()
+            .at_least(1)
+            .then_ignore(Token::terminator_parser());
+        let rest_of_line = none_of([Token::Newline, Token::Semicolon, Token::RightBrace])
+            .repeated()
+            .at_least(1);
+        choice((balanced_statement, rest_of_line)).to(None)
+    }
+}
+
+impl SyntaxDeclaration {
+    /// Parse `head [: value] [{ map }]`, where the head is a key or an edge chain `key (op key)+`.
+    fn parser<'tokens, 'src: 'tokens, I, M>(
+        source: &'src str,
+        map: M,
+    ) -> impl Parser<'tokens, I, SyntaxStatement, ParserExtra<'tokens, 'src>> + Clone
+    where
+        I: ValueInput<'tokens, Token = Token<'src>, Span = Span>,
+        M: Parser<'tokens, I, Vec<SyntaxStatement>, ParserExtra<'tokens, 'src>> + Clone,
+    {
+        let key = SyntaxKey::parser(source);
+        let operator = select! { Token::Edge(operator) => operator }
+            .labelled("edge operator")
+            .map_with(|operator, extra| {
+                let operator_span: Span = extra.span();
+                (operator, operator_span)
+            });
+        let link = operator
+            .then(key.clone())
+            .map(|((operator, operator_span), target)| SyntaxLink {
+                operator,
+                operator_span,
+                target,
+            });
+        let head = key
+            .then(link.repeated().collect::<Vec<SyntaxLink>>())
+            .map(|(source, links)| SyntaxHead::from_chain(source, links));
+        let value = just(Token::Colon).ignore_then(SyntaxValue::parser(source).or_not());
+        let assignment = value
+            .or_not()
+            .then(map.or_not())
+            .map(|(value, map)| SyntaxAssignment {
+                value: value.flatten(),
+                map,
+            });
+        head.then(assignment).map_with(|(head, assignment), extra| {
+            let span = extra.span();
+            let declaration = Self {
+                head,
+                assignment,
+                span,
+            };
+            SyntaxStatement::Declaration(declaration)
+        })
+    }
+}
+
+impl SyntaxHead {
+    fn from_chain(source: SyntaxKey, links: Vec<SyntaxLink>) -> Self {
+        let is_single_key = links.is_empty();
+        if is_single_key {
+            return Self::Key(source);
+        }
+        Self::Edges { source, links }
+    }
+}
+
+impl SyntaxKey {
+    /// Parse `[&|!&] segment (. segment)*`, a segment being one quoted string or a run of unquoted pieces.
+    fn parser<'tokens, 'src: 'tokens, I>(
+        source: &'src str,
+    ) -> Boxed<'tokens, 'tokens, I, Self, ParserExtra<'tokens, 'src>>
+    where
+        I: ValueInput<'tokens, Token = Token<'src>, Span = Span>,
+    {
+        let quoted_segment = select! {
+            Token::DoubleQuoted(raw) => Token::decode_double_quoted(raw),
+            Token::SingleQuoted(raw) => Token::decode_single_quoted(raw),
+        }
+        .map_with(|name, extra| {
+            let span = extra.span();
+            let segment = KeySegment { name, span };
+            SyntaxSegment {
+                segment,
+                is_glob: false,
+                is_parent_reference: false,
+            }
+        });
+        let unquoted_piece_is_glob = select! {
+            Token::Word => false,
+            Token::Dash => false,
+            Token::Dollar => false,
+            Token::Pipe => false,
+            Token::Star => true,
+        };
+        let unquoted_segment = unquoted_piece_is_glob
+            .repeated()
+            .at_least(1)
+            .collect::<Vec<bool>>()
+            .map_with(move |piece_is_glob, extra| {
+                let span: Span = extra.span();
+                let raw = &source[span.range()];
+                let is_parent_reference = raw == "_";
+                let name = Token::decode_escapes(raw);
+                let segment = KeySegment { name, span };
+                let is_glob = piece_is_glob.contains(&true);
+                SyntaxSegment {
+                    segment,
+                    is_glob,
+                    is_parent_reference,
+                }
+            });
+        let segment = choice((quoted_segment, unquoted_segment));
+        let filter = choice((just(Token::Ampersand), just(Token::NotAmpersand)));
+        filter
+            .or_not()
+            .then(segment.separated_by(just(Token::Dot)).at_least(1).collect())
+            .map_with(|(filter, segments), extra| {
+                let is_filtered = filter.is_some();
+                let span = extra.span();
+                Self {
+                    is_filtered,
+                    segments,
+                    span,
+                }
+            })
+            .labelled("key")
+            .boxed()
+    }
+}
+
+impl SyntaxValue {
+    /// Parse a value up to the next separator, brace or bracket, or one `[ … ]` array of values and maps split by separators.
+    fn parser<'tokens, 'src: 'tokens, I>(
+        source: &'src str,
+    ) -> Boxed<'tokens, 'tokens, I, Self, ParserExtra<'tokens, 'src>>
+    where
+        I: ValueInput<'tokens, Token = Token<'src>, Span = Span>,
+    {
+        recursive(|value| {
+            let separator = choice((just(Token::Newline), just(Token::Semicolon))).to(None);
+            let map = just(Token::LeftBrace)
+                .rewind()
+                .ignore_then(Token::balanced_tree_parser())
+                .to_span()
+                .map(Self::Map);
+            let item = choice((map, value)).map(Some);
+            let array = choice((item, separator))
+                .repeated()
+                .collect::<Vec<Option<Self>>>()
+                .delimited_by(just(Token::LeftBracket), just(Token::RightBracket))
+                .map_with(|items, extra| {
+                    let items = items.into_iter().flatten().collect();
+                    let span = extra.span();
+                    Self::Array(SyntaxArray { items, span })
+                });
+            let run = none_of([
+                Token::Newline,
+                Token::Semicolon,
+                Token::LeftBrace,
+                Token::RightBrace,
+                Token::LeftBracket,
+                Token::RightBracket,
+            ])
+            .repeated()
+            .at_least(1)
+            .collect::<Vec<Token<'src>>>()
+            .map_with(move |pieces, extra| {
+                let span = extra.span();
+                Self::from_run(&pieces, span, source)
+            });
+            choice((array, run)).labelled("value")
+        })
+        .boxed()
+    }
+
+    /// Read a run of value tokens: a lone quoted string or block string, an `@` import, a `${…}` substitution, else unquoted text.
+    fn from_run(pieces: &[Token<'_>], span: Span, source: &str) -> Self {
+        match pieces {
+            [Token::DoubleQuoted(raw)] => {
+                let text = Token::decode_double_quoted(raw);
+                let scalar = Scalar { text, span };
+                Self::Scalar(scalar)
+            }
+            [Token::SingleQuoted(raw)] => {
+                let text = Token::decode_single_quoted(raw);
+                let scalar = Scalar { text, span };
+                Self::Scalar(scalar)
+            }
+            [Token::BlockString] => Self::BlockString(span),
+            [Token::At, ..] => Self::Import(span),
+            _ if pieces.contains(&Token::Substitution) => Self::Substitution(span),
+            _ => {
+                let raw = &source[span.range()];
+                if raw == "null" {
+                    return Self::Null(span);
+                }
+                let text = Token::decode_escapes(raw);
+                let scalar = Scalar { text, span };
+                Self::Scalar(scalar)
+            }
+        }
+    }
+}
+
+impl<'src> Token<'src> {
+    /// Match one token outside brackets, or a whole `{ … }` / `[ … ]` group, separators inside it included.
+    fn balanced_tree_parser<'tokens, I>()
+    -> impl Parser<'tokens, I, (), ParserExtra<'tokens, 'src>> + Clone
+    where
+        'src: 'tokens,
+        I: ValueInput<'tokens, Token = Token<'src>, Span = Span>,
+    {
+        recursive(|tree| {
+            let separator = choice((just(Token::Newline), just(Token::Semicolon))).ignored();
+            let contents = choice((tree, separator)).repeated();
+            let braced = contents
+                .clone()
+                .delimited_by(just(Token::LeftBrace), just(Token::RightBrace));
+            let bracketed =
+                contents.delimited_by(just(Token::LeftBracket), just(Token::RightBracket));
+            let plain = none_of([
+                Token::Newline,
+                Token::Semicolon,
+                Token::LeftBrace,
+                Token::RightBrace,
+                Token::LeftBracket,
+                Token::RightBracket,
+            ])
+            .ignored();
+            choice((braced, bracketed, plain))
+        })
+    }
+
+    /// Look ahead, without consuming, for what may end a statement: a separator, a `}` or the end.
+    fn terminator_parser<'tokens, I>()
+    -> impl Parser<'tokens, I, (), ParserExtra<'tokens, 'src>> + Clone
+    where
+        'src: 'tokens,
+        I: ValueInput<'tokens, Token = Token<'src>, Span = Span>,
+    {
+        let closing_token = choice((
+            just(Token::Newline),
+            just(Token::Semicolon),
+            just(Token::RightBrace),
+        ))
+        .ignored();
+        choice((closing_token, end()))
+            .labelled("end of statement")
+            .rewind()
+    }
+}
+
+impl SyntaxError {
+    fn from_rich(error: Rich<'_, Token<'_>, Span>) -> Self {
+        let message = error.reason().to_string();
+        Self::new(message, *error.span())
+    }
+}
+
+impl SyntaxValue {
+    pub(crate) fn span(&self) -> Span {
+        match self {
+            Self::Scalar(scalar) => scalar.span,
+            Self::Array(array) => array.span,
+            Self::Null(span)
+            | Self::BlockString(span)
+            | Self::Import(span)
+            | Self::Substitution(span)
+            | Self::Map(span) => *span,
+        }
+    }
+}
+
+impl SyntaxStatement {
+    pub(crate) fn span(&self) -> Span {
+        match self {
+            Self::Declaration(declaration) => declaration.span,
+            Self::EdgeReference(span) => *span,
+            Self::Spread {
+                value: _value,
+                span,
+            } => *span,
+        }
+    }
+}

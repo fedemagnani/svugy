@@ -1,0 +1,109 @@
+main:has(.svugy-playground) {
+  max-width: min(1100px, calc(100% - 160px));
+}
+
+.svugy-playground {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 16px;
+  align-items: stretch;
+  margin: 1em 0;
+}
+
+.svugy-preview {
+  display: grid;
+}
+
+.svugy-preview > object {
+  grid-area: 1 / 1;
+  align-self: center;
+}
+
+@media (max-width: 900px) {
+  .svugy-playground {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.svugy-editor {
+  position: relative;
+  min-height: 280px;
+  border-radius: 14px;
+  background: var(--quote-bg);
+  overflow: hidden;
+}
+
+.svugy-editor textarea,
+.svugy-editor .svugy-highlight {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 14px 16px;
+  border: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  font-family: var(--mono-font, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 13px;
+  line-height: 1.5;
+  tab-size: 2;
+  white-space: pre;
+  overflow: auto;
+}
+
+.svugy-editor .svugy-highlight {
+  pointer-events: none;
+  color: var(--fg);
+  background: transparent;
+}
+
+.svugy-editor .svugy-highlight code {
+  font: inherit;
+  padding: 0;
+  background: none;
+}
+
+.svugy-editor textarea {
+  resize: none;
+  color: transparent;
+  background: transparent;
+  caret-color: var(--fg);
+  outline: none;
+}
+
+.svugy-editor textarea::selection {
+  background: rgba(120, 160, 255, 0.35);
+}
+
+.svugy-preview object.svugy {
+  margin: 0;
+}
+
+.svugy-token-comment { color: #7d8799; font-style: italic; }
+.svugy-token-string { color: #7fd17f; }
+.svugy-token-keyword { color: #c792ea; }
+.svugy-token-key { color: #82aaff; }
+.svugy-token-number { color: #f78c6c; }
+.svugy-token-arrow { color: #ffcb6b; font-weight: bold; }
+.svugy-token-punctuation { color: #89a0b8; }
+
+#svugy-diagnostics {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1em;
+  font-family: var(--mono-font, ui-monospace, monospace);
+  font-size: 12.5px;
+}
+
+#svugy-diagnostics li {
+  padding: 4px 8px;
+  border-left: 3px solid transparent;
+}
+
+#svugy-diagnostics li[data-line] {
+  cursor: pointer;
+}
+
+#svugy-diagnostics .svugy-diagnostic-error { border-color: #ff5370; }
+#svugy-diagnostics .svugy-diagnostic-warning { border-color: #ffcb6b; }
+#svugy-diagnostics .svugy-diagnostic-status { color: #7d8799; }

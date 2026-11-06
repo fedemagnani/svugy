@@ -1,0 +1,233 @@
+---
+source: crates/svugy-model/tests/validate.rs
+expression: pretty
+---
+{
+  "causes": [],
+  "code": "svugy::model_report",
+  "labels": [],
+  "message": "the model has 9 error(s) and 9 warning(s)",
+  "related": [
+    {
+      "causes": [],
+      "code": "svugy::duplicate_id",
+      "labels": [
+        {
+          "label": "declared again here",
+          "span": {
+            "length": 6,
+            "offset": 20
+          }
+        }
+      ],
+      "message": "element `desk.quoter` is declared more than once",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::dangling_reference",
+      "labels": [],
+      "message": "element `cache.hot` is inside `cache`, which is not an element",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::dangling_reference",
+      "help": "did you mean `db`?",
+      "labels": [],
+      "message": "edge `(desk.quoter -> dbb)[0]` points to `dbb`, which is not an element",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::ancestor_descendant_edge",
+      "labels": [
+        {
+          "label": "declared here",
+          "span": {
+            "length": 12,
+            "offset": 40
+          }
+        }
+      ],
+      "message": "edge `(desk -> desk.quoter)[0]` joins an element to its own ancestor, so layout leaves it out",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::mismatched_style_value",
+      "labels": [
+        {
+          "label": "styled here",
+          "span": {
+            "length": 4,
+            "offset": 0
+          }
+        }
+      ],
+      "message": "element `desk` sets style `bold` to `very`, which is not a boolean",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::unknown_style",
+      "help": "did you mean `fill`?",
+      "labels": [
+        {
+          "label": "styled here",
+          "span": {
+            "length": 4,
+            "offset": 0
+          }
+        }
+      ],
+      "message": "element `desk` has style `fil`, which is not a v1 style key",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::impossible_placement",
+      "labels": [],
+      "message": "element `cache.hot` is pinned at (inf, 0), which is not within 1000000 plan units of its level's origin",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::impossible_placement",
+      "labels": [
+        {
+          "label": "declared here",
+          "span": {
+            "length": 4,
+            "offset": 0
+          }
+        }
+      ],
+      "message": "element `desk` asks for a grid of 0 columns, which has no cell for any child",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::impossible_placement",
+      "labels": [],
+      "message": "element `desk.quoter` has child placement `Column` but no children to place",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::impossible_placement",
+      "labels": [],
+      "message": "element `wide` packs its 1 children into 40000 columns and 1 rows, but a packed level holds at most 32766 of either",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::impossible_height",
+      "labels": [],
+      "message": "element `cache.hot` stands 0 plan units tall, which is not a positive number no greater than 1000000",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::ignored_container_shape",
+      "labels": [
+        {
+          "label": "shaped here",
+          "span": {
+            "length": 4,
+            "offset": 0
+          }
+        }
+      ],
+      "message": "element `desk` is a container, so it is drawn as a slab and its shape `Disc` is ignored in v1",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::ignored_container_height",
+      "labels": [
+        {
+          "label": "declared here",
+          "span": {
+            "length": 4,
+            "offset": 0
+          }
+        }
+      ],
+      "message": "element `desk` is a container, so it is drawn as a slab and its height 30 is ignored in v1",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::ignored_container_badge",
+      "labels": [
+        {
+          "label": "marked here",
+          "span": {
+            "length": 4,
+            "offset": 0
+          }
+        }
+      ],
+      "message": "element `desk` is a container, so it is entered rather than badged and edges into it are drawn as arcs",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::arc_into_badge_target",
+      "labels": [
+        {
+          "label": "declared here",
+          "span": {
+            "length": 14,
+            "offset": 60
+          }
+        }
+      ],
+      "message": "edge `(wide -> ledger)[0]` starts at a container, whose top holds its interior, so it is drawn as an arc instead of a badge",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::unresolved_link",
+      "help": "did you mean `desk.quoter`?",
+      "labels": [],
+      "message": "element `desk.quoter` links to `desk.quoterr`, which is not an element; write `./desk.quoterr` if it is a relative URL",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::undrawn_legend_key",
+      "labels": [],
+      "message": "the legend describes the arcs dashed `3`, which the diagram never draws",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::undrawn_legend_key",
+      "help": "did you mean `ledger`?",
+      "labels": [],
+      "message": "the legend describes the badges of `ledgr`, which the diagram never draws",
+      "related": [],
+      "severity": "warning"
+    }
+  ],
+  "severity": "error"
+}

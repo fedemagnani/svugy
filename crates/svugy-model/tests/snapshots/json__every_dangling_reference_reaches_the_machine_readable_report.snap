@@ -1,0 +1,54 @@
+---
+source: crates/svugy-model/tests/json.rs
+expression: pretty
+---
+{
+  "causes": [],
+  "code": "svugy::model_report",
+  "labels": [],
+  "message": "the model has 3 error(s) and 0 warning(s)",
+  "related": [
+    {
+      "causes": [],
+      "code": "svugy::dangling_reference",
+      "labels": [
+        {
+          "label": "declared here",
+          "span": {
+            "length": 9,
+            "offset": 30
+          }
+        }
+      ],
+      "message": "element `cache.hot` is inside `cache`, which is not an element",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::dangling_reference",
+      "help": "did you mean `db.primary`?",
+      "labels": [
+        {
+          "label": "referenced here",
+          "span": {
+            "length": 9,
+            "offset": 5
+          }
+        }
+      ],
+      "message": "edge `(db.primary -> db.primry)[0]` points to `db.primry`, which is not an element",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::dangling_reference",
+      "labels": [],
+      "message": "edge `(ghost -> ghost)[0]` points to `ghost`, which is not an element",
+      "related": [],
+      "severity": "error"
+    }
+  ],
+  "severity": "error"
+}

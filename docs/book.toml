@@ -1,0 +1,14 @@
+[book]
+title = "svugy"
+description = "Text in, an isometric SVG you can click into."
+authors = ["Fede"]
+language = "en"
+src = "src"
+
+[build]
+build-dir = "book"
+
+[output.html]
+additional-css = ["theme/figures.css", "theme/playground.css"]
+default-theme = "navy"
+preferred-dark-theme = "navy"

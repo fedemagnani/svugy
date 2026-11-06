@@ -1,0 +1,15 @@
+# Containers declared by nesting and by dotted paths, quoted keys keep their dots.
+direction: right
+
+cloud: AWS {
+  vpc: "Main VPC" {
+    api: 'API server'
+    "db.primary": Primary DB {
+      shape: cylinder
+      link: cloud.vpc
+    }
+  }
+}
+
+cloud.vpc.cache: Redis; cloud.vpc.queue
+"edge.node"."with space": unicode ✓

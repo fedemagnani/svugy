@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Runtime syntax
+        run: node --check runtime/svugy.js
+      - name: Test
+        env:
+          INSTA_UPDATE: new
+        run: cargo test --workspace
+      - name: Upload pending pixel snapshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pending-pixel-snapshots
+          path: crates/svugy/tests/snapshots/*.snap.new*
+          if-no-files-found: ignore
+      - name: Wasm check
+        run: cargo check -p svugy-model -p svugy-import -p svugy -p svugy-wasm --target wasm32-unknown-unknown
+
+  d2-accepts-fixtures:
+    runs-on: ubuntu-latest
+    env:
+      D2_VERSION: v0.9.0
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned d2
+        run: |
+          curl -fsSL "https://github.com/d2lang/d2/releases/download/${D2_VERSION}/d2-${D2_VERSION}-linux-amd64.tar.gz" | tar -xz
+          echo "$PWD/$(dirname "$(find . -path '*/bin/d2' -type f | head -n 1)")" >> "$GITHUB_PATH"
+      - name: Compile every valid d2 fixture with d2 itself
+        run: |
+          d2 --version
+          git ls-files '*.d2' | grep -v 'syntax_error.d2$' | while read -r fixture; do
+            d2 --layout=elk "$fixture" "$RUNNER_TEMP/out.svg"
+          done
+
+  determinism-probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: ubuntu-latest
+            target: wasm32-wasip1
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - if: matrix.target == 'wasm32-wasip1'
+        uses: bytecodealliance/actions/wasmtime/setup@v1
+      - name: Run probe
+        env:
+          CARGO_TARGET_WASM32_WASIP1_RUNNER: wasmtime
+        run: cargo run --release -p svugy --example determinism_probe --target ${{ matrix.target }} > determinism-${{ matrix.target }}.out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: determinism-${{ matrix.target }}
+          path: determinism-${{ matrix.target }}.out
+          if-no-files-found: error
+
+  determinism-compare:
+    needs: determinism-probe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: determinism-*
+          merge-multiple: true
+      - name: Compare probe outputs byte for byte
+        run: |
+          diff --report-identical-files determinism-x86_64-unknown-linux-gnu.out determinism-aarch64-apple-darwin.out
+          diff --report-identical-files determinism-x86_64-unknown-linux-gnu.out determinism-wasm32-wasip1.out

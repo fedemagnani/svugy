@@ -1,0 +1,59 @@
+# d2 v0.9.0 · svugy rendering one diagram, drawn by svugy
+
+label: "svugy · one render"
+vars: {
+  svugy: {
+    subtitle: "from your d2 file to one explorable SVG"
+    legend: {
+      title: What happens on render
+      entries: [
+        "① the CLI imports your d2"
+        "② the pipeline lays it out and draws it"
+        "③ the runtime is embedded, the SVG written"
+      ]
+      dashes: { 5: data; 2: embedded at build time }
+      badges: { pipeline.inter: reads the bundled font }
+    }
+  }
+}
+
+cli: svugy-cli {
+  style.fill: "#9945ff"
+  vars: { svugy: { caption: "svugy render"; height: 60; position: { x: 0; y: 60 } } }
+}
+
+pipeline: svugy {
+  style.fill: "#1b2436"
+  vars: { svugy: { caption: "the pipeline"; position: { x: 220; y: 0 } } }
+
+  layout: Layout {
+    style.fill: "#3478f6"
+    vars: { svugy: { caption: "plan space"; position: { x: 18; y: 18 } } }
+  }
+  geometry: Geometry {
+    style.fill: "#3478f6"
+    vars: { svugy: { caption: "isometric"; position: { x: 190; y: 18 } } }
+  }
+  render: Render {
+    style.fill: "#3478f6"
+    vars: { svugy: { caption: "markup"; position: { x: 362; y: 18 } } }
+  }
+  inter: Inter {
+    shape: cylinder
+    style.fill: "#d5dcea"
+    vars: { svugy: { badge: true; position: { x: 190; y: 200 } } }
+  }
+
+  layout -> geometry: boxes
+  geometry -> render: shapes
+  layout -> inter: measures
+  render -> inter: outlines
+}
+
+runtime: {
+  style.fill: "#3a3f4b"
+  vars: { svugy: { caption: "svugy.js · svugy.css"; position: { x: 840; y: 0 } } }
+}
+
+cli -> pipeline.layout: ① ② model
+runtime -> pipeline.render: ③ { style.stroke-dash: 2 }

@@ -1,0 +1,14 @@
+[package]
+name = "svugy-model"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+miette.workspace = true
+strsim.workspace = true
+
+[dev-dependencies]
+insta.workspace = true

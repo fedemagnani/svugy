@@ -1,0 +1,1222 @@
+---
+source: crates/svugy/tests/golden_svugy.rs
+expression: interactive_svg
+---
+<svg data-svugy-contract="1" height="1451.998" viewBox="-557.472 40.257 1936.438 1451.998" width="1936.438" xmlns="http://www.w3.org/2000/svg">
+<style>/*<![CDATA[*/[data-svugy-contract]{--svugy-canvas:#0a0b10;--svugy-grid-line:#151722;--svugy-face-outline:#0a0b10;--svugy-text:#e6e8ee;--svugy-text-muted:#8b93a5;--svugy-external-outline:#5b6170;--svugy-neutral-top:#3a3f4b;--svugy-neutral-left:#2b2f39;--svugy-neutral-right:#22252d;--svugy-neutral-ink:#e6e8ee;--svugy-container-blue-top:#1b2436;--svugy-container-blue-left:#131a28;--svugy-container-blue-right:#0d131f;--svugy-container-blue-ink:#8aa0c8;font-family:Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif}
+@media (prefers-color-scheme: light){
+[data-svugy-contract]{--svugy-canvas:#f6f8ff;--svugy-grid-line:#e1e4f4;--svugy-face-outline:#f6f8ff;--svugy-text:#14161a;--svugy-text-muted:#535a6a;--svugy-external-outline:#858b9b;--svugy-neutral-top:#acb2c0;--svugy-neutral-left:#868b96;--svugy-neutral-right:#6d717b;--svugy-neutral-ink:#14161a;--svugy-container-blue-top:#c8d4ed;--svugy-container-blue-left:#9da6ba;--svugy-container-blue-right:#808898;--svugy-container-blue-ink:#3c4f72}
+}
+[data-svugy-overlay] { visibility: hidden; }
+[data-svugy-entered] > [data-svugy-overlay] { visibility: visible; }
+
+[data-svugy-flow] { animation: svugy-flow 1.2s linear infinite; }
+@keyframes svugy-flow { to { stroke-dashoffset: -24; } }
+
+[data-svugy-contract]:focus,
+[data-svugy-contract] [tabindex]:focus { outline: none; }
+:is([data-svugy-element], [data-svugy-stub])[role="button"] { cursor: pointer; }
+:is([data-svugy-element], [data-svugy-stub])[role="button"]:has([data-svugy-entered]) { cursor: auto; }
+:is([data-svugy-element], [data-svugy-stub])[role="button"]:hover:not(:has([role="button"]:hover, [data-svugy-entered])) > :is(path, rect),
+:is([data-svugy-element], [data-svugy-edge], [data-svugy-stub]):focus-visible:not(:has([data-svugy-entered])) > :is(path, rect) { stroke: var(--svugy-text); stroke-opacity: 1; stroke-width: 2; fill-opacity: 0.8; }
+
+[data-svugy-contract] .svugy-panel { pointer-events: none; }
+[data-svugy-contract] .svugy-panel-plate { fill: #12141c; fill-opacity: 0.96; stroke: #2c3242; stroke-width: 1; }
+[data-svugy-contract] .svugy-panel-title,
+[data-svugy-contract] .svugy-panel-body { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; text-anchor: start; letter-spacing: 0; }
+[data-svugy-contract] .svugy-panel-title { font-size: 12.5px; font-weight: 650; fill: #eef0f6; }
+[data-svugy-contract] .svugy-panel-body { font-size: 11.5px; font-weight: 450; fill: #a6adbf; }
+
+@media (prefers-color-scheme: light) {
+  [data-svugy-contract] .svugy-panel-plate { fill: #ffffff; stroke: #d5d9e3; }
+  [data-svugy-contract] .svugy-panel-title { fill: #161922; }
+  [data-svugy-contract] .svugy-panel-body { fill: #545b6c; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-svugy-flow] { animation: none; }
+  [data-svugy-dot] { visibility: hidden; }
+}
+/*]]>*/</style>
+<defs>
+<marker id="arrowhead-0" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
+<path d="M0,1 L9,5 L0,9 Z" fill="var(--svugy-text-muted)"/>
+</marker>
+<marker id="arrowhead-1" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
+<path d="M0,1 L9,5 L0,9 Z" fill="#14f195"/>
+</marker>
+<marker id="arrowhead-2" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
+<path d="M0,1 L9,5 L0,9 Z" fill="#3478f6"/>
+</marker>
+<marker id="arrowhead-3" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
+<path d="M0,1 L9,5 L0,9 Z" fill="#5b6170"/>
+</marker>
+<marker id="arrowhead-4" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
+<path d="M0,1 L9,5 L0,9 Z" fill="#9945ff"/>
+</marker>
+<marker id="arrowhead-5" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
+<path d="M0,1 L9,5 L0,9 Z" fill="#f0a020"/>
+</marker>
+</defs>
+<rect fill="var(--svugy-canvas)" height="1451.998" rx="14" width="1936.438" x="-557.472" y="40.257"/>
+<line stroke="var(--svugy-grid-line)" x1="0" x2="-1091.192" y1="-60" y2="570"/>
+<line stroke="var(--svugy-grid-line)" x1="51.962" x2="-1039.23" y1="-30" y2="600"/>
+<line stroke="var(--svugy-grid-line)" x1="103.923" x2="-987.269" y1="0" y2="630"/>
+<line stroke="var(--svugy-grid-line)" x1="155.885" x2="-935.307" y1="30" y2="660"/>
+<line stroke="var(--svugy-grid-line)" x1="207.846" x2="-883.346" y1="60" y2="690"/>
+<line stroke="var(--svugy-grid-line)" x1="259.808" x2="-831.384" y1="90" y2="720"/>
+<line stroke="var(--svugy-grid-line)" x1="311.769" x2="-779.423" y1="120" y2="750"/>
+<line stroke="var(--svugy-grid-line)" x1="363.731" x2="-727.461" y1="150" y2="780"/>
+<line stroke="var(--svugy-grid-line)" x1="415.692" x2="-675.5" y1="180" y2="810"/>
+<line stroke="var(--svugy-grid-line)" x1="467.654" x2="-623.538" y1="210" y2="840"/>
+<line stroke="var(--svugy-grid-line)" x1="519.615" x2="-571.577" y1="240" y2="870"/>
+<line stroke="var(--svugy-grid-line)" x1="571.577" x2="-519.615" y1="270" y2="900"/>
+<line stroke="var(--svugy-grid-line)" x1="623.538" x2="-467.654" y1="300" y2="930"/>
+<line stroke="var(--svugy-grid-line)" x1="675.5" x2="-415.692" y1="330" y2="960"/>
+<line stroke="var(--svugy-grid-line)" x1="727.461" x2="-363.731" y1="360" y2="990"/>
+<line stroke="var(--svugy-grid-line)" x1="779.423" x2="-311.769" y1="390" y2="1020"/>
+<line stroke="var(--svugy-grid-line)" x1="831.384" x2="-259.808" y1="420" y2="1050"/>
+<line stroke="var(--svugy-grid-line)" x1="883.346" x2="-207.846" y1="450" y2="1080"/>
+<line stroke="var(--svugy-grid-line)" x1="935.307" x2="-155.885" y1="480" y2="1110"/>
+<line stroke="var(--svugy-grid-line)" x1="987.269" x2="-103.923" y1="510" y2="1140"/>
+<line stroke="var(--svugy-grid-line)" x1="1039.23" x2="-51.962" y1="540" y2="1170"/>
+<line stroke="var(--svugy-grid-line)" x1="1091.192" x2="0" y1="570" y2="1200"/>
+<line stroke="var(--svugy-grid-line)" x1="1143.154" x2="51.962" y1="600" y2="1230"/>
+<line stroke="var(--svugy-grid-line)" x1="1195.115" x2="103.923" y1="630" y2="1260"/>
+<line stroke="var(--svugy-grid-line)" x1="1247.077" x2="155.885" y1="660" y2="1290"/>
+<line stroke="var(--svugy-grid-line)" x1="1299.038" x2="207.846" y1="690" y2="1320"/>
+<line stroke="var(--svugy-grid-line)" x1="1351" x2="259.808" y1="720" y2="1350"/>
+<line stroke="var(--svugy-grid-line)" x1="1402.961" x2="311.769" y1="750" y2="1380"/>
+<line stroke="var(--svugy-grid-line)" x1="1454.923" x2="363.731" y1="780" y2="1410"/>
+<line stroke="var(--svugy-grid-line)" x1="1506.884" x2="415.692" y1="810" y2="1440"/>
+<line stroke="var(--svugy-grid-line)" x1="1558.846" x2="467.654" y1="840" y2="1470"/>
+<line stroke="var(--svugy-grid-line)" x1="1610.807" x2="519.615" y1="870" y2="1500"/>
+<line stroke="var(--svugy-grid-line)" x1="1662.769" x2="571.577" y1="900" y2="1530"/>
+<line stroke="var(--svugy-grid-line)" x1="1714.73" x2="623.538" y1="930" y2="1560"/>
+<line stroke="var(--svugy-grid-line)" x1="1766.692" x2="675.5" y1="960" y2="1590"/>
+<line stroke="var(--svugy-grid-line)" x1="1818.653" x2="727.461" y1="990" y2="1620"/>
+<line stroke="var(--svugy-grid-line)" x1="1870.615" x2="779.423" y1="1020" y2="1650"/>
+<line stroke="var(--svugy-grid-line)" x1="0" x2="1870.615" y1="-60" y2="1020"/>
+<line stroke="var(--svugy-grid-line)" x1="-51.962" x2="1818.653" y1="-30" y2="1050"/>
+<line stroke="var(--svugy-grid-line)" x1="-103.923" x2="1766.692" y1="0" y2="1080"/>
+<line stroke="var(--svugy-grid-line)" x1="-155.885" x2="1714.73" y1="30" y2="1110"/>
+<line stroke="var(--svugy-grid-line)" x1="-207.846" x2="1662.769" y1="60" y2="1140"/>
+<line stroke="var(--svugy-grid-line)" x1="-259.808" x2="1610.807" y1="90" y2="1170"/>
+<line stroke="var(--svugy-grid-line)" x1="-311.769" x2="1558.846" y1="120" y2="1200"/>
+<line stroke="var(--svugy-grid-line)" x1="-363.731" x2="1506.884" y1="150" y2="1230"/>
+<line stroke="var(--svugy-grid-line)" x1="-415.692" x2="1454.923" y1="180" y2="1260"/>
+<line stroke="var(--svugy-grid-line)" x1="-467.654" x2="1402.961" y1="210" y2="1290"/>
+<line stroke="var(--svugy-grid-line)" x1="-519.615" x2="1351" y1="240" y2="1320"/>
+<line stroke="var(--svugy-grid-line)" x1="-571.577" x2="1299.038" y1="270" y2="1350"/>
+<line stroke="var(--svugy-grid-line)" x1="-623.538" x2="1247.077" y1="300" y2="1380"/>
+<line stroke="var(--svugy-grid-line)" x1="-675.5" x2="1195.115" y1="330" y2="1410"/>
+<line stroke="var(--svugy-grid-line)" x1="-727.461" x2="1143.154" y1="360" y2="1440"/>
+<line stroke="var(--svugy-grid-line)" x1="-779.423" x2="1091.192" y1="390" y2="1470"/>
+<line stroke="var(--svugy-grid-line)" x1="-831.384" x2="1039.23" y1="420" y2="1500"/>
+<line stroke="var(--svugy-grid-line)" x1="-883.346" x2="987.269" y1="450" y2="1530"/>
+<line stroke="var(--svugy-grid-line)" x1="-935.307" x2="935.307" y1="480" y2="1560"/>
+<line stroke="var(--svugy-grid-line)" x1="-987.269" x2="883.346" y1="510" y2="1590"/>
+<line stroke="var(--svugy-grid-line)" x1="-1039.23" x2="831.384" y1="540" y2="1620"/>
+<line stroke="var(--svugy-grid-line)" x1="-1091.192" x2="779.423" y1="570" y2="1650"/>
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="174.242" x="-533.472" y="80.726">svugy · how it is built</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="266.319" x="-533.472" y="98.726">text in → model → layout → geometry → SVG out</text>
+<text fill="var(--svugy-text)" font-size="12.5" font-weight="700" text-anchor="start" textLength="103.973" x="1106.923" y="76.367">Read it as a story</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="159.897" x="1106.923" y="96.367">① your text becomes a model</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="227.595" x="1106.923" y="113.367">② the model becomes boxes in plan space</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="186.538" x="1106.923" y="130.367">③ boxes become isometric shapes</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="248.042" x="1106.923" y="147.367">④ shapes become one SVG file, runtime inside</text>
+<path d="M1106.923,174.367 L1136.923,174.367" fill="none" opacity="0.9" stroke="var(--svugy-text)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="100.042" x="1146.923" y="178.367">data flows this way</text>
+<path d="M1106.923,191.367 L1136.923,191.367" fill="none" opacity="0.9" stroke="var(--svugy-text)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="122.488" x="1146.923" y="195.367">embedded at build time</text>
+<path d="M1112.323,206.865 L1112.323,212.654 C1112.323,215.703 1116.621,218.391 1121.923,218.656 C1127.225,218.922 1131.523,216.665 1131.523,213.616 L1131.523,207.828 C1131.523,210.877 1127.225,213.134 1121.923,212.868 C1116.621,212.603 1112.323,209.915 1112.323,206.865 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M1131.523,207.828 C1131.523,210.877 1127.225,213.134 1121.923,212.868 C1116.621,212.603 1112.323,209.915 1112.323,206.865 C1112.323,203.816 1116.621,201.559 1121.923,201.825 C1127.225,202.091 1131.523,204.778 1131.523,207.828 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="118.121" x="1146.923" y="214.241">reads the bundled font</text>
+<g data-svugy-level="" data-svugy-view="-557.472 40.257 1936.438 1451.998">
+<g data-svugy-element="cli" data-svugy-goto="pipeline">
+<title>svugy-cli</title>
+<desc data-svugy-details="">{"kind":"element","path":"cli","label":"svugy-cli","caption":"render · validate · import"}</desc>
+<path d="M-533.472,326 L-437.024,381.684 L-437.024,311.684 L-533.472,256 Z" fill="#7734c9" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-379.866,348.684 L-437.024,381.684 L-437.024,311.684 L-379.866,278.684 Z" fill="#6129a4" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-476.314,223 L-379.866,278.684 L-437.024,311.684 L-533.472,256 Z" fill="#9945ff" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="55.371" transform="matrix(0.866 0.5 -0.866 0.5 -456.669 267.342)" x="0" y="-2">svugy-cli</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="99.369" transform="matrix(0.866 0.5 -0.866 0.5 -456.669 267.342)" x="0" y="11">render · validate · import</text>
+</g>
+<a href="https://d2lang.com">
+<g data-svugy-element="d2">
+<title>d2 v0.9.0</title>
+<desc data-svugy-details="">{"kind":"element","path":"d2","label":"d2 v0.9.0","caption":"reference grammar"}</desc>
+<path d="M168.009,181 L246.514,226.325 L246.514,203.825 L168.009,158.5 Z" fill="none" stroke="#5b6170" stroke-dasharray="5 4" stroke-width="1"/>
+<path d="M303.672,193.325 L246.514,226.325 L246.514,203.825 L303.672,170.825 Z" fill="none" stroke="#5b6170" stroke-dasharray="5 4" stroke-width="1"/>
+<path d="M225.167,125.5 L303.672,170.825 L246.514,203.825 L168.009,158.5 Z" fill="none" stroke="#5b6170" stroke-dasharray="5 4" stroke-width="1"/>
+<text fill="var(--svugy-text-muted)" font-size="12" font-weight="650" text-anchor="middle" textLength="57.152" transform="matrix(0.866 0.5 -0.866 0.5 235.84 164.662)" x="0" y="-2">d2 v0.9.0</text>
+<text fill="var(--svugy-text-muted)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="78.65" transform="matrix(0.866 0.5 -0.866 0.5 235.84 164.662)" x="0" y="11">reference grammar</text>
+</g>
+</a>
+<g data-svugy-element="import">
+<title>svugy-import</title>
+<desc data-svugy-details="">{"kind":"element","path":"import","label":"svugy-import","caption":"d2 → model"}</desc>
+<path d="M-53.694,309 L268.468,495 L268.468,484.5 L-53.694,298.5 Z" fill="#1f1a10" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M356.802,444 L268.468,495 L268.468,484.5 L356.802,433.5 Z" fill="#17130b" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M34.641,247.5 L356.802,433.5 L268.468,484.5 L-53.694,298.5 Z" fill="#2a2418" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="import" data-svugy-view="-46.517 219 396.142 271.5" transform="matrix(1 0 0 1 34.641 247.5)">
+<g data-svugy-element="import.lex">
+<title>lex</title>
+<desc data-svugy-details="">{"kind":"element","path":"import.lex","label":"lex","caption":"logos tokens"}</desc>
+<path d="M-57.158,51 L5.196,87 L5.196,64.5 L-57.158,28.5 Z" fill="#bd7d17" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,54 L5.196,87 L5.196,64.5 L62.354,31.5 Z" fill="#9a6511" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,-4.5 L62.354,31.5 L5.196,64.5 L-57.158,28.5 Z" fill="#f0a020" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1f1101" font-size="12" font-weight="650" text-anchor="middle" textLength="17.361" transform="matrix(0.866 0.5 -0.866 0.5 2.598 30)" x="0" y="-2">lex</text>
+<text fill="#1f1101" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="51.984" transform="matrix(0.866 0.5 -0.866 0.5 2.598 30)" x="0" y="11">logos tokens</text>
+</g>
+<g data-svugy-element="import.parse">
+<title>parse</title>
+<desc data-svugy-details="">{"kind":"element","path":"import.parse","label":"parse","caption":"chumsky + recovery"}</desc>
+<path d="M57.158,117 L139.847,164.74 L139.847,142.24 L57.158,94.5 Z" fill="#bd7d17" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M197.004,131.74 L139.847,164.74 L139.847,142.24 L197.004,109.24 Z" fill="#9a6511" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M114.315,61.5 L197.004,109.24 L139.847,142.24 L57.158,94.5 Z" fill="#f0a020" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1f1101" font-size="12" font-weight="650" text-anchor="middle" textLength="33.287" transform="matrix(0.866 0.5 -0.866 0.5 127.081 101.87)" x="0" y="-2">parse</text>
+<text fill="#1f1101" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="83.481" transform="matrix(0.866 0.5 -0.866 0.5 127.081 101.87)" x="0" y="11">chumsky + recovery</text>
+</g>
+<g data-svugy-element="import.lower">
+<title>lower</title>
+<desc data-svugy-details="">{"kind":"element","path":"import.lower","label":"lower","caption":"AST → model"}</desc>
+<path d="M171.473,183 L233.827,219 L233.827,196.5 L171.473,160.5 Z" fill="#bd7d17" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M290.985,186 L233.827,219 L233.827,196.5 L290.985,163.5 Z" fill="#9a6511" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M228.631,127.5 L290.985,163.5 L233.827,196.5 L171.473,160.5 Z" fill="#f0a020" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1f1101" font-size="12" font-weight="650" text-anchor="middle" textLength="32.848" transform="matrix(0.866 0.5 -0.866 0.5 231.229 162)" x="0" y="-2">lower</text>
+<text fill="#1f1101" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="54.781" transform="matrix(0.866 0.5 -0.866 0.5 231.229 162)" x="0" y="11">AST → model</text>
+</g>
+<g data-svugy-edge="(import.lex -&gt; import.parse)[0]">
+<title>(import.lex -&gt; import.parse)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(import.lex -&gt; import.parse)[0]","from":"import.lex","to":"import.parse"}</desc>
+<path d="M33.775,48 Q59.581,-0.67 85.387,76.942" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-5)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#f0a020" r="3">
+<animateMotion dur="2.4s" path="M33.775,48 Q59.756,-1 85.737,78" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(import.parse -&gt; import.lower)[0]">
+<title>(import.parse -&gt; import.lower)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(import.parse -&gt; import.lower)[0]","from":"import.parse","to":"import.lower"}</desc>
+<path d="M168.425,125.74 Q184.104,80.65 199.782,142.921" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-5)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#f0a020" r="3">
+<animateMotion dur="2.4s" path="M168.425,125.74 Q184.239,80.263 200.052,144" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="62.455" transform="matrix(0.866 0.5 0 1 -53.694 298.5)" x="9" y="21.5">svugy-import</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="48.207" transform="matrix(0.866 0.5 0 1 -53.694 298.5)" x="9" y="34.5">d2 → model</text>
+</g>
+<g data-svugy-element="pipeline">
+<title>svugy</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline","label":"svugy","caption":"the pipeline"}</desc>
+<path d="M57.158,745 L944.47,1257.29 L944.47,1246.79 L57.158,734.5 Z" fill="#131a28" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M1354.966,1020.29 L944.47,1257.29 L944.47,1246.79 L1354.966,1009.79 Z" fill="#0d131f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M467.654,497.5 L1354.966,1009.79 L944.47,1246.79 L57.158,734.5 Z" fill="#1b2436" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="pipeline" data-svugy-view="126.688 494.5 1038.591 740.29" transform="matrix(1 0 0 1 467.654 497.5)">
+<g data-svugy-element="pipeline.inter">
+<title>Inter</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.inter","label":"Inter"}</desc>
+<path d="M589.039,423.881 L589.039,449.381 C589.039,462.816 607.974,474.656 631.333,475.826 C654.691,476.997 673.626,467.054 673.626,453.619 L673.626,428.119 C673.626,441.554 654.691,451.497 631.333,450.326 C607.974,449.156 589.039,437.316 589.039,423.881 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M673.626,428.119 C673.626,441.554 654.691,451.497 631.333,450.326 C607.974,449.156 589.039,437.316 589.039,423.881 C589.039,410.446 607.974,400.503 631.333,401.674 C654.691,402.844 673.626,414.684 673.626,428.119 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="27.27" transform="matrix(1 0 0 1 631.333 426)" x="0" y="4">Inter</text>
+</g>
+<g data-svugy-element="pipeline.layout">
+<title>layout</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.layout","label":"layout","caption":"plan space"}</desc>
+<path d="M-88.335,87 L234.228,273.231 L234.228,262.731 L-88.335,76.5 Z" fill="#16274f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M322.562,222.231 L234.228,273.231 L234.228,262.731 L322.562,211.731 Z" fill="#101e3f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,25.5 L322.562,211.731 L234.228,262.731 L-88.335,76.5 Z" fill="#1f3566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="pipeline.layout" data-svugy-view="386.496 494.5 396.543 271.731" transform="matrix(1 0 0 1 0 25.5)">
+<g data-svugy-element="pipeline.layout.place">
+<title>place</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.layout.place","label":"place","caption":"dagre · taffy · pins"}</desc>
+<path d="M-57.158,51 L17.315,93.997 L17.315,71.497 L-57.158,28.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M74.472,60.997 L17.315,93.997 L17.315,71.497 L74.472,38.497 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,-4.5 L74.472,38.497 L17.315,71.497 L-57.158,28.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="31.992" transform="matrix(0.866 0.5 -0.866 0.5 8.657 33.498)" x="0" y="-2">place</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="73.993" transform="matrix(0.866 0.5 -0.866 0.5 8.657 33.498)" x="0" y="11">dagre · taffy · pins</text>
+</g>
+<g data-svugy-element="pipeline.layout.route">
+<title>route</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.layout.route","label":"route","caption":"ports"}</desc>
+<path d="M57.158,117 L119.512,153 L119.512,130.5 L57.158,94.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M176.669,120 L119.512,153 L119.512,130.5 L176.669,97.5 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M114.315,61.5 L176.669,97.5 L119.512,130.5 L57.158,94.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="31.26" transform="matrix(0.866 0.5 -0.866 0.5 116.913 96)" x="0" y="-2">route</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="21.146" transform="matrix(0.866 0.5 -0.866 0.5 116.913 96)" x="0" y="11">ports</text>
+</g>
+<g data-svugy-element="pipeline.layout.stub">
+<title>stub</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.layout.stub","label":"stub","caption":"boundary slots"}</desc>
+<path d="M171.473,183 L234.228,219.231 L234.228,196.731 L171.473,160.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M291.385,186.231 L234.228,219.231 L234.228,196.731 L291.385,163.731 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M228.631,127.5 L291.385,163.731 L234.228,196.731 L171.473,160.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="26.15" transform="matrix(0.866 0.5 -0.866 0.5 231.429 162.116)" x="0" y="-2">stub</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="60.463" transform="matrix(0.866 0.5 -0.866 0.5 231.429 162.116)" x="0" y="11">boundary slots</text>
+</g>
+<g data-svugy-edge="(pipeline.layout.place -&gt; pipeline.layout.route)[0]">
+<title>(pipeline.layout.place -&gt; pipeline.layout.route)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout.place -&gt; pipeline.layout.route)[0]","from":"pipeline.layout.place","to":"pipeline.layout.route"}</desc>
+<path d="M45.893,54.997 Q65.661,8.457 85.43,76.93" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#3478f6" r="3">
+<animateMotion dur="2.4s" path="M45.893,54.997 Q65.815,8.096 85.737,78" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(pipeline.layout.route -&gt; pipeline.layout.stub)[0]">
+<title>(pipeline.layout.route -&gt; pipeline.layout.stub)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout.route -&gt; pipeline.layout.stub)[0]","from":"pipeline.layout.route","to":"pipeline.layout.stub"}</desc>
+<path d="M148.09,114 Q173.896,65.33 199.702,142.942" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#3478f6" r="3">
+<animateMotion dur="2.4s" path="M148.09,114 Q174.071,65 200.052,144" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+<text fill="#ffffff" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="28.487" transform="matrix(0.866 0.5 0 1 -88.335 76.5)" x="9" y="21.5">layout</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="44.16" transform="matrix(0.866 0.5 0 1 -88.335 76.5)" x="9" y="34.5">plan space</text>
+</g>
+<g data-svugy-element="pipeline.geometry">
+<title>geometry</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.geometry","label":"geometry","caption":"screen space"}</desc>
+<path d="M-316.965,219 L5.196,405 L5.196,394.5 L-316.965,208.5 Z" fill="#16274f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M93.531,354 L5.196,405 L5.196,394.5 L93.531,343.5 Z" fill="#101e3f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-228.631,157.5 L93.531,343.5 L5.196,394.5 L-316.965,208.5 Z" fill="#1f3566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="pipeline.geometry" data-svugy-view="157.865 626.5 396.142 271.5" transform="matrix(1 0 0 1 -228.631 157.5)">
+<g data-svugy-element="pipeline.geometry.projection">
+<title>projection</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.geometry.projection","label":"projection","caption":"exact constants"}</desc>
+<path d="M-57.158,51 L9.227,89.327 L9.227,66.827 L-57.158,28.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M66.385,56.327 L9.227,89.327 L9.227,66.827 L66.385,33.827 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,-4.5 L66.385,33.827 L9.227,66.827 L-57.158,28.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="59.748" transform="matrix(0.866 0.5 -0.866 0.5 4.614 31.164)" x="0" y="-2">projection</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="64.655" transform="matrix(0.866 0.5 -0.866 0.5 4.614 31.164)" x="0" y="11">exact constants</text>
+</g>
+<g data-svugy-element="pipeline.geometry.primitive">
+<title>primitive</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.geometry.primitive","label":"primitive","caption":"4 primitives"}</desc>
+<path d="M57.158,117 L119.512,153 L119.512,130.5 L57.158,94.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M176.669,120 L119.512,153 L119.512,130.5 L176.669,97.5 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M114.315,61.5 L176.669,97.5 L119.512,130.5 L57.158,94.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="51.896" transform="matrix(0.866 0.5 -0.866 0.5 116.913 96)" x="0" y="-2">primitive</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="47.709" transform="matrix(0.866 0.5 -0.866 0.5 116.913 96)" x="0" y="11">4 primitives</text>
+</g>
+<g data-svugy-element="pipeline.geometry.depth">
+<title>depth</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.geometry.depth","label":"depth","caption":"painter's order"}</desc>
+<path d="M171.473,183 L233.827,219 L233.827,196.5 L171.473,160.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M290.985,186 L233.827,219 L233.827,196.5 L290.985,163.5 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M228.631,127.5 L290.985,163.5 L233.827,196.5 L171.473,160.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="34.143" transform="matrix(0.866 0.5 -0.866 0.5 231.229 162)" x="0" y="-2">depth</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="59.969" transform="matrix(0.866 0.5 -0.866 0.5 231.229 162)" x="0" y="11">painter's order</text>
+</g>
+<g data-svugy-edge="(pipeline.geometry.primitive -&gt; pipeline.geometry.depth)[0]">
+<title>(pipeline.geometry.primitive -&gt; pipeline.geometry.depth)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry.primitive -&gt; pipeline.geometry.depth)[0]","from":"pipeline.geometry.primitive","to":"pipeline.geometry.depth"}</desc>
+<path d="M148.09,114 Q173.896,65.33 199.702,142.942" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#3478f6" r="3">
+<animateMotion dur="2.4s" path="M148.09,114 Q174.071,65 200.052,144" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(pipeline.geometry.projection -&gt; pipeline.geometry.primitive)[0]">
+<title>(pipeline.geometry.projection -&gt; pipeline.geometry.primitive)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry.projection -&gt; pipeline.geometry.primitive)[0]","from":"pipeline.geometry.projection","to":"pipeline.geometry.primitive"}</desc>
+<path d="M37.806,50.327 Q61.603,2.365 85.4,76.938" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#3478f6" r="3">
+<animateMotion dur="2.4s" path="M37.806,50.327 Q61.771,2.026 85.737,78" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+<text fill="#ffffff" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="44.002" transform="matrix(0.866 0.5 0 1 -316.965 208.5)" x="9" y="21.5">geometry</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="54.694" transform="matrix(0.866 0.5 0 1 -316.965 208.5)" x="9" y="34.5">screen space</text>
+</g>
+<g data-svugy-element="pipeline.metrics">
+<title>metrics</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.metrics","label":"metrics","caption":"measures labels"}</desc>
+<path d="M431.281,351 L498.934,390.06 L498.934,367.56 L431.281,328.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M556.092,357.06 L498.934,390.06 L498.934,367.56 L556.092,334.56 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M488.438,295.5 L556.092,334.56 L498.934,367.56 L431.281,328.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="44.414" transform="matrix(0.866 0.5 -0.866 0.5 493.686 331.53)" x="0" y="-2">metrics</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="66.12" transform="matrix(0.866 0.5 -0.866 0.5 493.686 331.53)" x="0" y="11">measures labels</text>
+<g data-svugy-edge="(pipeline.metrics -&gt; pipeline.inter)[0]">
+<title>measures</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.metrics -&gt; pipeline.inter)[0]","from":"pipeline.metrics","to":"pipeline.inter","label":"measures"}</desc>
+<path d="M527.732,327.95 L527.732,333.738 C527.732,336.788 532.03,339.475 537.332,339.741 C542.634,340.007 546.932,337.75 546.932,334.701 L546.932,328.912 C546.932,331.962 542.634,334.219 537.332,333.953 C532.03,333.687 527.732,331 527.732,327.95 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M546.932,328.912 C546.932,331.962 542.634,334.219 537.332,333.953 C532.03,333.687 527.732,331 527.732,327.95 C527.732,324.901 532.03,322.644 537.332,322.91 C542.634,323.175 546.932,325.863 546.932,328.912 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+</g>
+</g>
+<g data-svugy-element="pipeline.render">
+<title>render</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.render","label":"render","caption":"markup"}</desc>
+<path d="M105.655,499 L476.816,713.29 L476.816,702.79 L105.655,488.5 Z" fill="#16274f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M596.328,644.29 L476.816,713.29 L476.816,702.79 L596.328,633.79 Z" fill="#101e3f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M225.167,419.5 L596.328,633.79 L476.816,702.79 L105.655,488.5 Z" fill="#1f3566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="pipeline.render" data-svugy-view="611.663 906.5 413.965 299.105" transform="matrix(1 0 0 1 225.167 419.5)">
+<g data-svugy-element="pipeline.render.theme">
+<title>theme</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.render.theme","label":"theme","caption":"tokens · Oklab"}</desc>
+<path d="M-57.158,69 L5.196,105 L5.196,82.5 L-57.158,46.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,72 L5.196,105 L5.196,82.5 L62.354,49.5 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,13.5 L62.354,49.5 L5.196,82.5 L-57.158,46.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="37.113" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="-2">theme</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="58.064" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="11">tokens · Oklab</text>
+</g>
+<g data-svugy-element="pipeline.render.profile">
+<title>profile</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.render.profile","label":"profile","caption":"static · interactive"}</desc>
+<path d="M57.158,135 L130.268,177.21 L130.268,154.71 L57.158,112.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M187.425,144.21 L130.268,177.21 L130.268,154.71 L187.425,121.71 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M114.315,79.5 L187.425,121.71 L130.268,154.71 L57.158,112.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="38.238" transform="matrix(0.866 0.5 -0.866 0.5 122.292 117.105)" x="0" y="-2">profile</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="72.42" transform="matrix(0.866 0.5 -0.866 0.5 122.292 117.105)" x="0" y="11">static · interactive</text>
+<g data-svugy-edge="(pipeline.render.profile -&gt; pipeline.inter)[0]">
+<title>outlines</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.profile -&gt; pipeline.inter)[0]","from":"pipeline.render.profile","to":"pipeline.inter","label":"outlines"}</desc>
+<path d="M159.066,115.1 L159.066,120.889 C159.066,123.938 163.364,126.626 168.666,126.891 C173.968,127.157 178.266,124.9 178.266,121.851 L178.266,116.063 C178.266,119.112 173.968,121.369 168.666,121.103 C163.364,120.837 159.066,118.15 159.066,115.1 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M178.266,116.063 C178.266,119.112 173.968,121.369 168.666,121.103 C163.364,120.837 159.066,118.15 159.066,115.1 C159.066,112.051 163.364,109.794 168.666,110.06 C173.968,110.326 178.266,113.013 178.266,116.063 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+</g>
+</g>
+<g data-svugy-element="pipeline.render.writer">
+<title>writer</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.render.writer","label":"writer","caption":"escaping · decimals"}</desc>
+<path d="M171.473,201 L251.65,247.29 L251.65,224.79 L171.473,178.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M308.807,214.29 L251.65,247.29 L251.65,224.79 L308.807,191.79 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M228.631,145.5 L308.807,191.79 L251.65,224.79 L171.473,178.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="34.77" transform="matrix(0.866 0.5 -0.866 0.5 240.14 185.145)" x="0" y="-2">writer</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="80.58" transform="matrix(0.866 0.5 -0.866 0.5 240.14 185.145)" x="0" y="11">escaping · decimals</text>
+</g>
+<g data-svugy-edge="(pipeline.render.profile -&gt; pipeline.render.writer)[0]">
+<title>(pipeline.render.profile -&gt; pipeline.render.writer)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.profile -&gt; pipeline.render.writer)[0]","from":"pipeline.render.profile","to":"pipeline.render.writer"}</desc>
+<path d="M158.847,138.21 Q179.293,91.431 199.739,160.931" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#3478f6" r="3">
+<animateMotion dur="2.4s" path="M158.847,138.21 Q179.449,91.073 200.052,162" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(pipeline.render.theme -&gt; pipeline.render.profile)[0]">
+<title>(pipeline.render.theme -&gt; pipeline.render.profile)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.theme -&gt; pipeline.render.profile)[0]","from":"pipeline.render.theme","to":"pipeline.render.profile"}</desc>
+<path d="M33.775,66 Q59.581,17.33 85.387,94.942" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#3478f6" r="3">
+<animateMotion dur="2.4s" path="M33.775,66 Q59.756,17 85.737,96" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="" data-svugy-stub="contract">
+<title>to runtime contract</title>
+<desc data-svugy-details="">{"kind":"stub","target":"contract","edges":[{"kind":"edge","edge":"(pipeline.render.writer -&gt; contract)[0]","from":"pipeline.render.writer","to":"contract","label":"emits"}]}</desc>
+<rect fill="#1f3566" height="15.705" rx="7.852" stroke="#ffffff" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 184.017 234.89)" width="103.154" x="-51.577" y="-7.852"/>
+<text fill="#ffffff" font-size="10.5" font-weight="500" text-anchor="middle" textLength="83.154" transform="matrix(0.866 0.5 -0.866 0.5 184.017 234.89)" x="0" y="3.82">runtime contract</text>
+</g>
+<g data-svugy-goto="pipeline" data-svugy-stub="pipeline.inter">
+<title>to Inter</title>
+<desc data-svugy-details="">{"kind":"stub","target":"pipeline.inter","edges":[{"kind":"edge","edge":"(pipeline.render.profile -&gt; pipeline.inter)[0]","from":"pipeline.render.profile","to":"pipeline.inter","label":"outlines"}]}</desc>
+<rect fill="#1f3566" height="15.705" rx="7.852" stroke="#ffffff" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 95.316 64.383)" width="42.979" x="-21.49" y="-7.852"/>
+<text fill="#ffffff" font-size="10.5" font-weight="500" text-anchor="middle" textLength="22.979" transform="matrix(0.866 0.5 -0.866 0.5 95.316 64.383)" x="0" y="3.82">Inter</text>
+</g>
+</g>
+</g>
+<text fill="#ffffff" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="30.412" transform="matrix(0.866 0.5 0 1 105.655 488.5)" x="9" y="21.5">render</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="30.783" transform="matrix(0.866 0.5 0 1 105.655 488.5)" x="9" y="34.5">markup</text>
+</g>
+<g data-svugy-edge="(pipeline.geometry -&gt; pipeline.render)[0]">
+<title>(pipeline.geometry -&gt; pipeline.render)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry -&gt; pipeline.render)[0]","from":"pipeline.geometry","to":"pipeline.render"}</desc>
+<path d="M49.363,369 Q107.178,310.487 164.992,452.964" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="var(--svugy-text-muted)" r="3">
+<animateMotion dur="2.4s" path="M49.363,369 Q107.387,310.275 165.411,454" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(pipeline.layout -&gt; pipeline.geometry)[0]">
+<title>③</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout -&gt; pipeline.geometry)[0]","from":"pipeline.layout","to":"pipeline.geometry","label":"③"}</desc>
+<path d="M72.947,169.616 Q2.942,105.481 -67.062,249.494" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="var(--svugy-text-muted)" r="3">
+<animateMotion dur="2.4s" path="M72.947,169.616 Q2.698,105.258 -67.55,250.5" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(pipeline.metrics -&gt; pipeline.layout)[0]">
+<title>(pipeline.metrics -&gt; pipeline.layout)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.metrics -&gt; pipeline.layout)[0]","from":"pipeline.metrics","to":"pipeline.layout"}</desc>
+<path d="M459.859,312 Q369.521,146.386 279.183,236.441" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#3478f6" r="3">
+<animateMotion dur="2.4s" path="M459.859,312 Q369.127,145.663 278.395,237.231" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(pipeline.layout -&gt; pipeline.geometry)[0]">
+<title>③</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout -&gt; pipeline.geometry)[0]","from":"pipeline.layout","to":"pipeline.geometry","label":"③"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="34.591" x="-14.597" y="149.806"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" x="2.698" y="161.477">③</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="" data-svugy-stub="contract">
+<title>to runtime contract</title>
+<desc data-svugy-details="">{"kind":"stub","target":"contract","edges":[{"kind":"edge","edge":"(pipeline.render.writer -&gt; contract)[0]","from":"pipeline.render.writer","to":"contract","label":"emits"}]}</desc>
+<rect fill="#1b2436" height="15.705" rx="7.852" stroke="#ffffff" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 373.541 680.312)" width="103.154" x="-51.577" y="-7.852"/>
+<text fill="#ffffff" font-size="10.5" font-weight="500" text-anchor="middle" textLength="83.154" transform="matrix(0.866 0.5 -0.866 0.5 373.541 680.312)" x="0" y="3.82">runtime contract</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="27.862" transform="matrix(0.866 0.5 0 1 57.158 734.5)" x="9" y="21.5">svugy</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="47.298" transform="matrix(0.866 0.5 0 1 57.158 734.5)" x="9" y="34.5">the pipeline</text>
+</g>
+<g data-svugy-element="contract">
+<title>runtime contract</title>
+<desc data-svugy-details="">{"kind":"element","path":"contract","label":"runtime contract","caption":"data-svugy-*"}</desc>
+<path d="M445.137,1321 L540.408,1376.005 L540.408,1365.505 L445.137,1310.5 Z" fill="#26344f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M597.566,1343.005 L540.408,1376.005 L540.408,1365.505 L597.566,1332.505 Z" fill="#1d293f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M502.295,1277.5 L597.566,1332.505 L540.408,1365.505 L445.137,1310.5 Z" fill="#334566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="98.01" transform="matrix(0.866 0.5 -0.866 0.5 521.352 1321.502)" x="0" y="-2">runtime contract</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="54.818" transform="matrix(0.866 0.5 -0.866 0.5 521.352 1321.502)" x="0" y="11">data-svugy-*</text>
+</g>
+<g data-svugy-element="runtime">
+<title>runtime</title>
+<desc data-svugy-details="">{"kind":"element","path":"runtime","label":"runtime","caption":"svugy.js · svugy.css"}</desc>
+<path d="M860.829,1421 L942.677,1468.255 L942.677,1445.755 L860.829,1398.5 Z" fill="#2b2f39" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M999.835,1435.255 L942.677,1468.255 L942.677,1445.755 L999.835,1412.755 Z" fill="#22252d" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M917.987,1365.5 L999.835,1412.755 L942.677,1445.755 L860.829,1398.5 Z" fill="#3a3f4b" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="45.574" transform="matrix(0.866 0.5 -0.866 0.5 930.332 1405.627)" x="0" y="-2">runtime</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="82.51" transform="matrix(0.866 0.5 -0.866 0.5 930.332 1405.627)" x="0" y="11">svugy.js · svugy.css</text>
+</g>
+<g data-svugy-element="svg">
+<title>one .svg file</title>
+<desc data-svugy-details="">{"kind":"element","path":"svg","label":"one .svg file"}</desc>
+<path d="M1130.634,1263.72 L1130.634,1274.22 C1130.634,1288.525 1151.282,1302.887 1176.753,1306.3 C1202.225,1309.712 1222.873,1300.882 1222.873,1286.577 L1222.873,1276.077 C1222.873,1290.382 1202.225,1299.212 1176.753,1295.8 C1151.282,1292.387 1130.634,1278.025 1130.634,1263.72 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M1222.873,1276.077 C1222.873,1290.382 1202.225,1299.212 1176.753,1295.8 C1151.282,1292.387 1130.634,1278.025 1130.634,1263.72 C1130.634,1249.416 1151.282,1240.586 1176.753,1243.998 C1202.225,1247.411 1222.873,1261.773 1222.873,1276.077 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="71.596" transform="matrix(0.866 0.5 -0.866 0.5 1176.753 1269.899)" x="0" y="-2">one .svg file</text>
+</g>
+<g data-svugy-element="text">
+<title>your text</title>
+<desc data-svugy-details="">{"kind":"element","path":"text","label":"your text","caption":"d2 · JSON · Rust builder"}</desc>
+<path d="M-282.324,181 L-188.292,235.29 L-188.292,212.79 L-282.324,158.5 Z" fill="#2b2f39" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-131.134,202.29 L-188.292,235.29 L-188.292,212.79 L-131.134,179.79 Z" fill="#22252d" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-225.167,125.5 L-131.134,179.79 L-188.292,212.79 L-282.324,158.5 Z" fill="#3a3f4b" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="52.682" transform="matrix(0.866 0.5 -0.866 0.5 -206.729 169.145)" x="0" y="-2">your text</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="96.58" transform="matrix(0.866 0.5 -0.866 0.5 -206.729 169.145)" x="0" y="11">d2 · JSON · Rust builder</text>
+</g>
+<g data-svugy-element="model">
+<title>svugy-model</title>
+<desc data-svugy-details="">{"kind":"element","path":"model","label":"svugy-model","caption":"the hub"}</desc>
+<path d="M-479.778,555 L-262.89,680.22 L-262.89,669.72 L-479.778,544.5 Z" fill="#101c16" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-34.26,548.22 L-262.89,680.22 L-262.89,669.72 L-34.26,537.72 Z" fill="#0b1510" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-251.147,412.5 L-34.26,537.72 L-262.89,669.72 L-479.778,544.5 Z" fill="#17271f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="model" data-svugy-view="-472.601 384 430.306 291.72" transform="matrix(1 0 0 1 -251.147 412.5)">
+<g data-svugy-element="model.path">
+<title>path</title>
+<desc data-svugy-details="">{"kind":"element","path":"model.path","label":"path","caption":"ids"}</desc>
+<path d="M-57.158,51 L5.196,87 L5.196,64.5 L-57.158,28.5 Z" fill="#0dbe74" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,54 L5.196,87 L5.196,64.5 L62.354,31.5 Z" fill="#099b5e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,-4.5 L62.354,31.5 L5.196,64.5 L-57.158,28.5 Z" fill="#14f195" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#001f0f" font-size="12" font-weight="650" text-anchor="middle" textLength="26.396" transform="matrix(0.866 0.5 -0.866 0.5 2.598 30)" x="0" y="-2">path</text>
+<text fill="#001f0f" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="11.974" transform="matrix(0.866 0.5 -0.866 0.5 2.598 30)" x="0" y="11">ids</text>
+</g>
+<g data-svugy-element="model.graph">
+<title>model</title>
+<desc data-svugy-details="">{"kind":"element","path":"model.graph","label":"model","caption":"elements · edges"}</desc>
+<path d="M57.158,117 L127.694,157.724 L127.694,135.224 L57.158,94.5 Z" fill="#0dbe74" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M184.852,124.724 L127.694,157.724 L127.694,135.224 L184.852,102.224 Z" fill="#099b5e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M114.315,61.5 L184.852,102.224 L127.694,135.224 L57.158,94.5 Z" fill="#14f195" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#001f0f" font-size="12" font-weight="650" text-anchor="middle" textLength="36.275" transform="matrix(0.866 0.5 -0.866 0.5 121.005 98.362)" x="0" y="-2">model</text>
+<text fill="#001f0f" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="69.448" transform="matrix(0.866 0.5 -0.866 0.5 121.005 98.362)" x="0" y="11">elements · edges</text>
+</g>
+<g data-svugy-element="model.validate">
+<title>validate</title>
+<desc data-svugy-details="">{"kind":"element","path":"model.validate","label":"validate","caption":"problems · bounds"}</desc>
+<path d="M-197.454,132 L-121.461,175.874 L-121.461,153.374 L-197.454,109.5 Z" fill="#0dbe74" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-64.303,142.874 L-121.461,175.874 L-121.461,153.374 L-64.303,120.374 Z" fill="#099b5e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-140.296,76.5 L-64.303,120.374 L-121.461,153.374 L-197.454,109.5 Z" fill="#14f195" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#001f0f" font-size="12" font-weight="650" text-anchor="middle" textLength="46.74" transform="matrix(0.866 0.5 -0.866 0.5 -130.879 114.937)" x="0" y="-2">validate</text>
+<text fill="#001f0f" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="75.749" transform="matrix(0.866 0.5 -0.866 0.5 -130.879 114.937)" x="0" y="11">problems · bounds</text>
+</g>
+<g data-svugy-element="model.json">
+<title>json</title>
+<desc data-svugy-details="">{"kind":"element","path":"model.json","label":"json","caption":"id-keyed schema"}</desc>
+<path d="M-83.138,198 L-11.743,239.22 L-11.743,216.72 L-83.138,175.5 Z" fill="#0dbe74" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M45.415,206.22 L-11.743,239.22 L-11.743,216.72 L45.415,183.72 Z" fill="#099b5e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-25.981,142.5 L45.415,183.72 L-11.743,216.72 L-83.138,175.5 Z" fill="#14f195" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#001f0f" font-size="12" font-weight="650" text-anchor="middle" textLength="24.803" transform="matrix(0.866 0.5 -0.866 0.5 -18.862 179.61)" x="0" y="-2">json</text>
+<text fill="#001f0f" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="70.44" transform="matrix(0.866 0.5 -0.866 0.5 -18.862 179.61)" x="0" y="11">id-keyed schema</text>
+</g>
+<g data-svugy-edge="(model.graph -&gt; model.json)[0]">
+<title>(model.graph -&gt; model.json)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model.graph -&gt; model.json)[0]","from":"model.graph","to":"model.json"}</desc>
+<path d="M104.182,121.649 Q57.19,63.92 10.197,162.102" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#14f195" r="3">
+<animateMotion dur="2.4s" path="M104.182,121.649 Q56.949,63.625 9.717,163.11" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(model.graph -&gt; model.validate)[0]">
+<title>(model.graph -&gt; model.validate)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model.graph -&gt; model.validate)[0]","from":"model.graph","to":"model.validate"}</desc>
+<path d="M80.67,108.075 Q-10.427,3.695 -101.524,97.633" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#14f195" r="3">
+<animateMotion dur="2.4s" path="M80.67,108.075 Q-10.815,3.25 -102.3,98.437" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(model.path -&gt; model.graph)[0]">
+<title>(model.path -&gt; model.graph)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model.path -&gt; model.graph)[0]","from":"model.path","to":"model.graph"}</desc>
+<path d="M33.775,48 Q59.581,-0.67 85.387,76.942" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#14f195" r="3">
+<animateMotion dur="2.4s" path="M33.775,48 Q59.756,-1 85.737,78" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="60.727" transform="matrix(0.866 0.5 0 1 -479.778 544.5)" x="9" y="21.5">svugy-model</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="30.746" transform="matrix(0.866 0.5 0 1 -479.778 544.5)" x="9" y="34.5">the hub</text>
+</g>
+<g data-svugy-edge="(cli -&gt; import)[0]">
+<title>(cli -&gt; import)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cli -&gt; import)[0]","from":"cli","to":"import"}</desc>
+<path d="M-398.918,289.684 Q-204.588,48.019 -10.258,272.154" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-4)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#9945ff" r="3">
+<animateMotion dur="2.4s" path="M-398.918,289.684 Q-204.222,47.563 -9.526,273" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(cli -&gt; pipeline)[0]">
+<title>(cli -&gt; pipeline)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cli -&gt; pipeline)[0]","from":"cli","to":"pipeline"}</desc>
+<path d="M-417.971,300.684 Q-43.906,65.84 330.16,575.597" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-4)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#9945ff" r="3">
+<animateMotion dur="2.4s" path="M-417.971,300.684 Q-43.575,65.632 330.822,576.5" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(d2 -&gt; import)[0]">
+<title>grammar</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(d2 -&gt; import)[0]","from":"d2","to":"import","label":"grammar"}</desc>
+<path d="M207.261,181.162 Q201.507,125.545 195.752,339.382" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-3)" opacity="0.9" stroke="#5b6170" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#5b6170" r="3">
+<animateMotion dur="2.4s" path="M207.261,181.162 Q201.492,125.399 195.722,340.5" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(import -&gt; model)[0]">
+<title>①</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(import -&gt; model)[0]","from":"import","to":"model","label":"①"}</desc>
+<path d="M107.387,391.5 Q-17.334,299.16 -142.055,474.199" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="var(--svugy-text-muted)" r="3">
+<animateMotion dur="2.4s" path="M107.387,391.5 Q-17.658,298.92 -142.703,475.11" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(model -&gt; pipeline)[0]">
+<title>②</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model -&gt; pipeline)[0]","from":"model","to":"pipeline","label":"②"}</desc>
+<path d="M-148.575,603.72 Q22.323,474.249 193.221,654.687" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="var(--svugy-text-muted)" r="3">
+<animateMotion dur="2.4s" path="M-148.575,603.72 Q22.707,473.958 193.99,655.5" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(pipeline -&gt; svg)[0]">
+<title>④</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline -&gt; svg)[0]","from":"pipeline","to":"svg","label":"④"}</desc>
+<path d="M1149.718,1128.29 Q1145.152,1080.455 1140.586,1247.883" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="var(--svugy-text-muted)" r="3">
+<animateMotion dur="2.4s" path="M1149.718,1128.29 Q1145.137,1080.295 1140.555,1249" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(pipeline.render.writer -&gt; contract)[0]">
+<title>emits</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.writer -&gt; contract)[0]","from":"pipeline.render.writer","to":"contract","label":"emits"}</desc>
+<path d="M904.382,1118.645 Q727.433,994.357 550.485,1304.031" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="2 4" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="#3478f6" r="3">
+<animateMotion dur="2.4s" path="M904.382,1118.645 Q727.156,994.162 549.93,1305.002" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(runtime -&gt; contract)[0]">
+<title>reads</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(runtime -&gt; contract)[0]","from":"runtime","to":"contract","label":"reads"}</desc>
+<path d="M889.408,1382 Q729.615,1206.262 569.822,1348.261" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="var(--svugy-text-muted)" r="3">
+<animateMotion dur="2.4s" path="M889.408,1382 Q729.198,1205.802 568.987,1349.005" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(runtime -&gt; svg)[0]">
+<title>(runtime -&gt; svg)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(runtime -&gt; svg)[0]","from":"runtime","to":"svg"}</desc>
+<path d="M958.911,1389.127 Q1053.138,1196.963 1147.364,1285.631" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="var(--svugy-text-muted)" r="3">
+<animateMotion dur="2.4s" path="M958.911,1389.127 Q1053.543,1196.137 1148.175,1286.399" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(text -&gt; cli)[0]">
+<title>(text -&gt; cli)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(text -&gt; cli)[0]","from":"text","to":"cli"}</desc>
+<path d="M-235.308,185.645 Q-331.465,41.492 -427.622,249.827" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<circle data-svugy-dot="" fill="var(--svugy-text-muted)" r="3">
+<animateMotion dur="2.4s" path="M-235.308,185.645 Q-331.699,41.142 -428.09,250.842" repeatCount="indefinite"/>
+</circle>
+</g>
+<g data-svugy-edge="(d2 -&gt; import)[0]">
+<title>grammar</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(d2 -&gt; import)[0]","from":"d2","to":"import","label":"grammar"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#5b6170" stroke-opacity="0.55" width="65.204" x="168.889" y="185.263"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="45.204" x="201.492" y="196.935">grammar</text>
+</g>
+<g data-svugy-edge="(import -&gt; model)[0]">
+<title>①</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(import -&gt; model)[0]","from":"import","to":"model","label":"①"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="34.591" x="-46.247" y="362.584"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" x="-28.951" y="374.256">①</text>
+</g>
+<g data-svugy-edge="(model -&gt; pipeline)[0]">
+<title>②</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model -&gt; pipeline)[0]","from":"model","to":"pipeline","label":"②"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="34.591" x="5.412" y="543.932"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" x="22.707" y="555.604">②</text>
+</g>
+<g data-svugy-edge="(pipeline -&gt; svg)[0]">
+<title>④</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline -&gt; svg)[0]","from":"pipeline","to":"svg","label":"④"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="34.591" x="1127.841" y="1126.618"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" x="1145.137" y="1138.29">④</text>
+</g>
+<g data-svugy-edge="(pipeline.render.writer -&gt; contract)[0]">
+<title>emits</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.writer -&gt; contract)[0]","from":"pipeline.render.writer","to":"contract","label":"emits"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="47.368" x="703.472" y="1095.14"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="27.368" x="727.156" y="1106.812">emits</text>
+</g>
+<g data-svugy-edge="(runtime -&gt; contract)[0]">
+<title>reads</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(runtime -&gt; contract)[0]","from":"runtime","to":"contract","label":"reads"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="48.337" x="705.029" y="1277.8"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="28.337" x="729.198" y="1289.472">reads</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+<script>//<![CDATA[
+(() => {
+  'use strict';
+
+  const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
+  const CONTRACT = 'data-svugy-contract';
+  const LEVEL = 'data-svugy-level';
+  const VIEW = 'data-svugy-view';
+  const ELEMENT = 'data-svugy-element';
+  const EDGE = 'data-svugy-edge';
+  const STUB = 'data-svugy-stub';
+  const GOTO = 'data-svugy-goto';
+  const DETAILS = 'data-svugy-details';
+  const ENTERED = 'data-svugy-entered';
+
+  const LEVEL_SELECTOR = `[${LEVEL}]`;
+  const ELEMENT_SELECTOR = `[${ELEMENT}]`;
+  const ENTERED_SELECTOR = `[${ENTERED}]`;
+  const INTERACTIVE_SELECTOR = `[${ELEMENT}],[${EDGE}],[${STUB}]`;
+
+  const ROOT_LEVEL_PATH = '';
+  const TWEEN_DURATION_MS = 450;
+  const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+  const PANEL_PADDING_PX = 8;
+  const PANEL_LINE_HEIGHT_PX = 16;
+  const PANEL_BASELINE_RAISE_PX = 4;
+  const PANEL_POINTER_OFFSET_PX = 14;
+  const PANEL_VIEW_MARGIN_PX = 6;
+  const PANEL_MAX_LINE_CHARACTERS = 72;
+  const ARROW = '\u2192';
+  const ELLIPSIS = '\u2026';
+
+  /** Binds the runtime to its enclosing diagram once the document is parsed. */
+  function start() {
+    const diagram = findEnclosingDiagram();
+    if (diagram === null) {
+      return;
+    }
+    const isDocumentParsing = document.readyState === 'loading';
+    if (isDocumentParsing) {
+      document.addEventListener('DOMContentLoaded', () => bindRuntime(diagram), { once: true });
+      return;
+    }
+    bindRuntime(diagram);
+  }
+
+  /** Finds the svugy root that holds this script, or the standalone document's root. */
+  function findEnclosingDiagram() {
+    const script = document.currentScript ?? null;
+    const enclosingDiagram = script === null ? null : script.closest(`[${CONTRACT}]`);
+    if (enclosingDiagram !== null) {
+      return enclosingDiagram;
+    }
+    const documentRoot = document.documentElement;
+    const isDocumentRootDiagram = documentRoot.hasAttribute(CONTRACT);
+    return isDocumentRootDiagram ? documentRoot : null;
+  }
+
+  /** Wires navigation and detail panels onto one diagram. */
+  function bindRuntime(svg) {
+    const rootLevel = Contract.levelAt(svg, ROOT_LEVEL_PATH);
+    const rootView = View.parse(svg.getAttribute('viewBox'));
+    const isDiagramMalformed = rootLevel === null || rootView === null;
+    if (isDiagramMalformed) {
+      return;
+    }
+    const animator = new ViewBoxAnimator(svg);
+    const navigator = new LevelNavigator(svg, rootLevel, rootView, animator);
+    const panel = new DetailPanel(svg);
+    Interactions.bind(svg, navigator, panel);
+  }
+
+  /** Answers questions about the rendered document by comparing attribute values, never by building selectors from paths. */
+  const Contract = {
+    levelAt(svg, path) {
+      const levels = Array.from(svg.querySelectorAll(LEVEL_SELECTOR));
+      const matchingLevel = levels.find((level) => level.getAttribute(LEVEL) === path);
+      return matchingLevel ?? null;
+    },
+
+    levelDisplaying(svg, path) {
+      const level = Contract.levelAt(svg, path);
+      if (level !== null) {
+        return level;
+      }
+      const elements = Array.from(svg.querySelectorAll(ELEMENT_SELECTOR));
+      const matchingElement = elements.find((element) => element.getAttribute(ELEMENT) === path);
+      return matchingElement === undefined ? null : Contract.enclosingLevelOf(matchingElement);
+    },
+
+    enclosingLevelOf(node) {
+      const parent = node.parentElement;
+      return parent === null ? null : parent.closest(LEVEL_SELECTOR);
+    },
+
+    interiorLevelOf(group) {
+      const path = group.getAttribute(ELEMENT);
+      if (path === null) {
+        return null;
+      }
+      const children = Array.from(group.children);
+      const interiorLevel = children.find((child) => child.getAttribute(LEVEL) === path);
+      return interiorLevel ?? null;
+    },
+
+    outermostInteriorBetween(baseLevel, group) {
+      let outermostInterior = null;
+      let element = group.closest(ELEMENT_SELECTOR);
+      while (element !== null) {
+        const isOutsideBaseLevel = !baseLevel.contains(element);
+        if (isOutsideBaseLevel) {
+          break;
+        }
+        outermostInterior = Contract.interiorLevelOf(element) ?? outermostInterior;
+        element = Contract.enclosingElementOf(element);
+      }
+      return outermostInterior;
+    },
+
+    enclosingElementOf(node) {
+      const parent = node.parentElement;
+      return parent === null ? null : parent.closest(ELEMENT_SELECTOR);
+    },
+
+    isEnterable(group) {
+      const hasGoto = group.hasAttribute(GOTO);
+      const isStub = group.hasAttribute(STUB);
+      const interiorLevel = Contract.interiorLevelOf(group);
+      return hasGoto || isStub || interiorLevel !== null;
+    },
+
+    titleOf(group) {
+      const children = Array.from(group.children);
+      const title = children.find((child) => child.localName === 'title');
+      return title === undefined ? null : title.textContent;
+    },
+
+    detailsOf(group) {
+      const children = Array.from(group.children);
+      const detailsCarrier = children.find((child) => child.hasAttribute(DETAILS));
+      if (detailsCarrier === undefined) {
+        return null;
+      }
+      try {
+        const details = JSON.parse(detailsCarrier.textContent);
+        const isObject = typeof details === 'object' && details !== null;
+        return isObject ? details : null;
+      } catch {
+        return null;
+      }
+    },
+  };
+
+  /** Parses and interpolates "min-x min-y width height" views. */
+  const View = {
+    parse(text) {
+      if (text === null) {
+        return null;
+      }
+      const numbers = text.trim().split(/[\s,]+/).map(Number);
+      const [x, y, width, height] = numbers;
+      const isWellFormed = numbers.length === 4 && numbers.every(Number.isFinite) && width > 0 && height > 0;
+      return isWellFormed ? { x, y, width, height } : null;
+    },
+
+    fromRect(rect) {
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    },
+
+    interpolate(start, target, fraction) {
+      return {
+        x: start.x + (target.x - start.x) * fraction,
+        y: start.y + (target.y - start.y) * fraction,
+        width: start.width + (target.width - start.width) * fraction,
+        height: start.height + (target.height - start.height) * fraction,
+      };
+    },
+
+    // ease(t) = 4t³ for t < ½, else 1 − (2 − 2t)³ / 2
+    easeInOutCubic(fraction) {
+      const isFirstHalf = fraction < 0.5;
+      return isFirstHalf ? 4 * fraction ** 3 : 1 - (2 - 2 * fraction) ** 3 / 2;
+    },
+  };
+
+  /** Tweens the root viewBox toward a target view, or jumps under reduced motion. */
+  class ViewBoxAnimator {
+    constructor(svg) {
+      this.svg = svg;
+      this.frameRequest = 0;
+    }
+
+    tweenTo(targetView) {
+      cancelAnimationFrame(this.frameRequest);
+      const isMotionReduced = window.matchMedia(REDUCED_MOTION_QUERY).matches;
+      if (isMotionReduced) {
+        this.show(targetView);
+        return;
+      }
+      const startView = View.fromRect(this.svg.viewBox.baseVal);
+      let startTime = null;
+      const step = (now) => {
+        startTime ??= now;
+        const elapsedFraction = Math.min(1, (now - startTime) / TWEEN_DURATION_MS);
+        const easedFraction = View.easeInOutCubic(elapsedFraction);
+        const view = View.interpolate(startView, targetView, easedFraction);
+        this.show(view);
+        const isTweenRunning = elapsedFraction < 1;
+        if (isTweenRunning) {
+          this.frameRequest = requestAnimationFrame(step);
+        }
+      };
+      this.frameRequest = requestAnimationFrame(step);
+    }
+
+    show(view) {
+      this.svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.width} ${view.height}`);
+    }
+  }
+
+  /** Keeps exactly one level entered and moves the view to it. */
+  class LevelNavigator {
+    constructor(svg, rootLevel, rootView, animator) {
+      this.svg = svg;
+      this.rootLevel = rootLevel;
+      this.rootView = rootView;
+      this.animator = animator;
+      const staleEnteredLevels = svg.querySelectorAll(ENTERED_SELECTOR);
+      staleEnteredLevels.forEach((level) => level.removeAttribute(ENTERED));
+      rootLevel.setAttribute(ENTERED, '');
+      this.enteredLevel = rootLevel;
+    }
+
+    levelReachedBy(group) {
+      const gotoPath = group.getAttribute(GOTO);
+      const hasGoto = gotoPath !== null;
+      if (hasGoto) {
+        const gotoLevel = Contract.levelDisplaying(this.svg, gotoPath);
+        return gotoLevel ?? this.enteredLevel;
+      }
+      const baseLevel = this.enteredOrEnclosingLevelContaining(group);
+      const outermostInterior = Contract.outermostInteriorBetween(baseLevel, group);
+      return outermostInterior ?? baseLevel;
+    }
+
+    enteredOrEnclosingLevelContaining(group) {
+      for (let level = this.enteredLevel; level !== null; level = Contract.enclosingLevelOf(level)) {
+        const isGroupInside = level.contains(group);
+        if (isGroupInside) {
+          return level;
+        }
+      }
+      return this.rootLevel;
+    }
+
+    exitOneLevel() {
+      const parentLevel = Contract.enclosingLevelOf(this.enteredLevel);
+      if (parentLevel === null) {
+        return;
+      }
+      this.enter(parentLevel);
+    }
+
+    enter(level) {
+      const isEnteredLevel = level === this.enteredLevel;
+      if (isEnteredLevel) {
+        return;
+      }
+      this.enteredLevel.removeAttribute(ENTERED);
+      level.setAttribute(ENTERED, '');
+      this.enteredLevel = level;
+      const targetView = this.viewOf(level);
+      if (targetView === null) {
+        return;
+      }
+      this.animator.tweenTo(targetView);
+    }
+
+    viewOf(level) {
+      const isRootLevel = level === this.rootLevel;
+      if (isRootLevel) {
+        return this.rootView;
+      }
+      return View.parse(level.getAttribute(VIEW));
+    }
+  }
+
+  /** Shows a group's details beside a client point, at a constant on-screen size inside the current view. */
+  class DetailPanel {
+    constructor(svg) {
+      this.svg = svg;
+      this.panel = createSvgElement('g', { class: 'svugy-panel', 'aria-hidden': 'true' });
+      this.shownGroup = null;
+      this.width = 0;
+      this.height = 0;
+    }
+
+    show(group, clientPoint) {
+      const isShownGroup = group === this.shownGroup;
+      if (isShownGroup) {
+        this.placeNear(clientPoint);
+        return;
+      }
+      const details = Contract.detailsOf(group);
+      const lines = DetailLines.of(details);
+      const isDetailless = lines.length === 0;
+      if (isDetailless) {
+        this.hide();
+        return;
+      }
+      this.render(lines);
+      this.shownGroup = group;
+      this.placeNear(clientPoint);
+    }
+
+    hide() {
+      this.panel.remove();
+      this.shownGroup = null;
+    }
+
+    render(lines) {
+      const plate = createSvgElement('rect', { class: 'svugy-panel-plate', rx: 6 });
+      const texts = lines.map((line, index) => {
+        const baseline = PANEL_PADDING_PX + (index + 1) * PANEL_LINE_HEIGHT_PX - PANEL_BASELINE_RAISE_PX;
+        const text = createSvgElement('text', { class: `svugy-panel-${line.role}`, x: PANEL_PADDING_PX, y: baseline });
+        text.textContent = DetailLines.truncate(line.text);
+        return text;
+      });
+      this.panel.replaceChildren(plate, ...texts);
+      this.svg.appendChild(this.panel);
+      const textWidths = texts.map((text) => text.getComputedTextLength());
+      this.width = Math.max(...textWidths) + 2 * PANEL_PADDING_PX;
+      this.height = lines.length * PANEL_LINE_HEIGHT_PX + 2 * PANEL_PADDING_PX - PANEL_BASELINE_RAISE_PX;
+      plate.setAttribute('width', String(this.width));
+      plate.setAttribute('height', String(this.height));
+    }
+
+    placeNear(clientPoint) {
+      const screenMatrix = this.svg.getScreenCTM();
+      if (screenMatrix === null) {
+        return;
+      }
+      const userToScreenMatrix = screenMatrix.inverse();
+      const clientDomPoint = new DOMPoint(clientPoint.x, clientPoint.y);
+      const pointer = clientDomPoint.matrixTransform(userToScreenMatrix);
+      const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
+      const offset = PANEL_POINTER_OFFSET_PX * userUnitsPerPixel;
+      const margin = PANEL_VIEW_MARGIN_PX * userUnitsPerPixel;
+      const view = this.svg.viewBox.baseVal;
+      const scaledWidth = this.width * userUnitsPerPixel;
+      const scaledHeight = this.height * userUnitsPerPixel;
+      const x = panelStartBesidePointer(pointer.x, offset, scaledWidth, view.x, view.width, margin);
+      const y = panelStartBesidePointer(pointer.y, offset, scaledHeight, view.y, view.height, margin);
+      this.panel.setAttribute('transform', `translate(${x} ${y}) scale(${userUnitsPerPixel})`);
+    }
+  }
+
+  // start = p + o, or p − o − e when that overflows v + w − m; then max(start, v + m)
+  function panelStartBesidePointer(pointer, offset, extent, viewStart, viewExtent, margin) {
+    const preferredStart = pointer + offset;
+    const viewEnd = viewStart + viewExtent - margin;
+    const isOverflowingView = preferredStart + extent > viewEnd;
+    const start = isOverflowingView ? pointer - offset - extent : preferredStart;
+    return Math.max(start, viewStart + margin);
+  }
+
+  /** Turns details JSON into panel lines, one builder per details kind. */
+  const DetailLines = {
+    of(details) {
+      if (details === null) {
+        return [];
+      }
+      const linesForKind = DETAIL_LINES_BY_KIND.get(details.kind);
+      if (linesForKind === undefined) {
+        return [];
+      }
+      const lines = linesForKind(details);
+      return lines.filter((line) => line !== null);
+    },
+
+    ofElement(details) {
+      const titleLine = DetailLines.line('title', details.label ?? details.path);
+      const captionLine = DetailLines.line('body', details.caption);
+      const hasLabel = details.label !== undefined;
+      const pathLine = hasLabel ? DetailLines.line('body', details.path) : null;
+      const metadata = DetailLines.isPlainObject(details.metadata) ? details.metadata : {};
+      const metadataLines = Object.entries(metadata).map(([key, value]) => {
+        const valueText = typeof value === 'string' ? value : JSON.stringify(value);
+        return DetailLines.line('body', `${key}: ${valueText}`);
+      });
+      return [titleLine, captionLine, pathLine, ...metadataLines];
+    },
+
+    ofEdge(details) {
+      const titleLine = DetailLines.line('title', details.label ?? details.edge);
+      const hasEndpoints = details.from !== undefined && details.to !== undefined;
+      const endpointsLine = hasEndpoints ? DetailLines.line('body', `${details.from} ${ARROW} ${details.to}`) : null;
+      return [titleLine, endpointsLine];
+    },
+
+    ofStub(details) {
+      const titleLine = DetailLines.line('title', `${ARROW} ${details.target}`);
+      const edges = Array.isArray(details.edges) ? details.edges : [];
+      const plainEdges = edges.filter(DetailLines.isPlainObject);
+      const edgeLines = plainEdges.flatMap(DetailLines.ofEdge);
+      return [titleLine, ...edgeLines];
+    },
+
+    line(role, value) {
+      const isAbsent = value === undefined || value === null;
+      return isAbsent ? null : { role, text: String(value) };
+    },
+
+    isPlainObject(value) {
+      return typeof value === 'object' && value !== null && !Array.isArray(value);
+    },
+
+    truncate(text) {
+      const isTooLong = text.length > PANEL_MAX_LINE_CHARACTERS;
+      return isTooLong ? `${text.slice(0, PANEL_MAX_LINE_CHARACTERS - 1)}${ELLIPSIS}` : text;
+    },
+  };
+
+  const DETAIL_LINES_BY_KIND = new Map([
+    ['element', DetailLines.ofElement],
+    ['edge', DetailLines.ofEdge],
+    ['stub', DetailLines.ofStub],
+  ]);
+
+  /** Translates pointer, focus and key events into navigation and detail panels. */
+  const Interactions = {
+    bind(svg, navigator, panel) {
+      Interactions.makeGroupsFocusable(svg);
+      svg.addEventListener('click', (event) => {
+        const group = Interactions.groupAt(event.target);
+        const clientPoint = { x: event.clientX, y: event.clientY };
+        if (group === null) {
+          Interactions.exitOneLevel(navigator, panel);
+          return;
+        }
+        Interactions.activate(group, clientPoint, navigator, panel);
+      });
+      svg.addEventListener('keydown', (event) => {
+        const isEscape = event.key === 'Escape';
+        if (isEscape) {
+          Interactions.exitOneLevel(navigator, panel);
+          return;
+        }
+        const isActivationKey = event.key === 'Enter' || event.key === ' ';
+        const isFocusedGroup = event.target instanceof Element && event.target.matches(INTERACTIVE_SELECTOR);
+        const isGroupActivated = isActivationKey && isFocusedGroup;
+        if (isGroupActivated) {
+          event.preventDefault();
+          const groupCenter = Interactions.centerOf(event.target);
+          Interactions.activate(event.target, groupCenter, navigator, panel);
+        }
+      });
+      svg.addEventListener('pointermove', (event) => {
+        const group = Interactions.groupAt(event.target);
+        if (group === null) {
+          panel.hide();
+          return;
+        }
+        const clientPoint = { x: event.clientX, y: event.clientY };
+        panel.show(group, clientPoint);
+      });
+      svg.addEventListener('pointerleave', () => panel.hide());
+      svg.addEventListener('focusin', (event) => {
+        const group = Interactions.groupAt(event.target);
+        if (group === null) {
+          return;
+        }
+        const groupCenter = Interactions.centerOf(group);
+        panel.show(group, groupCenter);
+      });
+      svg.addEventListener('focusout', () => panel.hide());
+    },
+
+    makeGroupsFocusable(svg) {
+      svg.setAttribute('tabindex', '-1');
+      const groups = svg.querySelectorAll(INTERACTIVE_SELECTOR);
+      groups.forEach((group) => {
+        group.setAttribute('tabindex', '0');
+        const title = Contract.titleOf(group);
+        if (title !== null) {
+          group.setAttribute('aria-label', title);
+        }
+        const isEnterable = Contract.isEnterable(group);
+        if (isEnterable) {
+          group.setAttribute('role', 'button');
+        }
+      });
+    },
+
+    activate(group, clientPoint, navigator, panel) {
+      const reachedLevel = navigator.levelReachedBy(group);
+      const isEnteredLevel = reachedLevel === navigator.enteredLevel;
+      if (isEnteredLevel) {
+        panel.show(group, clientPoint);
+        return;
+      }
+      panel.hide();
+      navigator.enter(reachedLevel);
+    },
+
+    exitOneLevel(navigator, panel) {
+      panel.hide();
+      navigator.exitOneLevel();
+    },
+
+    groupAt(target) {
+      const isElementTarget = target instanceof Element;
+      return isElementTarget ? target.closest(INTERACTIVE_SELECTOR) : null;
+    },
+
+    centerOf(group) {
+      const bounds = group.getBoundingClientRect();
+      return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+    },
+  };
+
+  function createSvgElement(name, attributes) {
+    const element = document.createElementNS(SVG_NAMESPACE, name);
+    Object.entries(attributes).forEach(([attribute, value]) => element.setAttribute(attribute, String(value)));
+    return element;
+  }
+  start();
+})();
+
+//]]></script>
+</svg>

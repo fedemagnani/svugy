@@ -1,0 +1,6 @@
+/target
+.vscode
+.claude
+/docs/book
+/docs/src/figures
+/docs/src/playground/svugy-wasm.js

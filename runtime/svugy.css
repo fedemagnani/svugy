@@ -1,0 +1,30 @@
+[data-svugy-overlay] { visibility: hidden; }
+[data-svugy-entered] > [data-svugy-overlay] { visibility: visible; }
+
+[data-svugy-flow] { animation: svugy-flow 1.2s linear infinite; }
+@keyframes svugy-flow { to { stroke-dashoffset: -24; } }
+
+[data-svugy-contract]:focus,
+[data-svugy-contract] [tabindex]:focus { outline: none; }
+:is([data-svugy-element], [data-svugy-stub])[role="button"] { cursor: pointer; }
+:is([data-svugy-element], [data-svugy-stub])[role="button"]:has([data-svugy-entered]) { cursor: auto; }
+:is([data-svugy-element], [data-svugy-stub])[role="button"]:hover:not(:has([role="button"]:hover, [data-svugy-entered])) > :is(path, rect),
+:is([data-svugy-element], [data-svugy-edge], [data-svugy-stub]):focus-visible:not(:has([data-svugy-entered])) > :is(path, rect) { stroke: var(--svugy-text); stroke-opacity: 1; stroke-width: 2; fill-opacity: 0.8; }
+
+[data-svugy-contract] .svugy-panel { pointer-events: none; }
+[data-svugy-contract] .svugy-panel-plate { fill: #12141c; fill-opacity: 0.96; stroke: #2c3242; stroke-width: 1; }
+[data-svugy-contract] .svugy-panel-title,
+[data-svugy-contract] .svugy-panel-body { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; text-anchor: start; letter-spacing: 0; }
+[data-svugy-contract] .svugy-panel-title { font-size: 12.5px; font-weight: 650; fill: #eef0f6; }
+[data-svugy-contract] .svugy-panel-body { font-size: 11.5px; font-weight: 450; fill: #a6adbf; }
+
+@media (prefers-color-scheme: light) {
+  [data-svugy-contract] .svugy-panel-plate { fill: #ffffff; stroke: #d5d9e3; }
+  [data-svugy-contract] .svugy-panel-title { fill: #161922; }
+  [data-svugy-contract] .svugy-panel-body { fill: #545b6c; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-svugy-flow] { animation: none; }
+  [data-svugy-dot] { visibility: hidden; }
+}

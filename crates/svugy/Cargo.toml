@@ -1,0 +1,22 @@
+[package]
+name = "svugy"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+svugy-model.workspace = true
+ttf-parser.workspace = true
+dagre-dgl-rs.workspace = true
+taffy.workspace = true
+kurbo.workspace = true
+glam.workspace = true
+libm.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+fontdb.workspace = true
+roxmltree.workspace = true
+resvg.workspace = true
+usvg.workspace = true
+insta.workspace = true

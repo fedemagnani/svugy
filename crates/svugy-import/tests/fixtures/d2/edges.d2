@@ -1,0 +1,11 @@
+# Edge operators, chains and labels.
+client -> gateway -> api: HTTPS
+api <- worker
+api <-> cache: sync
+api -- logs
+a ---> b <--- c
+cloud.vpc.api -> "db.primary": reads {
+  label: SQL over TLS
+  style.stroke-dash: 3
+}
+x -> y: label with -> arrow and: colon # trailing comment

@@ -1,0 +1,14 @@
+# Styles written dotted and as nested maps, with typed values.
+api.style.fill: "#f4a261"
+api.style: {
+  stroke: navy
+  stroke-width: 2
+  opacity: 0.4
+  bold: true
+}
+db: {
+  shape: cylinder
+  style.shadow: false
+  style: { font-color: "#FFF"; border-radius: 10 }
+}
+api -> db: { style: { animated: true } }

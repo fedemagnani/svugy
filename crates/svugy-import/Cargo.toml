@@ -1,0 +1,15 @@
+[package]
+name = "svugy-import"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+svugy-model.workspace = true
+logos.workspace = true
+chumsky.workspace = true
+miette.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+insta.workspace = true
+serde_json.workspace = true

@@ -1,0 +1,71 @@
+---
+source: crates/svugy-import/tests/d2_lower.rs
+expression: model.to_json()
+---
+{
+  "elements": {
+    "cloud": {
+      "label": "AWS",
+      "span": {
+        "start": 101,
+        "end": 106
+      }
+    },
+    "cloud.vpc": {
+      "label": "Main VPC",
+      "span": {
+        "start": 116,
+        "end": 119
+      }
+    },
+    "cloud.vpc.api": {
+      "label": "API server",
+      "span": {
+        "start": 138,
+        "end": 141
+      }
+    },
+    "cloud.vpc.cache": {
+      "label": "Redis",
+      "span": {
+        "start": 244,
+        "end": 259
+      }
+    },
+    "cloud.vpc.\"db.primary\"": {
+      "label": "Primary DB",
+      "shape": "cylinder",
+      "link": "cloud.vpc",
+      "link_span": {
+        "start": 221,
+        "end": 230
+      },
+      "span": {
+        "start": 160,
+        "end": 172
+      }
+    },
+    "cloud.vpc.queue": {
+      "label": "queue",
+      "span": {
+        "start": 268,
+        "end": 283
+      }
+    },
+    "\"edge.node\"": {
+      "label": "edge.node",
+      "span": {
+        "start": 284,
+        "end": 295
+      }
+    },
+    "\"edge.node\".with space": {
+      "label": "unicode ✓",
+      "span": {
+        "start": 284,
+        "end": 308
+      }
+    }
+  },
+  "edges": []
+}
