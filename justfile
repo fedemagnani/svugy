@@ -33,6 +33,10 @@ playground:
         printf '";\n'
     } > "{{playground}}/svugy-wasm.js"
 
+# Render examples/svugy.d2 as the static SVG the README shows.
+readme:
+    cargo run --quiet -p svugy-cli -- render examples/svugy.d2 --profile static -o docs/svugy.svg
+
 # Three-way merge upstream dagre-dgl-rs <version> into vendor/svugy-dagre/src, based on the recorded upstream version, then record <version>.
 dagre-sync version:
     #!/usr/bin/env bash
