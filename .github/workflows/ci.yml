@@ -34,10 +34,6 @@ jobs:
           name: pending-pixel-snapshots
           path: crates/svugy/tests/snapshots/*.snap.new*
           if-no-files-found: ignore
-      - name: README figure is fresh
-        run: |
-          cargo run --quiet -p svugy-cli -- render examples/svugy.d2 --profile static -o docs/svugy.svg
-          git diff --exit-code docs/svugy.svg
       - name: Wasm check
         run: cargo check -p svugy-model -p svugy-import -p svugy -p svugy-wasm --target wasm32-unknown-unknown
 
@@ -58,7 +54,8 @@ jobs:
             d2 --layout=elk "$fixture" "$RUNNER_TEMP/out.svg"
           done
 
-  determinism-probe:
+  # every target renders the committed README figure byte for byte, so it also fails when the figure is stale
+  same-bytes-everywhere:
     strategy:
       fail-fast: false
       matrix:
@@ -80,25 +77,7 @@ jobs:
           key: ${{ matrix.target }}
       - if: matrix.target == 'wasm32-wasip1'
         uses: bytecodealliance/actions/wasmtime/setup@v1
-      - name: Run probe
+      - name: Render the README figure and diff it against the committed one
         env:
-          CARGO_TARGET_WASM32_WASIP1_RUNNER: wasmtime
-        run: cargo run --release -p svugy --example determinism_probe --target ${{ matrix.target }} > determinism-${{ matrix.target }}.out
-      - uses: actions/upload-artifact@v4
-        with:
-          name: determinism-${{ matrix.target }}
-          path: determinism-${{ matrix.target }}.out
-          if-no-files-found: error
-
-  determinism-compare:
-    needs: determinism-probe
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: determinism-*
-          merge-multiple: true
-      - name: Compare probe outputs byte for byte
-        run: |
-          diff --report-identical-files determinism-x86_64-unknown-linux-gnu.out determinism-aarch64-apple-darwin.out
-          diff --report-identical-files determinism-x86_64-unknown-linux-gnu.out determinism-wasm32-wasip1.out
+          CARGO_TARGET_WASM32_WASIP1_RUNNER: wasmtime --dir=.
+        run: cargo run --quiet --release -p svugy-cli --target ${{ matrix.target }} -- render examples/svugy.d2 --profile static | diff - docs/svugy.svg
