@@ -4,7 +4,7 @@ use std::cell::RefCell;
 
 use miette::Diagnostic;
 use serde::Serialize;
-use svugy::InteractiveSvg;
+use svugy::{InteractiveSvg, RenderSvg};
 use svugy_model::problem::ErrorSeverity;
 use svugy_parse::d2::D2Language;
 use svugy_parse::diagnostic::{LabelledDiagnostic, SourceLanguage};

@@ -6,11 +6,12 @@ mod input;
 mod output;
 mod report;
 mod skill;
+mod view;
 
 use std::process::ExitCode;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use svugy::{InteractiveSvg, StaticSvg};
+use svugy::{InteractiveSvg, RenderSvg, StaticSvg};
 use svugy_model::model::Model;
 use svugy_parse::json::JsonPrinter;
 
@@ -20,6 +21,7 @@ use crate::input::{LoadedInput, ModelInput};
 use crate::output::{ModelFile, OutputTarget};
 use crate::report::InputReport;
 use crate::skill::SkillCommand;
+use crate::view::{LIVE_VIEW_HELP, ViewCommand};
 
 /// Point a new user at the example, then explain the input formats, where diagnostics go and the exit codes, after the top-level help.
 const EXIT_CODES_HELP: &str = "\
@@ -36,7 +38,8 @@ Exit codes, identical for every subcommand:
   1  the input has errors: Markdown syntax, d2 syntax, malformed JSON or model
      validation; or import -o FILE.md meets a model Markdown cannot say
   2  usage error: unknown flag, missing argument, INPUT not .md, .d2 or .json
-  3  I/O failure: a file cannot be read, written or opened";
+  3  I/O failure: a file cannot be read, written or opened, or view cannot
+     listen on its port";
 
 /// Explain the validate report's formats and its JSON report's fields, after validate's help.
 const VALIDATE_REPORT_HELP: &str = "\
@@ -81,6 +84,9 @@ struct Cli {
 enum Command {
     /// Render a model as an SVG, interactive unless --profile static is given.
     Render(RenderCommand),
+    /// Serve the interactive SVG in the default browser, reloading it whenever INPUT changes.
+    #[command(after_long_help = LIVE_VIEW_HELP)]
+    View(ViewCommand),
     /// Validate a model and print every diagnostic, errors and warnings alike.
     #[command(after_long_help = VALIDATE_REPORT_HELP)]
     Validate(ValidateCommand),
@@ -162,6 +168,7 @@ impl Command {
     fn run(self) -> Result<(), Failure> {
         match self {
             Self::Render(render_command) => render_command.run(),
+            Self::View(view_command) => view_command.run(),
             Self::Validate(validate_command) => validate_command.run(),
             Self::Import(import_command) => import_command.run(),
             Self::Skill(skill_command) => skill_command.run(),

@@ -132,16 +132,32 @@ D2Parse {
                                                         span: 215..230,
                                                     },
                                                 ),
+                                                Field(
+                                                    FieldAssignment {
+                                                        target: KeyPath {
+                                                            parent_references: 0,
+                                                            segments: [],
+                                                            span: 237..237,
+                                                        },
+                                                        field: Tooltip(
+                                                            Scalar {
+                                                                text: "Holds every order",
+                                                                span: 246..263,
+                                                            },
+                                                        ),
+                                                        span: 237..263,
+                                                    },
+                                                ),
                                             ],
-                                            span: 160..236,
+                                            span: 160..269,
                                         },
                                     ),
                                 ],
-                                span: 116..240,
+                                span: 116..273,
                             },
                         ),
                     ],
-                    span: 101..242,
+                    span: 101..275,
                 },
             ),
             Shape(
@@ -151,27 +167,27 @@ D2Parse {
                         segments: [
                             KeySegment {
                                 name: "cloud",
-                                span: 244..249,
+                                span: 277..282,
                             },
                             KeySegment {
                                 name: "vpc",
-                                span: 250..253,
+                                span: 283..286,
                             },
                             KeySegment {
                                 name: "cache",
-                                span: 254..259,
+                                span: 287..292,
                             },
                         ],
-                        span: 244..259,
+                        span: 277..292,
                     },
                     label: Some(
                         Scalar {
                             text: "Redis",
-                            span: 261..266,
+                            span: 294..299,
                         },
                     ),
                     body: [],
-                    span: 244..266,
+                    span: 277..299,
                 },
             ),
             Shape(
@@ -181,22 +197,22 @@ D2Parse {
                         segments: [
                             KeySegment {
                                 name: "cloud",
-                                span: 268..273,
+                                span: 301..306,
                             },
                             KeySegment {
                                 name: "vpc",
-                                span: 274..277,
+                                span: 307..310,
                             },
                             KeySegment {
                                 name: "queue",
-                                span: 278..283,
+                                span: 311..316,
                             },
                         ],
-                        span: 268..283,
+                        span: 301..316,
                     },
                     label: None,
                     body: [],
-                    span: 268..283,
+                    span: 301..316,
                 },
             ),
             Shape(
@@ -206,23 +222,23 @@ D2Parse {
                         segments: [
                             KeySegment {
                                 name: "edge.node",
-                                span: 284..295,
+                                span: 317..328,
                             },
                             KeySegment {
                                 name: "with space",
-                                span: 296..308,
+                                span: 329..341,
                             },
                         ],
-                        span: 284..308,
+                        span: 317..341,
                     },
                     label: Some(
                         Scalar {
                             text: "unicode ✓",
-                            span: 310..321,
+                            span: 343..354,
                         },
                     ),
                     body: [],
-                    span: 284..321,
+                    span: 317..354,
                 },
             ),
         ],

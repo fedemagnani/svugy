@@ -5,6 +5,7 @@ use std::fmt;
 use miette::{Diagnostic, Severity, SourceSpan};
 use thiserror::Error;
 
+use crate::description::DescriptionOwner;
 use crate::legend::DashKey;
 use crate::model::{EdgeId, MAX_MAGNITUDE, PlacementHint, Position, Shape};
 use crate::path::ElementPath;
@@ -46,6 +47,9 @@ pub enum Problem {
     #[error(transparent)]
     #[diagnostic(transparent)]
     UnresolvedLink(UnresolvedLink),
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    UnresolvedDescriptionTarget(UnresolvedDescriptionTarget),
     #[error(transparent)]
     #[diagnostic(transparent)]
     IgnoredContainerShape(IgnoredContainerShape),
@@ -251,6 +255,21 @@ pub struct UnresolvedLink {
     #[help]
     pub suggestion: Option<Suggestion<ElementPath>>,
     #[label("linked here")]
+    pub span: Option<SourceSpan>,
+}
+
+/// Report a description link whose `#` target names no element or edge, so the runtime shows its text unlinked.
+#[derive(Debug, Error, Diagnostic)]
+#[error(
+    "the description of {owner} links to `#{target}`, which names no element `#PATH` or edge `#FROM->TO[n]`"
+)]
+#[diagnostic(code(svugy::unresolved_description_target), severity(Warning))]
+pub struct UnresolvedDescriptionTarget {
+    pub owner: DescriptionOwner,
+    pub target: String,
+    #[help]
+    pub suggestion: Option<Suggestion<String>>,
+    #[label("described here")]
     pub span: Option<SourceSpan>,
 }
 

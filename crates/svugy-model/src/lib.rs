@@ -2,6 +2,7 @@
 
 pub mod builder;
 pub mod color;
+pub mod description;
 pub mod disclose;
 pub mod legend;
 pub mod link;

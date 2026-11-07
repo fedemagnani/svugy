@@ -1,11 +1,11 @@
-//! Prove examples/svugy.d2 imports into the model the golden builder saves as examples/svugy.json.
+//! Prove examples/svugy/svugy.d2 imports into the model the golden builder saves as examples/svugy/svugy.json.
 
 use serde_json::Value;
 use svugy_parse::d2::{D2Parse, GRAMMAR_VERSION};
 use svugy_parse::json::JsonPrinter;
 
-const SVUGY_D2: &str = include_str!("../../../examples/svugy.d2");
-const SVUGY_JSON: &str = include_str!("../../../examples/svugy.json");
+const SVUGY_D2: &str = include_str!("../../../examples/svugy/svugy.d2");
+const SVUGY_JSON: &str = include_str!("../../../examples/svugy/svugy.json");
 
 #[test]
 fn svugy_d2_imports_into_the_golden_model() {

@@ -1,5 +1,6 @@
 //! Build a model through element handles, so ancestors and edge endpoints exist by construction.
 
+use crate::description::DescriptionOwner;
 use crate::legend::Legend;
 use crate::model::{Edge, EdgeId, Element};
 use crate::path::ElementPath;
@@ -28,6 +29,13 @@ impl ModelBuilder {
     pub fn with_subtitle(mut self, subtitle: impl Into<String>) -> Self {
         let subtitle = subtitle.into();
         self.unchecked.model.subtitle = Some(subtitle);
+        self
+    }
+
+    /// Describe the diagram in Markdown, shown in the side panel while nothing is focused.
+    pub fn with_description(mut self, description: impl Into<String>) -> Self {
+        let description = description.into();
+        self.unchecked.model.description = Some(description);
         self
     }
 
@@ -69,6 +77,25 @@ impl ModelBuilder {
         self.unchecked
             .model
             .insert_edge_with_next_free_ordinal(from_path, to_path, edge)
+    }
+
+    /// Describe the diagram, an added element or an added edge in Markdown, once every target its links name is known; an element or edge never added stays undescribed.
+    pub fn describe(&mut self, owner: &DescriptionOwner, description: impl Into<String>) {
+        let description = description.into();
+        let model = &mut self.unchecked.model;
+        match owner {
+            DescriptionOwner::Diagram => model.description = Some(description),
+            DescriptionOwner::Element(path) => {
+                if let Some(element) = model.elements.get_mut(path) {
+                    element.description = Some(description);
+                }
+            }
+            DescriptionOwner::Edge(id) => {
+                if let Some(edge) = model.edges.get_mut(id) {
+                    edge.description = Some(description);
+                }
+            }
+        }
     }
 
     /// Admit the built model unless a check finds an error, with the report of every problem found, warnings included.

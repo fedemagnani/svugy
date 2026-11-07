@@ -13,7 +13,7 @@ Placement is a 2D problem, so layout solves it on the ground plane (plan space) 
 
 - A container is sized by its placed interior; a leaf by its labels, at least 72 × 66.
 - Children with a `position` go exactly there; the rest are placed at least 18 units clear of them.
-- Default: dagre ranks along plan x, so a chain of edges becomes a screen diagonal. Pin elements to control the shape, as `examples/svugy.md` does.
+- Default: dagre ranks along plan x, so a chain of edges becomes a screen diagonal. Pin elements to control the shape, as `examples/svugy/svugy.md` does.
 - `grid`, `row`, `column`: taffy packs the children in path order.
 
 **Routing**

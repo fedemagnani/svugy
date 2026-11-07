@@ -48,6 +48,16 @@ impl Profile for Static<'_> {
     ) {
     }
 
+    /// Write the content alone: no viewer reads the group's attributes.
+    fn write_in_live_group(
+        &self,
+        writer: &mut SvgWriter,
+        _attributes: &Attributes,
+        write_content: impl FnOnce(&mut SvgWriter),
+    ) {
+        write_content(writer);
+    }
+
     /// Write the content alone: a static document carries no style sheet and no script.
     fn embed_in_runtime(&self, writer: &mut SvgWriter, write_content: impl FnOnce(&mut SvgWriter)) {
         write_content(writer);

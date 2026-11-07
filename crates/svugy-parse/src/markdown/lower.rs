@@ -4,27 +4,33 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use chumsky::span::Spanned;
 use svugy_model::builder::{ElementRef, ModelBuilder};
+use svugy_model::description::DescriptionOwner;
 use svugy_model::legend::Legend;
 use svugy_model::link::Link;
-use svugy_model::model::{ByteRange, Edge, Element, PlacementHint};
+use svugy_model::model::{ByteRange, Edge, EdgeId, Element, PlacementHint};
 use svugy_model::path::ElementPath;
+use svugy_model::problem::Problem;
 use svugy_model::style::{ColorKey, NumberKey};
 
 use super::ast::{
-    ComponentItem, Document, EdgeItem, LegendItem, LegendKeyRow, LegendSection, Reference, Span,
+    ComponentItem, DescriptionBlock, Document, EdgeItem, LegendItem, LegendKeyRow, LegendSection,
+    Reference, Span,
 };
 use super::diagnostic::Diagnostics;
 use super::property::{LineStyle, Property, PropertyKey, PropertyValue};
 use super::resolve::SuffixIndex;
 use super::style::StyleBook;
+use super::target::{ParallelEdgeCounts, TargetResolver};
 use super::{MarkdownImport, MarkdownParse};
 
-/// Lower each item into the builder through the style book and the suffix index, the lowering recording every error on the way.
+/// Lower each item into the builder through the style book and the suffix index, holding each description until every target it may name is added, the lowering recording every error on the way.
 struct Lowering {
     styles: StyleBook,
     references: SuffixIndex,
     element_refs: BTreeMap<ElementPath, ElementRef>,
     container_paths: BTreeSet<ElementPath>,
+    parallel_edge_counts: ParallelEdgeCounts,
+    pending_descriptions: Vec<(DescriptionOwner, DescriptionBlock)>,
     builder: ModelBuilder,
     diagnostics: Diagnostics,
 }
@@ -50,6 +56,7 @@ impl MarkdownParse {
         let Document {
             title,
             subtitle,
+            description,
             styles,
             components,
             edges,
@@ -66,10 +73,15 @@ impl MarkdownParse {
             builder = builder.with_subtitle(subtitle);
         }
         let mut lowering = Lowering::new(style_book, suffix_index, builder, diagnostics);
+        if let Some(description) = description {
+            let diagram_description = (DescriptionOwner::Diagram, description);
+            lowering.pending_descriptions.push(diagram_description);
+        }
         lowering.lower_components(None, components);
         for edge in edges {
             lowering.lower_edge(edge);
         }
+        lowering.describe_all();
         let legend = legend.map(|legend| lowering.lower_legend(legend));
         lowering.into_import(legend)
     }
@@ -88,6 +100,8 @@ impl Lowering {
             references,
             element_refs: BTreeMap::new(),
             container_paths: BTreeSet::new(),
+            parallel_edge_counts: ParallelEdgeCounts::new(),
+            pending_descriptions: Vec::new(),
             builder,
             diagnostics,
         }
@@ -100,6 +114,7 @@ impl Lowering {
                 id,
                 display_name,
                 entries,
+                description,
                 children,
                 span,
             } = component;
@@ -109,6 +124,11 @@ impl Lowering {
             let properties = self.styles.expand(&entries, &mut self.diagnostics);
             let element = self.build_component(element, properties);
             let element_ref = self.add_component(parent, &id, element);
+            if let Some(description) = description {
+                let element_path = element_ref.path().clone();
+                let owner = DescriptionOwner::Element(element_path);
+                self.pending_descriptions.push((owner, description));
+            }
             let has_children = !children.is_empty();
             if has_children {
                 let container_path = element_ref.path().clone();
@@ -265,12 +285,13 @@ impl Lowering {
         Some(path_text)
     }
 
-    /// Add one edge per hop of the item whose two references resolve, after checking all of them; a chain drops its label and properties after recording them.
+    /// Add one edge per hop of the item whose two references resolve, after checking all of them; a chain drops its label, properties and description after recording them.
     fn lower_edge(&mut self, edge: EdgeItem) {
         let EdgeItem {
             references,
             label,
             properties,
+            description,
         } = edge;
         let endpoints: Vec<Option<(ElementPath, Span)>> = references
             .iter()
@@ -296,6 +317,14 @@ impl Lowering {
             }
             properties => properties,
         };
+        let mut description = match description {
+            Some(description) if is_chain => {
+                let message = "a chain takes no description; write its hops on separate lines";
+                self.diagnostics.record_error(message, description.span);
+                None
+            }
+            description => description,
+        };
         let entries = properties
             .map(|properties| properties.inner)
             .unwrap_or_default();
@@ -310,7 +339,13 @@ impl Lowering {
                 continue;
             };
             let hop_span = Span::from(from_span.start..to_span.end);
-            self.add_hop(&draft, from, to, hop_span);
+            let Some(edge_id) = self.add_hop(&draft, from, to, hop_span) else {
+                continue;
+            };
+            if let Some(description) = description.take() {
+                let owner = DescriptionOwner::Edge(edge_id);
+                self.pending_descriptions.push((owner, description));
+            }
         }
     }
 
@@ -357,25 +392,31 @@ impl Lowering {
         draft
     }
 
-    /// Add the hop from `from` to `to`, recording one from a component to itself or between it and its own ancestor or descendant, badged only between two leaves.
-    fn add_hop(&mut self, draft: &EdgeDraft, from: &ElementPath, to: &ElementPath, hop_span: Span) {
+    /// Add the hop from `from` to `to` and return its id, recording one from a component to itself or between it and its own ancestor or descendant, badged only between two leaves.
+    fn add_hop(
+        &mut self,
+        draft: &EdgeDraft,
+        from: &ElementPath,
+        to: &ElementPath,
+        hop_span: Span,
+    ) -> Option<EdgeId> {
         let is_self_edge = from == to;
         if is_self_edge {
             let message = format!("an edge cannot join `{from}` to itself");
             self.diagnostics.record_error(message, hop_span);
-            return;
+            return None;
         }
         let is_from_ancestor = from.is_ancestor_of(to);
         if is_from_ancestor {
             let message = format!("an edge cannot join `{from}` and its descendant `{to}`");
             self.diagnostics.record_error(message, hop_span);
-            return;
+            return None;
         }
         let is_to_ancestor = to.is_ancestor_of(from);
         if is_to_ancestor {
             let message = format!("an edge cannot join `{from}` and its ancestor `{to}`");
             self.diagnostics.record_error(message, hop_span);
-            return;
+            return None;
         }
         let hop_range = ByteRange::new(hop_span.start, hop_span.end);
         let edge = draft.edge.clone().with_span(hop_range);
@@ -385,7 +426,21 @@ impl Lowering {
         };
         let from_ref = &self.element_refs[from];
         let to_ref = &self.element_refs[to];
-        self.builder.add_edge(from_ref, to_ref, edge);
+        let edge_id = self.builder.add_edge(from_ref, to_ref, edge);
+        let pair = (from.clone(), to.clone());
+        let parallel_edge_count = self.parallel_edge_counts.entry(pair).or_default();
+        *parallel_edge_count += 1;
+        Some(edge_id)
+    }
+
+    /// Respell each held description's targets canonically against every component and edge, then describe its owner with it.
+    fn describe_all(&mut self) {
+        let resolver = TargetResolver::new(&self.references, &self.parallel_edge_counts);
+        let pending_descriptions = std::mem::take(&mut self.pending_descriptions);
+        for (owner, description) in pending_descriptions {
+            let canonical_text = resolver.canonicalize(&description, &mut self.diagnostics);
+            self.builder.describe(&owner, canonical_text);
+        }
     }
 
     /// Draw `edge` as a badge when both its ends are leaves, recording the first end that has children otherwise.
@@ -502,7 +557,10 @@ impl Lowering {
             Some(legend) => builder.with_legend(legend),
             None => builder,
         };
-        let admission = builder.build();
+        let mut admission = builder.build();
+        admission
+            .report
+            .retain(|problem| !matches!(problem, Problem::UnresolvedDescriptionTarget(..)));
         let (errors, warnings) = diagnostics.into_sorted_parts();
         MarkdownImport {
             admission,

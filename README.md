@@ -2,7 +2,7 @@
 
 Write a diagram in Markdown; svugy renders it as an isometric SVG you can click into.
 
-![svugy's own architecture, rendered by svugy from examples/svugy.d2 with --profile static](docs/svugy.svg)
+![svugy's own architecture, rendered by svugy from examples/svugy/svugy.d2 with --profile static](docs/svugy.svg)
 
 ```markdown
 ---
@@ -36,12 +36,20 @@ svugy example -o webapp.md
 svugy render webapp.md -o webapp.svg --open
 ```
 
+- `svugy view my.md` shows the diagram in your browser and reloads it on every save, keeping the focused level.
 - `svugy validate my.md` reports every problem in one run, with line and column; `--format json` for scripts and agents.
 - `svugy render my.md --profile static -o my.svg` writes an SVG without script, for `<img>` tags, READMEs and design tools.
 - `svugy import my.d2 -o my.md` converts d2 to Markdown; `-o my.json` writes the model as JSON. `render` reads `.d2` and `.json` directly too.
 - `svugy skill install` installs a Claude Code skill that writes, validates and renders diagrams.
 
 [Markdown](docs/src/run/markdown.md) lists every rule.
+
+## Examples
+
+Each folder in [`examples`](examples) holds one diagram in every format svugy reads, next to its committed interactive SVG; `cargo test -p svugy-examples` fails when a format or the SVG drifts from the `.md`.
+
+- [`webapp`](examples/webapp): the Quickstart's web app in Markdown, d2 and Rust. `cargo run -p svugy-examples --example webapp > webapp.svg` builds it in code.
+- [`svugy`](examples/svugy): svugy's own architecture in Markdown, d2 and JSON.
 
 ## Crates
 
@@ -52,7 +60,7 @@ svugy render webapp.md -o webapp.svg --open
 | [`svugy`](crates/svugy) | model to SVG: text metrics, layout, geometry, render |
 | [`svugy-cli`](crates/svugy-cli) | the `svugy` command |
 | [`svugy-wasm`](crates/svugy-wasm) | svugy compiled to wasm, for the docs' live editors |
-| [`svugy-dagre`](vendor/svugy-dagre) | dagre-dgl-rs, patched for deterministic layout |
+| [`svugy-dagre`](crates/svugy-dagre) | left-to-right layered layout, cut down from dagre-dgl-rs, deterministic |
 
 ## Docs
 
@@ -60,4 +68,4 @@ svugy render webapp.md -o webapp.svg --open
 
 ## License
 
-MIT or Apache-2.0, at your option. `svugy-dagre` keeps upstream's MIT license.
+MIT or Apache-2.0, at your option. `svugy-dagre` is MIT, as dagre-dgl-rs is.

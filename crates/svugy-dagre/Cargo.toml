@@ -1,0 +1,15 @@
+[package]
+name = "svugy-dagre"
+edition.workspace = true
+version.workspace = true
+description = "Lay out a directed graph in left-to-right ranks with dagre's algorithm, deterministically"
+license = "MIT"
+authors = ["Rochanglien Infimate"]
+repository.workspace = true
+categories = ["algorithms", "visualization"]
+
+[dependencies]
+indexmap = "2"
+
+[lints]
+workspace = true

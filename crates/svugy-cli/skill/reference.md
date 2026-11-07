@@ -27,6 +27,44 @@ What SKILL.md leaves out. Read only the section you need.
 - Edges may cross containers: `web -> shop.api`.
 - `line=badge` replaces the arc with a mini of the target on the source's top face. Use it for a dependency many components share (a font, a config store). Both ends must be leaves.
 
+## Descriptions
+
+````markdown
+```description
+Checkout turns a cart into a charged card.
+```
+
+## Components
+- web
+- shop: Shop backend
+
+  ```description
+  Owns the cart and the *orders* table.
+  - carts expire after a day
+  ```
+
+  - api
+
+## Edges
+- web -> api: places order
+  ```description
+  One request per click on **Pay**.
+  ```
+````
+
+- A ```` ```description ```` block before `## Components` describes the diagram; indented under a component or an edge, it describes that item.
+- Backtick or tilde fence, three or more; when the content holds a line of only ```, open with a longer fence: ````` ````description `````.
+- Under an item it goes on the next line or after a blank line, and before a component's children.
+- Stored verbatim: any Markdown, bullet lists included.
+- Errors: unfenced text under an item or before `## Components`, a code block with another info string, a second description block, a missing closing fence.
+- Legend items and chains `a -> b -> c` take no description.
+
+### Links to components and edges
+
+- `[TEXT](#REF)` targets a component; `[TEXT](#REF->REF)` the edge between two, when only one exists; `[TEXT](#REF->REF[n])` the n-th, from 0 in written order. No spaces.
+- Targets may name items declared later. The model stores the whole form: `#shop.api`, `#web->shop.api[0]`.
+- A target naming nothing or several items is a warning; the link shows as plain text.
+
 ## Values
 
 - Bare value: runs to the next `,` or `)`, trimmed: `caption=HTTP endpoints`.

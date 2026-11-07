@@ -17,7 +17,7 @@ use crate::geometry::{
     Scene, Solid,
 };
 use crate::metrics::LabelRole;
-use crate::render::contract::{ContractAnnotator, RuntimeContract};
+use crate::render::contract::{ContractAnnotator, DiagramDetails, RuntimeContract};
 use crate::render::theme::Token;
 use crate::render::writer::css::CssValue;
 use crate::render::writer::path_data::PathData;
@@ -67,6 +67,14 @@ pub(crate) trait Profile {
         &self,
         writer: &mut SvgWriter,
         write_live_content: impl FnOnce(&mut SvgWriter),
+    );
+
+    /// Write what `write_content` draws inside a group carrying `attributes`, which only a live viewer reads; without a live viewer, the content alone.
+    fn write_in_live_group(
+        &self,
+        writer: &mut SvgWriter,
+        attributes: &Attributes,
+        write_content: impl FnOnce(&mut SvgWriter),
     );
 
     /// Write the document's content through `write_content`, embedded in the runtime that drives it, if the profile has one.
@@ -168,7 +176,7 @@ impl<P: Profile> Renderer<P> {
 }
 
 impl InteractiveRenderer {
-    /// Write `layer_scenes`, disclosed from `model`, as the interactive document sized to the canvas covering every layer's root view, so changing layer never changes its aspect ratio: the model's title, the definitions every layer shares, one canvas under every layer's root view, then one group per layer, the deepest shown so a viewer without scripts sees the whole diagram.
+    /// Write `layer_scenes`, disclosed from `model`, as the interactive document sized to the canvas covering every layer's root view, so changing layer never changes its aspect ratio: the model's title, its diagram details, the definitions every layer shares, one canvas under every layer's root view, then one group per layer, the deepest shown so a viewer without scripts sees the whole diagram.
     pub(crate) fn write_layered_document(
         &self,
         model: &Model,
@@ -186,8 +194,9 @@ impl InteractiveRenderer {
             .iter()
             .map(|layer_scene| {
                 let layer_model = layer_scene.disclosure.model();
-                let annotator =
-                    ContractAnnotator::new(model).with_disclosure(layer_scene.disclosure);
+                let annotator = ContractAnnotator::new(model)
+                    .with_disclosure(layer_scene.disclosure)
+                    .with_descriptions();
                 let scene = &layer_scene.scene;
                 LayerPass::new(&self.profile, scene, layer_model, annotator, &definitions)
             })
@@ -203,6 +212,9 @@ impl InteractiveRenderer {
             if let Some(title) = model.title() {
                 let no_attributes = Attributes::new();
                 writer.text_element("title", &no_attributes, title);
+            }
+            if let Some(diagram_details) = DiagramDetails::of(model) {
+                diagram_details.write(writer);
             }
             definitions.write(writer, &self.profile);
             self.write_canvas(writer, canvas_view);
@@ -308,21 +320,23 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         writer.empty_element("line", &line_attributes);
     }
 
-    /// Write the heading: the diagram's title in text ink and its subtitle muted, outside every level group, so they stay in document space whatever level is entered.
+    /// Write the heading: the diagram's title in text ink and its subtitle muted, outside every level group, so they stay in document space whatever level is entered, in the group a live viewer clicks for the diagram's description.
     fn write_heading(&self, writer: &mut SvgWriter, heading: &Heading) {
         let title_ink = Paint::Token(Token::Text);
         let subtitle_ink = Paint::Token(Token::TextMuted);
-        match heading {
-            Heading::Titled { title, subtitle } => {
-                self.write_label_in_ink(writer, title, title_ink);
-                if let Some(subtitle) = subtitle {
+        let heading_attributes = Attributes::new().with_text(RuntimeContract::HEADING, "");
+        self.profile
+            .write_in_live_group(writer, &heading_attributes, |writer| match heading {
+                Heading::Titled { title, subtitle } => {
+                    self.write_label_in_ink(writer, title, title_ink);
+                    if let Some(subtitle) = subtitle {
+                        self.write_label_in_ink(writer, subtitle, subtitle_ink);
+                    }
+                }
+                Heading::Subtitled(subtitle) => {
                     self.write_label_in_ink(writer, subtitle, subtitle_ink);
                 }
-            }
-            Heading::Subtitled(subtitle) => {
-                self.write_label_in_ink(writer, subtitle, subtitle_ink);
-            }
-        }
+            });
     }
 
     /// Draw `label` in `ink`, a caption at the caption opacity.
@@ -631,7 +645,7 @@ mod tests {
     use crate::layout::{LevelPlan, LevelPlans};
     use crate::metrics::{BundledFont, TextAnchor};
     use crate::render::theme::FaceShades;
-    use crate::{InteractiveSvg, StaticSvg};
+    use crate::{InteractiveSvg, RenderSvg, StaticSvg};
 
     const FORBIDDEN_STATIC_MARKUP: [&str; 6] = [
         "<text",
@@ -1171,9 +1185,13 @@ mod tests {
 
         let heading_lines = lines_before_the_root_level(&markup);
 
-        let [title_line, subtitle_line] = heading_lines[..] else {
-            panic!("expected a title and a subtitle line: {heading_lines:?}");
+        let [group_opening, title_line, subtitle_line, group_closing] = heading_lines[..] else {
+            panic!(
+                "expected a heading group around a title and a subtitle line: {heading_lines:?}"
+            );
         };
+        assert_eq!(group_opening, "<g data-svugy-heading=\"\">");
+        assert_eq!(group_closing, "</g>");
         let text_ink = format!(
             "fill=\"var({})\"",
             Token::Text.css_custom_property().as_str()

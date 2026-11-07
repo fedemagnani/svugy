@@ -2,7 +2,7 @@
 
 use std::ffi::OsStr;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use miette::{IntoDiagnostic, NamedSource, WrapErr};
 use svugy_model::model::Model;
@@ -96,6 +96,10 @@ impl ModelInput {
         let source = NamedSource::new(input_name, source_text);
         let loaded = (self.load_source)(source);
         Ok(loaded)
+    }
+
+    pub fn path(&self) -> &Path {
+        &self.path
     }
 }
 

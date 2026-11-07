@@ -22,10 +22,10 @@ Parsers output a `Model`; layout, geometry and render take only a `Model`. Addin
 - **`svugy`:** layout, geometry, render; embeds the runtime.
 - **`svugy-cli`:** the `svugy` binary.
 - **`svugy-wasm`:** Markdown or d2 to interactive SVG in the browser; runs this book's live editors.
-- **`svugy-dagre`:** dagre-dgl-rs, patched for deterministic output.
+- **`svugy-dagre`:** `LeftToRightLayout::node_centres`, dagre's layered layout cut down from dagre-dgl-rs to what `svugy` uses, deterministic.
 
 ## svugy, drawn by svugy
 
-Source: `examples/svugy.md`, also the golden test.
+Source: `examples/svugy/svugy.md`, also the golden test.
 
 <object class="svugy" type="image/svg+xml" data="../figures/svugy.svg"></object>

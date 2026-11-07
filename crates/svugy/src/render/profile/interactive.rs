@@ -53,6 +53,17 @@ impl Profile for Interactive {
         write_live_content(writer);
     }
 
+    fn write_in_live_group(
+        &self,
+        writer: &mut SvgWriter,
+        attributes: &Attributes,
+        write_content: impl FnOnce(&mut SvgWriter),
+    ) {
+        writer.open_element("g", attributes);
+        write_content(writer);
+        writer.close_element();
+    }
+
     /// Write the style sheet first and the runtime script last, so the script starts on a fully parsed document.
     fn embed_in_runtime(&self, writer: &mut SvgWriter, write_content: impl FnOnce(&mut SvgWriter)) {
         let style_sheet = Self::style_sheet();

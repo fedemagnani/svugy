@@ -16,11 +16,12 @@ use crate::unique_key_map::UniqueKeyMapVisitor;
 /// Largest magnitude a numeric style value, a position coordinate or a height may take, so no valid model can explode the output.
 pub const MAX_MAGNITUDE: f64 = 1_000_000.0;
 
-/// Model a system as the diagram's title, subtitle and legend, elements keyed by path and edges keyed by id; every model handed out of this crate has its edge endpoints and ancestors declared.
+/// Model a system as the diagram's title, subtitle, description and legend, elements keyed by path and edges keyed by id; every model handed out of this crate has its edge endpoints and ancestors declared.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Model {
     pub(crate) title: Option<String>,
     pub(crate) subtitle: Option<String>,
+    pub(crate) description: Option<String>,
     pub(crate) legend: Option<Legend>,
     pub(crate) elements: BTreeMap<ElementPath, Element>,
     pub(crate) edges: BTreeMap<EdgeId, Edge>,
@@ -123,6 +124,11 @@ impl Model {
         self.subtitle.as_deref()
     }
 
+    /// Return the diagram's description, Markdown shown in the side panel while nothing is focused.
+    pub fn description(&self) -> Option<&str> {
+        self.description.as_deref()
+    }
+
     /// Return the diagram's legend, drawn at the top-right of the top-level view.
     pub fn legend(&self) -> Option<&Legend> {
         self.legend.as_ref()
@@ -161,6 +167,8 @@ pub struct Element {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     caption: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     shape: Option<Shape>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     height: Option<f64>,
@@ -197,6 +205,7 @@ impl Element {
         Self {
             label,
             caption: None,
+            description: None,
             shape: None,
             height: None,
             style: BTreeMap::new(),
@@ -220,6 +229,13 @@ impl Element {
     pub fn with_caption(mut self, caption: impl Into<String>) -> Self {
         let caption = caption.into();
         self.caption = Some(caption);
+        self
+    }
+
+    /// Set the Markdown describing the element in the side panel.
+    pub fn with_description(mut self, description: impl Into<String>) -> Self {
+        let description = description.into();
+        self.description = Some(description);
         self
     }
 
@@ -290,6 +306,11 @@ impl Element {
     /// Return the secondary line drawn under the label, if any.
     pub fn caption(&self) -> Option<&str> {
         self.caption.as_deref()
+    }
+
+    /// Return the Markdown describing the element in the side panel, if any.
+    pub fn description(&self) -> Option<&str> {
+        self.description.as_deref()
     }
 
     /// Return the authored shape, or `None` to let the renderer pick (box for components, slab for containers).
@@ -504,6 +525,7 @@ impl fmt::Display for EdgeId {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Edge {
     pub(crate) label: Option<String>,
+    pub(crate) description: Option<String>,
     pub(crate) style: BTreeMap<String, String>,
     pub(crate) traveler: Option<Traveler>,
     pub(crate) badge: bool,
@@ -520,6 +542,13 @@ impl Edge {
     pub fn with_label(mut self, label: impl Into<String>) -> Self {
         let label = label.into();
         self.label = Some(label);
+        self
+    }
+
+    /// Set the Markdown describing the dataflow in the side panel.
+    pub fn with_description(mut self, description: impl Into<String>) -> Self {
+        let description = description.into();
+        self.description = Some(description);
         self
     }
 
@@ -552,6 +581,11 @@ impl Edge {
     /// Return the label drawn along the edge, if any.
     pub fn label(&self) -> Option<&str> {
         self.label.as_deref()
+    }
+
+    /// Return the Markdown describing the dataflow in the side panel, if any.
+    pub fn description(&self) -> Option<&str> {
+        self.description.as_deref()
     }
 
     /// Return the edge's raw style entries, keyed by style name.

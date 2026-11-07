@@ -1,12 +1,13 @@
 ---
 source: crates/svugy-parse/tests/json.rs
+assertion_line: 440
 expression: pretty
 ---
 {
   "causes": [],
   "code": "svugy::model_report",
   "labels": [],
-  "message": "the model has 3 error(s) and 0 warning(s)",
+  "message": "the model has 3 error(s) and 1 warning(s)",
   "related": [
     {
       "causes": [],
@@ -48,6 +49,15 @@ expression: pretty
       "message": "edge `(ghost -> ghost)[0]` points to `ghost`, which is not an element",
       "related": [],
       "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::unresolved_description_target",
+      "help": "did you mean `#db.primary`?",
+      "labels": [],
+      "message": "the description of element `db` links to `#db.primry`, which names no element `#PATH` or edge `#FROM->TO[n]`",
+      "related": [],
+      "severity": "warning"
     }
   ],
   "severity": "error"

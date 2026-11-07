@@ -1304,6 +1304,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "svugy-examples"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "svugy",
+ "svugy-model",
+ "svugy-parse",
+]
+
+[[package]]
 name = "svugy-model"
 version = "0.1.0"
 dependencies = [

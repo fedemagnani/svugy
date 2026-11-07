@@ -257,23 +257,29 @@ D2Parse {
                                 span: 179..191,
                             },
                         ),
+                        Tooltip(
+                            Scalar {
+                                text: "One connection per request",
+                                span: 203..229,
+                            },
+                        ),
                         Style(
                             [
                                 StyleProperty {
                                     name: KeySegment {
                                         name: "stroke-dash",
-                                        span: 200..211,
+                                        span: 238..249,
                                     },
                                     value: Scalar {
                                         text: "3",
-                                        span: 213..214,
+                                        span: 251..252,
                                     },
-                                    span: 194..214,
+                                    span: 232..252,
                                 },
                             ],
                         ),
                     ],
-                    span: 131..216,
+                    span: 131..254,
                 },
             ),
             Edge(
@@ -283,35 +289,35 @@ D2Parse {
                         segments: [
                             KeySegment {
                                 name: "x",
-                                span: 217..218,
+                                span: 255..256,
                             },
                         ],
-                        span: 217..218,
+                        span: 255..256,
                     },
                     links: [
                         EdgeLink {
                             operator: Forward,
-                            operator_span: 219..221,
+                            operator_span: 257..259,
                             target: KeyPath {
                                 parent_references: 0,
                                 segments: [
                                     KeySegment {
                                         name: "y",
-                                        span: 222..223,
+                                        span: 260..261,
                                     },
                                 ],
-                                span: 222..223,
+                                span: 260..261,
                             },
                         },
                     ],
                     label: Some(
                         Scalar {
                             text: "label with -> arrow and: colon",
-                            span: 225..255,
+                            span: 263..293,
                         },
                     ),
                     fields: [],
-                    span: 217..255,
+                    span: 255..293,
                 },
             ),
         ],

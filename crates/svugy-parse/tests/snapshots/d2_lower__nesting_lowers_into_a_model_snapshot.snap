@@ -28,12 +28,13 @@ expression: model.to_json()
     "cloud.vpc.cache": {
       "label": "Redis",
       "span": {
-        "start": 244,
-        "end": 259
+        "start": 277,
+        "end": 292
       }
     },
     "cloud.vpc.\"db.primary\"": {
       "label": "Primary DB",
+      "description": "Holds every order",
       "shape": "cylinder",
       "link": "cloud.vpc",
       "link_span": {
@@ -48,22 +49,22 @@ expression: model.to_json()
     "cloud.vpc.queue": {
       "label": "queue",
       "span": {
-        "start": 268,
-        "end": 283
+        "start": 301,
+        "end": 316
       }
     },
     "\"edge.node\"": {
       "label": "edge.node",
       "span": {
-        "start": 284,
-        "end": 295
+        "start": 317,
+        "end": 328
       }
     },
     "\"edge.node\".with space": {
       "label": "unicode ✓",
       "span": {
-        "start": 284,
-        "end": 308
+        "start": 317,
+        "end": 341
       }
     }
   },

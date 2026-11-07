@@ -1,6 +1,7 @@
 //! Hold a diagram file as written: its frontmatter, its component tree, its edges and its legend, each value spanned in the source.
 
 use std::fmt;
+use std::ops::Range;
 
 use chumsky::span::{SimpleSpan, Spanned};
 
@@ -12,6 +13,7 @@ pub(crate) type Span = SimpleSpan<usize>;
 pub(crate) struct Document {
     pub(crate) title: Option<String>,
     pub(crate) subtitle: Option<String>,
+    pub(crate) description: Option<DescriptionBlock>,
     pub(crate) styles: Vec<StyleDefinition>,
     pub(crate) components: Vec<ComponentItem>,
     pub(crate) edges: Vec<EdgeItem>,
@@ -25,22 +27,32 @@ pub(crate) struct StyleDefinition {
     pub(crate) entries: Vec<Entry>,
 }
 
-/// Declare a component by its item line `ID[: DISPLAY NAME] [(PROPERTIES)]`, with the items nested under it.
+/// Declare a component by its item line `ID[: DISPLAY NAME] [(PROPERTIES)]`, with its description and the items nested under it.
 #[derive(Debug)]
 pub(crate) struct ComponentItem {
     pub(crate) id: Spanned<String>,
     pub(crate) display_name: Option<String>,
     pub(crate) entries: Vec<Entry>,
+    pub(crate) description: Option<DescriptionBlock>,
     pub(crate) children: Vec<ComponentItem>,
     pub(crate) span: Span,
 }
 
-/// Declare one edge per hop of the item line `REF -> REF ... [: LABEL] [(PROPERTIES)]`.
+/// Declare one edge per hop of the item line `REF -> REF ... [: LABEL] [(PROPERTIES)]`, with the description under it.
 #[derive(Debug)]
 pub(crate) struct EdgeItem {
     pub(crate) references: Vec<Reference>,
     pub(crate) label: Option<Spanned<String>>,
     pub(crate) properties: Option<Spanned<Vec<Entry>>>,
+    pub(crate) description: Option<DescriptionBlock>,
+}
+
+/// Hold a description block's content as stored, with where each of its lines starts in the source, `None` where the line is not a suffix of its source line.
+#[derive(Debug)]
+pub(crate) struct DescriptionBlock {
+    pub(crate) text: String,
+    pub(crate) line_starts: Vec<Option<usize>>,
+    pub(crate) span: Span,
 }
 
 /// Reference a component by a dotted suffix of its path.
@@ -120,6 +132,23 @@ impl Entry {
                 Self::Assignment(relabelled_assignment)
             }
         }
+    }
+}
+
+impl DescriptionBlock {
+    /// Return where `range`, a range of the text within one of its lines, is written in the source, else the whole block's span.
+    pub(crate) fn source_span(&self, range: Range<usize>) -> Span {
+        let text_before = &self.text[..range.start];
+        let line_index = text_before.matches('\n').count();
+        let line_text_start = text_before.rfind('\n').map_or(0, |newline| newline + 1);
+        let line_source_start = self.line_starts.get(line_index).copied().flatten();
+        let Some(line_source_start) = line_source_start else {
+            return self.span;
+        };
+        let column = range.start - line_text_start;
+        let start = line_source_start + column;
+        let end = start + range.len();
+        Span::from(start..end)
     }
 }
 

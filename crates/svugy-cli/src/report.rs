@@ -3,8 +3,8 @@
 use std::fmt;
 
 use miette::{
-    Diagnostic, GraphicalReportHandler, JSONReportHandler, NamedSource, Severity, SourceCode,
-    SourceSpan,
+    Diagnostic, GraphicalReportHandler, GraphicalTheme, JSONReportHandler, NamedSource, Severity,
+    SourceCode, SourceSpan,
 };
 use serde_json::Value;
 use svugy_model::problem::ErrorSeverity;
@@ -52,11 +52,24 @@ impl InputReport {
             return;
         }
         let handler = GraphicalReportHandler::new();
+        let rendered = self.render_graphical(&handler);
+        eprint!("{rendered}");
+    }
+
+    /// Render every diagnostic as miette's graphical report without color codes, for a reader that is not a terminal.
+    pub fn to_plain_text(&self) -> String {
+        let plain_theme = GraphicalTheme::unicode_nocolor();
+        let handler = GraphicalReportHandler::new_themed(plain_theme);
+        self.render_graphical(&handler)
+    }
+
+    /// Render every diagnostic with `handler`, with source snippets where spans exist.
+    fn render_graphical(&self, handler: &GraphicalReportHandler) -> String {
         let mut rendered = String::new();
         handler
             .render_report(&mut rendered, self)
             .expect("every span points into the source it is rendered against");
-        eprint!("{rendered}");
+        rendered
     }
 
     /// Render the report as miette's machine-readable JSON, one `related` entry per diagnostic, each label located by line and column when the source is known.

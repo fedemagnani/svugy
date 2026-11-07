@@ -9,8 +9,8 @@ styles:
 <!-- Every error below is reported in one pass; each `expect` names the problem on the line after it. -->
 <!-- expect: the title goes in the frontmatter `title` -->
 # Every error at once
-<!-- expect: text before the first section goes in a comment, `<!-- … -->`, or in the frontmatter `subtitle` -->
-Prose before the first section.
+<!-- expect: a bullet list belongs under a section: `## Components`, `## Edges` or `## Legend`; one that describes the diagram goes in a ```description block -->
+- a list before the first section
 
 ## Components
 - orders <!-- a trailing comment is ignored -->
@@ -43,6 +43,31 @@ Prose before the first section.
 - mailer: Mail relay (SMTP only)
 <!-- expect: a label is either quoted whole or holds no `"` -->
 - notifier: "Notifier" service
+- gateway
+  <!-- expect: wrap a description in a ```description block -->
+  Routes every request.
+  <!-- expect: the only code block allowed here is ```description -->
+  ```yaml
+  routes: 3
+  ```
+  ```description
+  The edge proxy.
+  <!-- expect: `#api` stays plain text: `api` matches `orders.api` and `billing.api`; add a parent to pick one -->
+  It forwards to [the API](#api),
+  <!-- expect: `#valt` stays plain text: no component `valt`; did you mean `vault`? -->
+  reads [the vault](#valt)
+  <!-- expect: `#audit->reports` stays plain text: 2 edges go from `audit` to `reports`; add `[0]` to `[1]` to pick one -->
+  and [reports](#audit->reports).
+  ```
+  <!-- expect: a second ```description block; merge it into the first -->
+  ```description
+  Also the TLS terminator.
+  ```
+  - edge
+  <!-- expect: a description goes between its item's line and the items nested under it -->
+  ```description
+  Written after the nested items.
+  ```
 
 <!-- expect: use `## Edges` -->
 ### Edges
@@ -60,6 +85,19 @@ Prose before the first section.
 - audit -> search (shape=cylinder)
 <!-- expect: an edge cannot join `audit` to itself -->
 - audit -> audit
+- vault -> worker -> audit
+  <!-- expect: a chain takes no description; write its hops on separate lines -->
+  ```description
+  Nightly.
+  ```
+- audit -> reports
+  <!-- expect: only `## Components` items nest -->
+  - nested
+- audit -> reports: again
 
 ## Legend
 - (optional) parts are grey
+  <!-- expect: a legend item takes no description: the legend holds one line of text per item -->
+  ```description
+  Grey parts ship later.
+  ```

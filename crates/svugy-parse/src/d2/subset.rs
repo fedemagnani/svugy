@@ -211,6 +211,9 @@ impl<'sink> SubsetFilter<'sink> {
             Keyword::Link => self
                 .filter_scalar_field(keyword, rest, assignment, span)
                 .map(Field::Link)?,
+            Keyword::Tooltip => self
+                .filter_scalar_field(keyword, rest, assignment, span)
+                .map(Field::Tooltip)?,
             Keyword::Style => self.filter_style_field(rest, assignment, span)?,
             Keyword::Vars => self.filter_vars_field(rest, assignment, span)?,
             Keyword::Class | Keyword::Classes => {

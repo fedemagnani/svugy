@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-use svugy::StaticSvg;
+use svugy::{RenderSvg, StaticSvg};
 use svugy_model::builder::{ElementRef, ModelBuilder};
 use svugy_model::model::{Edge, Element, Model};
 

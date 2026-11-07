@@ -11,8 +11,9 @@ mod property;
 mod resolve;
 mod skeleton;
 mod style;
+mod target;
 
-pub use diagnostic::{MarkdownError, MarkdownLanguage};
+pub use diagnostic::{MarkdownError, MarkdownLanguage, UnresolvedTarget};
 pub use print::{
     MarkdownPrinter, TextField, Unprintable, UnprintableModel, UnprintableOwner, UnprintableReason,
 };

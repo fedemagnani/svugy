@@ -1,0 +1,64 @@
+# d2 v0.9.0 · the web app of examples/webapp/webapp.md, written in d2
+# d2 can't say the diagram's description or the edges' travelers: examples/tests/twins.rs leaves both out of the comparison.
+
+label: A web app
+vars: {
+  svugy: {
+    subtitle: "from the browser to the database and back"
+  }
+}
+
+browser: Browser {
+  vars: { svugy: { caption: "the user's tab" } }
+}
+cdn: CDN {
+  shape: circle
+  vars: { svugy: { caption: static files } }
+}
+backend: Backend {
+  tooltip: "Every browser request lands on [the API](#backend.api). From there:\n- the API answers the browser right away\n- work that can wait, like the receipt, goes through [the queue](#backend.queue) to [the worker](#backend.worker)"
+  vars: { svugy: { caption: your servers } }
+  api: API {
+    style.fill: "#3478f6"
+    vars: { svugy: { caption: HTTP endpoints } }
+  }
+  queue: Queue {
+    vars: { svugy: { shape: slab; caption: pending jobs } }
+  }
+  worker: Worker {
+    style.fill: "#3478f6"
+    vars: { svugy: { caption: background jobs } }
+  }
+}
+data: Data {
+  tooltip: "[The database](#data.db) keeps users and orders. [The cache](#data.cache) keeps the reads the API repeats most."
+  vars: { svugy: { caption: what the app remembers } }
+  db: Database {
+    shape: cylinder
+    style.fill: "#d5dcea"
+    vars: { svugy: { caption: users · orders } }
+  }
+  cache: Cache {
+    shape: cylinder
+    style.fill: "#d5dcea"
+    vars: { svugy: { caption: hot reads } }
+  }
+}
+mail: Email provider {
+  style.fill: transparent
+  style.stroke-dash: 5
+  vars: { svugy: { caption: outside your servers } }
+}
+
+browser -> cdn: loads the page
+browser -> backend.api: signs in
+browser -> backend.api: places an order
+backend.api -> data.cache: looks up
+backend.api -> data.db: saves the order
+backend.api -> backend.queue: schedules a receipt {
+  tooltip: "The API answers [the browser](#browser) *before* the receipt is sent."
+}
+backend.queue -> backend.worker: hands over
+backend.worker -> mail: sends the receipt {
+  tooltip: "The email provider delivers the receipt to the user's inbox."
+}
