@@ -6,3 +6,4 @@
 /docs/src/playground/svugy-wasm.js
 *.snap.new
 *.pending-snap
+/_site

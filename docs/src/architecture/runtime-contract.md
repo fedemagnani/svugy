@@ -131,7 +131,7 @@ The description panel sits top right at a constant on-screen width, its height f
 
 Without any description there is no panel, and a click on an undescribed group closes an open one.
 
-While the panel is open, with f = (SVG client width − panel width − 24 px) / SVG client width, the runtime fits F's view into the left fraction f of the viewBox's width, so the panel does not cover it; when the panel closes, it refits F's view to the full width. The viewBox never grows past the canvas, so a view almost as wide as the canvas stays partly under the panel. When f < 0.5 the panel is ignored for framing. Before the first navigation the requested view is the canvas, which already fills the viewBox, so a panel opening at start moves nothing.
+The panel floats over the diagram: opening, changing or closing it never moves the view.
 
 Descriptions render a Markdown subset:
 

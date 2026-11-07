@@ -1464,7 +1464,6 @@
 
   const DESCRIPTION_WIDTH_PX = 320;
   const DESCRIPTION_VIEW_MARGIN_PX = 12;
-  const MIN_UNCOVERED_FRACTION = 0.5;
   const LIFTED_KIND = 'lifted';
 
   const PARAGRAPH_BLOCK = 'paragraph';
@@ -1551,7 +1550,7 @@
     const navigator = new LayerNavigator(svg, layers, initialLayer, rootLevel, animator, fader);
     const panel = new DetailPanel(svg);
     const dimmer = new UnrelatedGroupDimmer(svg);
-    const descriptionPanel = new DescriptionPanel(svg, deepestLayer, animator);
+    const descriptionPanel = new DescriptionPanel(svg, deepestLayer);
     const highlighter = new TargetHighlighter();
     navigator.addNavigationListener((focusedLevel) => {
       panel.hide();
@@ -1750,14 +1749,13 @@
       return `${view.x} ${view.y} ${view.width} ${view.height}`;
     },
 
-    // width = min(max(w, h·A·f) / f, canvas width), height = width / A, A the canvas aspect; the view centred in the left f of the width, then clamped into the canvas
-    fittedInside(view, canvas, uncoveredFraction) {
+    // width = min(max(w, h·A), canvas width), height = width / A, A the canvas aspect; the view centred, then clamped into the canvas
+    fittedInside(view, canvas) {
       const canvasAspect = canvas.width / canvas.height;
-      const uncoveredAspect = canvasAspect * uncoveredFraction;
-      const uncoveredWidth = Math.max(view.width, view.height * uncoveredAspect);
-      const width = Math.min(uncoveredWidth / uncoveredFraction, canvas.width);
+      const aspectWidth = Math.max(view.width, view.height * canvasAspect);
+      const width = Math.min(aspectWidth, canvas.width);
       const height = width / canvasAspect;
-      const centredX = view.x + (view.width - width * uncoveredFraction) / 2;
+      const centredX = view.x + (view.width - width) / 2;
       const centredY = view.y + (view.height - height) / 2;
       const rightmostX = canvas.x + canvas.width - width;
       const lowestY = canvas.y + canvas.height - height;
@@ -1782,15 +1780,12 @@
     },
   };
 
-  /** Tweens or jumps the root viewBox to a target view fitted to the canvas left of its covered right edge, so no letterbox ever falls outside the canvas; tweens jump under reduced motion. */
+  /** Tweens or jumps the root viewBox to a target view fitted to the canvas, so no letterbox ever falls outside the canvas; tweens jump under reduced motion. */
   class ViewBoxAnimator {
     constructor(svg) {
       this.svg = svg;
       this.frameRequest = 0;
       this.canvasView = this.currentView();
-      this.requestedView = this.canvasView;
-      this.coveredWidthPx = 0;
-      this.fittedUncoveredFraction = 1;
     }
 
     tweenTo(requestedView, startView = this.currentView()) {
@@ -1800,7 +1795,7 @@
         return;
       }
       cancelAnimationFrame(this.frameRequest);
-      const targetView = this.retarget(requestedView);
+      const targetView = View.fittedInside(requestedView, this.canvasView);
       this.show(startView);
       let startTime = null;
       const step = (now) => {
@@ -1819,35 +1814,8 @@
 
     jumpTo(requestedView) {
       cancelAnimationFrame(this.frameRequest);
-      const targetView = this.retarget(requestedView);
+      const targetView = View.fittedInside(requestedView, this.canvasView);
       this.show(targetView);
-    }
-
-    /** Keeps the requested view clear of the right `coveredWidthPx` screen pixels, tweening to its new fit when the uncovered fraction changed. */
-    coverRightEdge(coveredWidthPx) {
-      this.coveredWidthPx = coveredWidthPx;
-      const uncoveredFraction = this.uncoveredFraction();
-      const isFitUnchanged = uncoveredFraction === this.fittedUncoveredFraction;
-      if (isFitUnchanged) {
-        return;
-      }
-      this.tweenTo(this.requestedView);
-    }
-
-    /** Records `requestedView` as the view to keep framed and returns its fit for the current cover. */
-    retarget(requestedView) {
-      const uncoveredFraction = this.uncoveredFraction();
-      this.requestedView = requestedView;
-      this.fittedUncoveredFraction = uncoveredFraction;
-      return View.fittedInside(requestedView, this.canvasView, uncoveredFraction);
-    }
-
-    // f = (client width − covered width) / client width, or 1 when that leaves less than MIN_UNCOVERED_FRACTION of the width
-    uncoveredFraction() {
-      const clientWidth = this.svg.getBoundingClientRect().width;
-      const uncoveredFraction = (clientWidth - this.coveredWidthPx) / clientWidth;
-      const isUncoveredPartWide = uncoveredFraction >= MIN_UNCOVERED_FRACTION;
-      return isUncoveredPartWide ? uncoveredFraction : 1;
     }
 
     currentView() {
@@ -2407,12 +2375,11 @@
     },
   };
 
-  /** Shows the author's description of the focused level, or of the last clicked group or heading, in a panel pinned top-right at a constant on-screen width that the view is framed beside; nothing without a description. */
+  /** Shows the author's description of the focused level, or of the last clicked group or heading, in a panel floating top-right at a constant on-screen width; nothing without a description. */
   class DescriptionPanel {
-    constructor(svg, deepestLayer, animator) {
+    constructor(svg, deepestLayer) {
       this.svg = svg;
       this.deepestLayer = deepestLayer;
-      this.animator = animator;
       this.body = createXhtmlElement('aside', { class: 'svugy-description', 'aria-label': 'description' });
       this.frame = createSvgElement('foreignObject', { class: 'svugy-description-frame' });
       this.frame.appendChild(this.body);
@@ -2510,7 +2477,6 @@
       const isContentless = content.length === 0;
       if (isContentless) {
         this.panel.remove();
-        this.animator.coverRightEdge(0);
         return;
       }
       const isDetached = !this.panel.isConnected;
@@ -2521,7 +2487,7 @@
       this.body.scrollTop = 0;
     }
 
-    /** Sizes and places the shown panel, then keeps the view clear of the screen width it covers. */
+    /** Sizes and places the shown panel. */
     layOut() {
       const isDetached = !this.panel.isConnected;
       if (isDetached) {
@@ -2529,8 +2495,6 @@
       }
       this.fit();
       this.place();
-      const coveredWidth = this.width + 2 * DESCRIPTION_VIEW_MARGIN_PX;
-      this.animator.coverRightEdge(coveredWidth);
     }
 
     // w = min(W, client width − 2m), h = min(content height, client height − 2m): the panel never leaves the viewport

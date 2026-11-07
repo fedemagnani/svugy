@@ -1,0 +1,2737 @@
+<svg data-svugy-contract="2" height="1003.997" viewBox="-237.751 -89.743 1429.593 1003.997" width="1429.593" xmlns="http://www.w3.org/2000/svg">
+<style>/*<![CDATA[*/[data-svugy-contract]{--svugy-canvas:#0a0b10;--svugy-grid-line:#151722;--svugy-face-outline:#0a0b10;--svugy-text:#e6e8ee;--svugy-text-muted:#8b93a5;--svugy-external-outline:#5b6170;--svugy-neutral-top:#3a3f4b;--svugy-neutral-left:#2b2f39;--svugy-neutral-right:#22252d;--svugy-neutral-ink:#e6e8ee;--svugy-container-blue-top:#1b2436;--svugy-container-blue-left:#131a28;--svugy-container-blue-right:#0d131f;--svugy-container-blue-ink:#8aa0c8;font-family:Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif}
+@media (prefers-color-scheme: light){
+[data-svugy-contract]{--svugy-canvas:#f6f8ff;--svugy-grid-line:#e1e4f4;--svugy-face-outline:#f6f8ff;--svugy-text:#14161a;--svugy-text-muted:#535a6a;--svugy-external-outline:#858b9b;--svugy-neutral-top:#acb2c0;--svugy-neutral-left:#868b96;--svugy-neutral-right:#6d717b;--svugy-neutral-ink:#14161a;--svugy-container-blue-top:#c8d4ed;--svugy-container-blue-left:#9da6ba;--svugy-container-blue-right:#808898;--svugy-container-blue-ink:#3c4f72}
+}
+[data-svugy-layer]:not([data-svugy-shown]) { visibility: hidden; }
+[data-svugy-overlay] { visibility: hidden; }
+[data-svugy-shown] [data-svugy-entered] > [data-svugy-overlay] { visibility: visible; }
+
+[data-svugy-flow] { animation: svugy-flow 1.2s linear infinite; }
+@keyframes svugy-flow { to { stroke-dashoffset: -24; } }
+
+[data-svugy-dimmed] > :not([data-svugy-level], [data-svugy-edge]) { opacity: 0.2; }
+
+[data-svugy-contract]:focus,
+[data-svugy-contract] [tabindex]:focus { outline: none; }
+:is([data-svugy-element], [data-svugy-edge], [data-svugy-stub], [data-svugy-heading])[role="button"] { cursor: pointer; }
+[data-svugy-contract] [data-svugy-heading]:focus-visible { outline: 1px dashed var(--svugy-text-muted); outline-offset: 4px; }
+:is([data-svugy-element], [data-svugy-stub])[role="button"]:has([data-svugy-entered]) { cursor: auto; }
+:is([data-svugy-element], [data-svugy-stub])[role="button"]:hover:not(:has([role="button"]:hover, [data-svugy-entered])) > :is(path, rect),
+:is([data-svugy-element], [data-svugy-edge], [data-svugy-stub]):focus-visible:not(:has([data-svugy-entered])) > :is(path, rect) { stroke: var(--svugy-text); stroke-opacity: 1; stroke-width: 2; fill-opacity: 0.8; }
+[data-svugy-contract] .svugy-highlighted { animation: svugy-highlight 0.3s ease-in-out 4 alternate; }
+[data-svugy-contract] .svugy-highlighted > :is(path, rect) { stroke: var(--svugy-container-blue-ink); stroke-opacity: 1; stroke-width: 2.5; }
+@keyframes svugy-highlight { to { filter: drop-shadow(0 0 6px var(--svugy-container-blue-ink)); } }
+
+[data-svugy-contract] .svugy-panel { pointer-events: none; }
+[data-svugy-contract] .svugy-panel-plate { fill: #12141c; fill-opacity: 0.96; stroke: #2c3242; stroke-width: 1; }
+[data-svugy-contract] :is(.svugy-panel-title, .svugy-panel-body) { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; text-anchor: start; letter-spacing: 0; }
+[data-svugy-contract] .svugy-panel-title { font-size: 12.5px; font-weight: 650; fill: #eef0f6; }
+[data-svugy-contract] .svugy-panel-body { font-size: 11.5px; font-weight: 450; fill: #a6adbf; }
+
+[data-svugy-contract] .svugy-description-frame { overflow: visible; }
+[data-svugy-contract] .svugy-description { box-sizing: border-box; max-height: 100%; overflow-y: auto; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--svugy-text-muted) 40%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--svugy-canvas) 94%, var(--svugy-text)); box-shadow: 0 4px 16px rgb(0 0 0 / 0.25); color: var(--svugy-text); font: 450 12.5px/1.5 Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; overflow-wrap: anywhere; }
+[data-svugy-contract] .svugy-description :is(h3, h4, h5, h6, p, ul, ol, pre, section) { margin: 0 0 8px; }
+[data-svugy-contract] .svugy-description > :last-child,
+[data-svugy-contract] .svugy-description :is(section, li) > :last-child { margin-bottom: 0; }
+[data-svugy-contract] .svugy-description :is(ul, ol) { padding-left: 18px; }
+[data-svugy-contract] .svugy-description li > :is(ul, ol) { margin-top: 2px; }
+[data-svugy-contract] .svugy-description :is(h4, h5, h6) { margin-top: 12px; font-weight: 650; line-height: 1.3; }
+[data-svugy-contract] .svugy-description > :first-child:is(h4, h5, h6) { margin-top: 0; }
+[data-svugy-contract] .svugy-description h4 { font-size: 13.5px; }
+[data-svugy-contract] .svugy-description h5 { font-size: 12.5px; }
+[data-svugy-contract] .svugy-description h6 { font-size: 11.5px; color: var(--svugy-text-muted); }
+[data-svugy-contract] .svugy-description section + section { padding-top: 8px; border-top: 1px solid color-mix(in srgb, var(--svugy-text-muted) 25%, transparent); }
+[data-svugy-contract] .svugy-description .svugy-description-source-edge { margin-bottom: 4px; font-size: 11.5px; font-weight: 650; color: var(--svugy-text-muted); }
+[data-svugy-contract] .svugy-description pre { padding: 6px 8px; border-radius: 6px; background: color-mix(in srgb, var(--svugy-text) 8%, transparent); overflow-x: auto; white-space: pre; overflow-wrap: normal; }
+[data-svugy-contract] .svugy-description pre code { padding: 0; background: none; }
+[data-svugy-contract] .svugy-description code { padding: 1px 4px; border-radius: 4px; background: color-mix(in srgb, var(--svugy-text) 12%, transparent); font: 11.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+[data-svugy-contract] .svugy-description a { color: var(--svugy-container-blue-ink); }
+[data-svugy-contract] .svugy-description button { margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; line-height: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 45%, transparent); text-underline-offset: 2px; cursor: pointer; }
+[data-svugy-contract] .svugy-description button:hover, [data-svugy-contract] .svugy-description button:focus-visible { color: var(--svugy-link-hover, var(--svugy-container-blue-ink)); text-decoration-color: currentColor; outline: none; }
+
+@media (prefers-color-scheme: light) {
+  [data-svugy-contract] .svugy-panel-plate { fill: #ffffff; stroke: #d5d9e3; }
+  [data-svugy-contract] .svugy-panel-title { fill: #161922; }
+  [data-svugy-contract] .svugy-panel-body { fill: #545b6c; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-svugy-flow] { animation: none; }
+  [data-svugy-traveler] { visibility: hidden; }
+  [data-svugy-contract] .svugy-highlighted { animation: none; }
+}
+/*]]>*/</style>
+<title>A Kubernetes cluster</title>
+<desc data-svugy-details="">{"kind":"diagram","description":"Requests enter through [the ingress](#cluster.ingress), reach [web](#cluster.shop.web) or [api](#cluster.shop.api), and end in [Postgres](#cluster.data.postgres). Click a namespace to open it, then a deployment to see its pods."}</desc>
+<defs>
+<marker id="arrowhead-0" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
+<path d="M0,1 L9,5 L0,9 Z" fill="var(--svugy-text-muted)"/>
+</marker>
+<marker id="arrowhead-1" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
+<path d="M0,1 L9,5 L0,9 Z" fill="#d5dcea"/>
+</marker>
+<symbol id="traveler-document" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" viewBox="-5 -5 10 10">
+<path d="M-2.75,-3.5 L1,-3.5 L2.75,-1.75 L2.75,3.5 L-2.75,3.5 Z" fill-opacity="0.35"/>
+<path d="M1,-3.5 L1,-1.75 L2.75,-1.75 M-1.25,0.25 L1.25,0.25 M-1.25,2 L1.25,2" fill="none"/>
+</symbol>
+<symbol id="traveler-dot" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" viewBox="-5 -5 10 10">
+<path d="M2.5,0 C2.5,1.381 1.381,2.5 0,2.5 C-1.381,2.5 -2.5,1.381 -2.5,0 C-2.5,-1.381 -1.381,-2.5 0,-2.5 C1.381,-2.5 2.5,-1.381 2.5,0 Z" fill-opacity="1"/>
+</symbol>
+<symbol id="traveler-envelope" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" viewBox="-5 -5 10 10">
+<path d="M-3.5,-2.5 L3.5,-2.5 L3.5,2.5 L-3.5,2.5 Z" fill-opacity="0.35"/>
+<path d="M-3.5,-2.5 L0,0.5 L3.5,-2.5" fill="none"/>
+</symbol>
+<symbol id="traveler-key" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" viewBox="-5 -5 10 10">
+<path d="M-0.25,0 C-0.25,0.966 -1.034,1.75 -2,1.75 C-2.966,1.75 -3.75,0.966 -3.75,0 C-3.75,-0.966 -2.966,-1.75 -2,-1.75 C-1.034,-1.75 -0.25,-0.966 -0.25,0 Z" fill-opacity="0.35"/>
+<path d="M-0.25,0 L3.75,0 M2.25,0 L2.25,1.5 M3.5,0 L3.5,1.5" fill="none"/>
+</symbol>
+</defs>
+<rect fill="var(--svugy-canvas)" height="1003.997" rx="14" width="1429.593" x="-237.751" y="-89.743"/>
+<g data-svugy-layer="0">
+<line stroke="var(--svugy-grid-line)" x1="0" x2="-207.846" y1="-60" y2="60"/>
+<line stroke="var(--svugy-grid-line)" x1="51.962" x2="-155.885" y1="-30" y2="90"/>
+<line stroke="var(--svugy-grid-line)" x1="103.923" x2="-103.923" y1="0" y2="120"/>
+<line stroke="var(--svugy-grid-line)" x1="155.885" x2="-51.962" y1="30" y2="150"/>
+<line stroke="var(--svugy-grid-line)" x1="207.846" x2="0" y1="60" y2="180"/>
+<line stroke="var(--svugy-grid-line)" x1="259.808" x2="51.962" y1="90" y2="210"/>
+<line stroke="var(--svugy-grid-line)" x1="311.769" x2="103.923" y1="120" y2="240"/>
+<line stroke="var(--svugy-grid-line)" x1="363.731" x2="155.885" y1="150" y2="270"/>
+<line stroke="var(--svugy-grid-line)" x1="0" x2="363.731" y1="-60" y2="150"/>
+<line stroke="var(--svugy-grid-line)" x1="-51.962" x2="311.769" y1="-30" y2="180"/>
+<line stroke="var(--svugy-grid-line)" x1="-103.923" x2="259.808" y1="0" y2="210"/>
+<line stroke="var(--svugy-grid-line)" x1="-155.885" x2="207.846" y1="30" y2="240"/>
+<line stroke="var(--svugy-grid-line)" x1="-207.846" x2="155.885" y1="60" y2="270"/>
+<g data-svugy-heading="">
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="175.894" x="-57.158" y="-49.274">A Kubernetes cluster</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="208.623" x="-57.158" y="-31.274">click a namespace, then a deployment</text>
+</g>
+<g data-svugy-level="" data-svugy-view="-81.158 -89.743 302.808 283.356">
+<g data-svugy-closed="" data-svugy-element="cluster">
+<title>Cluster</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster","label":"Cluster","caption":"prod · eu-west-1"}</desc>
+<path d="M72.038,130.091 L140.493,169.614 L140.493,165.114 L72.038,125.591 Z M197.651,136.614 L140.493,169.614 L140.493,165.114 L197.651,132.114 Z M129.195,92.591 L197.651,132.114 L140.493,165.114 L72.038,125.591 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M72.038,125.591 L140.493,165.114 L140.493,142.614 L72.038,103.091 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M197.651,132.114 L140.493,165.114 L140.493,142.614 L197.651,109.614 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M129.195,70.091 L197.651,109.614 L140.493,142.614 L72.038,103.091 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="42.75" transform="matrix(0.866 0.5 -0.866 0.5 134.844 106.352)" x="0" y="-2">Cluster</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="67.045" transform="matrix(0.866 0.5 -0.866 0.5 134.844 106.352)" x="0" y="11">prod · eu-west-1</text>
+</g>
+<g data-svugy-element="users">
+<title>Users</title>
+<desc data-svugy-details="">{"kind":"element","path":"users","label":"Users","caption":"browsers · apps"}</desc>
+<path d="M-57.158,51 L9.684,89.591 L9.684,67.091 L-57.158,28.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M66.841,56.591 L9.684,89.591 L9.684,67.091 L66.841,34.091 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,-4.5 L66.841,34.091 L9.684,67.091 L-57.158,28.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="34.26" transform="matrix(0.866 0.5 -0.866 0.5 4.842 31.295)" x="0" y="-2">Users</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="65.182" transform="matrix(0.866 0.5 -0.866 0.5 4.842 31.295)" x="0" y="11">browsers · apps</text>
+</g>
+<g data-svugy-edge="(users -&gt; cluster)[0]" data-svugy-from="users" data-svugy-to="cluster">
+<title>HTTPS</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"users","to":"cluster","label":"HTTPS","edges":[{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}]}</desc>
+<path d="M38.263,50.591 Q69.25,0.099 100.238,85.542" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="envelope" fill="var(--svugy-text-muted)" height="10" href="#traveler-envelope" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M38.263,50.591 Q69.44,-0.209 100.616,86.591" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(users -&gt; cluster)[0]" data-svugy-from="users" data-svugy-to="cluster">
+<title>HTTPS</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"users","to":"cluster","label":"HTTPS","edges":[{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}]}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="55.048" x="41.916" y="26.339"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="35.048" x="69.44" y="38.011">HTTPS</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+</g>
+<g data-svugy-layer="1">
+<line stroke="var(--svugy-grid-line)" x1="0" x2="-363.731" y1="-60" y2="150"/>
+<line stroke="var(--svugy-grid-line)" x1="51.962" x2="-311.769" y1="-30" y2="180"/>
+<line stroke="var(--svugy-grid-line)" x1="103.923" x2="-259.808" y1="0" y2="210"/>
+<line stroke="var(--svugy-grid-line)" x1="155.885" x2="-207.846" y1="30" y2="240"/>
+<line stroke="var(--svugy-grid-line)" x1="207.846" x2="-155.885" y1="60" y2="270"/>
+<line stroke="var(--svugy-grid-line)" x1="259.808" x2="-103.923" y1="90" y2="300"/>
+<line stroke="var(--svugy-grid-line)" x1="311.769" x2="-51.962" y1="120" y2="330"/>
+<line stroke="var(--svugy-grid-line)" x1="363.731" x2="0" y1="150" y2="360"/>
+<line stroke="var(--svugy-grid-line)" x1="415.692" x2="51.962" y1="180" y2="390"/>
+<line stroke="var(--svugy-grid-line)" x1="467.654" x2="103.923" y1="210" y2="420"/>
+<line stroke="var(--svugy-grid-line)" x1="519.615" x2="155.885" y1="240" y2="450"/>
+<line stroke="var(--svugy-grid-line)" x1="571.577" x2="207.846" y1="270" y2="480"/>
+<line stroke="var(--svugy-grid-line)" x1="623.538" x2="259.808" y1="300" y2="510"/>
+<line stroke="var(--svugy-grid-line)" x1="675.5" x2="311.769" y1="330" y2="540"/>
+<line stroke="var(--svugy-grid-line)" x1="0" x2="675.5" y1="-60" y2="330"/>
+<line stroke="var(--svugy-grid-line)" x1="-51.962" x2="623.538" y1="-30" y2="360"/>
+<line stroke="var(--svugy-grid-line)" x1="-103.923" x2="571.577" y1="0" y2="390"/>
+<line stroke="var(--svugy-grid-line)" x1="-155.885" x2="519.615" y1="30" y2="420"/>
+<line stroke="var(--svugy-grid-line)" x1="-207.846" x2="467.654" y1="60" y2="450"/>
+<line stroke="var(--svugy-grid-line)" x1="-259.808" x2="415.692" y1="90" y2="480"/>
+<line stroke="var(--svugy-grid-line)" x1="-311.769" x2="363.731" y1="120" y2="510"/>
+<line stroke="var(--svugy-grid-line)" x1="-363.731" x2="311.769" y1="150" y2="540"/>
+<g data-svugy-heading="">
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="175.894" x="-137.698" y="-2.774">A Kubernetes cluster</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="208.623" x="-137.698" y="15.226">click a namespace, then a deployment</text>
+</g>
+<g data-svugy-level="" data-svugy-view="-161.698 -43.243 703.549 510.224">
+<g data-svugy-element="users">
+<title>Users</title>
+<desc data-svugy-details="">{"kind":"element","path":"users","label":"Users","caption":"browsers · apps"}</desc>
+<path d="M-137.698,97.5 L-70.857,136.091 L-70.857,113.591 L-137.698,75 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-13.699,103.091 L-70.857,136.091 L-70.857,113.591 L-13.699,80.591 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-80.54,42 L-13.699,80.591 L-70.857,113.591 L-137.698,75 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="34.26" transform="matrix(0.866 0.5 -0.866 0.5 -75.698 77.795)" x="0" y="-2">Users</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="65.182" transform="matrix(0.866 0.5 -0.866 0.5 -75.698 77.795)" x="0" y="11">browsers · apps</text>
+</g>
+<g data-svugy-element="cluster">
+<title>Cluster</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster","label":"Cluster","caption":"prod · eu-west-1"}</desc>
+<path d="M-89.043,218.591 L299.613,442.982 L299.613,432.482 L-89.043,208.091 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M517.851,316.982 L299.613,442.982 L299.613,432.482 L517.851,306.482 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M129.195,82.091 L517.851,306.482 L299.613,432.482 L-89.043,208.091 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster" data-svugy-view="-50.689 87.786 480.823 308.695" transform="matrix(1 0 0 1 129.195 82.091)">
+<g data-svugy-closed="" data-svugy-element="cluster.data">
+<title>data</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.data","label":"data","caption":"namespace"}</desc>
+<path d="M157.427,254.391 L219.781,290.391 L219.781,285.891 L157.427,249.891 Z M276.939,257.391 L219.781,290.391 L219.781,285.891 L276.939,252.891 Z M214.585,216.891 L276.939,252.891 L219.781,285.891 L157.427,249.891 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M157.427,249.891 L219.781,285.891 L219.781,263.391 L157.427,227.391 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M276.939,252.891 L219.781,285.891 L219.781,263.391 L276.939,230.391 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M214.585,194.391 L276.939,230.391 L219.781,263.391 L157.427,227.391 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="25.893" transform="matrix(0.866 0.5 -0.866 0.5 217.183 228.891)" x="0" y="-2">data</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="47.041" transform="matrix(0.866 0.5 -0.866 0.5 217.183 228.891)" x="0" y="11">namespace</text>
+</g>
+<g data-svugy-element="cluster.ingress">
+<title>Ingress</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.ingress","label":"Ingress","caption":"TLS · routing"}</desc>
+<path d="M-49.891,73.195 L12.463,109.195 L12.463,98.695 L-49.891,62.695 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M69.62,76.195 L12.463,109.195 L12.463,98.695 L69.62,65.695 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M7.266,29.695 L69.62,65.695 L12.463,98.695 L-49.891,62.695 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="43.898" transform="matrix(0.866 0.5 -0.866 0.5 9.865 64.195)" x="0" y="-2">Ingress</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="51.905" transform="matrix(0.866 0.5 -0.866 0.5 9.865 64.195)" x="0" y="11">TLS · routing</text>
+</g>
+<g data-svugy-closed="" data-svugy-element="cluster.observability">
+<title>observability</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.observability","label":"observability","caption":"namespace"}</desc>
+<path d="M-155.885,130.5 L-78.998,174.891 L-78.998,170.391 L-155.885,126 Z M-21.84,141.891 L-78.998,174.891 L-78.998,170.391 L-21.84,137.391 Z M-98.727,93 L-21.84,137.391 L-78.998,170.391 L-155.885,126 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M-155.885,126 L-78.998,170.391 L-78.998,147.891 L-155.885,103.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-21.84,137.391 L-78.998,170.391 L-78.998,147.891 L-21.84,114.891 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-98.727,70.5 L-21.84,114.891 L-78.998,147.891 L-155.885,103.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="76.781" transform="matrix(0.866 0.5 -0.866 0.5 -88.862 109.195)" x="0" y="-2">observability</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="47.041" transform="matrix(0.866 0.5 -0.866 0.5 -88.862 109.195)" x="0" y="11">namespace</text>
+</g>
+<g data-svugy-closed="" data-svugy-element="cluster.shop">
+<title>shop</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop","label":"shop","caption":"namespace","description":"The stateless services. Each deployment scales its pods on CPU."}</desc>
+<path d="M32.72,182.391 L95.073,218.391 L95.073,213.891 L32.72,177.891 Z M152.231,185.391 L95.073,218.391 L95.073,213.891 L152.231,180.891 Z M89.877,144.891 L152.231,180.891 L95.073,213.891 L32.72,177.891 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M32.72,177.891 L95.073,213.891 L95.073,191.391 L32.72,155.391 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M152.231,180.891 L95.073,213.891 L95.073,191.391 L152.231,158.391 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M89.877,122.391 L152.231,158.391 L95.073,191.391 L32.72,155.391 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="29.115" transform="matrix(0.866 0.5 -0.866 0.5 92.475 156.891)" x="0" y="-2">shop</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="47.041" transform="matrix(0.866 0.5 -0.866 0.5 92.475 156.891)" x="0" y="11">namespace</text>
+</g>
+<g data-svugy-edge="(cluster.ingress -&gt; cluster.shop)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop">
+<title>Ingress → shop</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.ingress","to":"cluster.shop","edges":[{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.api)[0]","from":"cluster.ingress","to":"cluster.shop.api","label":"routes /api"},{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.web)[0]","from":"cluster.ingress","to":"cluster.shop.web","label":"routes /"}]}</desc>
+<path d="M41.041,82.195 Q55.861,19.052 70.68,132.284" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M41.041,82.195 Q55.933,18.745 70.825,133.391" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.observability -&gt; cluster.shop)[0]" data-svugy-from="cluster.observability" data-svugy-to="cluster.shop">
+<title>observability → shop</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.observability","to":"cluster.shop","edges":[{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"},{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}]}</desc>
+<path d="M-50.419,131.391 Q0.377,64.111 51.173,143.45" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M-50.419,131.391 Q0.677,63.715 51.772,144.391" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.shop -&gt; cluster.data)[0]" data-svugy-from="cluster.shop" data-svugy-to="cluster.data">
+<title>shop → data</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop","to":"cluster.data","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"},{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}]}</desc>
+<path d="M123.652,174.891 Q154.64,124.399 185.627,209.842" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M123.652,174.891 Q154.829,124.091 186.006,210.891" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="" data-svugy-stub="users">
+<title>to Users</title>
+<desc data-svugy-details="">{"kind":"stub","target":"users","edges":[{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -70.483 50.046)" width="49.311" x="-24.655" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="29.311" transform="matrix(0.866 -0.5 0.866 0.5 -70.483 50.046)" x="0" y="3.82">Users</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="33.313" transform="matrix(0.866 0.5 0 1 -89.043 208.091)" x="9" y="21.5">Cluster</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="67.045" transform="matrix(0.866 0.5 0 1 -89.043 208.091)" x="9" y="34.5">prod · eu-west-1</text>
+</g>
+<g data-svugy-edge="(users -&gt; cluster.ingress)[0]" data-svugy-from="users" data-svugy-to="cluster.ingress">
+<title>HTTPS</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}</desc>
+<path d="M-42.278,97.091 Q32.485,19.678 107.247,127.367" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="envelope" fill="var(--svugy-text-muted)" height="10" href="#traveler-envelope" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M-42.278,97.091 Q32.803,19.349 107.883,128.286" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(users -&gt; cluster.ingress)[0]" data-svugy-from="users" data-svugy-to="cluster.ingress">
+<title>HTTPS</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="55.048" x="5.279" y="58.167"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="35.048" x="32.803" y="69.838">HTTPS</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+</g>
+<g data-svugy-layer="2">
+<line stroke="var(--svugy-grid-line)" x1="0" x2="-467.654" y1="-60" y2="210"/>
+<line stroke="var(--svugy-grid-line)" x1="51.962" x2="-415.692" y1="-30" y2="240"/>
+<line stroke="var(--svugy-grid-line)" x1="103.923" x2="-363.731" y1="0" y2="270"/>
+<line stroke="var(--svugy-grid-line)" x1="155.885" x2="-311.769" y1="30" y2="300"/>
+<line stroke="var(--svugy-grid-line)" x1="207.846" x2="-259.808" y1="60" y2="330"/>
+<line stroke="var(--svugy-grid-line)" x1="259.808" x2="-207.846" y1="90" y2="360"/>
+<line stroke="var(--svugy-grid-line)" x1="311.769" x2="-155.885" y1="120" y2="390"/>
+<line stroke="var(--svugy-grid-line)" x1="363.731" x2="-103.923" y1="150" y2="420"/>
+<line stroke="var(--svugy-grid-line)" x1="415.692" x2="-51.962" y1="180" y2="450"/>
+<line stroke="var(--svugy-grid-line)" x1="467.654" x2="0" y1="210" y2="480"/>
+<line stroke="var(--svugy-grid-line)" x1="519.615" x2="51.962" y1="240" y2="510"/>
+<line stroke="var(--svugy-grid-line)" x1="571.577" x2="103.923" y1="270" y2="540"/>
+<line stroke="var(--svugy-grid-line)" x1="623.538" x2="155.885" y1="300" y2="570"/>
+<line stroke="var(--svugy-grid-line)" x1="675.5" x2="207.846" y1="330" y2="600"/>
+<line stroke="var(--svugy-grid-line)" x1="727.461" x2="259.808" y1="360" y2="630"/>
+<line stroke="var(--svugy-grid-line)" x1="779.423" x2="311.769" y1="390" y2="660"/>
+<line stroke="var(--svugy-grid-line)" x1="831.384" x2="363.731" y1="420" y2="690"/>
+<line stroke="var(--svugy-grid-line)" x1="883.346" x2="415.692" y1="450" y2="720"/>
+<line stroke="var(--svugy-grid-line)" x1="935.307" x2="467.654" y1="480" y2="750"/>
+<line stroke="var(--svugy-grid-line)" x1="987.269" x2="519.615" y1="510" y2="780"/>
+<line stroke="var(--svugy-grid-line)" x1="0" x2="987.269" y1="-60" y2="510"/>
+<line stroke="var(--svugy-grid-line)" x1="-51.962" x2="935.307" y1="-30" y2="540"/>
+<line stroke="var(--svugy-grid-line)" x1="-103.923" x2="883.346" y1="0" y2="570"/>
+<line stroke="var(--svugy-grid-line)" x1="-155.885" x2="831.384" y1="30" y2="600"/>
+<line stroke="var(--svugy-grid-line)" x1="-207.846" x2="779.423" y1="60" y2="630"/>
+<line stroke="var(--svugy-grid-line)" x1="-259.808" x2="727.461" y1="90" y2="660"/>
+<line stroke="var(--svugy-grid-line)" x1="-311.769" x2="675.5" y1="120" y2="690"/>
+<line stroke="var(--svugy-grid-line)" x1="-363.731" x2="623.538" y1="150" y2="720"/>
+<line stroke="var(--svugy-grid-line)" x1="-415.692" x2="571.577" y1="180" y2="750"/>
+<line stroke="var(--svugy-grid-line)" x1="-467.654" x2="519.615" y1="210" y2="780"/>
+<g data-svugy-heading="">
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="175.894" x="-176.669" y="19.726">A Kubernetes cluster</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="208.623" x="-176.669" y="37.726">click a namespace, then a deployment</text>
+</g>
+<g data-svugy-level="" data-svugy-view="-200.669 -20.743 1056.102 713.771">
+<g data-svugy-element="users">
+<title>Users</title>
+<desc data-svugy-details="">{"kind":"element","path":"users","label":"Users","caption":"browsers · apps"}</desc>
+<path d="M-176.669,120 L-109.828,158.591 L-109.828,136.091 L-176.669,97.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-52.67,125.591 L-109.828,158.591 L-109.828,136.091 L-52.67,103.091 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-119.512,64.5 L-52.67,103.091 L-109.828,136.091 L-176.669,97.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="34.26" transform="matrix(0.866 0.5 -0.866 0.5 -114.67 100.295)" x="0" y="-2">Users</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="65.182" transform="matrix(0.866 0.5 -0.866 0.5 -114.67 100.295)" x="0" y="11">browsers · apps</text>
+</g>
+<g data-svugy-element="cluster">
+<title>Cluster</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster","label":"Cluster","caption":"prod · eu-west-1"}</desc>
+<path d="M-166.985,263.591 L535.252,669.028 L535.252,658.528 L-166.985,253.091 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M831.433,498.028 L535.252,669.028 L535.252,658.528 L831.433,487.528 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M129.195,82.091 L831.433,487.528 L535.252,658.528 L-166.985,253.091 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster" data-svugy-view="-128.632 118.371 921.71 519.157" transform="matrix(1 0 0 1 129.195 82.091)">
+<g data-svugy-element="cluster.ingress">
+<title>Ingress</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.ingress","label":"Ingress","caption":"TLS · routing"}</desc>
+<path d="M25.689,134.832 L88.043,170.832 L88.043,160.332 L25.689,124.332 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M145.2,137.832 L88.043,170.832 L88.043,160.332 L145.2,127.332 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M82.847,91.332 L145.2,127.332 L88.043,160.332 L25.689,124.332 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="43.898" transform="matrix(0.866 0.5 -0.866 0.5 85.445 125.832)" x="0" y="-2">Ingress</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="51.905" transform="matrix(0.866 0.5 -0.866 0.5 85.445 125.832)" x="0" y="11">TLS · routing</text>
+</g>
+<g data-svugy-element="cluster.observability">
+<title>observability</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.observability","label":"observability","caption":"namespace"}</desc>
+<path d="M-233.827,171 L25.397,320.663 L25.397,310.163 L-233.827,160.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M144.909,251.663 L25.397,320.663 L25.397,310.163 L144.909,241.163 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-114.315,91.5 L144.909,241.163 L25.397,310.163 L-233.827,160.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster.observability" data-svugy-view="-66.278 163.091 349.269 233.004" transform="matrix(1 0 0 1 -114.315 91.5)">
+<g data-svugy-element="cluster.observability.grafana">
+<title>Grafana</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.observability.grafana","label":"Grafana","caption":"dashboards"}</desc>
+<path d="M-57.158,69 L5.196,105 L5.196,82.5 L-57.158,46.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,72 L5.196,105 L5.196,82.5 L62.354,49.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,13.5 L62.354,49.5 L5.196,82.5 L-57.158,46.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="47.039" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="-2">Grafana</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="48.107" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="11">dashboards</text>
+</g>
+<g data-svugy-element="cluster.observability.prometheus">
+<title>Prometheus</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.observability.prometheus","label":"Prometheus","caption":"scrapes metrics"}</desc>
+<path d="M67.55,141 L139.713,182.663 L139.713,160.163 L67.55,118.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M196.87,149.663 L139.713,182.663 L139.713,160.163 L196.87,127.163 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M124.708,85.5 L196.87,127.163 L139.713,160.163 L67.55,118.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="71.326" transform="matrix(0.866 0.5 -0.866 0.5 132.21 122.832)" x="0" y="-2">Prometheus</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="65.037" transform="matrix(0.866 0.5 -0.866 0.5 132.21 122.832)" x="0" y="11">scrapes metrics</text>
+</g>
+<g data-svugy-edge="(cluster.observability.grafana -&gt; cluster.observability.prometheus)[0]" data-svugy-from="cluster.observability.grafana" data-svugy-to="cluster.observability.prometheus">
+<title>queries</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.grafana -&gt; cluster.observability.prometheus)[0]","from":"cluster.observability.grafana","to":"cluster.observability.prometheus","label":"queries"}</desc>
+<path d="M33.775,66 Q64.763,15.508 95.75,100.951" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M33.775,66 Q64.952,15.2 96.129,102" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.observability.grafana -&gt; cluster.observability.prometheus)[0]" data-svugy-from="cluster.observability.grafana" data-svugy-to="cluster.observability.prometheus">
+<title>queries</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.grafana -&gt; cluster.observability.prometheus)[0]","from":"cluster.observability.grafana","to":"cluster.observability.prometheus","label":"queries"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="57.504" x="41.396" y="45.703"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="37.504" x="70.148" y="57.375">queries</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="cluster.shop.api" data-svugy-stub="cluster.shop.api">
+<title>to api</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.shop.api","edges":[{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 222.113 161.737)" width="35.099" x="-17.549" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="15.099" transform="matrix(0.866 -0.5 0.866 0.5 222.113 161.737)" x="0" y="3.82">api</text>
+</g>
+<g data-svugy-goto="cluster.shop.web" data-svugy-stub="cluster.shop.web">
+<title>to web</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.shop.web","edges":[{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 183.142 184.237)" width="41.364" x="-20.682" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="21.364" transform="matrix(0.866 -0.5 0.866 0.5 183.142 184.237)" x="0" y="3.82">web</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="60.14" transform="matrix(0.866 0.5 0 1 -233.827 160.5)" x="9" y="21.5">observability</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="47.041" transform="matrix(0.866 0.5 0 1 -233.827 160.5)" x="9" y="34.5">namespace</text>
+</g>
+<g data-svugy-element="cluster.shop">
+<title>shop</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop","label":"shop","caption":"namespace","description":"The stateless services. Each deployment scales its pods on CPU."}</desc>
+<path d="M113.732,341.663 L238.439,413.663 L238.439,403.163 L113.732,331.163 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M435.893,299.663 L238.439,413.663 L238.439,403.163 L435.893,289.163 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M311.186,217.163 L435.893,289.163 L238.439,403.163 L113.732,331.163 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster.shop" data-svugy-view="281.281 278.339 258.524 203.481" transform="matrix(1 0 0 1 311.186 217.163)">
+<g data-svugy-closed="" data-svugy-element="cluster.shop.api">
+<title>api</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment"}</desc>
+<path d="M-57.158,73.5 L5.196,109.5 L5.196,105 L-57.158,69 Z M62.354,76.5 L5.196,109.5 L5.196,105 L62.354,72 Z M0,36 L62.354,72 L5.196,105 L-57.158,69 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M-57.158,69 L5.196,105 L5.196,82.5 L-57.158,46.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,72 L5.196,105 L5.196,82.5 L62.354,49.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,13.5 L62.354,49.5 L5.196,82.5 L-57.158,46.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="17.783" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="-2">api</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="49.095" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="11">Deployment</text>
+</g>
+<g data-svugy-closed="" data-svugy-element="cluster.shop.web">
+<title>web</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.web","label":"web","caption":"Deployment"}</desc>
+<path d="M-135.1,118.5 L-72.746,154.5 L-72.746,150 L-135.1,114 Z M-15.588,121.5 L-72.746,154.5 L-72.746,150 L-15.588,117 Z M-77.942,81 L-15.588,117 L-72.746,150 L-135.1,114 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M-135.1,114 L-72.746,150 L-72.746,127.5 L-135.1,91.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-15.588,117 L-72.746,150 L-72.746,127.5 L-15.588,94.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-77.942,58.5 L-15.588,94.5 L-72.746,127.5 L-135.1,91.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="24.914" transform="matrix(0.866 0.5 -0.866 0.5 -75.344 93)" x="0" y="-2">web</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="49.095" transform="matrix(0.866 0.5 -0.866 0.5 -75.344 93)" x="0" y="11">Deployment</text>
+</g>
+<g data-svugy-edge="(cluster.shop.web -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.shop.web" data-svugy-to="cluster.shop.api">
+<title>calls</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.web -&gt; cluster.shop.api)[0]","from":"cluster.shop.web","to":"cluster.shop.api","label":"calls"}</desc>
+<path d="M-46.765,76.5 Q-36.503,21.595 -26.24,63.426" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="document" fill="var(--svugy-text-muted)" height="10" href="#traveler-document" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M-46.765,76.5 Q-36.373,20.9 -25.981,64.5" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.shop.web -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.shop.web" data-svugy-to="cluster.shop.api">
+<title>calls</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.web -&gt; cluster.shop.api)[0]","from":"cluster.shop.web","to":"cluster.shop.api","label":"calls"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="42.969" x="-64.972" y="53.578"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="22.969" x="-43.487" y="65.25">calls</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="cluster.data.postgres" data-svugy-stub="cluster.data.postgres">
+<title>to Postgres</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.data.postgres","edges":[{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 40.609 111.202)" width="64.697" x="-32.348" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="44.697" transform="matrix(0.866 -0.5 0.866 0.5 40.609 111.202)" x="0" y="3.82">Postgres</text>
+</g>
+<g data-svugy-goto="cluster.data" data-svugy-stub="cluster.data.redis">
+<title>to Redis</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.data.redis","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -13.945 142.699)" width="47.762" x="-23.881" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="27.762" transform="matrix(0.866 -0.5 0.866 0.5 -13.945 142.699)" x="0" y="3.82">Redis</text>
+</g>
+<g data-svugy-goto="cluster" data-svugy-stub="cluster.ingress">
+<title>to Ingress</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.ingress","edges":[{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.api)[0]","from":"cluster.ingress","to":"cluster.shop.api","label":"routes /api"},{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.web)[0]","from":"cluster.ingress","to":"cluster.shop.web","label":"routes /"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -103.277 68.979)" width="57.222" x="-28.611" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="37.222" transform="matrix(0.866 -0.5 0.866 0.5 -103.277 68.979)" x="0" y="3.82">Ingress</text>
+</g>
+<g data-svugy-goto="cluster.observability" data-svugy-stub="cluster.observability.prometheus">
+<title>to Prometheus</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.observability.prometheus","edges":[{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"},{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -30.872 27.176)" width="80.662" x="-40.331" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="60.662" transform="matrix(0.866 -0.5 0.866 0.5 -30.872 27.176)" x="0" y="3.82">Prometheus</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="22.451" transform="matrix(0.866 0.5 0 1 113.732 331.163)" x="9" y="21.5">shop</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="47.041" transform="matrix(0.866 0.5 0 1 113.732 331.163)" x="9" y="34.5">namespace</text>
+</g>
+<g data-svugy-element="cluster.data">
+<title>data</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.data","label":"data","caption":"namespace"}</desc>
+<path d="M290.401,455.663 L421.645,531.437 L421.645,520.937 L290.401,445.163 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M639.883,405.437 L421.645,531.437 L421.645,520.937 L639.883,394.937 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M508.639,319.163 L639.883,394.937 L421.645,520.937 L290.401,445.163 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster.data" data-svugy-view="476.217 392.641 251.24 187.845" transform="matrix(1 0 0 1 508.639 319.163)">
+<g data-svugy-closed="" data-svugy-element="cluster.data.postgres">
+<title>Postgres</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.data.postgres","label":"Postgres","caption":"StatefulSet"}</desc>
+<path d="M-53.889,75.387 L8.464,111.387 L8.464,106.887 L-53.889,70.887 Z M65.622,78.387 L8.464,111.387 L8.464,106.887 L65.622,73.887 Z M3.268,37.887 L65.622,73.887 L8.464,106.887 L-53.889,70.887 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M-53.889,70.887 L8.464,106.887 L8.464,84.387 L-53.889,48.387 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M65.622,73.887 L8.464,106.887 L8.464,84.387 L65.622,51.387 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M3.268,15.387 L65.622,51.387 L8.464,84.387 L-53.889,48.387 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="52.588" transform="matrix(0.866 0.5 -0.866 0.5 5.866 49.887)" x="0" y="-2">Postgres</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="44.953" transform="matrix(0.866 0.5 -0.866 0.5 5.866 49.887)" x="0" y="11">StatefulSet</text>
+</g>
+<g data-svugy-element="cluster.data.redis">
+<title>Redis</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.data.redis","label":"Redis","caption":"sessions · cache"}</desc>
+<path d="M-137.618,99.118 L-137.618,124.618 C-137.618,138.644 -117.579,152.15 -92.861,154.784 C-68.142,157.418 -48.103,148.182 -48.103,134.156 L-48.103,108.656 C-48.103,122.682 -68.142,131.918 -92.861,129.284 C-117.579,126.65 -137.618,113.144 -137.618,99.118 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-48.103,108.656 C-48.103,122.682 -68.142,131.918 -92.861,129.284 C-117.579,126.65 -137.618,113.144 -137.618,99.118 C-137.618,85.091 -117.579,75.856 -92.861,78.49 C-68.142,81.124 -48.103,94.63 -48.103,108.656 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="32.566" transform="matrix(1 0 0 1 -92.861 103.887)" x="0" y="4">Redis</text>
+<text fill="#1a1b1e" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="67.548" transform="matrix(1 0 0 1 -92.861 103.887)" x="0" y="17">sessions · cache</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="cluster.shop.api" data-svugy-stub="cluster.shop.api">
+<title>to api</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.shop.api","edges":[{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]},{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -91.285 62.056)" width="35.099" x="-17.549" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="15.099" transform="matrix(0.866 -0.5 0.866 0.5 -91.285 62.056)" x="0" y="3.82">api</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="20.029" transform="matrix(0.866 0.5 0 1 290.401 445.163)" x="9" y="21.5">data</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="47.041" transform="matrix(0.866 0.5 0 1 290.401 445.163)" x="9" y="34.5">namespace</text>
+</g>
+<g data-svugy-edge="(cluster.ingress -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop.api">
+<title>routes /api</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.api)[0]","from":"cluster.ingress","to":"cluster.shop.api","label":"routes /api"}</desc>
+<path d="M126.148,138.332 Q208.929,38.279 291.71,240.628" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M126.148,138.332 Q209.14,38.024 292.133,241.663" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.ingress -&gt; cluster.shop.web)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop.web">
+<title>routes /</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.web)[0]","from":"cluster.ingress","to":"cluster.shop.web","label":"routes /"}</desc>
+<path d="M107.095,149.332 Q160.515,58.77 213.935,285.575" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M107.095,149.332 Q160.643,58.553 214.191,286.663" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.observability.prometheus -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.observability.prometheus" data-svugy-to="cluster.shop.api">
+<title>scrapes</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"}</desc>
+<path d="M63.502,229.663 Q167.925,131.833 272.348,251.819" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M63.502,229.663 Q168.291,131.49 273.08,252.663" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.observability.prometheus -&gt; cluster.shop.web)[0]" data-svugy-from="cluster.observability.prometheus" data-svugy-to="cluster.shop.web">
+<title>scrapes</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}</desc>
+<path d="M44.45,240.663 Q119.509,170.593 194.568,296.702" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M44.45,240.663 Q119.794,170.326 195.138,297.663" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres)[0]" data-svugy-from="cluster.shop.api" data-svugy-to="cluster.data.postgres">
+<title>writes</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
+<path d="M354.487,277.663 Q418.668,215.478 482.849,350.041" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="document" fill="var(--svugy-text-muted)" height="10" href="#traveler-document" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M354.487,277.663 Q418.908,215.246 483.329,351.05" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.redis)[0]" data-svugy-from="cluster.shop.api" data-svugy-to="cluster.data.redis">
+<title>reads sessions</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}</desc>
+<path d="M335.434,288.663 Q358.308,234.953 381.182,402.056" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="key" fill="var(--svugy-text-muted)" height="10" href="#traveler-key" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M335.434,288.663 Q358.384,234.776 381.334,403.163" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.ingress -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop.api">
+<title>routes /api</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.api)[0]","from":"cluster.ingress","to":"cluster.shop.api","label":"routes /api"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="73.895" x="172.193" y="106.158"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="53.895" x="209.14" y="117.83">routes /api</text>
+</g>
+<g data-svugy-edge="(cluster.ingress -&gt; cluster.shop.web)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop.web">
+<title>routes /</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.web)[0]","from":"cluster.ingress","to":"cluster.shop.web","label":"routes /"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="58.796" x="131.245" y="130.423"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="38.796" x="160.643" y="142.095">routes /</text>
+</g>
+<g data-svugy-edge="(cluster.observability.prometheus -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.observability.prometheus" data-svugy-to="cluster.shop.api">
+<title>scrapes</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="60.052" x="138.266" y="178.474"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="40.052" x="168.291" y="190.146">scrapes</text>
+</g>
+<g data-svugy-edge="(cluster.observability.prometheus -&gt; cluster.shop.web)[0]" data-svugy-from="cluster.observability.prometheus" data-svugy-to="cluster.shop.web">
+<title>scrapes</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="60.052" x="89.768" y="211.892"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="40.052" x="119.794" y="223.564">scrapes</text>
+</g>
+<g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres)[0]" data-svugy-from="cluster.shop.api" data-svugy-to="cluster.data.postgres">
+<title>writes</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="50.808" x="393.504" y="256.949"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="30.808" x="418.908" y="268.621">writes</text>
+</g>
+<g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.redis)[0]" data-svugy-from="cluster.shop.api" data-svugy-to="cluster.data.redis">
+<title>reads sessions</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="95.228" x="313.003" y="288.587"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="75.228" x="360.616" y="300.259">reads sessions</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="" data-svugy-stub="users">
+<title>to Users</title>
+<desc data-svugy-details="">{"kind":"stub","target":"users","edges":[{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -116.362 76.534)" width="49.311" x="-24.655" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="29.311" transform="matrix(0.866 -0.5 0.866 0.5 -116.362 76.534)" x="0" y="3.82">Users</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="33.313" transform="matrix(0.866 0.5 0 1 -166.985 253.091)" x="9" y="21.5">Cluster</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="67.045" transform="matrix(0.866 0.5 0 1 -166.985 253.091)" x="9" y="34.5">prod · eu-west-1</text>
+</g>
+<g data-svugy-edge="(users -&gt; cluster.ingress)[0]" data-svugy-from="users" data-svugy-to="cluster.ingress">
+<title>HTTPS</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}</desc>
+<path d="M-81.249,119.591 Q50.765,18.7 182.779,189.038" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="envelope" fill="var(--svugy-text-muted)" height="10" href="#traveler-envelope" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M-81.249,119.591 Q51.107,18.439 183.463,189.922" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(users -&gt; cluster.ingress)[0]" data-svugy-from="users" data-svugy-to="cluster.ingress">
+<title>HTTPS</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="55.048" x="23.583" y="78.745"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="35.048" x="51.107" y="90.417">HTTPS</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+</g>
+<g data-svugy-layer="3" data-svugy-shown="">
+<line stroke="var(--svugy-grid-line)" x1="0" x2="-519.615" y1="-60" y2="240"/>
+<line stroke="var(--svugy-grid-line)" x1="51.962" x2="-467.654" y1="-30" y2="270"/>
+<line stroke="var(--svugy-grid-line)" x1="103.923" x2="-415.692" y1="0" y2="300"/>
+<line stroke="var(--svugy-grid-line)" x1="155.885" x2="-363.731" y1="30" y2="330"/>
+<line stroke="var(--svugy-grid-line)" x1="207.846" x2="-311.769" y1="60" y2="360"/>
+<line stroke="var(--svugy-grid-line)" x1="259.808" x2="-259.808" y1="90" y2="390"/>
+<line stroke="var(--svugy-grid-line)" x1="311.769" x2="-207.846" y1="120" y2="420"/>
+<line stroke="var(--svugy-grid-line)" x1="363.731" x2="-155.885" y1="150" y2="450"/>
+<line stroke="var(--svugy-grid-line)" x1="415.692" x2="-103.923" y1="180" y2="480"/>
+<line stroke="var(--svugy-grid-line)" x1="467.654" x2="-51.962" y1="210" y2="510"/>
+<line stroke="var(--svugy-grid-line)" x1="519.615" x2="0" y1="240" y2="540"/>
+<line stroke="var(--svugy-grid-line)" x1="571.577" x2="51.962" y1="270" y2="570"/>
+<line stroke="var(--svugy-grid-line)" x1="623.538" x2="103.923" y1="300" y2="600"/>
+<line stroke="var(--svugy-grid-line)" x1="675.5" x2="155.885" y1="330" y2="630"/>
+<line stroke="var(--svugy-grid-line)" x1="727.461" x2="207.846" y1="360" y2="660"/>
+<line stroke="var(--svugy-grid-line)" x1="779.423" x2="259.808" y1="390" y2="690"/>
+<line stroke="var(--svugy-grid-line)" x1="831.384" x2="311.769" y1="420" y2="720"/>
+<line stroke="var(--svugy-grid-line)" x1="883.346" x2="363.731" y1="450" y2="750"/>
+<line stroke="var(--svugy-grid-line)" x1="935.307" x2="415.692" y1="480" y2="780"/>
+<line stroke="var(--svugy-grid-line)" x1="987.269" x2="467.654" y1="510" y2="810"/>
+<line stroke="var(--svugy-grid-line)" x1="1039.23" x2="519.615" y1="540" y2="840"/>
+<line stroke="var(--svugy-grid-line)" x1="1091.192" x2="571.577" y1="570" y2="870"/>
+<line stroke="var(--svugy-grid-line)" x1="1143.154" x2="623.538" y1="600" y2="900"/>
+<line stroke="var(--svugy-grid-line)" x1="1195.115" x2="675.5" y1="630" y2="930"/>
+<line stroke="var(--svugy-grid-line)" x1="1247.077" x2="727.461" y1="660" y2="960"/>
+<line stroke="var(--svugy-grid-line)" x1="1299.038" x2="779.423" y1="690" y2="990"/>
+<line stroke="var(--svugy-grid-line)" x1="1351" x2="831.384" y1="720" y2="1020"/>
+<line stroke="var(--svugy-grid-line)" x1="0" x2="1351" y1="-60" y2="720"/>
+<line stroke="var(--svugy-grid-line)" x1="-51.962" x2="1299.038" y1="-30" y2="750"/>
+<line stroke="var(--svugy-grid-line)" x1="-103.923" x2="1247.077" y1="0" y2="780"/>
+<line stroke="var(--svugy-grid-line)" x1="-155.885" x2="1195.115" y1="30" y2="810"/>
+<line stroke="var(--svugy-grid-line)" x1="-207.846" x2="1143.154" y1="60" y2="840"/>
+<line stroke="var(--svugy-grid-line)" x1="-259.808" x2="1091.192" y1="90" y2="870"/>
+<line stroke="var(--svugy-grid-line)" x1="-311.769" x2="1039.23" y1="120" y2="900"/>
+<line stroke="var(--svugy-grid-line)" x1="-363.731" x2="987.269" y1="150" y2="930"/>
+<line stroke="var(--svugy-grid-line)" x1="-415.692" x2="935.307" y1="180" y2="960"/>
+<line stroke="var(--svugy-grid-line)" x1="-467.654" x2="883.346" y1="210" y2="990"/>
+<line stroke="var(--svugy-grid-line)" x1="-519.615" x2="831.384" y1="240" y2="1020"/>
+<g data-svugy-heading="">
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="175.894" x="-213.751" y="33.226">A Kubernetes cluster</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="208.623" x="-213.751" y="51.226">click a namespace, then a deployment</text>
+</g>
+<g data-svugy-level="" data-svugy-view="-237.751 -7.243 1429.593 921.497">
+<g data-svugy-element="users">
+<title>Users</title>
+<desc data-svugy-details="">{"kind":"element","path":"users","label":"Users","caption":"browsers · apps"}</desc>
+<path d="M-200.052,133.5 L-133.21,172.091 L-133.21,149.591 L-200.052,111 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-76.053,139.091 L-133.21,172.091 L-133.21,149.591 L-76.053,116.591 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-142.894,78 L-76.053,116.591 L-133.21,149.591 L-200.052,111 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="34.26" transform="matrix(0.866 0.5 -0.866 0.5 -138.052 113.795)" x="0" y="-2">Users</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="65.182" transform="matrix(0.866 0.5 -0.866 0.5 -138.052 113.795)" x="0" y="11">browsers · apps</text>
+</g>
+<g data-svugy-element="cluster">
+<title>Cluster</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster","label":"Cluster","caption":"prod · eu-west-1"}</desc>
+<path d="M-213.751,290.591 L824.896,890.254 L824.896,879.754 L-213.751,280.091 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M1167.842,692.254 L824.896,890.254 L824.896,879.754 L1167.842,681.754 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M129.195,82.091 L1167.842,681.754 L824.896,879.754 L-213.751,280.091 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster" data-svugy-view="-159.808 133.333 1289.297 734.421" transform="matrix(1 0 0 1 129.195 82.091)">
+<g data-svugy-element="cluster.ingress">
+<title>Ingress</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.ingress","label":"Ingress","caption":"TLS · routing"}</desc>
+<path d="M-5.488,152.832 L56.866,188.832 L56.866,178.332 L-5.488,142.332 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M114.024,155.832 L56.866,188.832 L56.866,178.332 L114.024,145.332 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M51.67,109.332 L114.024,145.332 L56.866,178.332 L-5.488,142.332 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="43.898" transform="matrix(0.866 0.5 -0.866 0.5 54.268 143.832)" x="0" y="-2">Ingress</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="51.905" transform="matrix(0.866 0.5 -0.866 0.5 54.268 143.832)" x="0" y="11">TLS · routing</text>
+</g>
+<g data-svugy-element="cluster.observability">
+<title>observability</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.observability","label":"observability","caption":"namespace"}</desc>
+<path d="M-265.004,189 L-5.78,338.663 L-5.78,328.163 L-265.004,178.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M113.732,269.663 L-5.78,338.663 L-5.78,328.163 L113.732,259.163 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-145.492,109.5 L113.732,259.163 L-5.78,328.163 L-265.004,178.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster.observability" data-svugy-view="-97.455 181.091 351.867 233.004" transform="matrix(1 0 0 1 -145.492 109.5)">
+<g data-svugy-element="cluster.observability.grafana">
+<title>Grafana</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.observability.grafana","label":"Grafana","caption":"dashboards"}</desc>
+<path d="M-57.158,69 L5.196,105 L5.196,82.5 L-57.158,46.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,72 L5.196,105 L5.196,82.5 L62.354,49.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,13.5 L62.354,49.5 L5.196,82.5 L-57.158,46.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="47.039" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="-2">Grafana</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="48.107" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="11">dashboards</text>
+</g>
+<g data-svugy-element="cluster.observability.prometheus">
+<title>Prometheus</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.observability.prometheus","label":"Prometheus","caption":"scrapes metrics"}</desc>
+<path d="M67.55,141 L139.713,182.663 L139.713,160.163 L67.55,118.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M196.87,149.663 L139.713,182.663 L139.713,160.163 L196.87,127.163 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M124.708,85.5 L196.87,127.163 L139.713,160.163 L67.55,118.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="71.326" transform="matrix(0.866 0.5 -0.866 0.5 132.21 122.832)" x="0" y="-2">Prometheus</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="65.037" transform="matrix(0.866 0.5 -0.866 0.5 132.21 122.832)" x="0" y="11">scrapes metrics</text>
+</g>
+<g data-svugy-edge="(cluster.observability.grafana -&gt; cluster.observability.prometheus)[0]" data-svugy-from="cluster.observability.grafana" data-svugy-to="cluster.observability.prometheus">
+<title>queries</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.grafana -&gt; cluster.observability.prometheus)[0]","from":"cluster.observability.grafana","to":"cluster.observability.prometheus","label":"queries"}</desc>
+<path d="M33.775,66 Q64.763,15.508 95.75,100.951" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M33.775,66 Q64.952,15.2 96.129,102" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.observability.grafana -&gt; cluster.observability.prometheus)[0]" data-svugy-from="cluster.observability.grafana" data-svugy-to="cluster.observability.prometheus">
+<title>queries</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.grafana -&gt; cluster.observability.prometheus)[0]","from":"cluster.observability.grafana","to":"cluster.observability.prometheus","label":"queries"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="57.504" x="41.396" y="45.703"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="37.504" x="70.148" y="57.375">queries</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="cluster.shop.api" data-svugy-stub="cluster.shop.api">
+<title>to api</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.shop.api","edges":[{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 224.711 160.237)" width="35.099" x="-17.549" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="15.099" transform="matrix(0.866 -0.5 0.866 0.5 224.711 160.237)" x="0" y="3.82">api</text>
+</g>
+<g data-svugy-goto="cluster.shop.web" data-svugy-stub="cluster.shop.web">
+<title>to web</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.shop.web","edges":[{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 183.142 184.237)" width="41.364" x="-20.682" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="21.364" transform="matrix(0.866 -0.5 0.866 0.5 183.142 184.237)" x="0" y="3.82">web</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="60.14" transform="matrix(0.866 0.5 0 1 -265.004 178.5)" x="9" y="21.5">observability</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="47.041" transform="matrix(0.866 0.5 0 1 -265.004 178.5)" x="9" y="34.5">namespace</text>
+</g>
+<g data-svugy-element="cluster.shop">
+<title>shop</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop","label":"shop","caption":"namespace","description":"The stateless services. Each deployment scales its pods on CPU."}</desc>
+<path d="M51.378,377.663 L373.539,563.663 L373.539,553.163 L51.378,367.163 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M633.347,413.663 L373.539,563.663 L373.539,553.163 L633.347,403.163 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M311.186,217.163 L633.347,403.163 L373.539,553.163 L51.378,367.163 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster.shop" data-svugy-view="209.98 296.254 524.44 327" transform="matrix(1 0 0 1 311.186 217.163)">
+<g data-svugy-element="cluster.shop.api">
+<title>api</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment"}</desc>
+<path d="M-88.335,87 L88.335,189 L88.335,178.5 L-88.335,76.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M176.669,138 L88.335,189 L88.335,178.5 L176.669,127.5 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,25.5 L176.669,127.5 L88.335,178.5 L-88.335,76.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster.shop.api" data-svugy-view="359.223 296.254 250.65 187.5" transform="matrix(1 0 0 1 0 25.5)">
+<g data-svugy-element="cluster.shop.api.api-1">
+<title>api-1</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api.api-1","label":"api-1","caption":"pod"}</desc>
+<path d="M-57.158,51 L5.196,87 L5.196,64.5 L-57.158,28.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,54 L5.196,87 L5.196,64.5 L62.354,31.5 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,-4.5 L62.354,31.5 L5.196,64.5 L-57.158,28.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="28.57" transform="matrix(0.866 0.5 -0.866 0.5 2.598 30)" x="0" y="-2">api-1</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="15.643" transform="matrix(0.866 0.5 -0.866 0.5 2.598 30)" x="0" y="11">pod</text>
+</g>
+<g data-svugy-element="cluster.shop.api.api-2">
+<title>api-2</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api.api-2","label":"api-2","caption":"pod"}</desc>
+<path d="M25.981,99 L88.335,135 L88.335,112.5 L25.981,76.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M145.492,102 L88.335,135 L88.335,112.5 L145.492,79.5 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M83.138,43.5 L145.492,79.5 L88.335,112.5 L25.981,76.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="30.955" transform="matrix(0.866 0.5 -0.866 0.5 85.737 78)" x="0" y="-2">api-2</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="15.643" transform="matrix(0.866 0.5 -0.866 0.5 85.737 78)" x="0" y="11">pod</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="13.74" transform="matrix(0.866 0.5 0 1 -88.335 76.5)" x="9" y="21.5">api</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="49.095" transform="matrix(0.866 0.5 0 1 -88.335 76.5)" x="9" y="34.5">Deployment</text>
+</g>
+<g data-svugy-element="cluster.shop.web">
+<title>web</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.web","label":"web","caption":"Deployment"}</desc>
+<path d="M-197.454,150 L62.354,300 L62.354,289.5 L-197.454,139.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M150.688,249 L62.354,300 L62.354,289.5 L150.688,238.5 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-109.119,88.5 L150.688,238.5 L62.354,289.5 L-197.454,139.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster.shop.web" data-svugy-view="250.104 359.254 333.788 235.5" transform="matrix(1 0 0 1 -109.119 88.5)">
+<g data-svugy-element="cluster.shop.web.web-1">
+<title>web-1</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.web.web-1","label":"web-1","caption":"pod"}</desc>
+<path d="M-57.158,51 L5.196,87 L5.196,64.5 L-57.158,28.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,54 L5.196,87 L5.196,64.5 L62.354,31.5 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,-4.5 L62.354,31.5 L5.196,64.5 L-57.158,28.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="35.701" transform="matrix(0.866 0.5 -0.866 0.5 2.598 30)" x="0" y="-2">web-1</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="15.643" transform="matrix(0.866 0.5 -0.866 0.5 2.598 30)" x="0" y="11">pod</text>
+</g>
+<g data-svugy-element="cluster.shop.web.web-2">
+<title>web-2</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.web.web-2","label":"web-2","caption":"pod"}</desc>
+<path d="M25.981,99 L88.335,135 L88.335,112.5 L25.981,76.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M145.492,102 L88.335,135 L88.335,112.5 L145.492,79.5 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M83.138,43.5 L145.492,79.5 L88.335,112.5 L25.981,76.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="38.086" transform="matrix(0.866 0.5 -0.866 0.5 85.737 78)" x="0" y="-2">web-2</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="15.643" transform="matrix(0.866 0.5 -0.866 0.5 85.737 78)" x="0" y="11">pod</text>
+</g>
+<g data-svugy-element="cluster.shop.web.web-3">
+<title>web-3</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.web.web-3","label":"web-3","caption":"pod"}</desc>
+<path d="M109.119,147 L171.473,183 L171.473,160.5 L109.119,124.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M228.631,150 L171.473,183 L171.473,160.5 L228.631,127.5 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M166.277,91.5 L228.631,127.5 L171.473,160.5 L109.119,124.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="38.273" transform="matrix(0.866 0.5 -0.866 0.5 168.875 126)" x="0" y="-2">web-3</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="15.643" transform="matrix(0.866 0.5 -0.866 0.5 168.875 126)" x="0" y="11">pod</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="19.092" transform="matrix(0.866 0.5 0 1 -197.454 139.5)" x="9" y="21.5">web</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="49.095" transform="matrix(0.866 0.5 0 1 -197.454 139.5)" x="9" y="34.5">Deployment</text>
+</g>
+<g data-svugy-edge="(cluster.shop.web -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.shop.web" data-svugy-to="cluster.shop.api">
+<title>calls</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.web -&gt; cluster.shop.api)[0]","from":"cluster.shop.web","to":"cluster.shop.api","label":"calls"}</desc>
+<path d="M20.785,163.5 Q10.523,85.029 0.26,126.43" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="document" fill="var(--svugy-text-muted)" height="10" href="#traveler-document" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M20.785,163.5 Q10.392,84.034 0,127.5" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.shop.web -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.shop.web" data-svugy-to="cluster.shop.api">
+<title>calls</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.web -&gt; cluster.shop.api)[0]","from":"cluster.shop.web","to":"cluster.shop.api","label":"calls"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="42.969" x="-11.092" y="106.915"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="22.969" x="10.392" y="118.586">calls</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="cluster.data.postgres" data-svugy-stub="cluster.data.postgres.pg-0">
+<title>to pg-0</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.data.postgres.pg-0","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 243.914 221.824)" width="44.63" x="-22.315" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="24.63" transform="matrix(0.866 -0.5 0.866 0.5 243.914 221.824)" x="0" y="3.82">pg-0</text>
+</g>
+<g data-svugy-goto="cluster.data" data-svugy-stub="cluster.data.redis">
+<title>to Redis</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.data.redis","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 174.375 261.972)" width="47.762" x="-23.881" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="27.762" transform="matrix(0.866 -0.5 0.866 0.5 174.375 261.972)" x="0" y="3.82">Redis</text>
+</g>
+<g data-svugy-goto="cluster" data-svugy-stub="cluster.ingress">
+<title>to Ingress</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.ingress","edges":[{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.api)[0]","from":"cluster.ingress","to":"cluster.shop.api","label":"routes /api"},{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.web)[0]","from":"cluster.ingress","to":"cluster.shop.web","label":"routes /"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -98.924 66.466)" width="57.222" x="-28.611" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="37.222" transform="matrix(0.866 -0.5 0.866 0.5 -98.924 66.466)" x="0" y="3.82">Ingress</text>
+</g>
+<g data-svugy-goto="cluster.observability" data-svugy-stub="cluster.observability.prometheus">
+<title>to Prometheus</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.observability.prometheus","edges":[{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"},{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -164.673 104.426)" width="80.662" x="-40.331" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="60.662" transform="matrix(0.866 -0.5 0.866 0.5 -164.673 104.426)" x="0" y="3.82">Prometheus</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="22.451" transform="matrix(0.866 0.5 0 1 51.378 367.163)" x="9" y="21.5">shop</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="47.041" transform="matrix(0.866 0.5 0 1 51.378 367.163)" x="9" y="34.5">namespace</text>
+</g>
+<g data-svugy-element="cluster.data">
+<title>data</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.data","label":"data","caption":"namespace"}</desc>
+<path d="M425.501,605.663 L695.701,761.663 L695.701,751.163 L425.501,595.163 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M976.293,599.663 L695.701,761.663 L695.701,751.163 L976.293,589.163 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M706.093,433.163 L976.293,589.163 L695.701,751.163 L425.501,595.163 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster.data" data-svugy-view="665.948 516.754 401.186 253.845" transform="matrix(1 0 0 1 706.093 433.163)">
+<g data-svugy-element="cluster.data.postgres">
+<title>Postgres</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.data.postgres","label":"Postgres","caption":"StatefulSet"}</desc>
+<path d="M-119.512,105 L88.335,225 L88.335,214.5 L-119.512,94.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M207.846,156 L88.335,225 L88.335,214.5 L207.846,145.5 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,25.5 L207.846,145.5 L88.335,214.5 L-119.512,94.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster.data.postgres" data-svugy-view="719.447 537.334 267.872 170.339" transform="matrix(1 0 0 1 0 25.5)">
+<g data-svugy-element="cluster.data.postgres.pg-0">
+<title>pg-0</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.data.postgres.pg-0","label":"pg-0","caption":"primary"}</desc>
+<path d="M-39.696,42.881 L-39.696,68.381 C-39.696,81.816 -20.76,93.656 2.598,94.826 C25.956,95.997 44.892,86.054 44.892,72.619 L44.892,47.119 C44.892,60.554 25.956,70.497 2.598,69.326 C-20.76,68.156 -39.696,56.316 -39.696,42.881 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M44.892,47.119 C44.892,60.554 25.956,70.497 2.598,69.326 C-20.76,68.156 -39.696,56.316 -39.696,42.881 C-39.696,29.446 -20.76,19.503 2.598,20.674 C25.956,21.844 44.892,33.684 44.892,47.119 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="28.852" transform="matrix(1 0 0 1 2.598 45)" x="0" y="4">pg-0</text>
+<text fill="#1a1b1e" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="31.236" transform="matrix(1 0 0 1 2.598 45)" x="0" y="17">primary</text>
+</g>
+<g data-svugy-element="cluster.data.postgres.pg-1">
+<title>pg-1</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.data.postgres.pg-1","label":"pg-1","caption":"replica"}</desc>
+<path d="M43.443,90.881 L43.443,116.381 C43.443,129.816 62.378,141.656 85.737,142.826 C109.095,143.997 128.03,134.054 128.03,120.619 L128.03,95.119 C128.03,108.554 109.095,118.497 85.737,117.326 C62.378,116.156 43.443,104.316 43.443,90.881 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M128.03,95.119 C128.03,108.554 109.095,118.497 85.737,117.326 C62.378,116.156 43.443,104.316 43.443,90.881 C43.443,77.446 62.378,67.503 85.737,68.674 C109.095,69.844 128.03,81.684 128.03,95.119 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="25.934" transform="matrix(1 0 0 1 85.737 93)" x="0" y="4">pg-1</text>
+<text fill="#1a1b1e" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="27.55" transform="matrix(1 0 0 1 85.737 93)" x="0" y="17">replica</text>
+</g>
+<g data-svugy-edge="(cluster.data.postgres.pg-0 -&gt; cluster.data.postgres.pg-1)[0]" data-svugy-from="cluster.data.postgres.pg-0" data-svugy-to="cluster.data.postgres.pg-1">
+<title>(cluster.data.postgres.pg-0 -&gt; cluster.data.postgres.pg-1)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.data.postgres.pg-0 -&gt; cluster.data.postgres.pg-1)[0]","from":"cluster.data.postgres.pg-0","to":"cluster.data.postgres.pg-1"}</desc>
+<path d="M33.775,63 Q44.064,19.832 54.354,73.909" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#d5dcea" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#d5dcea" height="10" href="#traveler-dot" stroke="#d5dcea" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M33.775,63 Q44.167,19.4 54.56,75" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="cluster.shop.api" data-svugy-stub="cluster.shop.api">
+<title>to api</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.shop.api","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -69.843 49.676)" width="35.099" x="-17.549" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="15.099" transform="matrix(0.866 -0.5 0.866 0.5 -69.843 49.676)" x="0" y="3.82">api</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="40.974" transform="matrix(0.866 0.5 0 1 -119.512 94.5)" x="9" y="21.5">Postgres</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="44.953" transform="matrix(0.866 0.5 0 1 -119.512 94.5)" x="9" y="34.5">StatefulSet</text>
+</g>
+<g data-svugy-element="cluster.data.redis">
+<title>Redis</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.data.redis","label":"Redis","caption":"sessions · cache"}</desc>
+<path d="M-130.494,175.231 L-130.494,200.731 C-130.494,214.757 -110.455,228.263 -85.737,230.897 C-61.018,233.531 -40.979,224.295 -40.979,210.269 L-40.979,184.769 C-40.979,198.795 -61.018,208.031 -85.737,205.397 C-110.455,202.763 -130.494,189.257 -130.494,175.231 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-40.979,184.769 C-40.979,198.795 -61.018,208.031 -85.737,205.397 C-110.455,202.763 -130.494,189.257 -130.494,175.231 C-130.494,161.205 -110.455,151.969 -85.737,154.603 C-61.018,157.237 -40.979,170.743 -40.979,184.769 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="32.566" transform="matrix(1 0 0 1 -85.737 180)" x="0" y="4">Redis</text>
+<text fill="#1a1b1e" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="67.548" transform="matrix(1 0 0 1 -85.737 180)" x="0" y="17">sessions · cache</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="cluster.shop.api" data-svugy-stub="cluster.shop.api">
+<title>to api</title>
+<desc data-svugy-details="">{"kind":"stub","target":"cluster.shop.api","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"},{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -123.342 80.564)" width="35.099" x="-17.549" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="15.099" transform="matrix(0.866 -0.5 0.866 0.5 -123.342 80.564)" x="0" y="3.82">api</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="20.029" transform="matrix(0.866 0.5 0 1 425.501 595.163)" x="9" y="21.5">data</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="47.041" transform="matrix(0.866 0.5 0 1 425.501 595.163)" x="9" y="34.5">namespace</text>
+</g>
+<g data-svugy-edge="(cluster.ingress -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop.api">
+<title>routes /api</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.api)[0]","from":"cluster.ingress","to":"cluster.shop.api","label":"routes /api"}</desc>
+<path d="M94.971,156.332 Q188.11,69.03 281.248,258.659" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M94.971,156.332 Q188.356,68.8 281.741,259.663" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.ingress -&gt; cluster.shop.web)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop.web">
+<title>routes /</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.web)[0]","from":"cluster.ingress","to":"cluster.shop.web","label":"routes /"}</desc>
+<path d="M75.918,167.332 Q124.153,95.688 172.388,321.569" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M75.918,167.332 Q124.27,95.515 172.622,322.663" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.observability.prometheus -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.observability.prometheus" data-svugy-to="cluster.shop.api">
+<title>scrapes</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"}</desc>
+<path d="M32.325,247.663 Q141.963,138.028 251.601,275.787" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M32.325,247.663 Q142.311,137.68 252.296,276.663" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.observability.prometheus -&gt; cluster.shop.web)[0]" data-svugy-from="cluster.observability.prometheus" data-svugy-to="cluster.shop.web">
+<title>scrapes</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}</desc>
+<path d="M13.273,258.663 Q78.002,189.75 142.732,338.638" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M13.273,258.663 Q78.225,189.513 143.177,339.663" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]" data-svugy-from="cluster.shop.api" data-svugy-to="cluster.data.postgres.pg-0">
+<title>writes</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}</desc>
+<path d="M458.41,361.663 Q567.728,247.624 677.046,484.647" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="document" fill="var(--svugy-text-muted)" height="10" href="#traveler-document" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M458.41,361.663 Q567.962,247.38 677.514,485.663" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.redis)[0]" data-svugy-from="cluster.shop.api" data-svugy-to="cluster.data.redis">
+<title>reads sessions</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}</desc>
+<path d="M428.965,378.663 Q507.297,291.489 585.63,592.193" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="key" fill="var(--svugy-text-muted)" height="10" href="#traveler-key" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M428.965,378.663 Q507.438,291.332 585.912,593.276" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.ingress -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop.api">
+<title>routes /api</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.api)[0]","from":"cluster.ingress","to":"cluster.shop.api","label":"routes /api"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="73.895" x="151.409" y="130.546"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="53.895" x="188.356" y="142.218">routes /api</text>
+</g>
+<g data-svugy-edge="(cluster.ingress -&gt; cluster.shop.web)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop.web">
+<title>routes /</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.web)[0]","from":"cluster.ingress","to":"cluster.shop.web","label":"routes /"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="58.796" x="94.872" y="162.404"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="38.796" x="124.27" y="174.076">routes /</text>
+</g>
+<g data-svugy-edge="(cluster.observability.prometheus -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.observability.prometheus" data-svugy-to="cluster.shop.api">
+<title>scrapes</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="60.052" x="112.285" y="192.069"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="40.052" x="142.311" y="203.741">scrapes</text>
+</g>
+<g data-svugy-edge="(cluster.observability.prometheus -&gt; cluster.shop.web)[0]" data-svugy-from="cluster.observability.prometheus" data-svugy-to="cluster.shop.web">
+<title>scrapes</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="60.052" x="48.199" y="236.486"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="40.052" x="78.225" y="248.158">scrapes</text>
+</g>
+<g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]" data-svugy-from="cluster.shop.api" data-svugy-to="cluster.data.postgres.pg-0">
+<title>writes</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="50.808" x="542.558" y="327.669"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="30.808" x="567.962" y="339.341">writes</text>
+</g>
+<g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.redis)[0]" data-svugy-from="cluster.shop.api" data-svugy-to="cluster.data.redis">
+<title>reads sessions</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="95.228" x="459.824" y="380.799"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="75.228" x="507.438" y="392.471">reads sessions</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="" data-svugy-stub="users">
+<title>to Users</title>
+<desc data-svugy-details="">{"kind":"stub","target":"users","edges":[{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -142.276 91.495)" width="49.311" x="-24.655" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="29.311" transform="matrix(0.866 -0.5 0.866 0.5 -142.276 91.495)" x="0" y="3.82">Users</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="33.313" transform="matrix(0.866 0.5 0 1 -213.751 280.091)" x="9" y="21.5">Cluster</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="67.045" transform="matrix(0.866 0.5 0 1 -213.751 280.091)" x="9" y="34.5">prod · eu-west-1</text>
+</g>
+<g data-svugy-edge="(users -&gt; cluster.ingress)[0]" data-svugy-from="users" data-svugy-to="cluster.ingress">
+<title>HTTPS</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}</desc>
+<path d="M-104.632,133.091 Q23.493,35.658 151.617,207.026" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="envelope" fill="var(--svugy-text-muted)" height="10" href="#traveler-envelope" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M-104.632,133.091 Q23.827,35.404 152.286,207.922" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(users -&gt; cluster.ingress)[0]" data-svugy-from="users" data-svugy-to="cluster.ingress">
+<title>HTTPS</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="55.048" x="-3.697" y="95.103"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="35.048" x="23.827" y="106.775">HTTPS</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+</g>
+<script>//<![CDATA[
+(() => {
+  'use strict';
+
+  const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+  const XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
+
+  const CONTRACT = 'data-svugy-contract';
+  const LAYER = 'data-svugy-layer';
+  const SHOWN = 'data-svugy-shown';
+  const LEVEL = 'data-svugy-level';
+  const VIEW = 'data-svugy-view';
+  const ELEMENT = 'data-svugy-element';
+  const CLOSED = 'data-svugy-closed';
+  const EDGE = 'data-svugy-edge';
+  const FROM = 'data-svugy-from';
+  const TO = 'data-svugy-to';
+  const STUB = 'data-svugy-stub';
+  const GOTO = 'data-svugy-goto';
+  const DETAILS = 'data-svugy-details';
+  const HEADING = 'data-svugy-heading';
+  const ENTERED = 'data-svugy-entered';
+  const DIMMED = 'data-svugy-dimmed';
+
+  const LAYER_SELECTOR = `[${LAYER}]`;
+  const LEVEL_SELECTOR = `[${LEVEL}]`;
+  const ELEMENT_SELECTOR = `[${ELEMENT}]`;
+  const EDGE_SELECTOR = `[${EDGE}]`;
+  const SHOWN_SELECTOR = `[${SHOWN}]`;
+  const ENTERED_SELECTOR = `[${ENTERED}]`;
+  const DIMMED_SELECTOR = `[${DIMMED}]`;
+  const INTERACTIVE_SELECTOR = `[${ELEMENT}],[${EDGE}],[${STUB}]`;
+  const HEADING_SELECTOR = `[${HEADING}]`;
+  const ELEMENT_OR_LEVEL_SELECTOR = `[${ELEMENT}],[${LEVEL}]`;
+
+  const ROOT_LEVEL_PATH = '';
+  const LEVEL_LINK_PREFIX = '#svugy=';
+  const LEVEL_LINK_PATH_KEY = 'svugy';
+  const LEVEL_LINK_LAYER_KEY = 'layer';
+  const TWEEN_DURATION_MS = 450;
+  const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+  const FADE_IN_KEYFRAMES = [{ opacity: 0 }, { opacity: 1 }];
+  const FADE_OUT_KEYFRAMES = [{ opacity: 1 }, { opacity: 0 }];
+
+  const PANEL_PADDING_PX = 8;
+  const PANEL_LINE_HEIGHT_PX = 16;
+  const PANEL_BASELINE_RAISE_PX = 4;
+  const PANEL_POINTER_OFFSET_PX = 14;
+  const PANEL_VIEW_MARGIN_PX = 6;
+  const PANEL_MAX_LINE_CHARACTERS = 72;
+
+  const DESCRIPTION_WIDTH_PX = 320;
+  const DESCRIPTION_VIEW_MARGIN_PX = 12;
+  const LIFTED_KIND = 'lifted';
+
+  const PARAGRAPH_BLOCK = 'paragraph';
+  const HEADING_BLOCK = 'heading';
+  const CODE_BLOCK = 'code';
+  const LIST_BLOCK = 'list';
+  const FENCE = '```';
+  const HEADING_PATTERN = /^(#{1,3})\s+(.*)$/;
+  const LIST_ITEM_PATTERN = /^(\s*)([-*]|\d+\.)\s+(.*)$/;
+  const ORDERED_MARKER_PATTERN = /^\d/;
+  const INDENTED_LINE_PATTERN = /^\s/;
+  const LINE_BREAK_PATTERN = /\r?\n/;
+  const AUTHOR_HEADING_RANK_OFFSET = 3;
+  const INLINE_PATTERN = /`([^`]+)`|\*\*(.+?)\*\*|\*([^*\s][^*]*)\*|\[([^\]]+)\]\(([^()\s]+)\)/g;
+  const CONTROL_OR_SPACE_PATTERN = /[\u0000-\u0020\u007f]/;
+  const HTTP_SCHEME_PATTERN = /^https?:/i;
+  const ANY_SCHEME_PATTERN = /^[^/?#]*:/;
+  const TARGET_LINK_PREFIX = '#';
+  const EDGE_TARGET_PATTERN = /^(.+->.+)\[(\d+)\]$/;
+  const HEX_COLOR_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+  const RGB_COLOR_PATTERN = /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i;
+  const FLOW_PATH_SELECTOR = 'path[data-svugy-flow]';
+  const LINK_HOVER_PROPERTY = '--svugy-link-hover';
+  const MIN_LINK_CONTRAST = 3;
+
+  const HIGHLIGHTED_CLASS = 'svugy-highlighted';
+  const HIGHLIGHT_DURATION_MS = 1200;
+
+  const ARROW = '\u2192';
+  const ELLIPSIS = '\u2026';
+
+  /** Binds the runtime to its enclosing diagram once the document is parsed. */
+  function start() {
+    const diagram = findEnclosingDiagram();
+    if (diagram === null) {
+      return;
+    }
+    const isDocumentParsing = document.readyState === 'loading';
+    if (isDocumentParsing) {
+      document.addEventListener('DOMContentLoaded', () => bindRuntime(diagram), { once: true });
+      return;
+    }
+    bindRuntime(diagram);
+  }
+
+  /** Finds the svugy root that holds this script, or the standalone document's root. */
+  function findEnclosingDiagram() {
+    const script = document.currentScript ?? null;
+    const enclosingDiagram = script === null ? null : script.closest(`[${CONTRACT}]`);
+    if (enclosingDiagram !== null) {
+      return enclosingDiagram;
+    }
+    const documentRoot = document.documentElement;
+    const isDocumentRootDiagram = documentRoot.hasAttribute(CONTRACT);
+    return isDocumentRootDiagram ? documentRoot : null;
+  }
+
+  /** Reads the level path and layer index a `#svugy=PATH&layer=K` fragment of the document's URL links to, PATH URL-encoded, `&layer=K` optional; null without one. */
+  function levelLink() {
+    const fragment = window.location.hash;
+    const isOtherFragment = !fragment.startsWith(LEVEL_LINK_PREFIX);
+    if (isOtherFragment) {
+      return null;
+    }
+    const fragmentQuery = fragment.slice(1);
+    const fragmentParameters = new URLSearchParams(fragmentQuery);
+    const path = fragmentParameters.get(LEVEL_LINK_PATH_KEY);
+    const layerText = fragmentParameters.get(LEVEL_LINK_LAYER_KEY);
+    const layerIndex = layerText === null ? 0 : Number(layerText);
+    return { path, layerIndex };
+  }
+
+  /** Wires navigation, the detail and description panels and dimming onto one diagram. */
+  function bindRuntime(svg) {
+    const layers = Layers.of(svg);
+    const initialLayer = layers[0];
+    const deepestLayer = layers[layers.length - 1];
+    const rootLevel = Contract.levelAt(initialLayer, ROOT_LEVEL_PATH);
+    if (rootLevel === null) {
+      return;
+    }
+    const animator = new ViewBoxAnimator(svg);
+    const fader = new LayerFader();
+    const navigator = new LayerNavigator(svg, layers, initialLayer, rootLevel, animator, fader);
+    const panel = new DetailPanel(svg);
+    const dimmer = new UnrelatedGroupDimmer(svg);
+    const descriptionPanel = new DescriptionPanel(svg, deepestLayer);
+    const highlighter = new TargetHighlighter();
+    navigator.addNavigationListener((focusedLevel) => {
+      panel.hide();
+      dimmer.clear();
+      const focusedPath = focusedLevel.getAttribute(LEVEL);
+      descriptionPanel.describeFocusedLevel(focusedPath);
+    });
+    descriptionPanel.describeFocusedLevel(ROOT_LEVEL_PATH);
+    Interactions.bind(svg, navigator, panel, dimmer, descriptionPanel, highlighter);
+    const link = levelLink();
+    if (link !== null) {
+      navigator.jumpTo(link.path, link.layerIndex);
+    }
+  }
+
+  /** Lists the layers a document draws, in increasing depth; a document without layer groups is its own single layer. */
+  const Layers = {
+    of(svg) {
+      const layerGroups = Array.from(svg.querySelectorAll(LAYER_SELECTOR));
+      const hasLayerGroups = layerGroups.length > 0;
+      return hasLayerGroups ? layerGroups : [svg];
+    },
+  };
+
+  /** Answers questions about the rendered document by comparing attribute values, never by building selectors from paths. */
+  const Contract = {
+    levelAt(scope, path) {
+      const levels = Array.from(scope.querySelectorAll(LEVEL_SELECTOR));
+      const matchingLevel = levels.find((level) => level.getAttribute(LEVEL) === path);
+      return matchingLevel ?? null;
+    },
+
+    elementAt(scope, path) {
+      const elements = Array.from(scope.querySelectorAll(ELEMENT_SELECTOR));
+      const matchingElement = elements.find((element) => element.getAttribute(ELEMENT) === path);
+      return matchingElement ?? null;
+    },
+
+    edgesAt(scope, edgeName) {
+      const edges = Array.from(scope.querySelectorAll(EDGE_SELECTOR));
+      return edges.filter((edge) => edge.getAttribute(EDGE) === edgeName);
+    },
+
+    /** Finds the written-edge or element group of `scope` a description link's canonical target names: `#FROM->TO[n]`, else `#PATH`; null when it names nothing. */
+    groupTargetedBy(scope, target) {
+      const targetName = target.slice(TARGET_LINK_PREFIX.length);
+      const edgeTarget = EDGE_TARGET_PATTERN.exec(targetName);
+      if (edgeTarget === null) {
+        return Contract.elementAt(scope, targetName);
+      }
+      const [_targetName, endpointsText, ordinal] = edgeTarget;
+      const edges = Array.from(scope.querySelectorAll(EDGE_SELECTOR));
+      const targetedEdge = edges.find((edge) => {
+        const [from, to] = Contract.endpointsOf(edge);
+        const isSameEndpoints = `${from}->${to}` === endpointsText;
+        const writtenEdgeName = `(${from} -> ${to})[${ordinal}]`;
+        const isSameOrdinal = edge.getAttribute(EDGE) === writtenEdgeName;
+        return isSameEndpoints && isSameOrdinal;
+      });
+      return targetedEdge ?? null;
+    },
+
+    /** Lists the groups of `scope` drawing the element or edge `group` draws: the element's group, or every group of the edge, its label's included. */
+    groupsDrawing(scope, group) {
+      const elementPath = group.getAttribute(ELEMENT);
+      if (elementPath === null) {
+        const edgeName = group.getAttribute(EDGE);
+        return Contract.edgesAt(scope, edgeName);
+      }
+      const element = Contract.elementAt(scope, elementPath);
+      return element === null ? [] : [element];
+    },
+
+    levelDisplaying(scope, path) {
+      const level = Contract.levelAt(scope, path);
+      if (level !== null) {
+        return level;
+      }
+      const element = Contract.elementAt(scope, path);
+      return element === null ? null : Contract.enclosingLevelOf(element);
+    },
+
+    counterpartIn(scope, node) {
+      const levelPath = node.getAttribute(LEVEL);
+      if (levelPath !== null) {
+        return Contract.levelAt(scope, levelPath);
+      }
+      const elementPath = node.getAttribute(ELEMENT);
+      if (elementPath !== null) {
+        return Contract.elementAt(scope, elementPath);
+      }
+      return null;
+    },
+
+    enclosingLevelOf(node) {
+      const parent = node.parentElement;
+      return parent === null ? null : parent.closest(LEVEL_SELECTOR);
+    },
+
+    depthOf(level) {
+      let depth = 0;
+      for (let ancestor = Contract.enclosingLevelOf(level); ancestor !== null; ancestor = Contract.enclosingLevelOf(ancestor)) {
+        depth += 1;
+      }
+      return depth;
+    },
+
+    interiorLevelOf(group) {
+      const path = group.getAttribute(ELEMENT);
+      if (path === null) {
+        return null;
+      }
+      const children = Array.from(group.children);
+      const interiorLevel = children.find((child) => child.getAttribute(LEVEL) === path);
+      return interiorLevel ?? null;
+    },
+
+    outermostInteriorBetween(baseLevel, group) {
+      let outermostInterior = null;
+      let element = group.closest(ELEMENT_SELECTOR);
+      while (element !== null) {
+        const isOutsideBaseLevel = !baseLevel.contains(element);
+        if (isOutsideBaseLevel) {
+          break;
+        }
+        outermostInterior = Contract.interiorLevelOf(element) ?? outermostInterior;
+        element = Contract.enclosingElementOf(element);
+      }
+      return outermostInterior;
+    },
+
+    enclosingElementOf(node) {
+      const parent = node.parentElement;
+      return parent === null ? null : parent.closest(ELEMENT_SELECTOR);
+    },
+
+    ancestorElementsOf(node) {
+      const ancestors = [];
+      for (let element = Contract.enclosingElementOf(node); element !== null; element = Contract.enclosingElementOf(element)) {
+        ancestors.push(element);
+      }
+      return ancestors;
+    },
+
+    endpointsOf(edge) {
+      const from = edge.getAttribute(FROM);
+      const to = edge.getAttribute(TO);
+      return [from, to];
+    },
+
+    isBadge(edge) {
+      const parent = edge.parentElement;
+      const enclosingGroup = parent === null ? null : parent.closest(ELEMENT_OR_LEVEL_SELECTOR);
+      return enclosingGroup !== null && enclosingGroup.hasAttribute(ELEMENT);
+    },
+
+    titleOf(group) {
+      const children = Array.from(group.children);
+      const title = children.find((child) => child.localName === 'title');
+      return title === undefined ? null : title.textContent;
+    },
+
+    detailsOf(group) {
+      const children = Array.from(group.children);
+      const detailsCarrier = children.find((child) => child.hasAttribute(DETAILS));
+      if (detailsCarrier === undefined) {
+        return null;
+      }
+      try {
+        const details = JSON.parse(detailsCarrier.textContent);
+        const isObject = typeof details === 'object' && details !== null;
+        return isObject ? details : null;
+      } catch {
+        return null;
+      }
+    },
+  };
+
+  /** Parses and interpolates "min-x min-y width height" views. */
+  const View = {
+    parse(text) {
+      if (text === null) {
+        return null;
+      }
+      const numbers = text.trim().split(/[\s,]+/).map(Number);
+      const [x, y, width, height] = numbers;
+      const isWellFormed = numbers.length === 4 && numbers.every(Number.isFinite) && width > 0 && height > 0;
+      return isWellFormed ? { x, y, width, height } : null;
+    },
+
+    fromRect(rect) {
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    },
+
+    format(view) {
+      return `${view.x} ${view.y} ${view.width} ${view.height}`;
+    },
+
+    // width = min(max(w, h·A), canvas width), height = width / A, A the canvas aspect; the view centred, then clamped into the canvas
+    fittedInside(view, canvas) {
+      const canvasAspect = canvas.width / canvas.height;
+      const aspectWidth = Math.max(view.width, view.height * canvasAspect);
+      const width = Math.min(aspectWidth, canvas.width);
+      const height = width / canvasAspect;
+      const centredX = view.x + (view.width - width) / 2;
+      const centredY = view.y + (view.height - height) / 2;
+      const rightmostX = canvas.x + canvas.width - width;
+      const lowestY = canvas.y + canvas.height - height;
+      const x = Math.max(canvas.x, Math.min(centredX, rightmostX));
+      const y = Math.max(canvas.y, Math.min(centredY, lowestY));
+      return { x, y, width, height };
+    },
+
+    interpolate(start, target, fraction) {
+      return {
+        x: start.x + (target.x - start.x) * fraction,
+        y: start.y + (target.y - start.y) * fraction,
+        width: start.width + (target.width - start.width) * fraction,
+        height: start.height + (target.height - start.height) * fraction,
+      };
+    },
+
+    // ease(t) = 4t³ for t < ½, else 1 − (2 − 2t)³ / 2
+    easeInOutCubic(fraction) {
+      const isFirstHalf = fraction < 0.5;
+      return isFirstHalf ? 4 * fraction ** 3 : 1 - (2 - 2 * fraction) ** 3 / 2;
+    },
+  };
+
+  /** Tweens or jumps the root viewBox to a target view fitted to the canvas, so no letterbox ever falls outside the canvas; tweens jump under reduced motion. */
+  class ViewBoxAnimator {
+    constructor(svg) {
+      this.svg = svg;
+      this.frameRequest = 0;
+      this.canvasView = this.currentView();
+    }
+
+    tweenTo(requestedView, startView = this.currentView()) {
+      const isMotionReduced = window.matchMedia(REDUCED_MOTION_QUERY).matches;
+      if (isMotionReduced) {
+        this.jumpTo(requestedView);
+        return;
+      }
+      cancelAnimationFrame(this.frameRequest);
+      const targetView = View.fittedInside(requestedView, this.canvasView);
+      this.show(startView);
+      let startTime = null;
+      const step = (now) => {
+        startTime ??= now;
+        const elapsedFraction = Math.min(1, (now - startTime) / TWEEN_DURATION_MS);
+        const easedFraction = View.easeInOutCubic(elapsedFraction);
+        const view = View.interpolate(startView, targetView, easedFraction);
+        this.show(view);
+        const isTweenRunning = elapsedFraction < 1;
+        if (isTweenRunning) {
+          this.frameRequest = requestAnimationFrame(step);
+        }
+      };
+      this.frameRequest = requestAnimationFrame(step);
+    }
+
+    jumpTo(requestedView) {
+      cancelAnimationFrame(this.frameRequest);
+      const targetView = View.fittedInside(requestedView, this.canvasView);
+      this.show(targetView);
+    }
+
+    currentView() {
+      const viewBox = this.svg.viewBox.baseVal;
+      return View.fromRect(viewBox);
+    }
+
+    show(view) {
+      const viewBoxText = View.format(view);
+      this.svg.setAttribute('viewBox', viewBoxText);
+    }
+  }
+
+  /** Crossfades the shown layer into another, or swaps them at once under reduced motion. */
+  class LayerFader {
+    constructor() {
+      this.runningFade = null;
+    }
+
+    crossfade(fadingLayer, appearingLayer) {
+      this.finishRunningFade();
+      appearingLayer.setAttribute(SHOWN, '');
+      const isMotionReduced = window.matchMedia(REDUCED_MOTION_QUERY).matches;
+      if (isMotionReduced) {
+        fadingLayer.removeAttribute(SHOWN);
+        return;
+      }
+      fadingLayer.style.pointerEvents = 'none';
+      const timing = { duration: TWEEN_DURATION_MS, easing: 'ease-in-out' };
+      const fadeOut = fadingLayer.animate(FADE_OUT_KEYFRAMES, timing);
+      const fadeIn = appearingLayer.animate(FADE_IN_KEYFRAMES, timing);
+      fadeOut.onfinish = () => this.finishRunningFade();
+      this.runningFade = { fadingLayer, fadeOut, fadeIn };
+    }
+
+    finishRunningFade() {
+      const fade = this.runningFade;
+      if (fade === null) {
+        return;
+      }
+      this.runningFade = null;
+      fade.fadeOut.cancel();
+      fade.fadeIn.cancel();
+      fade.fadingLayer.removeAttribute(SHOWN);
+      fade.fadingLayer.style.removeProperty('pointer-events');
+    }
+  }
+
+  /** Keeps one layer shown and one of its levels focused, and moves the view to them. */
+  class LayerNavigator {
+    constructor(svg, layers, initialLayer, rootLevel, animator, fader) {
+      this.svg = svg;
+      this.layers = layers;
+      this.animator = animator;
+      this.fader = fader;
+      const staleMarks = svg.querySelectorAll(`${SHOWN_SELECTOR},${ENTERED_SELECTOR}`);
+      staleMarks.forEach((node) => {
+        node.removeAttribute(SHOWN);
+        node.removeAttribute(ENTERED);
+      });
+      initialLayer.setAttribute(SHOWN, '');
+      rootLevel.setAttribute(ENTERED, '');
+      this.shownLayer = initialLayer;
+      this.focusedLevel = rootLevel;
+      this.navigationListeners = [];
+    }
+
+    /** Calls `listener(focusedLevel)` after every change of the shown layer or the focused level. */
+    addNavigationListener(listener) {
+      this.navigationListeners.push(listener);
+    }
+
+    /** Shows layer `layerIndex` focused on level `path`, without animation, or the first layer holding that level when layer `layerIndex` does not; a path that is no level changes nothing. */
+    jumpTo(path, layerIndex) {
+      const requestedLayer = this.layers[layerIndex];
+      const levelInRequestedLayer = requestedLayer === undefined ? null : Contract.levelAt(requestedLayer, path);
+      const isLevelInRequestedLayer = levelInRequestedLayer !== null;
+      const firstOpeningLayer = this.layers.find((layer) => Contract.levelAt(layer, path) !== null);
+      const openingLayer = isLevelInRequestedLayer ? requestedLayer : firstOpeningLayer;
+      if (openingLayer === undefined) {
+        return;
+      }
+      const linkedLevel = Contract.levelAt(openingLayer, path);
+      this.shownLayer.removeAttribute(SHOWN);
+      openingLayer.setAttribute(SHOWN, '');
+      this.shownLayer = openingLayer;
+      this.moveEnteredMarkTo(linkedLevel);
+      this.announceNavigation();
+      const targetView = this.viewOf(linkedLevel);
+      if (targetView !== null) {
+        this.animator.jumpTo(targetView);
+      }
+    }
+
+    /** Follows a click on `group` and tells whether the view moved; when it did not, the group's details are due. */
+    followClickOn(group) {
+      const gotoPath = group.getAttribute(GOTO);
+      const hasGoto = gotoPath !== null;
+      if (hasGoto) {
+        return this.goTo(gotoPath, group);
+      }
+      const isClosedContainer = group.hasAttribute(CLOSED);
+      if (isClosedContainer) {
+        return this.revealOneMoreDepth(group);
+      }
+      const reachedLevel = this.levelReachedThrough(group);
+      return this.focus(reachedLevel);
+    }
+
+    /** Shows `target`, an element or edge group of the deepest layer, where a description link reads it best: a container as the focused level, a leaf or a badge in its enclosing level, an arc in its home level; each in the first layer from the shown one drawing that level open, the edge as written. */
+    revealGroup(target) {
+      const interiorLevel = Contract.interiorLevelOf(target);
+      const readingLevel = interiorLevel ?? Contract.enclosingLevelOf(target);
+      const readingPath = readingLevel.getAttribute(LEVEL);
+      const isEdge = target.hasAttribute(EDGE);
+      if (isEdge) {
+        const edgeName = target.getAttribute(EDGE);
+        const writingLayer = this.firstLayerFromShownWhere((layer) => Contract.edgesAt(layer, edgeName).length > 0);
+        if (writingLayer === null) {
+          return;
+        }
+        this.focusLevelIn(writingLayer, readingPath, this.focusedLevel);
+        return;
+      }
+      const shownCounterpart = Contract.counterpartIn(this.shownLayer, target);
+      const anchor = shownCounterpart ?? this.focusedLevel;
+      this.goTo(readingPath, anchor);
+    }
+
+    goTo(path, group) {
+      const openingLayer = this.firstLayerFromShownWhere((layer) => Contract.levelAt(layer, path) !== null);
+      if (openingLayer === null) {
+        const displayingLevel = Contract.levelDisplaying(this.shownLayer, path);
+        if (displayingLevel === null) {
+          return false;
+        }
+        return this.focus(displayingLevel);
+      }
+      return this.focusLevelIn(openingLayer, path, group);
+    }
+
+    firstLayerFromShownWhere(isMatchingLayer) {
+      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
+      const layersFromShown = this.layers.slice(shownLayerIndex);
+      const matchingLayer = layersFromShown.find(isMatchingLayer);
+      return matchingLayer ?? null;
+    }
+
+    /** Focuses level `path` of `layer`, crossfading to `layer` around `anchor` when it is not the shown one. */
+    focusLevelIn(layer, path, anchor) {
+      const isShownLayer = layer === this.shownLayer;
+      if (isShownLayer) {
+        const level = Contract.levelAt(layer, path);
+        return this.focus(level);
+      }
+      return this.showLayer(layer, path, anchor);
+    }
+
+    revealOneMoreDepth(closedContainer) {
+      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
+      const deeperLayer = this.layers[shownLayerIndex + 1];
+      if (deeperLayer === undefined) {
+        return false;
+      }
+      const focusedPath = this.focusedLevel.getAttribute(LEVEL);
+      return this.showLayer(deeperLayer, focusedPath, closedContainer);
+    }
+
+    levelReachedThrough(group) {
+      const baseLevel = this.focusedOrEnclosingLevelContaining(group);
+      const outermostInterior = Contract.outermostInteriorBetween(baseLevel, group);
+      return outermostInterior ?? baseLevel;
+    }
+
+    focusedOrEnclosingLevelContaining(group) {
+      for (let level = this.focusedLevel; level !== null; level = Contract.enclosingLevelOf(level)) {
+        const isGroupInside = level.contains(group);
+        if (isGroupInside) {
+          return level;
+        }
+      }
+      return Contract.levelAt(this.shownLayer, ROOT_LEVEL_PATH);
+    }
+
+    /** Undoes one step: closes the deepest open containers while the shown layer is deeper than the focused level, else focuses its parent. */
+    exitOneStep() {
+      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
+      const focusedDepth = Contract.depthOf(this.focusedLevel);
+      const isLayerDeeperThanFocus = shownLayerIndex > focusedDepth;
+      if (isLayerDeeperThanFocus) {
+        const shallowerLayer = this.layers[shownLayerIndex - 1];
+        const focusedPath = this.focusedLevel.getAttribute(LEVEL);
+        this.showLayer(shallowerLayer, focusedPath, this.focusedLevel);
+        return;
+      }
+      const parentLevel = Contract.enclosingLevelOf(this.focusedLevel);
+      if (parentLevel === null) {
+        return;
+      }
+      this.focus(parentLevel);
+    }
+
+    focus(level) {
+      const isFocusedLevel = level === this.focusedLevel;
+      if (isFocusedLevel) {
+        return false;
+      }
+      this.moveEnteredMarkTo(level);
+      this.announceNavigation();
+      const targetView = this.viewOf(level);
+      if (targetView !== null) {
+        this.animator.tweenTo(targetView);
+      }
+      return true;
+    }
+
+    /** Shows `layer` focused on its level at `focusedPath`, keeping `anchor`'s counterpart where `anchor` was on screen as the view starts moving. */
+    showLayer(layer, focusedPath, anchor) {
+      const targetLevel = Contract.levelAt(layer, focusedPath);
+      if (targetLevel === null) {
+        return false;
+      }
+      const startView = this.anchoredStartView(layer, anchor);
+      const previousLayer = this.shownLayer;
+      this.moveEnteredMarkTo(targetLevel);
+      this.shownLayer = layer;
+      this.fader.crossfade(previousLayer, layer);
+      this.announceNavigation();
+      this.carryKeyboardFocus(previousLayer, layer);
+      const targetView = this.viewOf(targetLevel);
+      if (targetView !== null) {
+        this.animator.tweenTo(targetView, startView);
+      }
+      return true;
+    }
+
+    anchoredStartView(layer, anchor) {
+      const currentView = this.animator.currentView();
+      const anchorCounterpart = Contract.counterpartIn(layer, anchor);
+      const hasAnchorCounterpart = anchorCounterpart !== null;
+      const focusedCounterpart = Contract.counterpartIn(layer, this.focusedLevel);
+      const oldAnchor = hasAnchorCounterpart ? anchor : this.focusedLevel;
+      const newAnchor = hasAnchorCounterpart ? anchorCounterpart : focusedCounterpart;
+      if (newAnchor === null) {
+        return currentView;
+      }
+      const oldCenter = this.userCenterOf(oldAnchor);
+      const newCenter = this.userCenterOf(newAnchor);
+      const isCenterUnmeasurable = oldCenter === null || newCenter === null;
+      if (isCenterUnmeasurable) {
+        return currentView;
+      }
+      // start = view + (new center − old center), at the view's size, so the new center lands on the old one's screen point
+      return {
+        x: currentView.x + newCenter.x - oldCenter.x,
+        y: currentView.y + newCenter.y - oldCenter.y,
+        width: currentView.width,
+        height: currentView.height,
+      };
+    }
+
+    userCenterOf(node) {
+      const screenMatrix = this.svg.getScreenCTM();
+      if (screenMatrix === null) {
+        return null;
+      }
+      const screenToUserMatrix = screenMatrix.inverse();
+      const bounds = node.getBoundingClientRect();
+      const clientCenterX = bounds.left + bounds.width / 2;
+      const clientCenterY = bounds.top + bounds.height / 2;
+      const clientCenter = new DOMPoint(clientCenterX, clientCenterY);
+      return clientCenter.matrixTransform(screenToUserMatrix);
+    }
+
+    moveEnteredMarkTo(level) {
+      this.focusedLevel.removeAttribute(ENTERED);
+      level.setAttribute(ENTERED, '');
+      this.focusedLevel = level;
+    }
+
+    carryKeyboardFocus(previousLayer, layer) {
+      const focusedNode = document.activeElement;
+      const isFocusInPreviousLayer = previousLayer.contains(focusedNode);
+      const isFocusOutsidePreviousLayer = !isFocusInPreviousLayer;
+      if (isFocusOutsidePreviousLayer) {
+        return;
+      }
+      const focusedCounterpart = Contract.counterpartIn(layer, focusedNode);
+      const focusTarget = focusedCounterpart ?? this.svg;
+      focusTarget.focus({ preventScroll: true });
+    }
+
+    announceNavigation() {
+      this.navigationListeners.forEach((listener) => listener(this.focusedLevel));
+    }
+
+    viewOf(level) {
+      const viewText = level.getAttribute(VIEW);
+      return View.parse(viewText);
+    }
+  }
+
+  /** Shows a group's details beside a client point, at a constant on-screen size inside the current view. */
+  class DetailPanel {
+    constructor(svg) {
+      this.svg = svg;
+      this.panel = createSvgElement('g', { class: 'svugy-panel', 'aria-hidden': 'true' });
+      this.shownGroup = null;
+      this.width = 0;
+      this.height = 0;
+      const viewBoxObserver = new MutationObserver(() => this.followShownGroup());
+      viewBoxObserver.observe(svg, { attributes: true, attributeFilter: ['viewBox'] });
+    }
+
+    show(group, clientPoint) {
+      const isShownGroup = group === this.shownGroup;
+      if (isShownGroup) {
+        this.placeNear(clientPoint);
+        return;
+      }
+      const details = Contract.detailsOf(group);
+      const lines = DetailLines.of(details);
+      const isDetailless = lines.length === 0;
+      if (isDetailless) {
+        this.hide();
+        return;
+      }
+      this.render(lines);
+      this.shownGroup = group;
+      this.placeNear(clientPoint);
+    }
+
+    hide() {
+      this.panel.remove();
+      this.shownGroup = null;
+    }
+
+    followShownGroup() {
+      const isHidden = this.shownGroup === null;
+      if (isHidden) {
+        return;
+      }
+      const groupCenter = clientCenterOf(this.shownGroup);
+      this.placeNear(groupCenter);
+    }
+
+    render(lines) {
+      const plate = createSvgElement('rect', { class: 'svugy-panel-plate', rx: 6 });
+      const texts = lines.map((line, index) => {
+        const baseline = PANEL_PADDING_PX + (index + 1) * PANEL_LINE_HEIGHT_PX - PANEL_BASELINE_RAISE_PX;
+        const text = createSvgElement('text', { class: `svugy-panel-${line.role}`, x: PANEL_PADDING_PX, y: baseline });
+        text.textContent = DetailLines.truncate(line.text);
+        return text;
+      });
+      this.panel.replaceChildren(plate, ...texts);
+      this.svg.appendChild(this.panel);
+      const textWidths = texts.map((text) => text.getComputedTextLength());
+      this.width = Math.max(...textWidths) + 2 * PANEL_PADDING_PX;
+      this.height = lines.length * PANEL_LINE_HEIGHT_PX + 2 * PANEL_PADDING_PX - PANEL_BASELINE_RAISE_PX;
+      plate.setAttribute('width', String(this.width));
+      plate.setAttribute('height', String(this.height));
+    }
+
+    placeNear(clientPoint) {
+      const screenMatrix = this.svg.getScreenCTM();
+      if (screenMatrix === null) {
+        return;
+      }
+      const screenToUserMatrix = screenMatrix.inverse();
+      const clientDomPoint = new DOMPoint(clientPoint.x, clientPoint.y);
+      const pointer = clientDomPoint.matrixTransform(screenToUserMatrix);
+      const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
+      const offset = PANEL_POINTER_OFFSET_PX * userUnitsPerPixel;
+      const margin = PANEL_VIEW_MARGIN_PX * userUnitsPerPixel;
+      const view = this.svg.viewBox.baseVal;
+      const scaledWidth = this.width * userUnitsPerPixel;
+      const scaledHeight = this.height * userUnitsPerPixel;
+      const x = panelStartBesidePointer(pointer.x, offset, scaledWidth, view.x, view.width, margin);
+      const y = panelStartBesidePointer(pointer.y, offset, scaledHeight, view.y, view.height, margin);
+      this.panel.setAttribute('transform', `translate(${x} ${y}) scale(${userUnitsPerPixel})`);
+    }
+  }
+
+  // start = p + o, or p − o − e when that overflows v + w − m; then max(start, v + m)
+  function panelStartBesidePointer(pointer, offset, extent, viewStart, viewExtent, margin) {
+    const preferredStart = pointer + offset;
+    const viewEnd = viewStart + viewExtent - margin;
+    const isOverflowingView = preferredStart + extent > viewEnd;
+    const start = isOverflowingView ? pointer - offset - extent : preferredStart;
+    return Math.max(start, viewStart + margin);
+  }
+
+  /** Turns details JSON into panel lines, one builder per details kind. */
+  const DetailLines = {
+    of(details) {
+      if (details === null) {
+        return [];
+      }
+      const linesForKind = DETAIL_LINES_BY_KIND.get(details.kind);
+      if (linesForKind === undefined) {
+        return [];
+      }
+      const lines = linesForKind(details);
+      return lines.filter((line) => line !== null);
+    },
+
+    ofElement(details) {
+      const titleLine = DetailLines.line('title', details.label ?? details.path);
+      const captionLine = DetailLines.line('body', details.caption);
+      const hasLabel = details.label !== undefined;
+      const pathLine = hasLabel ? DetailLines.line('body', details.path) : null;
+      const metadata = DetailLines.isPlainObject(details.metadata) ? details.metadata : {};
+      const metadataLines = Object.entries(metadata).map(([key, value]) => {
+        const valueText = typeof value === 'string' ? value : JSON.stringify(value);
+        return DetailLines.line('body', `${key}: ${valueText}`);
+      });
+      return [titleLine, captionLine, pathLine, ...metadataLines];
+    },
+
+    ofEdge(details) {
+      const titleLine = DetailLines.line('title', details.label ?? details.edge);
+      const endpointsText = DetailLines.endpointsTextOf(details);
+      const endpointsLine = DetailLines.line('body', endpointsText);
+      return [titleLine, endpointsLine];
+    },
+
+    ofLifted(details) {
+      const endpointsText = DetailLines.endpointsTextOf(details);
+      const titleLine = DetailLines.line('title', details.label ?? endpointsText);
+      const sourceEdges = DetailLines.plainObjectsIn(details.edges);
+      const sourceEdgeLines = sourceEdges.map(DetailLines.sourceEdgeLine);
+      return [titleLine, ...sourceEdgeLines];
+    },
+
+    ofStub(details) {
+      const titleLine = DetailLines.line('title', `${ARROW} ${details.target}`);
+      const connections = DetailLines.plainObjectsIn(details.edges);
+      const connectionLines = connections.flatMap((connection) => DetailLines.of(connection));
+      return [titleLine, ...connectionLines];
+    },
+
+    sourceEdgeLine(edge) {
+      const endpointsText = DetailLines.endpointsTextOf(edge) ?? edge.edge;
+      const hasLabel = edge.label !== undefined;
+      const hasEndpointsText = endpointsText !== undefined;
+      const isLabelBesideEndpoints = hasLabel && hasEndpointsText;
+      const text = isLabelBesideEndpoints ? `${edge.label}: ${endpointsText}` : edge.label ?? endpointsText;
+      return DetailLines.line('body', text);
+    },
+
+    endpointsTextOf(details) {
+      const hasEndpoints = details.from !== undefined && details.to !== undefined;
+      return hasEndpoints ? `${details.from} ${ARROW} ${details.to}` : undefined;
+    },
+
+    line(role, value) {
+      const isAbsent = value === undefined || value === null;
+      return isAbsent ? null : { role, text: String(value) };
+    },
+
+    plainObjectsIn(value) {
+      const isArray = Array.isArray(value);
+      return isArray ? value.filter(DetailLines.isPlainObject) : [];
+    },
+
+    isPlainObject(value) {
+      return typeof value === 'object' && value !== null && !Array.isArray(value);
+    },
+
+    truncate(text) {
+      const isTooLong = text.length > PANEL_MAX_LINE_CHARACTERS;
+      return isTooLong ? `${text.slice(0, PANEL_MAX_LINE_CHARACTERS - 1)}${ELLIPSIS}` : text;
+    },
+  };
+
+  const DETAIL_LINES_BY_KIND = new Map([
+    ['element', DetailLines.ofElement],
+    ['edge', DetailLines.ofEdge],
+    ['lifted', DetailLines.ofLifted],
+    ['stub', DetailLines.ofStub],
+  ]);
+
+  /** Dims the element and edge groups of the shown layer unrelated to one hovered or focused group; stubs and badges are never dimmed. */
+  class UnrelatedGroupDimmer {
+    constructor(svg) {
+      const staleMarks = svg.querySelectorAll(DIMMED_SELECTOR);
+      staleMarks.forEach((node) => node.removeAttribute(DIMMED));
+      this.anchorGroup = null;
+      this.dimmedGroups = [];
+    }
+
+    dimUnrelatedTo(group, shownLayer) {
+      const isAnchorGroup = group === this.anchorGroup;
+      if (isAnchorGroup) {
+        return;
+      }
+      this.clear();
+      const isGroupOutsideShownLayer = !shownLayer.contains(group);
+      if (isGroupOutsideShownLayer) {
+        return;
+      }
+      const isStub = group.hasAttribute(STUB);
+      if (isStub) {
+        return;
+      }
+      const relatives = Relatives.of(group, shownLayer);
+      const layerElements = Array.from(shownLayer.querySelectorAll(ELEMENT_SELECTOR));
+      const layerEdges = Array.from(shownLayer.querySelectorAll(EDGE_SELECTOR));
+      const dimmableEdges = layerEdges.filter((edge) => !Contract.isBadge(edge));
+      const dimmableGroups = [...layerElements, ...dimmableEdges];
+      this.dimmedGroups = dimmableGroups.filter((candidate) => !relatives.has(candidate));
+      this.dimmedGroups.forEach((dimmedGroup) => dimmedGroup.setAttribute(DIMMED, ''));
+      this.anchorGroup = group;
+    }
+
+    clear() {
+      this.dimmedGroups.forEach((dimmedGroup) => dimmedGroup.removeAttribute(DIMMED));
+      this.dimmedGroups = [];
+      this.anchorGroup = null;
+    }
+  }
+
+  /** Collects the groups of a layer related to one element or edge group: its edges, their endpoints, and the ancestors of all of these. */
+  const Relatives = {
+    of(group, layer) {
+      const isEdge = group.hasAttribute(EDGE);
+      const core = isEdge ? Relatives.coreOfEdge(group) : Relatives.coreOfElement(group);
+      const layerEdges = Array.from(layer.querySelectorAll(EDGE_SELECTOR));
+      const coreEdges = layerEdges.filter(core.isCoreEdge);
+      const endpointPaths = new Set(coreEdges.flatMap((edge) => Contract.endpointsOf(edge)));
+      const layerElements = Array.from(layer.querySelectorAll(ELEMENT_SELECTOR));
+      const endpointElements = layerElements.filter((element) => endpointPaths.has(element.getAttribute(ELEMENT)));
+      const litElements = [...core.elements, ...endpointElements];
+      const litAncestors = litElements.flatMap((element) => Contract.ancestorElementsOf(element));
+      return new Set([...litElements, ...litAncestors, ...coreEdges]);
+    },
+
+    /** The element, its descendants, and every edge with an endpoint among them. */
+    coreOfElement(element) {
+      const descendants = Array.from(element.querySelectorAll(ELEMENT_SELECTOR));
+      const subtree = [element, ...descendants];
+      const subtreePaths = new Set(subtree.map((member) => member.getAttribute(ELEMENT)));
+      const isCoreEdge = (edge) => {
+        const [from, to] = Contract.endpointsOf(edge);
+        const isFromInSubtree = subtreePaths.has(from);
+        const isToInSubtree = subtreePaths.has(to);
+        return isFromInSubtree || isToInSubtree;
+      };
+      return { elements: subtree, isCoreEdge };
+    },
+
+    /** Every group drawing the same edge, since a labelled edge has a second group for its label. */
+    coreOfEdge(edge) {
+      const edgeName = edge.getAttribute(EDGE);
+      const isCoreEdge = (candidate) => candidate.getAttribute(EDGE) === edgeName;
+      return { elements: [], isCoreEdge };
+    },
+  };
+
+  /** Shows the author's description of the focused level, or of the last clicked group or heading, in a panel floating top-right at a constant on-screen width; nothing without a description. */
+  class DescriptionPanel {
+    constructor(svg, deepestLayer) {
+      this.svg = svg;
+      this.deepestLayer = deepestLayer;
+      this.body = createXhtmlElement('aside', { class: 'svugy-description', 'aria-label': 'description' });
+      this.frame = createSvgElement('foreignObject', { class: 'svugy-description-frame' });
+      this.frame.appendChild(this.body);
+      this.panel = createSvgElement('g', { class: 'svugy-description-panel' });
+      this.panel.appendChild(this.frame);
+      this.panel.addEventListener('click', (event) => event.stopPropagation());
+      this.focusedPath = ROOT_LEVEL_PATH;
+      this.isClickShown = false;
+      this.isShownContentKept = false;
+      this.width = 0;
+      this.targetLinkListeners = [];
+      const markdown = new SafeMarkdown(deepestLayer, (target) => this.announceTargetLink(target));
+      this.content = new DescriptionContent(deepestLayer, markdown);
+      const viewBoxObserver = new MutationObserver(() => this.place());
+      viewBoxObserver.observe(svg, { attributes: true, attributeFilter: ['viewBox'] });
+      const resizeObserver = new ResizeObserver(() => this.layOut());
+      resizeObserver.observe(svg);
+    }
+
+    /** Calls `listener(target)` when a description link to `target`, an element or edge group of the deepest layer, is activated. */
+    addTargetLinkListener(listener) {
+      this.targetLinkListeners.push(listener);
+    }
+
+    /** Runs `navigate` without replacing the shown description, so a link's reader keeps reading while the view moves to its target. */
+    keepShownContentWhile(navigate) {
+      this.isShownContentKept = true;
+      navigate();
+      this.isShownContentKept = false;
+    }
+
+    describeFocusedLevel(path) {
+      this.focusedPath = path;
+      if (this.isShownContentKept) {
+        this.isClickShown = true;
+        return;
+      }
+      this.isClickShown = false;
+      const focusedContent = this.contentOfFocusedLevel();
+      this.show(focusedContent);
+    }
+
+    /** Describes a clicked group: the focused level's own description when the group is that level's container, else the group's. */
+    describeClickedGroup(group) {
+      const groupPath = group.getAttribute(ELEMENT);
+      const isFocusedContainer = groupPath === this.focusedPath;
+      if (isFocusedContainer) {
+        this.describeFocusedLevel(this.focusedPath);
+        return;
+      }
+      const groupContent = this.content.of(group);
+      this.showClicked(groupContent);
+    }
+
+    describeClickedHeading() {
+      const diagramContent = this.content.of(this.svg);
+      this.showClicked(diagramContent);
+    }
+
+    /** Goes back from a clicked description to the focused level's and tells whether that changed the panel; a click that closed the panel over an undescribed level changed nothing to go back from. */
+    stepBackFromClick() {
+      const isFocusedLevelShown = !this.isClickShown;
+      if (isFocusedLevelShown) {
+        return false;
+      }
+      this.isClickShown = false;
+      const focusedContent = this.contentOfFocusedLevel();
+      const isPanelClosed = !this.panel.isConnected;
+      const isFocusedLevelUndescribed = focusedContent.length === 0;
+      const isPanelUnchanged = isPanelClosed && isFocusedLevelUndescribed;
+      if (isPanelUnchanged) {
+        return false;
+      }
+      this.show(focusedContent);
+      return true;
+    }
+
+    contentOfFocusedLevel() {
+      const isRoot = this.focusedPath === ROOT_LEVEL_PATH;
+      const describedNode = isRoot ? this.svg : Contract.elementAt(this.deepestLayer, this.focusedPath);
+      return describedNode === null ? [] : this.content.of(describedNode);
+    }
+
+    showClicked(content) {
+      this.isClickShown = true;
+      this.show(content);
+    }
+
+    show(content) {
+      const wasFocusInside = this.panel.contains(document.activeElement);
+      this.body.replaceChildren(...content);
+      if (wasFocusInside) {
+        this.svg.focus({ preventScroll: true });
+      }
+      const isContentless = content.length === 0;
+      if (isContentless) {
+        this.panel.remove();
+        return;
+      }
+      const isDetached = !this.panel.isConnected;
+      if (isDetached) {
+        this.svg.appendChild(this.panel);
+      }
+      this.layOut();
+      this.body.scrollTop = 0;
+    }
+
+    /** Sizes and places the shown panel. */
+    layOut() {
+      const isDetached = !this.panel.isConnected;
+      if (isDetached) {
+        return;
+      }
+      this.fit();
+      this.place();
+    }
+
+    // w = min(W, client width − 2m), h = min(content height, client height − 2m): the panel never leaves the viewport
+    fit() {
+      const svgBounds = this.svg.getBoundingClientRect();
+      const viewportMargins = 2 * DESCRIPTION_VIEW_MARGIN_PX;
+      const availableWidth = Math.max(0, svgBounds.width - viewportMargins);
+      const availableHeight = Math.max(0, svgBounds.height - viewportMargins);
+      this.width = Math.min(DESCRIPTION_WIDTH_PX, availableWidth);
+      this.frame.setAttribute('width', String(this.width));
+      this.frame.setAttribute('height', String(availableHeight));
+      const contentHeight = this.body.offsetHeight;
+      this.frame.setAttribute('height', String(contentHeight));
+    }
+
+    place() {
+      const isDetached = !this.panel.isConnected;
+      if (isDetached) {
+        return;
+      }
+      const screenMatrix = this.svg.getScreenCTM();
+      if (screenMatrix === null) {
+        return;
+      }
+      const screenToUserMatrix = screenMatrix.inverse();
+      const svgBounds = this.svg.getBoundingClientRect();
+      const clientCorner = new DOMPoint(svgBounds.right, svgBounds.top);
+      const userCorner = clientCorner.matrixTransform(screenToUserMatrix);
+      const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
+      // x = corner.x − (m + w)·u, y = corner.y + m·u, with u user units per pixel, so the panel sits m pixels inside the top-right corner
+      const x = userCorner.x - (DESCRIPTION_VIEW_MARGIN_PX + this.width) * userUnitsPerPixel;
+      const y = userCorner.y + DESCRIPTION_VIEW_MARGIN_PX * userUnitsPerPixel;
+      this.panel.setAttribute('transform', `translate(${x} ${y}) scale(${userUnitsPerPixel})`);
+    }
+
+    announceTargetLink(target) {
+      this.targetLinkListeners.forEach((listener) => listener(target));
+    }
+  }
+
+  /** Builds the description panel's XHTML from a group's or the diagram's details: its description as Markdown, or for a lifted edge each described source edge's description under that edge's name. */
+  class DescriptionContent {
+    constructor(deepestLayer, markdown) {
+      this.deepestLayer = deepestLayer;
+      this.markdown = markdown;
+    }
+
+    of(node) {
+      const details = Contract.detailsOf(node);
+      const isLifted = details?.kind === LIFTED_KIND;
+      return isLifted ? this.ofLiftedEdge(details) : this.descriptionBlocksOf(details);
+    }
+
+    ofLiftedEdge(details) {
+      const sourceEdges = DetailLines.plainObjectsIn(details.edges);
+      const describedSourceEdges = sourceEdges.filter(DescriptionContent.isDescribed);
+      return describedSourceEdges.map((sourceEdge) => this.sourceEdgeSectionOf(sourceEdge));
+    }
+
+    /** A section headed by the source edge's label, else its endpoints' names joined by an arrow, then its description. */
+    sourceEdgeSectionOf(sourceEdge) {
+      const fromName = this.nameOfElementAt(sourceEdge.from);
+      const toName = this.nameOfElementAt(sourceEdge.to);
+      const isLabelled = typeof sourceEdge.label === 'string';
+      const headingText = isLabelled ? sourceEdge.label : `${fromName} ${ARROW} ${toName}`;
+      const heading = createXhtmlElement('h3', { class: 'svugy-description-source-edge' });
+      heading.textContent = headingText;
+      const descriptionNodes = this.markdown.blocksOf(sourceEdge.description);
+      const section = createXhtmlElement('section', {});
+      section.append(heading, ...descriptionNodes);
+      return section;
+    }
+
+    descriptionBlocksOf(details) {
+      const isDescribed = DescriptionContent.isDescribed(details);
+      return isDescribed ? this.markdown.blocksOf(details.description) : [];
+    }
+
+    static isDescribed(details) {
+      const description = details?.description;
+      return typeof description === 'string';
+    }
+
+    nameOfElementAt(path) {
+      const element = Contract.elementAt(this.deepestLayer, path);
+      const title = element === null ? null : Contract.titleOf(element);
+      return title ?? path;
+    }
+  }
+
+  /** Renders the panel's Markdown subset as XHTML nodes: paragraphs keeping their line breaks, `-`/`*` and `1.` lists nested one level, `#`–`###` headings as h4–h6, fenced code, `**bold**`, `*em*`, `` `code` ``, `[text](url)` links to http(s) or relative URLs, and `[text](#target)` buttons following a link to a diagram object; author text only ever becomes text nodes, never markup. */
+  /** Picks the colour a description link takes on hover: its element's top face or its edge's stroke, when that colour reads against the canvas. */
+  const TargetColor = {
+    readableHoverColorOf(group) {
+      const isEdge = group.hasAttribute(EDGE);
+      const paint = isEdge ? TargetColor.flowStrokeOf(group) : TargetColor.topFaceFillOf(group);
+      if (paint === null) {
+        return null;
+      }
+      const svg = group.ownerSVGElement;
+      const svgStyle = getComputedStyle(svg);
+      const canvasPaint = svgStyle.getPropertyValue('--svugy-canvas').trim();
+      const paintChannels = TargetColor.channelsOf(paint);
+      const canvasChannels = TargetColor.channelsOf(canvasPaint);
+      const isEitherUnparsed = paintChannels === null || canvasChannels === null;
+      if (isEitherUnparsed) {
+        return null;
+      }
+      const contrast = TargetColor.contrastBetween(paintChannels, canvasChannels);
+      const isReadable = contrast >= MIN_LINK_CONTRAST;
+      return isReadable ? paint : null;
+    },
+
+    flowStrokeOf(group) {
+      const flowPath = group.querySelector(FLOW_PATH_SELECTOR);
+      if (flowPath === null) {
+        return null;
+      }
+      const flowStyle = getComputedStyle(flowPath);
+      return flowStyle.stroke;
+    },
+
+    topFaceFillOf(group) {
+      const faces = Array.from(group.querySelectorAll(':scope > path'));
+      const filledFaces = faces.filter((face) => face.getAttribute('fill') !== 'none');
+      const topFace = filledFaces.at(-1);
+      if (topFace === undefined) {
+        return null;
+      }
+      const topFaceStyle = getComputedStyle(topFace);
+      return topFaceStyle.fill;
+    },
+
+    channelsOf(paint) {
+      const hexMatch = HEX_COLOR_PATTERN.exec(paint);
+      if (hexMatch !== null) {
+        const hexDigits = hexMatch[1];
+        const isShortHex = hexDigits.length === 3;
+        const fullHexDigits = isShortHex ? hexDigits.replace(/./g, '$&$&') : hexDigits;
+        const channelPairs = fullHexDigits.match(/../g);
+        return channelPairs.map((pair) => parseInt(pair, 16));
+      }
+      const rgbMatch = RGB_COLOR_PATTERN.exec(paint);
+      if (rgbMatch === null) {
+        return null;
+      }
+      const [_rgbText, red, green, blue] = rgbMatch;
+      return [red, green, blue].map(Number);
+    },
+
+    // contrast = (L_light + 0.05) / (L_dark + 0.05), L = 0.2126·R + 0.7152·G + 0.0722·B over linearised channels (WCAG 2)
+    contrastBetween(firstChannels, secondChannels) {
+      const firstLuminance = TargetColor.relativeLuminanceOf(firstChannels);
+      const secondLuminance = TargetColor.relativeLuminanceOf(secondChannels);
+      const lighterLuminance = Math.max(firstLuminance, secondLuminance);
+      const darkerLuminance = Math.min(firstLuminance, secondLuminance);
+      return (lighterLuminance + 0.05) / (darkerLuminance + 0.05);
+    },
+
+    // c = v/255; linear = c ≤ 0.03928 ? c/12.92 : ((c + 0.055)/1.055)^2.4
+    relativeLuminanceOf(channels) {
+      const [red, green, blue] = channels.map((channel) => {
+        const unitChannel = channel / 255;
+        const isDarkChannel = unitChannel <= 0.03928;
+        return isDarkChannel ? unitChannel / 12.92 : ((unitChannel + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+    },
+  };
+
+  class SafeMarkdown {
+    constructor(deepestLayer, followTargetLink) {
+      this.deepestLayer = deepestLayer;
+      this.followTargetLink = followTargetLink;
+    }
+
+    blocksOf(markdown) {
+      const blocks = MarkdownBlocks.of(markdown);
+      return blocks.map((block) => this.nodeOfBlock(block));
+    }
+
+    nodeOfBlock(block) {
+      const nodeOfKind = NODE_OF_BLOCK_BY_KIND.get(block.kind);
+      return nodeOfKind.call(this, block);
+    }
+
+    paragraphNodeOf(paragraph) {
+      return this.elementHoldingLines('p', paragraph.lines);
+    }
+
+    headingNodeOf(heading) {
+      const rank = heading.level + AUTHOR_HEADING_RANK_OFFSET;
+      return this.elementHoldingLines(`h${rank}`, [heading.text]);
+    }
+
+    codeNodeOf(codeBlock) {
+      const code = createXhtmlElement('code', {});
+      code.textContent = codeBlock.lines.join('\n');
+      const preformatted = createXhtmlElement('pre', {});
+      preformatted.appendChild(code);
+      return preformatted;
+    }
+
+    listNodeOf(list) {
+      const listName = list.isOrdered ? 'ol' : 'ul';
+      const listNode = createXhtmlElement(listName, {});
+      const isStartingPastOne = list.isOrdered && list.start !== 1;
+      if (isStartingPastOne) {
+        listNode.setAttribute('start', String(list.start));
+      }
+      const itemNodes = list.items.map((item) => this.listItemNodeOf(item));
+      listNode.append(...itemNodes);
+      return listNode;
+    }
+
+    listItemNodeOf(item) {
+      const itemNode = this.elementHoldingLines('li', item.lines);
+      const nestedListNodes = item.lists.map((nestedList) => this.listNodeOf(nestedList));
+      itemNode.append(...nestedListNodes);
+      return itemNode;
+    }
+
+    elementHoldingLines(name, lines) {
+      const element = createXhtmlElement(name, {});
+      lines.forEach((line, index) => {
+        const isLaterLine = index > 0;
+        if (isLaterLine) {
+          const lineBreak = createXhtmlElement('br', {});
+          element.appendChild(lineBreak);
+        }
+        const inlineNodes = this.inlineNodesOf(line);
+        element.append(...inlineNodes);
+      });
+      return element;
+    }
+
+    inlineNodesOf(text) {
+      const nodes = [];
+      let consumedLength = 0;
+      for (const match of text.matchAll(INLINE_PATTERN)) {
+        const precedingText = text.slice(consumedLength, match.index);
+        const precedingNode = document.createTextNode(precedingText);
+        const matchNode = this.inlineNodeOf(match);
+        nodes.push(precedingNode, matchNode);
+        consumedLength = match.index + match[0].length;
+      }
+      const trailingText = text.slice(consumedLength);
+      const trailingNode = document.createTextNode(trailingText);
+      nodes.push(trailingNode);
+      return nodes;
+    }
+
+    inlineNodeOf(match) {
+      const [_source, code, bold, emphasis, linkText, linkUrl] = match;
+      if (code !== undefined) {
+        const codeNode = createXhtmlElement('code', {});
+        codeNode.textContent = code;
+        return codeNode;
+      }
+      if (bold !== undefined) {
+        return this.elementHoldingLines('strong', [bold]);
+      }
+      if (emphasis !== undefined) {
+        return this.elementHoldingLines('em', [emphasis]);
+      }
+      const isTargetLink = linkUrl.startsWith(TARGET_LINK_PREFIX);
+      if (isTargetLink) {
+        return this.targetLinkNodeOf(linkText, linkUrl);
+      }
+      const isSafeUrl = SafeMarkdown.isSafeUrl(linkUrl);
+      if (isSafeUrl) {
+        const link = this.elementHoldingLines('a', [linkText]);
+        link.setAttribute('href', linkUrl);
+        link.setAttribute('target', '_blank');
+        link.setAttribute('rel', 'noopener noreferrer');
+        return link;
+      }
+      return this.elementHoldingLines('span', [linkText]);
+    }
+
+    /** A button following the link to the element or edge `target` names, or the link's text alone when it names nothing in the diagram. */
+    targetLinkNodeOf(linkText, target) {
+      const targetedGroup = Contract.groupTargetedBy(this.deepestLayer, target);
+      if (targetedGroup === null) {
+        return this.elementHoldingLines('span', [linkText]);
+      }
+      const button = this.elementHoldingLines('button', [linkText]);
+      button.setAttribute('type', 'button');
+      button.addEventListener('click', () => this.followTargetLink(targetedGroup));
+      const hoverColor = TargetColor.readableHoverColorOf(targetedGroup);
+      if (hoverColor !== null) {
+        button.style.setProperty(LINK_HOVER_PROPERTY, hoverColor);
+      }
+      return button;
+    }
+
+    // safe = no control or space character, and an http(s) scheme or none at all: no ':' before the first '/', '?' or '#'
+    static isSafeUrl(url) {
+      const hasControlOrSpace = CONTROL_OR_SPACE_PATTERN.test(url);
+      if (hasControlOrSpace) {
+        return false;
+      }
+      const isHttp = HTTP_SCHEME_PATTERN.test(url);
+      const hasScheme = ANY_SCHEME_PATTERN.test(url);
+      return isHttp || !hasScheme;
+    }
+  }
+
+  const NODE_OF_BLOCK_BY_KIND = new Map([
+    [PARAGRAPH_BLOCK, SafeMarkdown.prototype.paragraphNodeOf],
+    [HEADING_BLOCK, SafeMarkdown.prototype.headingNodeOf],
+    [CODE_BLOCK, SafeMarkdown.prototype.codeNodeOf],
+    [LIST_BLOCK, SafeMarkdown.prototype.listNodeOf],
+  ]);
+
+  /** Splits Markdown into blocks: paragraphs of lines, `#`–`###` headings, fenced code, and `-`/`*` or `1.` lists whose indented items nest one level under the item above. */
+  class MarkdownBlocks {
+    static of(markdown) {
+      const reader = new MarkdownBlocks();
+      const lines = markdown.split(LINE_BREAK_PATTERN);
+      lines.forEach((line) => reader.read(line));
+      return reader.blocks;
+    }
+
+    constructor() {
+      this.blocks = [];
+      this.openCode = null;
+      this.openParagraph = null;
+      this.openItem = null;
+    }
+
+    // inside a fence every line is code up to the closing fence; else a blank line closes the open paragraph and item, an indented line continues the open item, any other line continues the open paragraph or starts one
+    read(line) {
+      if (this.openCode !== null) {
+        this.readCodeLine(line);
+        return;
+      }
+      const trimmedLine = line.trim();
+      const isBlank = trimmedLine === '';
+      if (isBlank) {
+        this.openParagraph = null;
+        this.openItem = null;
+        return;
+      }
+      const isFence = trimmedLine.startsWith(FENCE);
+      if (isFence) {
+        const codeBlock = { kind: CODE_BLOCK, lines: [] };
+        this.addBlock(codeBlock);
+        this.openCode = codeBlock;
+        return;
+      }
+      const heading = HEADING_PATTERN.exec(trimmedLine);
+      if (heading !== null) {
+        const [_line, hashes, text] = heading;
+        const headingBlock = { kind: HEADING_BLOCK, level: hashes.length, text };
+        this.addBlock(headingBlock);
+        return;
+      }
+      const listItem = LIST_ITEM_PATTERN.exec(line);
+      if (listItem !== null) {
+        this.addListItem(listItem);
+        return;
+      }
+      const isIndented = INDENTED_LINE_PATTERN.test(line);
+      const isItemContinuation = isIndented && this.openItem !== null;
+      if (isItemContinuation) {
+        this.openItem.lines.push(trimmedLine);
+        return;
+      }
+      if (this.openParagraph !== null) {
+        this.openParagraph.lines.push(trimmedLine);
+        return;
+      }
+      const paragraph = { kind: PARAGRAPH_BLOCK, lines: [trimmedLine] };
+      this.addBlock(paragraph);
+      this.openParagraph = paragraph;
+    }
+
+    readCodeLine(line) {
+      const trimmedLine = line.trim();
+      const isClosingFence = trimmedLine.startsWith(FENCE);
+      if (isClosingFence) {
+        this.openCode = null;
+        return;
+      }
+      this.openCode.lines.push(line);
+    }
+
+    addBlock(block) {
+      this.openParagraph = null;
+      this.openItem = null;
+      this.blocks.push(block);
+    }
+
+    // an indented item nests under the last item of a list ending the blocks; any other item joins or starts a top-level list
+    addListItem(listItem) {
+      const [_line, indentation, marker, text] = listItem;
+      const isOrdered = ORDERED_MARKER_PATTERN.test(marker);
+      const start = Number.parseInt(marker, 10);
+      const item = { lines: [text], lists: [] };
+      const lastBlock = this.blocks.at(-1);
+      const isListLast = lastBlock?.kind === LIST_BLOCK;
+      const parentItem = isListLast ? lastBlock.items.at(-1) : undefined;
+      const isIndentedItem = indentation !== '';
+      const isNestedItem = isIndentedItem && parentItem !== undefined;
+      const siblingLists = isNestedItem ? parentItem.lists : this.blocks;
+      const list = MarkdownBlocks.listToJoinIn(siblingLists, isOrdered, start);
+      list.items.push(item);
+      this.openParagraph = null;
+      this.openItem = item;
+    }
+
+    /** Returns the last of `blocks` when it is a list of this kind, else a new such list appended to `blocks`. */
+    static listToJoinIn(blocks, isOrdered, start) {
+      const lastBlock = blocks.at(-1);
+      const isListOfKind = lastBlock?.kind === LIST_BLOCK && lastBlock.isOrdered === isOrdered;
+      if (isListOfKind) {
+        return lastBlock;
+      }
+      const list = { kind: LIST_BLOCK, isOrdered, start, items: [] };
+      blocks.push(list);
+      return list;
+    }
+  }
+
+  /** Highlights the groups a description link targets for HIGHLIGHT_DURATION_MS, ending any earlier highlight first. */
+  class TargetHighlighter {
+    constructor() {
+      this.highlightedGroups = [];
+      this.expiryTimer = 0;
+    }
+
+    highlight(groups) {
+      this.clear();
+      groups.forEach((group) => group.classList.add(HIGHLIGHTED_CLASS));
+      this.highlightedGroups = groups;
+      this.expiryTimer = setTimeout(() => this.clear(), HIGHLIGHT_DURATION_MS);
+    }
+
+    clear() {
+      clearTimeout(this.expiryTimer);
+      this.highlightedGroups.forEach((group) => group.classList.remove(HIGHLIGHTED_CLASS));
+      this.highlightedGroups = [];
+    }
+  }
+
+  /** Translates pointer, focus and key events and description links into navigation, detail and description panels, dimming and highlights. */
+  const Interactions = {
+    bind(svg, navigator, panel, dimmer, descriptionPanel, highlighter) {
+      Interactions.makeGroupsFocusable(svg);
+      descriptionPanel.addTargetLinkListener((target) => {
+        Interactions.followTargetLink(target, navigator, panel, descriptionPanel, highlighter);
+      });
+      svg.addEventListener('click', (event) => {
+        const heading = Interactions.headingAt(event.target);
+        if (heading !== null) {
+          descriptionPanel.describeClickedHeading();
+          return;
+        }
+        const group = Interactions.groupAt(event.target);
+        const clientPoint = { x: event.clientX, y: event.clientY };
+        if (group === null) {
+          Interactions.exitOneStep(navigator, panel, descriptionPanel);
+          return;
+        }
+        Interactions.activate(group, clientPoint, navigator, panel, descriptionPanel);
+      });
+      svg.addEventListener('keydown', (event) => {
+        const isEscape = event.key === 'Escape';
+        if (isEscape) {
+          Interactions.exitOneStep(navigator, panel, descriptionPanel);
+          return;
+        }
+        const isActivationKey = event.key === 'Enter' || event.key === ' ';
+        const isElementTarget = event.target instanceof Element;
+        const isFocusedHeading = isElementTarget && event.target.matches(HEADING_SELECTOR);
+        const isHeadingActivated = isActivationKey && isFocusedHeading;
+        if (isHeadingActivated) {
+          event.preventDefault();
+          descriptionPanel.describeClickedHeading();
+          return;
+        }
+        const isFocusedGroup = isElementTarget && event.target.matches(INTERACTIVE_SELECTOR);
+        const isGroupActivated = isActivationKey && isFocusedGroup;
+        if (isGroupActivated) {
+          event.preventDefault();
+          const groupCenter = clientCenterOf(event.target);
+          Interactions.activate(event.target, groupCenter, navigator, panel, descriptionPanel);
+        }
+      });
+      svg.addEventListener('pointermove', (event) => {
+        const group = Interactions.groupAt(event.target);
+        if (group === null) {
+          panel.hide();
+          dimmer.clear();
+          return;
+        }
+        const clientPoint = { x: event.clientX, y: event.clientY };
+        panel.show(group, clientPoint);
+        dimmer.dimUnrelatedTo(group, navigator.shownLayer);
+      });
+      svg.addEventListener('pointerleave', () => {
+        panel.hide();
+        dimmer.clear();
+      });
+      svg.addEventListener('focusin', (event) => {
+        const group = Interactions.groupAt(event.target);
+        if (group === null) {
+          return;
+        }
+        const groupCenter = clientCenterOf(group);
+        panel.show(group, groupCenter);
+        dimmer.dimUnrelatedTo(group, navigator.shownLayer);
+      });
+      svg.addEventListener('focusout', () => {
+        panel.hide();
+        dimmer.clear();
+      });
+    },
+
+    makeGroupsFocusable(svg) {
+      svg.setAttribute('tabindex', '-1');
+      const groups = svg.querySelectorAll(INTERACTIVE_SELECTOR);
+      groups.forEach((group) => {
+        group.setAttribute('tabindex', '0');
+        group.setAttribute('role', 'button');
+        const title = Contract.titleOf(group);
+        if (title !== null) {
+          group.setAttribute('aria-label', title);
+        }
+      });
+      const headings = svg.querySelectorAll(HEADING_SELECTOR);
+      headings.forEach((heading) => {
+        heading.setAttribute('tabindex', '0');
+        heading.setAttribute('role', 'button');
+        heading.setAttribute('aria-label', 'diagram description');
+      });
+    },
+
+    activate(group, clientPoint, navigator, panel, descriptionPanel) {
+      const hasViewMoved = navigator.followClickOn(group);
+      if (hasViewMoved) {
+        panel.hide();
+      } else {
+        panel.show(group, clientPoint);
+      }
+      const isJumpElsewhere = group.hasAttribute(GOTO);
+      if (isJumpElsewhere) {
+        return;
+      }
+      descriptionPanel.describeClickedGroup(group);
+    },
+
+    followTargetLink(target, navigator, panel, descriptionPanel, highlighter) {
+      panel.hide();
+      descriptionPanel.keepShownContentWhile(() => navigator.revealGroup(target));
+      const shownGroups = Contract.groupsDrawing(navigator.shownLayer, target);
+      highlighter.highlight(shownGroups);
+    },
+
+    exitOneStep(navigator, panel, descriptionPanel) {
+      panel.hide();
+      const hasLeftClick = descriptionPanel.stepBackFromClick();
+      if (hasLeftClick) {
+        return;
+      }
+      navigator.exitOneStep();
+    },
+
+    groupAt(target) {
+      const isElementTarget = target instanceof Element;
+      return isElementTarget ? target.closest(INTERACTIVE_SELECTOR) : null;
+    },
+
+    headingAt(target) {
+      const isElementTarget = target instanceof Element;
+      return isElementTarget ? target.closest(HEADING_SELECTOR) : null;
+    },
+
+  };
+
+  function clientCenterOf(node) {
+    const bounds = node.getBoundingClientRect();
+    return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+  }
+
+  function createSvgElement(name, attributes) {
+    return createElementIn(SVG_NAMESPACE, name, attributes);
+  }
+
+  function createXhtmlElement(name, attributes) {
+    return createElementIn(XHTML_NAMESPACE, name, attributes);
+  }
+
+  function createElementIn(namespace, name, attributes) {
+    const element = document.createElementNS(namespace, name);
+    Object.entries(attributes).forEach(([attribute, value]) => element.setAttribute(attribute, String(value)));
+    return element;
+  }
+  start();
+})();
+
+//]]></script>
+</svg>

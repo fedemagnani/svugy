@@ -2,6 +2,7 @@ main:has(.svugy-playground) {
   max-width: min(1100px, calc(100% - 160px));
 }
 
+/* side by side: the source on the left, the diagram it renders on the right */
 .svugy-playground {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
@@ -12,17 +13,12 @@ main:has(.svugy-playground) {
 
 .svugy-preview {
   display: grid;
+  min-height: 280px;
 }
 
 .svugy-preview > object {
   grid-area: 1 / 1;
   align-self: center;
-}
-
-@media (max-width: 900px) {
-  .svugy-playground {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 .svugy-editor {
@@ -31,6 +27,86 @@ main:has(.svugy-playground) {
   border-radius: 14px;
   background: var(--quote-bg);
   overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .svugy-playground {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* opt-in with data-svugy-curtain: the diagram fills the playground; the source is a curtain over its left part, as wide as --svugy-curtain */
+[data-svugy-curtain] .svugy-playground {
+  --svugy-curtain: 0%;
+  display: block;
+  position: relative;
+}
+
+[data-svugy-curtain] .svugy-editor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  width: var(--svugy-curtain);
+  min-height: 0;
+  border-radius: 14px 0 0 14px;
+}
+
+.svugy-curtain {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: clamp(0px, calc(var(--svugy-curtain) - 8px), calc(100% - 16px));
+  z-index: 2;
+  width: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+
+.svugy-curtain::before {
+  content: "";
+  width: 4px;
+  height: 48px;
+  border-radius: 2px;
+  background: #5b6170;
+}
+
+.svugy-curtain:hover::before,
+.svugy-curtain:focus-visible::before,
+.svugy-playground[data-svugy-curtain-moving] .svugy-curtain::before {
+  background: #3478f6;
+}
+
+/* the diagram's own document would swallow the drag */
+.svugy-playground[data-svugy-curtain-moving] {
+  user-select: none;
+}
+.svugy-playground[data-svugy-curtain-moving] object {
+  pointer-events: none;
+}
+
+/* phones stack the source above the diagram */
+@media (max-width: 900px) {
+  [data-svugy-curtain] .svugy-playground {
+    display: grid;
+    gap: 16px;
+  }
+
+  [data-svugy-curtain] .svugy-editor {
+    position: relative;
+    width: auto;
+    min-height: 280px;
+    border-radius: 14px;
+  }
+
+  .svugy-curtain {
+    display: none;
+  }
 }
 
 .svugy-editor textarea,
@@ -47,8 +123,12 @@ main:has(.svugy-playground) {
   font-size: 13px;
   line-height: 1.5;
   tab-size: 2;
-  white-space: pre;
-  overflow: auto;
+  /* both layers wrap at the curtain's edge, the same way, so the caret stays on its highlighted text */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .svugy-editor .svugy-highlight {
@@ -59,6 +139,7 @@ main:has(.svugy-playground) {
 
 .svugy-editor .svugy-highlight code {
   font: inherit;
+  white-space: inherit;
   padding: 0;
   background: none;
 }

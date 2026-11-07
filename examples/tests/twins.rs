@@ -15,6 +15,12 @@ const SVUGY_MD: &str = include_str!("../svugy/svugy.md");
 const SVUGY_D2: &str = include_str!("../svugy/svugy.d2");
 const SVUGY_JSON: &str = include_str!("../svugy/svugy.json");
 const SVUGY_SVG: &str = include_str!("../svugy/svugy.svg");
+const RELEASE_MD: &str = include_str!("../release/release.md");
+const RELEASE_SVG: &str = include_str!("../release/release.svg");
+const EVENTS_MD: &str = include_str!("../events/events.md");
+const EVENTS_SVG: &str = include_str!("../events/events.svg");
+const CLUSTER_MD: &str = include_str!("../cluster/cluster.md");
+const CLUSTER_SVG: &str = include_str!("../cluster/cluster.svg");
 
 #[test]
 fn every_twin_lowers_to_the_model_of_its_markdown_spans_aside() {
@@ -56,6 +62,9 @@ fn every_committed_svg_is_the_interactive_render_of_its_markdown() {
     let renders = [
         ("examples/svugy/svugy.svg", SVUGY_MD, SVUGY_SVG),
         ("examples/webapp/webapp.svg", WEBAPP_MD, WEBAPP_SVG),
+        ("examples/release/release.svg", RELEASE_MD, RELEASE_SVG),
+        ("examples/events/events.svg", EVENTS_MD, EVENTS_SVG),
+        ("examples/cluster/cluster.svg", CLUSTER_MD, CLUSTER_SVG),
     ];
     for (svg_path, markdown_source, committed_svg) in renders {
         let model = markdown_model(markdown_source);
