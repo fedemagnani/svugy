@@ -98,15 +98,15 @@ expression: import.model.to_json()
     "x": {
       "label": "x",
       "span": {
-        "start": 217,
-        "end": 218
+        "start": 255,
+        "end": 256
       }
     },
     "y": {
       "label": "y",
       "span": {
-        "start": 222,
-        "end": 223
+        "start": 260,
+        "end": 261
       }
     }
   },
@@ -163,6 +163,7 @@ expression: import.model.to_json()
       "to": "\"db.primary\"",
       "ordinal": 0,
       "label": "SQL over TLS",
+      "description": "One connection per request",
       "style": {
         "stroke-dash": "3"
       },
@@ -196,8 +197,8 @@ expression: import.model.to_json()
       "ordinal": 0,
       "label": "label with -> arrow and: colon",
       "span": {
-        "start": 217,
-        "end": 223
+        "start": 255,
+        "end": 261
       }
     }
   ]

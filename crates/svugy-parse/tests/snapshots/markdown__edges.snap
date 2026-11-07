@@ -8,59 +8,59 @@ expression: model_json
     "api": {
       "label": "api",
       "span": {
-        "start": 203,
-        "end": 206
+        "start": 353,
+        "end": 356
       }
     },
     "billing": {
       "label": "billing",
       "span": {
-        "start": 253,
-        "end": 260
+        "start": 403,
+        "end": 410
       }
     },
     "billing.api": {
       "label": "api",
       "span": {
-        "start": 265,
-        "end": 268
+        "start": 415,
+        "end": 418
       }
     },
     "billing.store": {
       "label": "store",
       "shape": "cylinder",
       "span": {
-        "start": 273,
-        "end": 295
+        "start": 423,
+        "end": 445
       }
     },
     "client": {
       "label": "client",
       "span": {
-        "start": 194,
-        "end": 200
+        "start": 344,
+        "end": 350
       }
     },
     "orders": {
       "label": "orders",
       "span": {
-        "start": 209,
-        "end": 215
+        "start": 359,
+        "end": 365
       }
     },
     "orders.api": {
       "label": "api",
       "span": {
-        "start": 220,
-        "end": 223
+        "start": 370,
+        "end": 373
       }
     },
     "orders.store": {
       "label": "store",
       "shape": "cylinder",
       "span": {
-        "start": 228,
-        "end": 250
+        "start": 378,
+        "end": 400
       }
     }
   },
@@ -71,8 +71,8 @@ expression: model_json
       "ordinal": 0,
       "badge": true,
       "span": {
-        "start": 620,
-        "end": 648
+        "start": 963,
+        "end": 991
       }
     },
     {
@@ -81,8 +81,8 @@ expression: model_json
       "ordinal": 0,
       "label": "health: ok -> degraded",
       "span": {
-        "start": 729,
-        "end": 742
+        "start": 1072,
+        "end": 1085
       }
     },
     {
@@ -90,10 +90,10 @@ expression: model_json
       "to": "billing.api",
       "ordinal": 0,
       "label": "pays",
-      "description": "Card payments only; invoices go by post.",
+      "description": "Card payments only; invoices go by post. Refunds come back as [a refund](#orders.api->billing.api[1]).",
       "span": {
-        "start": 347,
-        "end": 368
+        "start": 497,
+        "end": 518
       }
     },
     {
@@ -101,8 +101,8 @@ expression: model_json
       "to": "orders.api",
       "ordinal": 0,
       "span": {
-        "start": 308,
-        "end": 328
+        "start": 458,
+        "end": 478
       }
     },
     {
@@ -110,11 +110,11 @@ expression: model_json
       "to": "billing.api",
       "ordinal": 0,
       "label": "charges",
-      "description": "One charge per order, retried **3 times** with backoff.",
+      "description": "One charge per order, retried **3 times** with backoff:\n- after 1 s\n- after 10 s\n\nPaid by [the client's card](#client->billing.api[0]).",
       "traveler": "envelope",
       "span": {
-        "start": 420,
-        "end": 445
+        "start": 655,
+        "end": 680
       }
     },
     {
@@ -128,8 +128,8 @@ expression: model_json
       },
       "traveler": "parcel",
       "span": {
-        "start": 537,
-        "end": 562
+        "start": 880,
+        "end": 905
       }
     },
     {
@@ -137,8 +137,8 @@ expression: model_json
       "to": "orders.store",
       "ordinal": 0,
       "span": {
-        "start": 318,
-        "end": 344
+        "start": 468,
+        "end": 494
       }
     },
     {
@@ -150,8 +150,8 @@ expression: model_json
       },
       "traveler": "document",
       "span": {
-        "start": 664,
-        "end": 693
+        "start": 1007,
+        "end": 1036
       }
     }
   ]

@@ -422,7 +422,7 @@ fn a_far_off_reference_gets_no_suggestion() {
 fn every_dangling_reference_reaches_the_machine_readable_report() {
     let dangling = r#"{
         "elements": {
-            "db": { "label": "db" },
+            "db": { "label": "db", "description": "Reads go to [the primary](#db.primry)." },
             "db.primary": { "label": "primary" },
             "cache.hot": { "label": "hot cache", "span": { "start": 30, "end": 39 } }
         },

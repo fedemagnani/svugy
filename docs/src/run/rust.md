@@ -6,10 +6,10 @@ Build the model in code and render it with the `svugy` crate, e.g. to draw a ser
 cargo add --git https://github.com/fedemagnani/svugy svugy svugy-model
 ```
 
-The Quickstart's web app, built in code: [`crates/svugy/examples/webapp.rs`](https://github.com/fedemagnani/svugy/blob/main/crates/svugy/examples/webapp.rs). `cargo run -p svugy --example webapp > webapp.svg` writes the SVG below.
+The Quickstart's web app, built in code: [`examples/webapp/webapp.rs`](https://github.com/fedemagnani/svugy/blob/main/examples/webapp/webapp.rs). `cargo run -p svugy-examples --example webapp > webapp.svg` writes the SVG below.
 
 ```rust,ignore
-{{#include ../../../crates/svugy/examples/webapp.rs}}
+{{#include ../../../examples/webapp/webapp.rs}}
 ```
 
 <object class="svugy" type="image/svg+xml" data="../figures/webapp-rust.svg"></object>

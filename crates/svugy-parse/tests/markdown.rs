@@ -39,8 +39,8 @@ fn every_fixture_lowers_into_the_model_its_snapshot_shows() {
         let model_json = lower_to_json(name, &source);
         insta::assert_snapshot!(name, model_json);
     }
-    let golden_source = read_source("../../examples/svugy.md");
-    let golden_json = lower_to_json("examples/svugy.md", &golden_source);
+    let golden_source = read_source("../../examples/svugy/svugy.md");
+    let golden_json = lower_to_json("examples/svugy/svugy.md", &golden_source);
     insta::assert_snapshot!("golden", golden_json);
 }
 

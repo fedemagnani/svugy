@@ -182,7 +182,6 @@ impl ComponentItem {
                 );
                 diagnostics.record_error(message, item.span);
             }
-            let description = description.map(|description| description.inner);
             let described_item = Self {
                 description,
                 children,
@@ -252,7 +251,10 @@ impl LineGrammar for ComponentItem {
 
 impl EdgeItem {
     /// Parse an edge's line, then give it the description under it; `None` when nothing of the line parses.
-    fn parse_described_line(edge: DescribedLine<'_>, diagnostics: &mut Diagnostics) -> Option<Self> {
+    fn parse_described_line(
+        edge: DescribedLine<'_>,
+        diagnostics: &mut Diagnostics,
+    ) -> Option<Self> {
         let DescribedLine { line, description } = edge;
         let edge_item = Self::parse_line(line, diagnostics)?;
         let described_edge_item = Self {

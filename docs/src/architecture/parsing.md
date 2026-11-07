@@ -48,4 +48,4 @@ Other properties map to the field of the same name.
 - Loading keeps the saved ordinals and goes straight to admission, skipping `ModelBuilder`, which would renumber them.
 - Duplicate keys are errors; serde_json alone would keep the last one.
 
-`examples/svugy.md`, `examples/svugy.d2` and `examples/svugy.json` must yield the same model, spans aside (`crates/svugy/tests/golden_svugy.rs`).
+`examples/svugy/svugy.md`, `examples/svugy/svugy.d2` and `examples/svugy/svugy.json` must yield the same model, spans aside (`examples/tests/twins.rs`).

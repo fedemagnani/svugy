@@ -18,11 +18,11 @@ const DIAGRAMS: [(&str, &str); 6] = [
     ),
     ("styles.md", include_str!("fixtures/markdown/styles.md")),
     (
-        "examples/svugy.md",
-        include_str!("../../../examples/svugy.md"),
+        "examples/svugy/svugy.md",
+        include_str!("../../../examples/svugy/svugy.md"),
     ),
 ];
-const SVUGY_D2: &str = include_str!("../../../examples/svugy.d2");
+const SVUGY_D2: &str = include_str!("../../../examples/svugy/svugy.d2");
 
 #[test]
 fn a_printed_model_parses_back_into_itself() {
@@ -31,7 +31,7 @@ fn a_printed_model_parses_back_into_itself() {
         (name, parsed_model)
     });
     let d2_golden_model = lower_d2_golden_model();
-    let imported_models = [("examples/svugy.d2", d2_golden_model)];
+    let imported_models = [("examples/svugy/svugy.d2", d2_golden_model)];
     for (name, model) in parsed_models.into_iter().chain(imported_models) {
         let printed = MarkdownPrinter::print(&model)
             .unwrap_or_else(|unprintable| panic!("{name} builds a printable model: {unprintable}"));
@@ -124,14 +124,14 @@ fn a_model_part_that_would_not_parse_back_as_itself_is_reported_instead_of_print
     }
 }
 
-/// Import examples/svugy.d2, panicking unless it lowers into a sound model.
+/// Import examples/svugy/svugy.d2, panicking unless it lowers into a sound model.
 fn lower_d2_golden_model() -> Model {
     let parsed = D2Parse::parse(SVUGY_D2);
     let import = parsed.lower();
     import
         .admission
         .model
-        .expect("examples/svugy.d2 lowers into a sound model")
+        .expect("examples/svugy/svugy.d2 lowers into a sound model")
 }
 
 /// Parse `source` as Markdown and lower it, panicking with `name` unless it lowers into a sound model.

@@ -6,58 +6,58 @@ expression: model_json
 {
   "title": "Order desk",
   "subtitle": "How an order becomes a trade, from click to ledger.",
-  "description": "Orders arrive from the **client** and settle in the `ledger`.\n\n1. the desk matches them\n2. the ledger records them",
+  "description": "Orders arrive from the **client** and settle in [the store](#ledger.store).\n\n- the desk matches them\n- the ledger records them",
   "elements": {
     "client": {
       "label": "client",
-      "description": "Sends orders over [FIX](https://www.fixtrading.org).",
+      "description": "Sends orders over [FIX](https://www.fixtrading.org) to [the API](#desk.api).",
       "span": {
-        "start": 442,
-        "end": 448
+        "start": 628,
+        "end": 634
       }
     },
     "desk": {
       "label": "Order desk",
       "description": "Matches orders *during* market hours.\n\n> Closed on weekends.",
       "span": {
-        "start": 506,
-        "end": 522
+        "start": 734,
+        "end": 750
       }
     },
     "desk.api": {
       "label": "api",
       "span": {
-        "start": 594,
-        "end": 597
+        "start": 845,
+        "end": 848
       }
     },
     "desk.engine": {
       "label": "Matching engine",
       "span": {
-        "start": 602,
-        "end": 627
+        "start": 853,
+        "end": 878
       }
     },
     "desk.engine.book": {
       "label": "book",
-      "description": "Price levels, best first:\n\n```\nbid | ask\n```",
+      "description": "Price levels, best first:\n\n```\n[bid](#bid) | ask\n```",
       "span": {
-        "start": 634,
-        "end": 638
+        "start": 885,
+        "end": 889
       }
     },
     "ledger": {
       "label": "Ledger (append-only)",
       "span": {
-        "start": 711,
-        "end": 741
+        "start": 1003,
+        "end": 1033
       }
     },
     "ledger.store": {
       "label": "store",
       "span": {
-        "start": 746,
-        "end": 751
+        "start": 1038,
+        "end": 1043
       }
     }
   },

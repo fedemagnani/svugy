@@ -41,6 +41,8 @@ impl RuntimeContract {
     pub(crate) const GOTO: &'static str = "data-svugy-goto";
     /// Mark a level's overlay, shown only while that level is entered.
     pub(crate) const OVERLAY: &'static str = "data-svugy-overlay";
+    /// Mark the group of the diagram's title and subtitle, a click on which shows the diagram's description.
+    pub(crate) const HEADING: &'static str = "data-svugy-heading";
     /// Mark a group's details JSON, or the root's diagram details JSON.
     pub(crate) const DETAILS: &'static str = "data-svugy-details";
     /// Names the runtime-owned marker of the entered level, which rendering never emits.
@@ -52,7 +54,7 @@ impl RuntimeContract {
 
     /// Lists the attributes rendering emits; `ENTERED` and `DIMMED` are left out because only the runtime sets them.
     #[cfg(test)]
-    pub(crate) const RENDERED_ATTRIBUTES: [&'static str; 16] = [
+    pub(crate) const RENDERED_ATTRIBUTES: [&'static str; 17] = [
         Self::CONTRACT,
         Self::LAYER,
         Self::SHOWN,
@@ -68,6 +70,7 @@ impl RuntimeContract {
         Self::STUB,
         Self::GOTO,
         Self::OVERLAY,
+        Self::HEADING,
         Self::DETAILS,
     ];
 }
@@ -85,9 +88,9 @@ mod tests {
 
     const CDATA_END: &str = "]]>";
 
-    /// Build a `desk` container holding `api` and `db`, and a `client` linked to `desk.api` calling into it, so every contract group appears.
+    /// Build a titled diagram of a `desk` container holding `api` and `db`, and a `client` linked to `desk.api` calling into it, so every contract group appears.
     fn desk_with_a_linked_client() -> Model {
-        let mut builder = ModelBuilder::new();
+        let mut builder = ModelBuilder::new().with_title("desk");
         let desk = builder.add_top_level("desk", Element::new("desk"));
         let api = builder.add_child(&desk, "api", Element::new("api"));
         let db = builder.add_child(&desk, "db", Element::new("db"));
@@ -223,7 +226,10 @@ mod tests {
             "{interactive_markup}"
         );
         for story in ["diagram **story**", "shop story", "posting story"] {
-            assert!(interactive_markup.contains(story), "interactive misses {story}");
+            assert!(
+                interactive_markup.contains(story),
+                "interactive misses {story}"
+            );
             assert!(!static_markup.contains(story), "static carries {story}");
         }
     }

@@ -2,8 +2,19 @@
 
 mod support;
 
+use std::fs;
+
 use serde_json::Value;
 use support::{fixture, run_svugy, scratch_file, stderr_text};
+
+const SVUGY_EXAMPLE_JSON: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../examples/svugy/svugy.json"
+);
+const WEBAPP_EXAMPLE_MD: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../examples/webapp/webapp.md"
+);
 
 fn parse_json_report(stdout: &[u8]) -> Value {
     serde_json::from_slice(stdout).expect("validate --format json prints JSON")
@@ -25,7 +36,7 @@ fn related_codes(json_report: &Value) -> Vec<&str> {
 
 #[test]
 fn a_clean_model_exits_0_and_prints_nothing() {
-    let model_argument = fixture("svugy.json");
+    let model_argument = SVUGY_EXAMPLE_JSON.to_owned();
 
     let run = run_svugy(&["validate", &model_argument]);
 
@@ -35,15 +46,21 @@ fn a_clean_model_exits_0_and_prints_nothing() {
 }
 
 #[test]
-fn the_shipped_example_validates_with_no_diagnostics() {
+fn the_shipped_example_is_examples_webapp_and_validates_with_no_diagnostics() {
     let example_argument = scratch_file("webapp.md");
     let example_run = run_svugy(&["example", "-o", &example_argument]);
 
     let validate_run = run_svugy(&["validate", &example_argument, "--format", "json"]);
 
+    let shipped_example = fs::read(&example_argument).expect("`svugy example -o` wrote the file");
+    let workspace_example = fs::read(WEBAPP_EXAMPLE_MD).expect("examples/webapp/webapp.md exists");
     let json_report = parse_json_report(&validate_run.stdout);
     let codes = related_codes(&json_report);
     assert_eq!(example_run.status.code(), Some(0));
+    assert!(
+        shipped_example == workspace_example,
+        "crates/svugy-cli/example/webapp.md must be a byte-identical copy of examples/webapp/webapp.md"
+    );
     assert!(
         codes.is_empty(),
         "the example a new user renders first must stay clean as the language evolves: {codes:?}"
@@ -52,7 +69,7 @@ fn the_shipped_example_validates_with_no_diagnostics() {
 
 #[test]
 fn a_clean_model_prints_an_empty_json_report() {
-    let model_argument = fixture("svugy.json");
+    let model_argument = SVUGY_EXAMPLE_JSON.to_owned();
 
     let run = run_svugy(&["validate", &model_argument, "--format", "json"]);
 
@@ -149,7 +166,7 @@ fn malformed_json_exits_1_with_its_code() {
 
 #[test]
 fn an_unknown_format_is_a_usage_error() {
-    let model_argument = fixture("svugy.json");
+    let model_argument = SVUGY_EXAMPLE_JSON.to_owned();
 
     let run = run_svugy(&["validate", &model_argument, "--format", "yaml"]);
 

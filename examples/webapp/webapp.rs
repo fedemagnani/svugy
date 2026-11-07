@@ -10,7 +10,10 @@ const STORE_FILL: &str = "#d5dcea";
 fn main() {
     let mut builder = ModelBuilder::new()
         .with_title("A web app")
-        .with_subtitle("from the browser to the database and back");
+        .with_subtitle("from the browser to the database and back")
+        .with_description(
+            "An order goes from [the browser](#browser) through [the API](#backend.api) into [the database](#data.db). [The worker](#backend.worker) sends [the receipt email](#backend.worker->mail[0]) later.",
+        );
 
     let browser_element = Element::new("Browser").with_caption("the user's tab");
     let browser = builder.add_top_level("browser", browser_element);
@@ -19,7 +22,9 @@ fn main() {
         .with_shape(Shape::Disc);
     let cdn = builder.add_top_level("cdn", cdn_element);
 
-    let backend_element = Element::new("Backend").with_caption("your servers");
+    let backend_element = Element::new("Backend")
+        .with_caption("your servers")
+        .with_description("Every browser request lands on [the API](#backend.api). From there:\n- the API answers the browser right away\n- work that can wait, like the receipt, goes through [the queue](#backend.queue) to [the worker](#backend.worker)");
     let backend = builder.add_top_level("backend", backend_element);
     let api_element = Element::new("API")
         .with_caption("HTTP endpoints")
@@ -34,7 +39,11 @@ fn main() {
         .with_style("fill", SERVICE_FILL);
     let worker = builder.add_child(&backend, "worker", worker_element);
 
-    let data_element = Element::new("Data").with_caption("what the app remembers");
+    let data_element = Element::new("Data")
+        .with_caption("what the app remembers")
+        .with_description(
+            "[The database](#data.db) keeps users and orders. [The cache](#data.cache) keeps the reads the API repeats most.",
+        );
     let data = builder.add_top_level("data", data_element);
     let db_element = Element::new("Database")
         .with_caption("users · orders")
@@ -71,12 +80,14 @@ fn main() {
     builder.add_edge(&api, &db, saves_order);
     let schedules_receipt = Edge::new()
         .with_label("schedules a receipt")
+        .with_description("The API answers [the browser](#browser) *before* the receipt is sent.")
         .with_traveler(Traveler::Parcel);
     builder.add_edge(&api, &queue, schedules_receipt);
     let hands_over = Edge::new().with_label("hands over");
     builder.add_edge(&queue, &worker, hands_over);
     let sends_receipt = Edge::new()
         .with_label("sends the receipt")
+        .with_description("The email provider delivers the receipt to the user's inbox.")
         .with_traveler(Traveler::Envelope);
     builder.add_edge(&worker, &mail, sends_receipt);
 

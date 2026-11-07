@@ -7,18 +7,19 @@ The renderer and the runtime (`crates/svugy/runtime/svugy.js`, `svugy.css`) comm
 - **Both profiles write them**; without script they do nothing.
 - **Versioned:** a rename, removal or change of meaning bumps the version. The embedded runtime always matches its file; the version is for outside readers.
 - **Paths are never selectors:** no path becomes an id, a class or part of a selector. The runtime finds elements by comparing `getAttribute()` results. The only ids are synthetic `<defs>` targets such as `arrowhead-0` and `traveler-envelope`.
-- **No markup from data:** detail panels are built with `textContent` and DOM calls, never `innerHTML`.
+- **No markup from data:** the detail and description panels are built with `textContent` and DOM calls, never `innerHTML`.
 
 ## Document
 
 The root is `<svg data-svugy-contract="2">`; its viewBox, width and height are the canvas: the union of every layer's root view. Its children, in order:
 
 1. the runtime's `<style>`
-2. `<title>TITLE</title>`, if the diagram has a title: the document's tooltip and the label of the elevator's root floor, which otherwise reads "root"
-3. `<defs>`, shared by all layers: arrowhead markers and traveler symbols
-4. one canvas `<rect>` covering every layer's root view
-5. the layers
-6. the runtime's `<script>`
+2. `<title>TITLE</title>`, if the diagram has a title: the document's tooltip
+3. `<desc data-svugy-details="">JSON</desc>`, if the diagram has a description: the diagram details (see [Details](#details))
+4. `<defs>`, shared by all layers: arrowhead markers and traveler symbols
+5. one canvas `<rect>` covering every layer's root view
+6. the layers
+7. the runtime's `<script>`
 
 The runtime's CSS and JavaScript use the writer's CDATA form.
 
@@ -31,11 +32,11 @@ A path's depth is its segment count: root 0, top-level element 1. Layer K shows 
 - an edge with both endpoints shown is drawn as written;
 - an edge with a hidden endpoint is drawn from that endpoint's ancestor of depth K + 1; if both ends land on one element it disappears; lifted edges joining the same ordered pair merge into one.
 
-With D the depth of the deepest container (0 without containers), the interactive document has layers 0 to D; layer D is the whole diagram. Each is a `<g data-svugy-layer="K">`, in increasing K, holding the layer's ground grid, the diagram's title, subtitle and legend (document coordinates, no data attributes; a click on them counts as a click on empty canvas), then the root level `<g data-svugy-level="" data-svugy-view="…">`. The root's path is the empty string.
+With D the depth of the deepest container (0 without containers), the interactive document has layers 0 to D; layer D is the whole diagram. Each is a `<g data-svugy-layer="K">`, in increasing K, holding the layer's ground grid, the diagram's title and subtitle inside `<g data-svugy-heading="">`, the legend (document coordinates, no data attributes; a click on it counts as a click on empty canvas), then the root level `<g data-svugy-level="" data-svugy-view="…">`. The root's path is the empty string.
 
 Layers share one coordinate system but are laid out independently: an element's coordinates differ per layer, and a path is unique within a layer only. The renderer writes `data-svugy-shown=""` on layer D, and the CSS hides every layer without it, so a document whose script never runs (inside `<img>`, in an editor preview) shows the whole diagram.
 
-The static profile draws layer D alone and unwrapped: ground grid, heading, legend and root level are direct children of the root, after the canvas; the viewBox is layer D's root view; there is no root title, no overlay and no traveler. Its groups carry the same attributes as the interactive layer D, `data-svugy-from` and `data-svugy-to` included. A document without `data-svugy-layer` is one fully disclosed layer.
+The static profile draws layer D alone and unwrapped: ground grid, heading, legend and root level are direct children of the root, after the canvas; the viewBox is layer D's root view; there is no root title, no diagram details, no heading group, no overlay and no traveler. Its groups carry the same attributes as the interactive layer D, `data-svugy-from` and `data-svugy-to` included. A document without `data-svugy-layer` is one fully disclosed layer.
 
 ## Groups
 
@@ -68,25 +69,30 @@ Every element, edge and stub group starts with `<title>LABEL</title><desc data-s
 
 ## Details
 
-One JSON object per group, empty keys omitted:
+One JSON object per group, plus one for the diagram, empty keys omitted:
 
-- element: `{"kind":"element","path":…,"label":…,"caption":…,"metadata":{…}}`
-- edge: `{"kind":"edge","edge":…,"from":…,"to":…,"label":…}`
+- element: `{"kind":"element","path":…,"label":…,"caption":…,"metadata":{…},"description":…}`
+- edge: `{"kind":"edge","edge":…,"from":…,"to":…,"label":…,"description":…}`
 - lifted: `{"kind":"lifted","from":…,"to":…,"label":…,"edges":[edge objects]}`
 - stub: `{"kind":"stub","target":…,"edges":[edge or lifted objects]}`
+- diagram: `{"kind":"diagram","description":…}`, a child of the root
+
+A `description` is the author's Markdown, unrendered. Only the interactive profile writes `description` keys and the diagram object; the static profile writes neither.
 
 ## Runtime state
 
 - **`data-svugy-shown`:** rendered on layer D; at start the runtime moves it to layer 0, or to a level link's layer, then to the layer it shows. Two layers carry it during a crossfade.
 - **`data-svugy-entered=""`:** on exactly one level group of the shown layer, the focused one; `[data-svugy-shown] [data-svugy-entered] > [data-svugy-overlay]` is visible. Never rendered.
 - **`data-svugy-dimmed=""`:** on the element and edge groups the hovered group dims. Never rendered.
+- **`svugy-highlighted` class:** for 1.2 s, on the shown layer's groups drawing a followed description link's target (see [Navigation](#navigation)). Never rendered.
 
 The CSS toggles `visibility`, never `display:none`, so the runtime can measure a hidden layer. No rule may make anything visible inside a layer that isn't shown. At start the runtime adds:
 
 - `tabindex="0"` on every element, edge and stub group, `tabindex="-1"` on the root;
-- `role="button"` on the groups a click acts on: closed containers, open containers, `data-svugy-goto` groups, stubs;
+- `role="button"` on every element, edge and stub group;
 - an `aria-label` from each group's title;
-- the `svugy-panel*` classes (detail panel) and `svugy-elevator*` classes (elevator).
+- `tabindex="0"`, `role="button"` and `aria-label="diagram description"` on each heading group;
+- the `svugy-panel*` classes (detail panel) and `svugy-description*` classes (description panel).
 
 The runtime binds only to the SVG it lives in.
 
@@ -94,17 +100,19 @@ The runtime binds only to the SVG it lives in.
 
 The runtime keeps the shown layer K and the focused level F, whose view fills the screen. F is open in layer K, so depth(F) ≤ K. Start: K = 0, F = root, unless the URL links a level.
 
-**Level link:** a URL fragment `#svugy=PATH`, PATH being a level's `data-svugy-level` encoded by `encodeURIComponent`. At start, K becomes the first layer holding that level and F the level, its view shown without animation. A PATH that names no level, or any other fragment, leaves the start as it is. The runtime reads the fragment of the document it runs in: the SVG file's URL, or the page's for an SVG inlined in HTML.
+**Level link:** a URL fragment `#svugy=PATH&layer=K`, PATH being a level's `data-svugy-level` encoded by `encodeURIComponent`, `&layer=K` optional. At start, F becomes the level and K becomes layer K if that layer holds the level, else the first layer holding it; F's view shows without animation. A PATH that names no level, or any other fragment, leaves the start as it is. `#svugy=&layer=1` starts at the root with layer 1 shown. The runtime reads the fragment of the document it runs in: the SVG file's URL, or the page's for an SVG inlined in HTML.
 
 - **Closed container,** even inside an open container below F: show layer K + 1, keep F. Every container of that depth opens at once, so an edge between children of two of them appears whichever was clicked.
 - **Inside an open container below F:** focus the outermost open container between F and the target, the slab that was clicked. A click outside F (visible at the edges once zoomed in) applies the same rule from the nearest open level containing it.
-- **Leaf or badge of F, or F's own slab:** show its details. Same for an edge of F; an edge homed below F acts like its home container.
+- **Leaf or badge of F, or F's own slab:** show its details and its description. Same for an edge of F; an edge homed below F acts like its home container.
 - **`data-svugy-goto="LEVEL"`:** overrides the above. F becomes LEVEL; K becomes max(K, depth(LEVEL)).
-- **Escape or a click on empty canvas:** undo one step: show layer K − 1 if K > depth(F), else focus F's parent; nothing at the root of layer 0.
+- **Heading:** show the diagram's description; K and F stay.
+- **Description link** to target T (see the Markdown subset below): focus T's reading level, in the first layer from K on that draws that level open and an edge T as written. The reading level is a container's own level, a leaf's or a badge's enclosing level, an arc's home level. The description panel keeps the text it showed, so the reader keeps reading; Escape then shows F's description. Put the `svugy-highlighted` class on T's groups in the shown layer.
+- **Escape or a click on empty canvas:** undo one step: if a click changed the description panel and the panel is open or F has a description, show F's description again; else show layer K − 1 if K > depth(F), else focus F's parent; nothing at the root of layer 0.
 
 Example: from the root of layer 0, click closed container A (layer 1), A's slab (F = A), then A's closed child a1 (layer 2). Three Escapes give A in layer 1, the root in layer 1, the root in layer 0.
 
-Focusing animates the viewBox to F's `data-svugy-view`. A layer change crossfades the two layers while the viewBox moves to F's view in the new layer, starting from the view that puts the clicked element's new center where its old center was on screen. Under reduced motion both jump, the flow animation stops and travelers hide.
+Focusing animates the viewBox to F's `data-svugy-view`, fitted to the canvas aspect and kept inside the canvas. A layer change crossfades the two layers while the viewBox moves to F's view in the new layer, starting from the view that puts the clicked element's new center where its old center was on screen. Under reduced motion both jump, the flow animation stops and travelers hide.
 
 Hovering or focusing an element dims every element and edge group of the shown layer except:
 
@@ -114,7 +122,25 @@ Hovering or focusing an element dims every element and edge group of the shown l
 
 Hovering an edge keeps only the edge, its endpoints and their ancestors lit. Stub markers and badges are never dimmed.
 
-While F isn't the root, the elevator sits top right at a constant on-screen size. A toggle switches its two modes; it starts in chain mode on every load:
+The description panel sits top right at a constant on-screen width, its height fitting its content up to the viewport's. It shows only the author's `description` from the details JSON, rendered as Markdown:
 
-- **Chain:** the levels from the root to F, each labelled with its container's title, the root with the document's; F highlighted; a click on a level focuses it.
-- **Mini-map:** the shown layer cropped to the view of F's parent, a rectangle marking F; a click focuses the parent.
+- **F = root, or the heading clicked:** the diagram's description.
+- **F, or a clicked element or badge:** the element's description, also when the click opened or focused it. A click that jumps through `data-svugy-goto` shows F's description instead.
+- **A clicked written edge:** its description.
+- **A clicked lifted edge:** for each source edge in `edges` that has a description, a heading with its label, else its endpoints' labels joined by " → ", then its description.
+
+Without any description there is no panel, and a click on an undescribed group closes an open one.
+
+While the panel is open, with f = (SVG client width − panel width − 24 px) / SVG client width, the runtime fits F's view into the left fraction f of the viewBox's width, so the panel does not cover it; when the panel closes, it refits F's view to the full width. The viewBox never grows past the canvas, so a view almost as wide as the canvas stays partly under the panel. When f < 0.5 the panel is ignored for framing. Before the first navigation the requested view is the canvas, which already fills the viewBox, so a panel opening at start moves nothing.
+
+Descriptions render a Markdown subset:
+
+- paragraphs, one line per source line;
+- `-` and `*` bullet lists and `1.` numbered lists; an indented item nests under the item above, one level deep; an indented line continues the open item;
+- `#`, `##` and `###` headings, drawn as `h4`, `h5` and `h6`;
+- fenced code between two ```` ``` ```` lines, preformatted, without inline formatting;
+- inline `**bold**`, `*em*`, `` `code` ``, and `[text](url)` links whose URL is http(s) or has no scheme and no space or control character;
+- `[text](#TARGET)` description links, drawn as a `<button type="button">` holding underlined `text`; on hover or keyboard focus the text takes T's colour (an element's top-face fill, an edge's stroke) when it has at least 3:1 contrast with `--svugy-canvas`, else `--svugy-container-blue-ink`. TARGET names an element as its `data-svugy-element` path, or a written edge as `FROM->TO[ORDINAL]`, FROM and TO its `data-svugy-from` and `data-svugy-to`, ORDINAL the one ending its `data-svugy-edge`; `[ORDINAL]` is required. The runtime resolves TARGET in layer D;
+- any other link, and a TARGET naming nothing, renders as its text.
+
+Author text only ever becomes text nodes.

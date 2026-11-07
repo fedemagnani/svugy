@@ -4,3 +4,5 @@
 /docs/book
 /docs/src/figures
 /docs/src/playground/svugy-wasm.js
+*.snap.new
+*.pending-snap

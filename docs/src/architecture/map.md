@@ -26,6 +26,6 @@ Parsers output a `Model`; layout, geometry and render take only a `Model`. Addin
 
 ## svugy, drawn by svugy
 
-Source: `examples/svugy.md`, also the golden test.
+Source: `examples/svugy/svugy.md`, also the golden test.
 
 <object class="svugy" type="image/svg+xml" data="../figures/svugy.svg"></object>

@@ -31,3 +31,8 @@ git_release_enable = false
 [[package]]
 name = "svugy-wasm"
 release = false
+
+# the examples and their twin tests, never released
+[[package]]
+name = "svugy-examples"
+release = false

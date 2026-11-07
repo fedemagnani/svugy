@@ -15,6 +15,6 @@ SVGs are committed and reviewed as diffs, so the same input must give the same b
 
 **Tests**
 
-- Snapshots pin both SVGs of `examples/svugy.md` and its static raster (`crates/svugy/tests/golden_svugy.rs`).
+- Snapshots pin both SVGs of `examples/svugy/svugy.md` and its static raster (`crates/svugy/tests/golden_svugy.rs`).
 - 300 random graphs are each rendered twice and compared (`crates/svugy/tests/determinism.rs`).
-- CI renders `examples/svugy.d2` on Linux, macOS and wasm32-wasip1 and diffs each result against the committed `docs/svugy.svg`.
+- CI renders `examples/svugy/svugy.d2` on Linux, macOS and wasm32-wasip1 and diffs each result against the committed `docs/svugy.svg`.

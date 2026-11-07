@@ -2,7 +2,7 @@
 
 Write a diagram in Markdown; svugy renders it as an isometric SVG you can click into.
 
-![svugy's own architecture, rendered by svugy from examples/svugy.d2 with --profile static](docs/svugy.svg)
+![svugy's own architecture, rendered by svugy from examples/svugy/svugy.d2 with --profile static](docs/svugy.svg)
 
 ```markdown
 ---
@@ -43,6 +43,13 @@ svugy render webapp.md -o webapp.svg --open
 - `svugy skill install` installs a Claude Code skill that writes, validates and renders diagrams.
 
 [Markdown](docs/src/run/markdown.md) lists every rule.
+
+## Examples
+
+Each folder in [`examples`](examples) holds one diagram in every format svugy reads, next to its committed interactive SVG; `cargo test -p svugy-examples` fails when a format or the SVG drifts from the `.md`.
+
+- [`webapp`](examples/webapp): the Quickstart's web app in Markdown, d2 and Rust. `cargo run -p svugy-examples --example webapp > webapp.svg` builds it in code.
+- [`svugy`](examples/svugy): svugy's own architecture in Markdown, d2 and JSON.
 
 ## Crates
 

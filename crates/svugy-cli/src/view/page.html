@@ -38,17 +38,22 @@
     diagnostics.hidden = false;
   });
 
-  /** Links the level the shown diagram is focused on as `#svugy=PATH`; empty at the root or before the first load. */
+  /** Links the shown diagram's focused level and shown layer as `#svugy=PATH&layer=K`; empty at the root of layer 0 or before the first load. */
   function focusedLevelFragment() {
     const svgDocument = diagram.contentDocument;
     const focusedLevel = svgDocument === null ? null : svgDocument.querySelector('[data-svugy-entered]');
-    const focusedPath = focusedLevel === null ? '' : focusedLevel.getAttribute('data-svugy-level');
-    const isRootFocused = focusedPath === '';
-    if (isRootFocused) {
+    if (focusedLevel === null) {
+      return '';
+    }
+    const focusedPath = focusedLevel.getAttribute('data-svugy-level');
+    const shownLayer = focusedLevel.closest('[data-svugy-layer]');
+    const shownLayerIndex = shownLayer === null ? '0' : shownLayer.getAttribute('data-svugy-layer');
+    const isStartState = focusedPath === '' && shownLayerIndex === '0';
+    if (isStartState) {
       return '';
     }
     const encodedPath = encodeURIComponent(focusedPath);
-    return `#svugy=${encodedPath}`;
+    return `#svugy=${encodedPath}&layer=${shownLayerIndex}`;
   }
 </script>
 </body>

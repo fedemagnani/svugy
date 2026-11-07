@@ -4,7 +4,7 @@ A diagram is one `.md` file. Every value is a named property, so a misspelt key 
 
 <div class="svugy-live">
 
-<textarea data-svugy-language="markdown">{{#include ../../../crates/svugy-cli/example/webapp.md}}</textarea>
+<textarea data-svugy-language="markdown">{{#include ../../../examples/webapp/webapp.md}}</textarea>
 
 <object class="svugy" type="image/svg+xml" data="../figures/webapp.svg"></object>
 
@@ -20,6 +20,7 @@ Every rule below is an error unless it says warning. `svugy validate FILE` repor
 | Part, in this order | Required |
 |---|---|
 | frontmatter between `---` lines; only a UTF-8 byte-order mark and blank lines may precede it | no |
+| the diagram's [description](#descriptions) | no |
 | `## Components`, with at least one item | yes |
 | `## Edges` | no |
 | `## Legend` or `## Legend: TITLE` | no |
@@ -29,10 +30,10 @@ Every rule below is an error unless it says warning. `svugy validate FILE` repor
   - `# Title`: the title goes in the frontmatter `title`
   - a known section at another level, e.g. `### Edges`
   - an unknown `## Name`, or any heading of level 3 or more
-- A section holds bullet lists only. A paragraph, code block or numbered list is an error; text before the first section goes in a comment or the frontmatter `subtitle`.
-- A list item is exactly one line, read verbatim: `*`, `_` and backticks are plain characters. An empty item is an error.
+- A section holds bullet lists only. A [description block](#descriptions) goes indented under an item.
+- An item's first line is read verbatim: `*`, `_` and backticks are plain characters. An empty item is an error.
 - Only `## Components` items nest.
-- HTML comments `<!-- … -->` and blank lines are ignored anywhere, including at the end of an item's line.
+- HTML comments `<!-- … -->` and blank lines are ignored anywhere, including at the end of an item's line. Inside a description block they are part of its text.
 - A comment between nested items must be indented like the item after it. A shallower comment ends the list in CommonMark, which would silently make the next item top-level; svugy reports that item as "indented but not nested".
 
 ```md
@@ -102,6 +103,64 @@ A component with children is a container: a slab holding its children. In the in
 - The label follows the display name's rules: `- browser -> api: places an order (traveler=envelope)`.
 - Two items joining the same pair are two edges.
 - Rejected: `a -> a`, and an edge between a component and its own ancestor or descendant.
+
+## Descriptions
+
+````md
+```description
+Every request starts in the browser and ends in the database.
+```
+
+## Components
+- browser
+- backend: Backend (caption=your servers)
+
+  ```description
+  Every browser request lands here.
+  - the API answers synchronously
+  - anything slower than 100 ms goes to the queue
+  ```
+
+  - api: API
+  - queue
+
+## Edges
+- browser -> api
+- api -> queue: schedules a receipt (traveler=parcel)
+  ```description
+  One job per order, retried 3 times with backoff.
+  ```
+````
+
+- A description is a fenced code block whose info string is `description`. The fence is backticks or tildes, three or more.
+- Before `## Components`, it describes the diagram. Indented to the content column of a component or an edge item, it describes that item, either on the line right under the item's line or after a blank line.
+- Its content is stored as written, any Markdown included, bullet lists too, except [link targets](#links-to-components-and-edges), stored in their whole form. The fence's indentation is removed and line breaks are stored as `\n`.
+- Under a component, the description goes before the children.
+- Rejected:
+  - text outside a description block, under an item or before `## Components`: wrap it in a ```` ```description ```` block
+  - a code block with another info string, or an indented code block
+  - a second description block on one item or on the diagram
+  - a description block with no closing fence
+  - a description on a legend item, since the legend holds one line of text per item, and on a chain `a -> b -> c`
+
+### Links to components and edges
+
+```md
+The API answers [the browser](#browser) and hands [the receipt job](#api->queue) to [the queue](#queue).
+```
+
+- A link `[TEXT](#TARGET)` targets a component or an edge of the diagram:
+
+| TARGET | Targets |
+|---|---|
+| `REF` | the component REF names, resolved like an edge's REF |
+| `REF->REF` | the edge between the two, when exactly one exists |
+| `REF->REF[n]` | the n-th edge between the two, counting from 0 in written order |
+
+- No spaces inside TARGET. It may name a component or edge declared later.
+- The model stores each target in its whole form, an edge always with `[n]`: `#backend.api`, `#backend.api->backend.queue[0]`.
+- Warning: a TARGET naming nothing, or more than one component or edge. The link stays as written and shows as plain text.
+- Links inside code spans and fenced code are text. Other destinations, `https://…` or `./guide.html`, are kept as written.
 
 ## Properties
 

@@ -7,6 +7,11 @@ use std::process::Output;
 
 use support::{fixture, run_svugy, scratch_file, stderr_text};
 
+const SVUGY_EXAMPLE_JSON: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../examples/svugy/svugy.json"
+);
+
 const SCRIPT_OPENING: &str = "<script>";
 
 fn stdout_text(run: &Output) -> String {
@@ -16,7 +21,7 @@ fn stdout_text(run: &Output) -> String {
 
 #[test]
 fn render_writes_the_interactive_svg_unless_the_static_profile_is_asked_for() {
-    let model_argument = fixture("svugy.json");
+    let model_argument = SVUGY_EXAMPLE_JSON.to_owned();
 
     let default_run = run_svugy(&["render", &model_argument]);
     let interactive_run = run_svugy(&["render", &model_argument, "--profile", "interactive"]);
@@ -40,7 +45,7 @@ fn render_writes_the_interactive_svg_unless_the_static_profile_is_asked_for() {
 
 #[test]
 fn an_unknown_profile_is_a_usage_error_naming_the_accepted_ones() {
-    let model_argument = fixture("svugy.json");
+    let model_argument = SVUGY_EXAMPLE_JSON.to_owned();
 
     let run = run_svugy(&["render", &model_argument, "--profile", "print"]);
 
@@ -52,7 +57,7 @@ fn an_unknown_profile_is_a_usage_error_naming_the_accepted_ones() {
 
 #[test]
 fn render_writes_the_same_svg_to_stdout_and_to_the_output_file() {
-    let model_argument = fixture("svugy.json");
+    let model_argument = SVUGY_EXAMPLE_JSON.to_owned();
     let svg_argument = scratch_file("svugy.svg");
 
     let stdout_run = run_svugy(&["render", &model_argument]);
@@ -143,7 +148,7 @@ fn an_unreadable_input_exits_3() {
 
 #[test]
 fn an_unwritable_output_exits_3() {
-    let model_argument = fixture("svugy.json");
+    let model_argument = SVUGY_EXAMPLE_JSON.to_owned();
     let svg_argument = scratch_file("no_such_directory/svugy.svg");
 
     let run = run_svugy(&["render", &model_argument, "-o", &svg_argument]);

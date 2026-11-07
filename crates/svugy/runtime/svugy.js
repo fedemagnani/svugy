@@ -17,6 +17,7 @@
   const STUB = 'data-svugy-stub';
   const GOTO = 'data-svugy-goto';
   const DETAILS = 'data-svugy-details';
+  const HEADING = 'data-svugy-heading';
   const ENTERED = 'data-svugy-entered';
   const DIMMED = 'data-svugy-dimmed';
 
@@ -28,6 +29,7 @@
   const ENTERED_SELECTOR = `[${ENTERED}]`;
   const DIMMED_SELECTOR = `[${DIMMED}]`;
   const INTERACTIVE_SELECTOR = `[${ELEMENT}],[${EDGE}],[${STUB}]`;
+  const HEADING_SELECTOR = `[${HEADING}]`;
   const ELEMENT_OR_LEVEL_SELECTOR = `[${ELEMENT}],[${LEVEL}]`;
 
   const ROOT_LEVEL_PATH = '';
@@ -48,16 +50,34 @@
 
   const DESCRIPTION_WIDTH_PX = 320;
   const DESCRIPTION_VIEW_MARGIN_PX = 12;
-  const FLOWS_HEADING = 'Flows';
+  const MIN_UNCOVERED_FRACTION = 0.5;
+  const LIFTED_KIND = 'lifted';
 
-  const LIST_BLOCK = 'list';
   const PARAGRAPH_BLOCK = 'paragraph';
-  const LIST_ITEM_PATTERN = /^\s*-\s+(.*)$/;
+  const HEADING_BLOCK = 'heading';
+  const CODE_BLOCK = 'code';
+  const LIST_BLOCK = 'list';
+  const FENCE = '```';
+  const HEADING_PATTERN = /^(#{1,3})\s+(.*)$/;
+  const LIST_ITEM_PATTERN = /^(\s*)([-*]|\d+\.)\s+(.*)$/;
+  const ORDERED_MARKER_PATTERN = /^\d/;
   const INDENTED_LINE_PATTERN = /^\s/;
+  const LINE_BREAK_PATTERN = /\r?\n/;
+  const AUTHOR_HEADING_RANK_OFFSET = 3;
   const INLINE_PATTERN = /`([^`]+)`|\*\*(.+?)\*\*|\*([^*\s][^*]*)\*|\[([^\]]+)\]\(([^()\s]+)\)/g;
   const CONTROL_OR_SPACE_PATTERN = /[\u0000-\u0020\u007f]/;
   const HTTP_SCHEME_PATTERN = /^https?:/i;
   const ANY_SCHEME_PATTERN = /^[^/?#]*:/;
+  const TARGET_LINK_PREFIX = '#';
+  const EDGE_TARGET_PATTERN = /^(.+->.+)\[(\d+)\]$/;
+  const HEX_COLOR_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+  const RGB_COLOR_PATTERN = /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i;
+  const FLOW_PATH_SELECTOR = 'path[data-svugy-flow]';
+  const LINK_HOVER_PROPERTY = '--svugy-link-hover';
+  const MIN_LINK_CONTRAST = 3;
+
+  const HIGHLIGHTED_CLASS = 'svugy-highlighted';
+  const HIGHLIGHT_DURATION_MS = 1200;
 
   const ARROW = '\u2192';
   const ELLIPSIS = '\u2026';
@@ -95,7 +115,8 @@
     if (isOtherFragment) {
       return null;
     }
-    const fragmentParameters = new URLSearchParams(fragment.slice(1));
+    const fragmentQuery = fragment.slice(1);
+    const fragmentParameters = new URLSearchParams(fragmentQuery);
     const path = fragmentParameters.get(LEVEL_LINK_PATH_KEY);
     const layerText = fragmentParameters.get(LEVEL_LINK_LAYER_KEY);
     const layerIndex = layerText === null ? 0 : Number(layerText);
@@ -116,7 +137,8 @@
     const navigator = new LayerNavigator(svg, layers, initialLayer, rootLevel, animator, fader);
     const panel = new DetailPanel(svg);
     const dimmer = new UnrelatedGroupDimmer(svg);
-    const descriptionPanel = new DescriptionPanel(svg, deepestLayer);
+    const descriptionPanel = new DescriptionPanel(svg, deepestLayer, animator);
+    const highlighter = new TargetHighlighter();
     navigator.addNavigationListener((focusedLevel) => {
       panel.hide();
       dimmer.clear();
@@ -124,7 +146,7 @@
       descriptionPanel.describeFocusedLevel(focusedPath);
     });
     descriptionPanel.describeFocusedLevel(ROOT_LEVEL_PATH);
-    Interactions.bind(svg, navigator, panel, dimmer, descriptionPanel);
+    Interactions.bind(svg, navigator, panel, dimmer, descriptionPanel, highlighter);
     const link = levelLink();
     if (link !== null) {
       navigator.jumpTo(link.path, link.layerIndex);
@@ -152,6 +174,41 @@
       const elements = Array.from(scope.querySelectorAll(ELEMENT_SELECTOR));
       const matchingElement = elements.find((element) => element.getAttribute(ELEMENT) === path);
       return matchingElement ?? null;
+    },
+
+    edgesAt(scope, edgeName) {
+      const edges = Array.from(scope.querySelectorAll(EDGE_SELECTOR));
+      return edges.filter((edge) => edge.getAttribute(EDGE) === edgeName);
+    },
+
+    /** Finds the written-edge or element group of `scope` a description link's canonical target names: `#FROM->TO[n]`, else `#PATH`; null when it names nothing. */
+    groupTargetedBy(scope, target) {
+      const targetName = target.slice(TARGET_LINK_PREFIX.length);
+      const edgeTarget = EDGE_TARGET_PATTERN.exec(targetName);
+      if (edgeTarget === null) {
+        return Contract.elementAt(scope, targetName);
+      }
+      const [_targetName, endpointsText, ordinal] = edgeTarget;
+      const edges = Array.from(scope.querySelectorAll(EDGE_SELECTOR));
+      const targetedEdge = edges.find((edge) => {
+        const [from, to] = Contract.endpointsOf(edge);
+        const isSameEndpoints = `${from}->${to}` === endpointsText;
+        const writtenEdgeName = `(${from} -> ${to})[${ordinal}]`;
+        const isSameOrdinal = edge.getAttribute(EDGE) === writtenEdgeName;
+        return isSameEndpoints && isSameOrdinal;
+      });
+      return targetedEdge ?? null;
+    },
+
+    /** Lists the groups of `scope` drawing the element or edge `group` draws: the element's group, or every group of the edge, its label's included. */
+    groupsDrawing(scope, group) {
+      const elementPath = group.getAttribute(ELEMENT);
+      if (elementPath === null) {
+        const edgeName = group.getAttribute(EDGE);
+        return Contract.edgesAt(scope, edgeName);
+      }
+      const element = Contract.elementAt(scope, elementPath);
+      return element === null ? [] : [element];
     },
 
     levelDisplaying(scope, path) {
@@ -237,23 +294,6 @@
       return enclosingGroup !== null && enclosingGroup.hasAttribute(ELEMENT);
     },
 
-    isEnterable(group) {
-      const hasGoto = group.hasAttribute(GOTO);
-      const isStub = group.hasAttribute(STUB);
-      const isClosedContainer = group.hasAttribute(CLOSED);
-      const interiorLevel = Contract.interiorLevelOf(group);
-      const isOpenContainer = interiorLevel !== null;
-      return hasGoto || isStub || isClosedContainer || isOpenContainer;
-    },
-
-    isLeaf(group) {
-      const isElement = group.hasAttribute(ELEMENT);
-      const isClosedContainer = group.hasAttribute(CLOSED);
-      const interiorLevel = Contract.interiorLevelOf(group);
-      const isOpenContainer = interiorLevel !== null;
-      return isElement && !isClosedContainer && !isOpenContainer;
-    },
-
     titleOf(group) {
       const children = Array.from(group.children);
       const title = children.find((child) => child.localName === 'title');
@@ -296,14 +336,14 @@
       return `${view.x} ${view.y} ${view.width} ${view.height}`;
     },
 
-    // width = max(w, h·A), height = width / A with A the canvas aspect; x, y = centred, then clamped into the canvas
-    fittedInside(view, canvas) {
+    // width = min(max(w, h·A·f) / f, canvas width), height = width / A, A the canvas aspect; the view centred in the left f of the width, then clamped into the canvas
+    fittedInside(view, canvas, uncoveredFraction) {
       const canvasAspect = canvas.width / canvas.height;
-      const viewAspect = view.width / view.height;
-      const isNarrowerThanCanvas = viewAspect < canvasAspect;
-      const width = isNarrowerThanCanvas ? view.height * canvasAspect : view.width;
+      const uncoveredAspect = canvasAspect * uncoveredFraction;
+      const uncoveredWidth = Math.max(view.width, view.height * uncoveredAspect);
+      const width = Math.min(uncoveredWidth / uncoveredFraction, canvas.width);
       const height = width / canvasAspect;
-      const centredX = view.x + (view.width - width) / 2;
+      const centredX = view.x + (view.width - width * uncoveredFraction) / 2;
       const centredY = view.y + (view.height - height) / 2;
       const rightmostX = canvas.x + canvas.width - width;
       const lowestY = canvas.y + canvas.height - height;
@@ -328,12 +368,15 @@
     },
   };
 
-  /** Tweens or jumps the root viewBox to a target view fitted to the canvas, so no letterbox ever falls outside it; tweens jump under reduced motion. */
+  /** Tweens or jumps the root viewBox to a target view fitted to the canvas left of its covered right edge, so no letterbox ever falls outside the canvas; tweens jump under reduced motion. */
   class ViewBoxAnimator {
     constructor(svg) {
       this.svg = svg;
       this.frameRequest = 0;
       this.canvasView = this.currentView();
+      this.requestedView = this.canvasView;
+      this.coveredWidthPx = 0;
+      this.fittedUncoveredFraction = 1;
     }
 
     tweenTo(requestedView, startView = this.currentView()) {
@@ -343,7 +386,7 @@
         return;
       }
       cancelAnimationFrame(this.frameRequest);
-      const targetView = View.fittedInside(requestedView, this.canvasView);
+      const targetView = this.retarget(requestedView);
       this.show(startView);
       let startTime = null;
       const step = (now) => {
@@ -362,8 +405,35 @@
 
     jumpTo(requestedView) {
       cancelAnimationFrame(this.frameRequest);
-      const targetView = View.fittedInside(requestedView, this.canvasView);
+      const targetView = this.retarget(requestedView);
       this.show(targetView);
+    }
+
+    /** Keeps the requested view clear of the right `coveredWidthPx` screen pixels, tweening to its new fit when the uncovered fraction changed. */
+    coverRightEdge(coveredWidthPx) {
+      this.coveredWidthPx = coveredWidthPx;
+      const uncoveredFraction = this.uncoveredFraction();
+      const isFitUnchanged = uncoveredFraction === this.fittedUncoveredFraction;
+      if (isFitUnchanged) {
+        return;
+      }
+      this.tweenTo(this.requestedView);
+    }
+
+    /** Records `requestedView` as the view to keep framed and returns its fit for the current cover. */
+    retarget(requestedView) {
+      const uncoveredFraction = this.uncoveredFraction();
+      this.requestedView = requestedView;
+      this.fittedUncoveredFraction = uncoveredFraction;
+      return View.fittedInside(requestedView, this.canvasView, uncoveredFraction);
+    }
+
+    // f = (client width − covered width) / client width, or 1 when that leaves less than MIN_UNCOVERED_FRACTION of the width
+    uncoveredFraction() {
+      const clientWidth = this.svg.getBoundingClientRect().width;
+      const uncoveredFraction = (clientWidth - this.coveredWidthPx) / clientWidth;
+      const isUncoveredPartWide = uncoveredFraction >= MIN_UNCOVERED_FRACTION;
+      return isUncoveredPartWide ? uncoveredFraction : 1;
     }
 
     currentView() {
@@ -473,8 +543,28 @@
       return this.focus(reachedLevel);
     }
 
+    /** Shows `target`, an element or edge group of the deepest layer, where a description link reads it best: a container as the focused level, a leaf or a badge in its enclosing level, an arc in its home level; each in the first layer from the shown one drawing that level open, the edge as written. */
+    revealGroup(target) {
+      const interiorLevel = Contract.interiorLevelOf(target);
+      const readingLevel = interiorLevel ?? Contract.enclosingLevelOf(target);
+      const readingPath = readingLevel.getAttribute(LEVEL);
+      const isEdge = target.hasAttribute(EDGE);
+      if (isEdge) {
+        const edgeName = target.getAttribute(EDGE);
+        const writingLayer = this.firstLayerFromShownWhere((layer) => Contract.edgesAt(layer, edgeName).length > 0);
+        if (writingLayer === null) {
+          return;
+        }
+        this.focusLevelIn(writingLayer, readingPath, this.focusedLevel);
+        return;
+      }
+      const shownCounterpart = Contract.counterpartIn(this.shownLayer, target);
+      const anchor = shownCounterpart ?? this.focusedLevel;
+      this.goTo(readingPath, anchor);
+    }
+
     goTo(path, group) {
-      const openingLayer = this.firstLayerFromShownOpening(path);
+      const openingLayer = this.firstLayerFromShownWhere((layer) => Contract.levelAt(layer, path) !== null);
       if (openingLayer === null) {
         const displayingLevel = Contract.levelDisplaying(this.shownLayer, path);
         if (displayingLevel === null) {
@@ -482,19 +572,24 @@
         }
         return this.focus(displayingLevel);
       }
-      const isShownLayer = openingLayer === this.shownLayer;
-      if (isShownLayer) {
-        const openLevel = Contract.levelAt(openingLayer, path);
-        return this.focus(openLevel);
-      }
-      return this.showLayer(openingLayer, path, group);
+      return this.focusLevelIn(openingLayer, path, group);
     }
 
-    firstLayerFromShownOpening(path) {
+    firstLayerFromShownWhere(isMatchingLayer) {
       const shownLayerIndex = this.layers.indexOf(this.shownLayer);
       const layersFromShown = this.layers.slice(shownLayerIndex);
-      const openingLayer = layersFromShown.find((layer) => Contract.levelAt(layer, path) !== null);
-      return openingLayer ?? null;
+      const matchingLayer = layersFromShown.find(isMatchingLayer);
+      return matchingLayer ?? null;
+    }
+
+    /** Focuses level `path` of `layer`, crossfading to `layer` around `anchor` when it is not the shown one. */
+    focusLevelIn(layer, path, anchor) {
+      const isShownLayer = layer === this.shownLayer;
+      if (isShownLayer) {
+        const level = Contract.levelAt(layer, path);
+        return this.focus(level);
+      }
+      return this.showLayer(layer, path, anchor);
     }
 
     revealOneMoreDepth(closedContainer) {
@@ -890,15 +985,6 @@
       return { elements: subtree, isCoreEdge };
     },
 
-    /** One group per edge with an endpoint at `element` or inside it, in document order. */
-    edgesTouching(element, layer) {
-      const core = Relatives.coreOfElement(element);
-      const layerEdges = Array.from(layer.querySelectorAll(EDGE_SELECTOR));
-      const touchingEdges = layerEdges.filter(core.isCoreEdge);
-      const edgeGroupsByName = new Map(touchingEdges.map((edge) => [edge.getAttribute(EDGE), edge]));
-      return Array.from(edgeGroupsByName.values());
-    },
-
     /** Every group drawing the same edge, since a labelled edge has a second group for its label. */
     coreOfEdge(edge) {
       const edgeName = edge.getAttribute(EDGE);
@@ -907,11 +993,12 @@
     },
   };
 
-  /** Describes the focused level, or a clicked leaf, in a panel pinned top-right at a constant on-screen width; at the root, the diagram's description, else nothing. */
+  /** Shows the author's description of the focused level, or of the last clicked group or heading, in a panel pinned top-right at a constant on-screen width that the view is framed beside; nothing without a description. */
   class DescriptionPanel {
-    constructor(svg, deepestLayer) {
+    constructor(svg, deepestLayer, animator) {
       this.svg = svg;
       this.deepestLayer = deepestLayer;
+      this.animator = animator;
       this.body = createXhtmlElement('aside', { class: 'svugy-description', 'aria-label': 'description' });
       this.frame = createSvgElement('foreignObject', { class: 'svugy-description-frame' });
       this.frame.appendChild(this.body);
@@ -919,39 +1006,85 @@
       this.panel.appendChild(this.frame);
       this.panel.addEventListener('click', (event) => event.stopPropagation());
       this.focusedPath = ROOT_LEVEL_PATH;
-      this.shownLeafPath = null;
+      this.isClickShown = false;
+      this.isShownContentKept = false;
       this.width = 0;
+      this.targetLinkListeners = [];
+      const markdown = new SafeMarkdown(deepestLayer, (target) => this.announceTargetLink(target));
+      this.content = new DescriptionContent(deepestLayer, markdown);
       const viewBoxObserver = new MutationObserver(() => this.place());
       viewBoxObserver.observe(svg, { attributes: true, attributeFilter: ['viewBox'] });
-      const resizeObserver = new ResizeObserver(() => {
-        this.fit();
-        this.place();
-      });
+      const resizeObserver = new ResizeObserver(() => this.layOut());
       resizeObserver.observe(svg);
+    }
+
+    /** Calls `listener(target)` when a description link to `target`, an element or edge group of the deepest layer, is activated. */
+    addTargetLinkListener(listener) {
+      this.targetLinkListeners.push(listener);
+    }
+
+    /** Runs `navigate` without replacing the shown description, so a link's reader keeps reading while the view moves to its target. */
+    keepShownContentWhile(navigate) {
+      this.isShownContentKept = true;
+      navigate();
+      this.isShownContentKept = false;
     }
 
     describeFocusedLevel(path) {
       this.focusedPath = path;
-      this.shownLeafPath = null;
-      const isRoot = path === ROOT_LEVEL_PATH;
-      const content = isRoot ? DescriptionContent.ofDiagram(this.svg) : DescriptionContent.ofElement(path, this.deepestLayer);
-      this.show(content);
+      if (this.isShownContentKept) {
+        this.isClickShown = true;
+        return;
+      }
+      this.isClickShown = false;
+      const focusedContent = this.contentOfFocusedLevel();
+      this.show(focusedContent);
     }
 
-    describeLeaf(path) {
-      this.shownLeafPath = path;
-      const content = DescriptionContent.ofElement(path, this.deepestLayer);
-      this.show(content);
+    /** Describes a clicked group: the focused level's own description when the group is that level's container, else the group's. */
+    describeClickedGroup(group) {
+      const groupPath = group.getAttribute(ELEMENT);
+      const isFocusedContainer = groupPath === this.focusedPath;
+      if (isFocusedContainer) {
+        this.describeFocusedLevel(this.focusedPath);
+        return;
+      }
+      const groupContent = this.content.of(group);
+      this.showClicked(groupContent);
     }
 
-    /** Goes back from a shown leaf to the focused level's description and tells whether a leaf was shown. */
-    stepBackFromLeaf() {
-      const isFocusedLevelShown = this.shownLeafPath === null;
+    describeClickedHeading() {
+      const diagramContent = this.content.of(this.svg);
+      this.showClicked(diagramContent);
+    }
+
+    /** Goes back from a clicked description to the focused level's and tells whether that changed the panel; a click that closed the panel over an undescribed level changed nothing to go back from. */
+    stepBackFromClick() {
+      const isFocusedLevelShown = !this.isClickShown;
       if (isFocusedLevelShown) {
         return false;
       }
-      this.describeFocusedLevel(this.focusedPath);
+      this.isClickShown = false;
+      const focusedContent = this.contentOfFocusedLevel();
+      const isPanelClosed = !this.panel.isConnected;
+      const isFocusedLevelUndescribed = focusedContent.length === 0;
+      const isPanelUnchanged = isPanelClosed && isFocusedLevelUndescribed;
+      if (isPanelUnchanged) {
+        return false;
+      }
+      this.show(focusedContent);
       return true;
+    }
+
+    contentOfFocusedLevel() {
+      const isRoot = this.focusedPath === ROOT_LEVEL_PATH;
+      const describedNode = isRoot ? this.svg : Contract.elementAt(this.deepestLayer, this.focusedPath);
+      return describedNode === null ? [] : this.content.of(describedNode);
+    }
+
+    showClicked(content) {
+      this.isClickShown = true;
+      this.show(content);
     }
 
     show(content) {
@@ -963,23 +1096,31 @@
       const isContentless = content.length === 0;
       if (isContentless) {
         this.panel.remove();
+        this.animator.coverRightEdge(0);
         return;
       }
       const isDetached = !this.panel.isConnected;
       if (isDetached) {
         this.svg.appendChild(this.panel);
       }
-      this.fit();
-      this.place();
+      this.layOut();
       this.body.scrollTop = 0;
     }
 
-    // w = min(W, client width − 2m), h = min(content height, client height − 2m): the panel never leaves the viewport
-    fit() {
+    /** Sizes and places the shown panel, then keeps the view clear of the screen width it covers. */
+    layOut() {
       const isDetached = !this.panel.isConnected;
       if (isDetached) {
         return;
       }
+      this.fit();
+      this.place();
+      const coveredWidth = this.width + 2 * DESCRIPTION_VIEW_MARGIN_PX;
+      this.animator.coverRightEdge(coveredWidth);
+    }
+
+    // w = min(W, client width − 2m), h = min(content height, client height − 2m): the panel never leaves the viewport
+    fit() {
       const svgBounds = this.svg.getBoundingClientRect();
       const viewportMargins = 2 * DESCRIPTION_VIEW_MARGIN_PX;
       const availableWidth = Math.max(0, svgBounds.width - viewportMargins);
@@ -1010,138 +1151,207 @@
       const y = userCorner.y + DESCRIPTION_VIEW_MARGIN_PX * userUnitsPerPixel;
       this.panel.setAttribute('transform', `translate(${x} ${y}) scale(${userUnitsPerPixel})`);
     }
+
+    announceTargetLink(target) {
+      this.targetLinkListeners.forEach((listener) => listener(target));
+    }
   }
 
-  /** Builds the description panel's XHTML: the diagram's Markdown description, or an element's name, description and the flows touching it, each by its label, endpoints and description. */
-  const DescriptionContent = {
-    ofDiagram(svg) {
-      const details = Contract.detailsOf(svg);
-      return DescriptionContent.descriptionBlocksOf(details);
-    },
+  /** Builds the description panel's XHTML from a group's or the diagram's details: its description as Markdown, or for a lifted edge each described source edge's description under that edge's name. */
+  class DescriptionContent {
+    constructor(deepestLayer, markdown) {
+      this.deepestLayer = deepestLayer;
+      this.markdown = markdown;
+    }
 
-    ofElement(path, deepestLayer) {
-      const element = Contract.elementAt(deepestLayer, path);
-      if (element === null) {
-        return [];
-      }
-      const name = DescriptionContent.nameOfElementAt(path, deepestLayer);
-      const nameNode = DescriptionContent.textElement('h2', 'svugy-description-name', name);
-      const details = Contract.detailsOf(element);
-      const descriptionNodes = DescriptionContent.descriptionBlocksOf(details);
-      const flowNodes = DescriptionContent.flowsOf(element, deepestLayer);
-      return [nameNode, ...descriptionNodes, ...flowNodes];
-    },
+    of(node) {
+      const details = Contract.detailsOf(node);
+      const isLifted = details?.kind === LIFTED_KIND;
+      return isLifted ? this.ofLiftedEdge(details) : this.descriptionBlocksOf(details);
+    }
 
-    flowsOf(element, deepestLayer) {
-      const flowGroups = Relatives.edgesTouching(element, deepestLayer);
-      const isFlowless = flowGroups.length === 0;
-      if (isFlowless) {
-        return [];
-      }
-      const heading = DescriptionContent.textElement('h3', 'svugy-description-flows-heading', FLOWS_HEADING);
-      const items = flowGroups.map((flowGroup) => DescriptionContent.flowItemOf(flowGroup, deepestLayer));
-      const list = createXhtmlElement('ul', { class: 'svugy-description-flows' });
-      list.append(...items);
-      return [heading, list];
-    },
+    ofLiftedEdge(details) {
+      const sourceEdges = DetailLines.plainObjectsIn(details.edges);
+      const describedSourceEdges = sourceEdges.filter(DescriptionContent.isDescribed);
+      return describedSourceEdges.map((sourceEdge) => this.sourceEdgeSectionOf(sourceEdge));
+    }
 
-    flowItemOf(flowGroup, deepestLayer) {
-      const [from, to] = Contract.endpointsOf(flowGroup);
-      const fromName = DescriptionContent.nameOfElementAt(from, deepestLayer);
-      const toName = DescriptionContent.nameOfElementAt(to, deepestLayer);
-      const endpointsText = `${fromName} ${ARROW} ${toName}`;
-      const details = Contract.detailsOf(flowGroup);
-      const label = details?.label;
-      const isLabelled = typeof label === 'string';
-      const labelText = isLabelled ? label : endpointsText;
-      const labelNode = DescriptionContent.textElement('p', 'svugy-description-flow-label', labelText);
-      const endpointsNode = DescriptionContent.textElement('p', 'svugy-description-flow-endpoints', endpointsText);
-      const endpointsNodes = isLabelled ? [endpointsNode] : [];
-      const descriptionNodes = DescriptionContent.descriptionBlocksOf(details);
-      const item = createXhtmlElement('li', { class: 'svugy-description-flow' });
-      item.append(labelNode, ...endpointsNodes, ...descriptionNodes);
-      return item;
-    },
+    /** A section headed by the source edge's label, else its endpoints' names joined by an arrow, then its description. */
+    sourceEdgeSectionOf(sourceEdge) {
+      const fromName = this.nameOfElementAt(sourceEdge.from);
+      const toName = this.nameOfElementAt(sourceEdge.to);
+      const isLabelled = typeof sourceEdge.label === 'string';
+      const headingText = isLabelled ? sourceEdge.label : `${fromName} ${ARROW} ${toName}`;
+      const heading = createXhtmlElement('h3', { class: 'svugy-description-source-edge' });
+      heading.textContent = headingText;
+      const descriptionNodes = this.markdown.blocksOf(sourceEdge.description);
+      const section = createXhtmlElement('section', {});
+      section.append(heading, ...descriptionNodes);
+      return section;
+    }
 
     descriptionBlocksOf(details) {
-      const description = details?.description;
-      const isDescribed = typeof description === 'string';
-      return isDescribed ? SafeMarkdown.blocksOf(description) : [];
-    },
+      const isDescribed = DescriptionContent.isDescribed(details);
+      return isDescribed ? this.markdown.blocksOf(details.description) : [];
+    }
 
-    nameOfElementAt(path, layer) {
-      const element = Contract.elementAt(layer, path);
+    static isDescribed(details) {
+      const description = details?.description;
+      return typeof description === 'string';
+    }
+
+    nameOfElementAt(path) {
+      const element = Contract.elementAt(this.deepestLayer, path);
       const title = element === null ? null : Contract.titleOf(element);
       return title ?? path;
+    }
+  }
+
+  /** Renders the panel's Markdown subset as XHTML nodes: paragraphs keeping their line breaks, `-`/`*` and `1.` lists nested one level, `#`–`###` headings as h4–h6, fenced code, `**bold**`, `*em*`, `` `code` ``, `[text](url)` links to http(s) or relative URLs, and `[text](#target)` buttons following a link to a diagram object; author text only ever becomes text nodes, never markup. */
+  /** Picks the colour a description link takes on hover: its element's top face or its edge's stroke, when that colour reads against the canvas. */
+  const TargetColor = {
+    readableHoverColorOf(group) {
+      const isEdge = group.hasAttribute(EDGE);
+      const paint = isEdge ? TargetColor.flowStrokeOf(group) : TargetColor.topFaceFillOf(group);
+      if (paint === null) {
+        return null;
+      }
+      const svg = group.ownerSVGElement;
+      const svgStyle = getComputedStyle(svg);
+      const canvasPaint = svgStyle.getPropertyValue('--svugy-canvas').trim();
+      const paintChannels = TargetColor.channelsOf(paint);
+      const canvasChannels = TargetColor.channelsOf(canvasPaint);
+      const isEitherUnparsed = paintChannels === null || canvasChannels === null;
+      if (isEitherUnparsed) {
+        return null;
+      }
+      const contrast = TargetColor.contrastBetween(paintChannels, canvasChannels);
+      const isReadable = contrast >= MIN_LINK_CONTRAST;
+      return isReadable ? paint : null;
     },
 
-    textElement(name, className, text) {
-      const element = createXhtmlElement(name, { class: className });
-      element.textContent = text;
-      return element;
+    flowStrokeOf(group) {
+      const flowPath = group.querySelector(FLOW_PATH_SELECTOR);
+      if (flowPath === null) {
+        return null;
+      }
+      const flowStyle = getComputedStyle(flowPath);
+      return flowStyle.stroke;
+    },
+
+    topFaceFillOf(group) {
+      const faces = Array.from(group.querySelectorAll(':scope > path'));
+      const filledFaces = faces.filter((face) => face.getAttribute('fill') !== 'none');
+      const topFace = filledFaces.at(-1);
+      if (topFace === undefined) {
+        return null;
+      }
+      const topFaceStyle = getComputedStyle(topFace);
+      return topFaceStyle.fill;
+    },
+
+    channelsOf(paint) {
+      const hexMatch = HEX_COLOR_PATTERN.exec(paint);
+      if (hexMatch !== null) {
+        const hexDigits = hexMatch[1];
+        const isShortHex = hexDigits.length === 3;
+        const fullHexDigits = isShortHex ? hexDigits.replace(/./g, '$&$&') : hexDigits;
+        const channelPairs = fullHexDigits.match(/../g);
+        return channelPairs.map((pair) => parseInt(pair, 16));
+      }
+      const rgbMatch = RGB_COLOR_PATTERN.exec(paint);
+      if (rgbMatch === null) {
+        return null;
+      }
+      const [_rgbText, red, green, blue] = rgbMatch;
+      return [red, green, blue].map(Number);
+    },
+
+    // contrast = (L_light + 0.05) / (L_dark + 0.05), L = 0.2126·R + 0.7152·G + 0.0722·B over linearised channels (WCAG 2)
+    contrastBetween(firstChannels, secondChannels) {
+      const firstLuminance = TargetColor.relativeLuminanceOf(firstChannels);
+      const secondLuminance = TargetColor.relativeLuminanceOf(secondChannels);
+      const lighterLuminance = Math.max(firstLuminance, secondLuminance);
+      const darkerLuminance = Math.min(firstLuminance, secondLuminance);
+      return (lighterLuminance + 0.05) / (darkerLuminance + 0.05);
+    },
+
+    // c = v/255; linear = c ≤ 0.03928 ? c/12.92 : ((c + 0.055)/1.055)^2.4
+    relativeLuminanceOf(channels) {
+      const [red, green, blue] = channels.map((channel) => {
+        const unitChannel = channel / 255;
+        const isDarkChannel = unitChannel <= 0.03928;
+        return isDarkChannel ? unitChannel / 12.92 : ((unitChannel + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
     },
   };
 
-  /** Renders a small Markdown subset as XHTML nodes: paragraphs, `-` lists, `**bold**`, `*em*`, `` `code` `` and `[text](url)` links to http(s) or relative URLs; author text only ever becomes text nodes, never markup. */
-  const SafeMarkdown = {
-    blocksOf(markdown) {
-      const blocks = SafeMarkdown.blockTextsOf(markdown);
-      return blocks.map(SafeMarkdown.nodeOfBlock);
-    },
+  class SafeMarkdown {
+    constructor(deepestLayer, followTargetLink) {
+      this.deepestLayer = deepestLayer;
+      this.followTargetLink = followTargetLink;
+    }
 
-    // a blank line ends a block, `- ` starts a list item, an indented line continues the open item, any other line continues the open paragraph
-    blockTextsOf(markdown) {
-      const lines = markdown.split('\n');
-      const blocks = [];
-      let openBlock = null;
-      for (const line of lines) {
-        const trimmedLine = line.trim();
-        const isBlank = trimmedLine === '';
-        if (isBlank) {
-          openBlock = null;
-          continue;
-        }
-        const listItem = LIST_ITEM_PATTERN.exec(line);
-        const isListItem = listItem !== null;
-        const isIndented = INDENTED_LINE_PATTERN.test(line);
-        const isListOpen = openBlock?.kind === LIST_BLOCK;
-        const isItemContinuation = isListOpen && isIndented && !isListItem;
-        if (isItemContinuation) {
-          const lastItemIndex = openBlock.texts.length - 1;
-          openBlock.texts[lastItemIndex] += ` ${trimmedLine}`;
-          continue;
-        }
-        const kind = isListItem ? LIST_BLOCK : PARAGRAPH_BLOCK;
-        const text = isListItem ? listItem[1] : trimmedLine;
-        const isBlockOfKindOpen = openBlock?.kind === kind;
-        if (isBlockOfKindOpen) {
-          openBlock.texts.push(text);
-          continue;
-        }
-        openBlock = { kind, texts: [text] };
-        blocks.push(openBlock);
-      }
-      return blocks;
-    },
+    blocksOf(markdown) {
+      const blocks = MarkdownBlocks.of(markdown);
+      return blocks.map((block) => this.nodeOfBlock(block));
+    }
 
     nodeOfBlock(block) {
-      const isList = block.kind === LIST_BLOCK;
-      if (isList) {
-        const items = block.texts.map((text) => SafeMarkdown.elementHolding('li', text));
-        const list = createXhtmlElement('ul', {});
-        list.append(...items);
-        return list;
-      }
-      const paragraphText = block.texts.join(' ');
-      return SafeMarkdown.elementHolding('p', paragraphText);
-    },
+      const nodeOfKind = NODE_OF_BLOCK_BY_KIND.get(block.kind);
+      return nodeOfKind.call(this, block);
+    }
 
-    elementHolding(name, text) {
+    paragraphNodeOf(paragraph) {
+      return this.elementHoldingLines('p', paragraph.lines);
+    }
+
+    headingNodeOf(heading) {
+      const rank = heading.level + AUTHOR_HEADING_RANK_OFFSET;
+      return this.elementHoldingLines(`h${rank}`, [heading.text]);
+    }
+
+    codeNodeOf(codeBlock) {
+      const code = createXhtmlElement('code', {});
+      code.textContent = codeBlock.lines.join('\n');
+      const preformatted = createXhtmlElement('pre', {});
+      preformatted.appendChild(code);
+      return preformatted;
+    }
+
+    listNodeOf(list) {
+      const listName = list.isOrdered ? 'ol' : 'ul';
+      const listNode = createXhtmlElement(listName, {});
+      const isStartingPastOne = list.isOrdered && list.start !== 1;
+      if (isStartingPastOne) {
+        listNode.setAttribute('start', String(list.start));
+      }
+      const itemNodes = list.items.map((item) => this.listItemNodeOf(item));
+      listNode.append(...itemNodes);
+      return listNode;
+    }
+
+    listItemNodeOf(item) {
+      const itemNode = this.elementHoldingLines('li', item.lines);
+      const nestedListNodes = item.lists.map((nestedList) => this.listNodeOf(nestedList));
+      itemNode.append(...nestedListNodes);
+      return itemNode;
+    }
+
+    elementHoldingLines(name, lines) {
       const element = createXhtmlElement(name, {});
-      const inlineNodes = SafeMarkdown.inlineNodesOf(text);
-      element.append(...inlineNodes);
+      lines.forEach((line, index) => {
+        const isLaterLine = index > 0;
+        if (isLaterLine) {
+          const lineBreak = createXhtmlElement('br', {});
+          element.appendChild(lineBreak);
+        }
+        const inlineNodes = this.inlineNodesOf(line);
+        element.append(...inlineNodes);
+      });
       return element;
-    },
+    }
 
     inlineNodesOf(text) {
       const nodes = [];
@@ -1149,7 +1359,7 @@
       for (const match of text.matchAll(INLINE_PATTERN)) {
         const precedingText = text.slice(consumedLength, match.index);
         const precedingNode = document.createTextNode(precedingText);
-        const matchNode = SafeMarkdown.inlineNodeOf(match);
+        const matchNode = this.inlineNodeOf(match);
         nodes.push(precedingNode, matchNode);
         consumedLength = match.index + match[0].length;
       }
@@ -1157,7 +1367,7 @@
       const trailingNode = document.createTextNode(trailingText);
       nodes.push(trailingNode);
       return nodes;
-    },
+    }
 
     inlineNodeOf(match) {
       const [_source, code, bold, emphasis, linkText, linkUrl] = match;
@@ -1167,24 +1377,44 @@
         return codeNode;
       }
       if (bold !== undefined) {
-        return SafeMarkdown.elementHolding('strong', bold);
+        return this.elementHoldingLines('strong', [bold]);
       }
       if (emphasis !== undefined) {
-        return SafeMarkdown.elementHolding('em', emphasis);
+        return this.elementHoldingLines('em', [emphasis]);
+      }
+      const isTargetLink = linkUrl.startsWith(TARGET_LINK_PREFIX);
+      if (isTargetLink) {
+        return this.targetLinkNodeOf(linkText, linkUrl);
       }
       const isSafeUrl = SafeMarkdown.isSafeUrl(linkUrl);
       if (isSafeUrl) {
-        const link = SafeMarkdown.elementHolding('a', linkText);
+        const link = this.elementHoldingLines('a', [linkText]);
         link.setAttribute('href', linkUrl);
         link.setAttribute('target', '_blank');
         link.setAttribute('rel', 'noopener noreferrer');
         return link;
       }
-      return SafeMarkdown.elementHolding('span', linkText);
-    },
+      return this.elementHoldingLines('span', [linkText]);
+    }
+
+    /** A button following the link to the element or edge `target` names, or the link's text alone when it names nothing in the diagram. */
+    targetLinkNodeOf(linkText, target) {
+      const targetedGroup = Contract.groupTargetedBy(this.deepestLayer, target);
+      if (targetedGroup === null) {
+        return this.elementHoldingLines('span', [linkText]);
+      }
+      const button = this.elementHoldingLines('button', [linkText]);
+      button.setAttribute('type', 'button');
+      button.addEventListener('click', () => this.followTargetLink(targetedGroup));
+      const hoverColor = TargetColor.readableHoverColorOf(targetedGroup);
+      if (hoverColor !== null) {
+        button.style.setProperty(LINK_HOVER_PROPERTY, hoverColor);
+      }
+      return button;
+    }
 
     // safe = no control or space character, and an http(s) scheme or none at all: no ':' before the first '/', '?' or '#'
-    isSafeUrl(url) {
+    static isSafeUrl(url) {
       const hasControlOrSpace = CONTROL_OR_SPACE_PATTERN.test(url);
       if (hasControlOrSpace) {
         return false;
@@ -1192,14 +1422,160 @@
       const isHttp = HTTP_SCHEME_PATTERN.test(url);
       const hasScheme = ANY_SCHEME_PATTERN.test(url);
       return isHttp || !hasScheme;
-    },
-  };
+    }
+  }
 
-  /** Translates pointer, focus and key events into navigation, detail and description panels, and dimming. */
+  const NODE_OF_BLOCK_BY_KIND = new Map([
+    [PARAGRAPH_BLOCK, SafeMarkdown.prototype.paragraphNodeOf],
+    [HEADING_BLOCK, SafeMarkdown.prototype.headingNodeOf],
+    [CODE_BLOCK, SafeMarkdown.prototype.codeNodeOf],
+    [LIST_BLOCK, SafeMarkdown.prototype.listNodeOf],
+  ]);
+
+  /** Splits Markdown into blocks: paragraphs of lines, `#`–`###` headings, fenced code, and `-`/`*` or `1.` lists whose indented items nest one level under the item above. */
+  class MarkdownBlocks {
+    static of(markdown) {
+      const reader = new MarkdownBlocks();
+      const lines = markdown.split(LINE_BREAK_PATTERN);
+      lines.forEach((line) => reader.read(line));
+      return reader.blocks;
+    }
+
+    constructor() {
+      this.blocks = [];
+      this.openCode = null;
+      this.openParagraph = null;
+      this.openItem = null;
+    }
+
+    // inside a fence every line is code up to the closing fence; else a blank line closes the open paragraph and item, an indented line continues the open item, any other line continues the open paragraph or starts one
+    read(line) {
+      if (this.openCode !== null) {
+        this.readCodeLine(line);
+        return;
+      }
+      const trimmedLine = line.trim();
+      const isBlank = trimmedLine === '';
+      if (isBlank) {
+        this.openParagraph = null;
+        this.openItem = null;
+        return;
+      }
+      const isFence = trimmedLine.startsWith(FENCE);
+      if (isFence) {
+        const codeBlock = { kind: CODE_BLOCK, lines: [] };
+        this.addBlock(codeBlock);
+        this.openCode = codeBlock;
+        return;
+      }
+      const heading = HEADING_PATTERN.exec(trimmedLine);
+      if (heading !== null) {
+        const [_line, hashes, text] = heading;
+        const headingBlock = { kind: HEADING_BLOCK, level: hashes.length, text };
+        this.addBlock(headingBlock);
+        return;
+      }
+      const listItem = LIST_ITEM_PATTERN.exec(line);
+      if (listItem !== null) {
+        this.addListItem(listItem);
+        return;
+      }
+      const isIndented = INDENTED_LINE_PATTERN.test(line);
+      const isItemContinuation = isIndented && this.openItem !== null;
+      if (isItemContinuation) {
+        this.openItem.lines.push(trimmedLine);
+        return;
+      }
+      if (this.openParagraph !== null) {
+        this.openParagraph.lines.push(trimmedLine);
+        return;
+      }
+      const paragraph = { kind: PARAGRAPH_BLOCK, lines: [trimmedLine] };
+      this.addBlock(paragraph);
+      this.openParagraph = paragraph;
+    }
+
+    readCodeLine(line) {
+      const trimmedLine = line.trim();
+      const isClosingFence = trimmedLine.startsWith(FENCE);
+      if (isClosingFence) {
+        this.openCode = null;
+        return;
+      }
+      this.openCode.lines.push(line);
+    }
+
+    addBlock(block) {
+      this.openParagraph = null;
+      this.openItem = null;
+      this.blocks.push(block);
+    }
+
+    // an indented item nests under the last item of a list ending the blocks; any other item joins or starts a top-level list
+    addListItem(listItem) {
+      const [_line, indentation, marker, text] = listItem;
+      const isOrdered = ORDERED_MARKER_PATTERN.test(marker);
+      const start = Number.parseInt(marker, 10);
+      const item = { lines: [text], lists: [] };
+      const lastBlock = this.blocks.at(-1);
+      const isListLast = lastBlock?.kind === LIST_BLOCK;
+      const parentItem = isListLast ? lastBlock.items.at(-1) : undefined;
+      const isIndentedItem = indentation !== '';
+      const isNestedItem = isIndentedItem && parentItem !== undefined;
+      const siblingLists = isNestedItem ? parentItem.lists : this.blocks;
+      const list = MarkdownBlocks.listToJoinIn(siblingLists, isOrdered, start);
+      list.items.push(item);
+      this.openParagraph = null;
+      this.openItem = item;
+    }
+
+    /** Returns the last of `blocks` when it is a list of this kind, else a new such list appended to `blocks`. */
+    static listToJoinIn(blocks, isOrdered, start) {
+      const lastBlock = blocks.at(-1);
+      const isListOfKind = lastBlock?.kind === LIST_BLOCK && lastBlock.isOrdered === isOrdered;
+      if (isListOfKind) {
+        return lastBlock;
+      }
+      const list = { kind: LIST_BLOCK, isOrdered, start, items: [] };
+      blocks.push(list);
+      return list;
+    }
+  }
+
+  /** Highlights the groups a description link targets for HIGHLIGHT_DURATION_MS, ending any earlier highlight first. */
+  class TargetHighlighter {
+    constructor() {
+      this.highlightedGroups = [];
+      this.expiryTimer = 0;
+    }
+
+    highlight(groups) {
+      this.clear();
+      groups.forEach((group) => group.classList.add(HIGHLIGHTED_CLASS));
+      this.highlightedGroups = groups;
+      this.expiryTimer = setTimeout(() => this.clear(), HIGHLIGHT_DURATION_MS);
+    }
+
+    clear() {
+      clearTimeout(this.expiryTimer);
+      this.highlightedGroups.forEach((group) => group.classList.remove(HIGHLIGHTED_CLASS));
+      this.highlightedGroups = [];
+    }
+  }
+
+  /** Translates pointer, focus and key events and description links into navigation, detail and description panels, dimming and highlights. */
   const Interactions = {
-    bind(svg, navigator, panel, dimmer, descriptionPanel) {
+    bind(svg, navigator, panel, dimmer, descriptionPanel, highlighter) {
       Interactions.makeGroupsFocusable(svg);
+      descriptionPanel.addTargetLinkListener((target) => {
+        Interactions.followTargetLink(target, navigator, panel, descriptionPanel, highlighter);
+      });
       svg.addEventListener('click', (event) => {
+        const heading = Interactions.headingAt(event.target);
+        if (heading !== null) {
+          descriptionPanel.describeClickedHeading();
+          return;
+        }
         const group = Interactions.groupAt(event.target);
         const clientPoint = { x: event.clientX, y: event.clientY };
         if (group === null) {
@@ -1215,7 +1591,15 @@
           return;
         }
         const isActivationKey = event.key === 'Enter' || event.key === ' ';
-        const isFocusedGroup = event.target instanceof Element && event.target.matches(INTERACTIVE_SELECTOR);
+        const isElementTarget = event.target instanceof Element;
+        const isFocusedHeading = isElementTarget && event.target.matches(HEADING_SELECTOR);
+        const isHeadingActivated = isActivationKey && isFocusedHeading;
+        if (isHeadingActivated) {
+          event.preventDefault();
+          descriptionPanel.describeClickedHeading();
+          return;
+        }
+        const isFocusedGroup = isElementTarget && event.target.matches(INTERACTIVE_SELECTOR);
         const isGroupActivated = isActivationKey && isFocusedGroup;
         if (isGroupActivated) {
           event.preventDefault();
@@ -1258,14 +1642,17 @@
       const groups = svg.querySelectorAll(INTERACTIVE_SELECTOR);
       groups.forEach((group) => {
         group.setAttribute('tabindex', '0');
+        group.setAttribute('role', 'button');
         const title = Contract.titleOf(group);
         if (title !== null) {
           group.setAttribute('aria-label', title);
         }
-        const isEnterable = Contract.isEnterable(group);
-        if (isEnterable) {
-          group.setAttribute('role', 'button');
-        }
+      });
+      const headings = svg.querySelectorAll(HEADING_SELECTOR);
+      headings.forEach((heading) => {
+        heading.setAttribute('tabindex', '0');
+        heading.setAttribute('role', 'button');
+        heading.setAttribute('aria-label', 'diagram description');
       });
     },
 
@@ -1273,20 +1660,27 @@
       const hasViewMoved = navigator.followClickOn(group);
       if (hasViewMoved) {
         panel.hide();
+      } else {
+        panel.show(group, clientPoint);
+      }
+      const isJumpElsewhere = group.hasAttribute(GOTO);
+      if (isJumpElsewhere) {
         return;
       }
-      panel.show(group, clientPoint);
-      const isLeaf = Contract.isLeaf(group);
-      if (isLeaf) {
-        const leafPath = group.getAttribute(ELEMENT);
-        descriptionPanel.describeLeaf(leafPath);
-      }
+      descriptionPanel.describeClickedGroup(group);
+    },
+
+    followTargetLink(target, navigator, panel, descriptionPanel, highlighter) {
+      panel.hide();
+      descriptionPanel.keepShownContentWhile(() => navigator.revealGroup(target));
+      const shownGroups = Contract.groupsDrawing(navigator.shownLayer, target);
+      highlighter.highlight(shownGroups);
     },
 
     exitOneStep(navigator, panel, descriptionPanel) {
       panel.hide();
-      const hasLeftLeaf = descriptionPanel.stepBackFromLeaf();
-      if (hasLeftLeaf) {
+      const hasLeftClick = descriptionPanel.stepBackFromClick();
+      if (hasLeftClick) {
         return;
       }
       navigator.exitOneStep();
@@ -1295,6 +1689,11 @@
     groupAt(target) {
       const isElementTarget = target instanceof Element;
       return isElementTarget ? target.closest(INTERACTIVE_SELECTOR) : null;
+    },
+
+    headingAt(target) {
+      const isElementTarget = target instanceof Element;
+      return isElementTarget ? target.closest(HEADING_SELECTOR) : null;
     },
 
   };

@@ -5,6 +5,7 @@ use std::fmt;
 
 use miette::{Diagnostic, JSONReportHandler, Severity, SourceSpan};
 
+use crate::description::{DescriptionOwner, DescriptionTarget, TargetLink};
 use crate::legend::{DashKey, Legend};
 use crate::link::Link;
 use crate::model::{Edge, EdgeId, Element, MAX_MAGNITUDE, Model, PlacementHint, Shape};
@@ -14,7 +15,7 @@ use crate::problem::{
     DanglingEdgeEndpoint, DuplicateElement, EmptyGridHint, ErrorSeverity, IgnoredContainerHeight,
     IgnoredContainerShape, ImpossibleHeight, LegendKey, MalformedLegendDash, MismatchedStyleValue,
     MissingAncestor, Problem, StyleOwner, Suggestion, UnboundedPosition, UncountablePackedTracks,
-    UndrawnLegendKey, UnknownStyleKey, UnresolvedLink,
+    UndrawnLegendKey, UnknownStyleKey, UnresolvedDescriptionTarget, UnresolvedLink,
 };
 use crate::style::AnyStyleKey;
 
@@ -86,6 +87,7 @@ impl UncheckedModel {
         let ignored_container_bodies = model.find_ignored_container_bodies();
         let badge_edges_on_containers = model.find_badge_edges_on_containers();
         let unresolved_links = model.find_unresolved_links();
+        let unresolved_description_targets = model.find_unresolved_description_targets();
         let legend_problems = model.find_legend_problems();
         let problems = duplicate_elements
             .into_iter()
@@ -99,6 +101,7 @@ impl UncheckedModel {
             .chain(ignored_container_bodies)
             .chain(badge_edges_on_containers)
             .chain(unresolved_links)
+            .chain(unresolved_description_targets)
             .chain(legend_problems)
             .collect();
         ModelReport { problems }
@@ -384,6 +387,82 @@ impl Model {
         Some(problem)
     }
 
+    /// Report each description link whose `#` target names no element or edge, the diagram's first, then elements', then edges'.
+    fn find_unresolved_description_targets(&self) -> Vec<Problem> {
+        let diagram_description = self
+            .description()
+            .map(|description| (DescriptionOwner::Diagram, description, None));
+        let element_descriptions = self.elements().iter().filter_map(|(path, element)| {
+            let description = element.description()?;
+            let owner_path = path.clone();
+            let owner = DescriptionOwner::Element(owner_path);
+            let span = element.source_span();
+            Some((owner, description, span))
+        });
+        let edge_descriptions = self.edges().iter().filter_map(|(id, edge)| {
+            let description = edge.description()?;
+            let owner_id = id.clone();
+            let owner = DescriptionOwner::Edge(owner_id);
+            let span = edge.source_span();
+            Some((owner, description, span))
+        });
+        let descriptions = diagram_description
+            .into_iter()
+            .chain(element_descriptions)
+            .chain(edge_descriptions);
+        let mut problems = Vec::new();
+        for (owner, description, span) in descriptions {
+            for target_link in TargetLink::find_all(description) {
+                let unresolved_target =
+                    self.check_description_target_resolves(&owner, target_link.target, span);
+                problems.extend(unresolved_target);
+            }
+        }
+        problems
+    }
+
+    /// Check that `target`, spelled after a link's `#` in the description of `owner`, canonically names an element or edge of the model.
+    fn check_description_target_resolves(
+        &self,
+        owner: &DescriptionOwner,
+        target: &str,
+        span: Option<SourceSpan>,
+    ) -> Option<Problem> {
+        let description_target = DescriptionTarget::parse(target);
+        let is_resolved =
+            description_target.is_some_and(|description_target| description_target.is_in(self));
+        if is_resolved {
+            return None;
+        }
+        let marked_target = format!("#{target}");
+        let suggestion = self.suggest_closest_target(&marked_target);
+        let describing_owner = owner.clone();
+        let unresolved_target = target.to_owned();
+        let unresolved_description_target = UnresolvedDescriptionTarget {
+            owner: describing_owner,
+            target: unresolved_target,
+            suggestion,
+            span,
+        };
+        let problem = Problem::UnresolvedDescriptionTarget(unresolved_description_target);
+        Some(problem)
+    }
+
+    /// Suggest the canonical target, `#PATH` or `#FROM->TO[n]`, closest to `unknown`.
+    fn suggest_closest_target(&self, unknown: &str) -> Option<Suggestion<String>> {
+        let element_targets = self.elements().keys().map(|path| {
+            let element_path = path.clone();
+            DescriptionTarget::Element(element_path)
+        });
+        let edge_targets = self.edges().keys().map(|id| {
+            let edge_id = id.clone();
+            DescriptionTarget::Edge(edge_id)
+        });
+        let known_targets = element_targets.chain(edge_targets);
+        let marked_targets = known_targets.map(|known_target| format!("#{known_target}"));
+        Suggestion::closest_to(unknown, marked_targets)
+    }
+
     /// Report each legend dash key that is not a dash length's shortest spelling, then each key row the legend describes but the diagram never draws.
     fn find_legend_problems(&self) -> Vec<Problem> {
         let Some(legend) = self.legend() else {
@@ -605,6 +684,11 @@ impl ModelReport {
             .render_report(&mut rendered, self)
             .expect("a report renders into a string: every message is plain text");
         rendered
+    }
+
+    /// Keep only the problems `keep` accepts, as an importer does with those it already reported more precisely.
+    pub fn retain(&mut self, keep: impl FnMut(&Problem) -> bool) {
+        self.problems.retain(keep);
     }
 
     /// Return every problem found, in the order the checks ran.

@@ -167,7 +167,7 @@ pub struct Element {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     caption: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    description: Option<String>,
+    pub(crate) description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     shape: Option<Shape>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

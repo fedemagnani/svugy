@@ -260,8 +260,9 @@ impl Lowering {
                     .edit_element(&target_key, |element| element.relabeled(label.text));
             }
             Field::Tooltip(tooltip) => {
-                self.elements
-                    .edit_element(&target_key, |element| element.with_description(tooltip.text));
+                self.elements.edit_element(&target_key, |element| {
+                    element.with_description(tooltip.text)
+                });
             }
             Field::Link(link) => {
                 let link_range = ByteRange::from(link.span);

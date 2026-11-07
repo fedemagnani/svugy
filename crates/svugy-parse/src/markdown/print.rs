@@ -5,6 +5,7 @@ use std::fmt;
 
 use thiserror::Error;
 
+use svugy_model::description::{DescriptionTarget, TargetLink};
 use svugy_model::link::Link;
 use svugy_model::model::{Edge, EdgeId, Element, Model, PlacementHint};
 use svugy_model::path::ElementPath;
@@ -13,7 +14,7 @@ use svugy_model::style::{ColorKey, NumberKey, NumberValue, StyleValue};
 use super::ast::Value;
 use super::parse::ItemLabel;
 use super::property::LineStyle;
-use super::skeleton::Skeleton;
+use super::skeleton::{DESCRIPTION_INFO, Skeleton};
 
 /// Name the style key an element's `color` lowers to.
 const FILL: &str = ColorKey::FILL.name();
@@ -31,6 +32,8 @@ const LINE_BREAKS: [char; 2] = ['\n', '\r'];
 const COMMENT_OPENING: &str = "<!--";
 /// List the first characters CommonMark may read, at the start of a list item, as a heading, quote, list, rule, code fence, HTML block or link definition.
 const BLOCK_MARKERS: [char; 10] = ['#', '>', '-', '+', '*', '_', '`', '~', '<', '['];
+/// Count the backticks of the shortest code fence CommonMark reads.
+const MIN_FENCE_LENGTH: usize = 3;
 /// List the characters that turn leading digits into an ordered list marker.
 const ORDERED_LIST_DELIMITERS: [char; 2] = ['.', ')'];
 
@@ -99,7 +102,7 @@ pub enum UnprintableReason {
     #[error("its {field} {text:?} holds `<!--`, which the language reads as a comment and drops")]
     CommentOpening { field: TextField, text: String },
     #[error(
-        "its description does not read back verbatim it must hold only paragraphs, numbered lists, quotes and closed code blocks, and start and end with one of them"
+        "its description does not read back verbatim from a ```description block: Markdown reads a carriage return as a line break"
     )]
     UnreadableDescription,
     #[error("its title ends with `#`, which Markdown reads as the heading's closing `#`s")]
@@ -220,7 +223,7 @@ impl<'a> MarkdownPrinter<'a> {
         let Some(description) = self.model.description() else {
             return;
         };
-        let description_spelling = Self::spell_description(description, "");
+        let description_spelling = self.spell_description(description, "");
         let mut reasons = Vec::new();
         let spelled_description = Self::spelling_or_push_reason(description_spelling, &mut reasons);
         self.markdown.push_str(&spelled_description);
@@ -228,16 +231,11 @@ impl<'a> MarkdownPrinter<'a> {
         self.report(reasons, || UnprintableOwner::Diagram);
     }
 
-    /// Write one component item per element, in path order, nested two spaces per level, a blank line after each description.
+    /// Write one component item per element, in path order, nested two spaces per level.
     fn write_components(&mut self) {
         self.markdown.push_str("## Components\n");
         let model = self.model;
-        let mut is_after_description = false;
         for (path, element) in model.elements() {
-            if is_after_description {
-                self.markdown.push('\n');
-            }
-            is_after_description = element.description().is_some();
             let mut reasons = Vec::new();
             let item = self.component_item(path, element, &mut reasons);
             self.markdown.push_str(&item);
@@ -281,9 +279,9 @@ impl<'a> MarkdownPrinter<'a> {
             return item_line;
         };
         let description_indent = format!("{indent}  ");
-        let description_spelling = Self::spell_description(description, &description_indent);
+        let description_spelling = self.spell_description(description, &description_indent);
         let spelled_description = Self::spelling_or_push_reason(description_spelling, reasons);
-        format!("{item_line}\n{spelled_description}")
+        format!("{item_line}{spelled_description}")
     }
 
     /// Spell the element's properties in the language's table order, from `caption` to `meta.NAME`, pushing onto `reasons` what the language cannot say.
@@ -389,7 +387,7 @@ impl<'a> MarkdownPrinter<'a> {
         }
     }
 
-    /// Write one edge item per edge, in edge order, under `## Edges` when the model has any, a blank line after each description.
+    /// Write one edge item per edge, in edge order, under `## Edges` when the model has any.
     fn write_edges(&mut self) {
         let model = self.model;
         let edges = model.edges();
@@ -400,12 +398,7 @@ impl<'a> MarkdownPrinter<'a> {
         self.markdown.push_str("\n## Edges\n");
         let mut previous_pair = None;
         let mut reading_ordinal = 0;
-        let mut is_after_description = false;
         for (id, edge) in edges {
-            if is_after_description {
-                self.markdown.push('\n');
-            }
-            is_after_description = edge.description().is_some();
             let from = id.from();
             let to = id.to();
             let pair = (from, to);
@@ -471,9 +464,9 @@ impl<'a> MarkdownPrinter<'a> {
         let Some(description) = edge.description() else {
             return item_line;
         };
-        let description_spelling = Self::spell_description(description, "  ");
+        let description_spelling = self.spell_description(description, "  ");
         let spelled_description = Self::spelling_or_push_reason(description_spelling, reasons);
-        format!("{item_line}\n{spelled_description}")
+        format!("{item_line}{spelled_description}")
     }
 
     /// Spell the edge's properties in the language's table order, `line`, `color`, `traveler`, pushing onto `reasons` what the language cannot say.
@@ -761,15 +754,68 @@ impl<'a> MarkdownPrinter<'a> {
         Ok(quoted)
     }
 
-    /// Spell each line of `description` after `indent`, or report a description that would not read back verbatim under an item.
-    fn spell_description(description: &str, indent: &str) -> Result<String, UnprintableReason> {
-        let item_spelling = Self::indented_lines(description, "  ");
+    /// Spell `description` as a description block after `indent`, its targets respelled as references, or report a description that would not read back verbatim under an item.
+    fn spell_description(
+        &self,
+        description: &str,
+        indent: &str,
+    ) -> Result<String, UnprintableReason> {
+        let respelled_description = self.respell_targets(description);
+        let description = respelled_description.as_str();
+        let item_spelling = Self::fenced_description(description, "  ");
         let reads_back = Skeleton::reads_back_as_description(description, &item_spelling);
-        if !reads_back {
+        let is_lossy = !reads_back;
+        if is_lossy {
             return Err(UnprintableReason::UnreadableDescription);
         }
-        let spelled_description = Self::indented_lines(description, indent);
+        let spelled_description = Self::fenced_description(description, indent);
         Ok(spelled_description)
+    }
+
+    /// Respell each canonical `#` target of `description` by its shortest unique references, keeping one that names nothing in the model as written.
+    fn respell_targets(&self, description: &str) -> String {
+        TargetLink::respell_all(description, |target_link| {
+            let description_target = DescriptionTarget::parse(target_link.target)?;
+            match description_target {
+                DescriptionTarget::Element(path) => self.references.spell(&path).ok(),
+                DescriptionTarget::Edge(id) => self.spell_edge_target(&id),
+            }
+        })
+    }
+
+    /// Spell an edge target `FROM->TO[n]` by its endpoints' shortest references, `[n]` dropped when the edge is the only one between them; `None` for an edge not in the model.
+    fn spell_edge_target(&self, id: &EdgeId) -> Option<String> {
+        self.model.edge(id)?;
+        let from = id.from();
+        let to = id.to();
+        let from_reference = self.references.spell(from).ok()?;
+        let to_reference = self.references.spell(to).ok()?;
+        let edge_ids = self.model.edges().keys();
+        let parallel_edge_count = edge_ids
+            .filter(|edge_id| edge_id.from() == from && edge_id.to() == to)
+            .count();
+        let is_only_edge_of_pair = parallel_edge_count == 1;
+        if is_only_edge_of_pair {
+            let unnumbered_target = format!("{from_reference}->{to_reference}");
+            return Some(unnumbered_target);
+        }
+        let ordinal = id.ordinal();
+        let numbered_target = format!("{from_reference}->{to_reference}[{ordinal}]");
+        Some(numbered_target)
+    }
+
+    /// Fence `description` as a description block after `indent`; fence length = max(3, 1 + longest backtick run opening a line).
+    fn fenced_description(description: &str, indent: &str) -> String {
+        let opening_backtick_runs = description.split('\n').map(|line| {
+            let after_spaces = line.trim_start_matches(' ');
+            let after_backticks = after_spaces.trim_start_matches('`');
+            after_spaces.len() - after_backticks.len()
+        });
+        let longest_opening_run = opening_backtick_runs.max().unwrap_or_default();
+        let fence_length = MIN_FENCE_LENGTH.max(longest_opening_run + 1);
+        let fence = "`".repeat(fence_length);
+        let content = Self::indented_lines(description, indent);
+        format!("{indent}{fence}{DESCRIPTION_INFO}\n{content}{indent}{fence}\n")
     }
 
     /// Spell each line of `text` after `indent`, an empty line left empty, each ending with a line break.

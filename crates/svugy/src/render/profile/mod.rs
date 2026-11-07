@@ -69,6 +69,14 @@ pub(crate) trait Profile {
         write_live_content: impl FnOnce(&mut SvgWriter),
     );
 
+    /// Write what `write_content` draws inside a group carrying `attributes`, which only a live viewer reads; without a live viewer, the content alone.
+    fn write_in_live_group(
+        &self,
+        writer: &mut SvgWriter,
+        attributes: &Attributes,
+        write_content: impl FnOnce(&mut SvgWriter),
+    );
+
     /// Write the document's content through `write_content`, embedded in the runtime that drives it, if the profile has one.
     fn embed_in_runtime(&self, writer: &mut SvgWriter, write_content: impl FnOnce(&mut SvgWriter));
 }
@@ -312,21 +320,23 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         writer.empty_element("line", &line_attributes);
     }
 
-    /// Write the heading: the diagram's title in text ink and its subtitle muted, outside every level group, so they stay in document space whatever level is entered.
+    /// Write the heading: the diagram's title in text ink and its subtitle muted, outside every level group, so they stay in document space whatever level is entered, in the group a live viewer clicks for the diagram's description.
     fn write_heading(&self, writer: &mut SvgWriter, heading: &Heading) {
         let title_ink = Paint::Token(Token::Text);
         let subtitle_ink = Paint::Token(Token::TextMuted);
-        match heading {
-            Heading::Titled { title, subtitle } => {
-                self.write_label_in_ink(writer, title, title_ink);
-                if let Some(subtitle) = subtitle {
+        let heading_attributes = Attributes::new().with_text(RuntimeContract::HEADING, "");
+        self.profile
+            .write_in_live_group(writer, &heading_attributes, |writer| match heading {
+                Heading::Titled { title, subtitle } => {
+                    self.write_label_in_ink(writer, title, title_ink);
+                    if let Some(subtitle) = subtitle {
+                        self.write_label_in_ink(writer, subtitle, subtitle_ink);
+                    }
+                }
+                Heading::Subtitled(subtitle) => {
                     self.write_label_in_ink(writer, subtitle, subtitle_ink);
                 }
-            }
-            Heading::Subtitled(subtitle) => {
-                self.write_label_in_ink(writer, subtitle, subtitle_ink);
-            }
-        }
+            });
     }
 
     /// Draw `label` in `ink`, a caption at the caption opacity.
@@ -1175,9 +1185,13 @@ mod tests {
 
         let heading_lines = lines_before_the_root_level(&markup);
 
-        let [title_line, subtitle_line] = heading_lines[..] else {
-            panic!("expected a title and a subtitle line: {heading_lines:?}");
+        let [group_opening, title_line, subtitle_line, group_closing] = heading_lines[..] else {
+            panic!(
+                "expected a heading group around a title and a subtitle line: {heading_lines:?}"
+            );
         };
+        assert_eq!(group_opening, "<g data-svugy-heading=\"\">");
+        assert_eq!(group_closing, "</g>");
         let text_ink = format!(
             "fill=\"var({})\"",
             Token::Text.css_custom_property().as_str()

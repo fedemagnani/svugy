@@ -22,13 +22,15 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: No bare `_` patterns
-        run: "! git grep -nE '\\|_\\||(^|[^a-zA-Z0-9_])_ =>|let _ =|[(,] ?_[,)]' -- 'crates/**/*.rs'"
+        run: "! git grep -nE '\\|_\\||(^|[^a-zA-Z0-9_])_ =>|let _ =|[(,] ?_[,)]' -- 'crates/**/*.rs' 'examples/**/*.rs'"
       - name: Runtime syntax
         run: node --check crates/svugy/runtime/svugy.js
       - name: Test
         env:
           INSTA_UPDATE: new
         run: cargo test --workspace
+      - name: The Rust web-app example renders examples/webapp/webapp.svg
+        run: cargo run --quiet -p svugy-examples --example webapp | cmp - examples/webapp/webapp.svg
       - name: Upload pending pixel snapshots
         if: failure()
         uses: actions/upload-artifact@v4
@@ -82,4 +84,4 @@ jobs:
       - name: Render the README figure and diff it against the committed one
         env:
           CARGO_TARGET_WASM32_WASIP1_RUNNER: wasmtime --dir=.
-        run: cargo run --quiet --release -p svugy-cli --target ${{ matrix.target }} -- render examples/svugy.d2 --profile static | diff - docs/svugy.svg
+        run: cargo run --quiet --release -p svugy-cli --target ${{ matrix.target }} -- render examples/svugy/svugy.d2 --profile static | diff - docs/svugy.svg
