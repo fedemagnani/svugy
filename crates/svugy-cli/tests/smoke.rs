@@ -30,7 +30,9 @@ fn clap_parses_the_cli() {
 
     let version_line = String::from_utf8(version_output.stdout).expect("utf-8 stdout");
     let unknown_flag_exit_code = unknown_flag_output.status.code();
-    assert_eq!(version_line.trim(), "svugy 0.1.0");
+    let package_version = env!("CARGO_PKG_VERSION");
+    let expected_version_line = format!("svugy {package_version}");
+    assert_eq!(version_line.trim(), expected_version_line);
     assert_eq!(unknown_flag_exit_code, Some(2));
 }
 
