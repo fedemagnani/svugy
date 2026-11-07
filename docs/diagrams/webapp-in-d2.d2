@@ -1,0 +1,64 @@
+# d2 v0.9.0 · the web app of crates/svugy-cli/example/webapp.md, written in d2
+
+label: A web app
+vars: {
+  svugy: {
+    subtitle: "from the browser to the database and back"
+    legend: {
+      title: How to read it
+      entries: [
+        "arrows point where a request goes"
+      ]
+      dashes: { 5: leaves your servers }
+      badges: { data.cache: looks up the cache }
+    }
+  }
+}
+
+browser: Browser {
+  vars: { svugy: { caption: "the user's tab" } }
+}
+cdn: CDN {
+  shape: circle
+  vars: { svugy: { caption: static files } }
+}
+backend: Backend {
+  vars: { svugy: { caption: your servers } }
+  api: API {
+    style.fill: "#3478f6"
+    vars: { svugy: { caption: HTTP endpoints } }
+  }
+  queue: Queue {
+    vars: { svugy: { shape: slab; caption: pending jobs } }
+  }
+  worker: Worker {
+    style.fill: "#3478f6"
+    vars: { svugy: { caption: background jobs } }
+  }
+}
+data: Data {
+  vars: { svugy: { caption: what the app remembers } }
+  db: Database {
+    shape: cylinder
+    style.fill: "#d5dcea"
+    vars: { svugy: { caption: users · orders } }
+  }
+  cache: Cache {
+    shape: cylinder
+    style.fill: "#d5dcea"
+    vars: { svugy: { caption: hot reads; badge: true } }
+  }
+}
+mail: Email provider {
+  style.fill: transparent
+  vars: { svugy: { caption: outside your servers } }
+}
+
+browser -> cdn: loads the page
+browser -> backend.api: signs in
+browser -> backend.api: places an order
+backend.api -> data.cache: looks up
+backend.api -> data.db: saves the order
+backend.api -> backend.queue: schedules a receipt
+backend.queue -> backend.worker: hands over
+backend.worker -> mail: sends the receipt { style.stroke-dash: 5 }

@@ -1,0 +1,49 @@
+---
+source: crates/svugy-parse/tests/d2_lower.rs
+expression: import.model.to_json()
+---
+{
+  "elements": {
+    "api": {
+      "label": "api",
+      "style": {
+        "bold": "true",
+        "fill": "#f4a261",
+        "opacity": "0.4",
+        "stroke": "navy",
+        "stroke-width": "2"
+      },
+      "span": {
+        "start": 63,
+        "end": 66
+      }
+    },
+    "db": {
+      "label": "db",
+      "shape": "cylinder",
+      "style": {
+        "border-radius": "10",
+        "font-color": "#FFF",
+        "shadow": "false"
+      },
+      "span": {
+        "start": 165,
+        "end": 167
+      }
+    }
+  },
+  "edges": [
+    {
+      "from": "api",
+      "to": "db",
+      "ordinal": 0,
+      "style": {
+        "animated": "true"
+      },
+      "span": {
+        "start": 264,
+        "end": 273
+      }
+    }
+  ]
+}

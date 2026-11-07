@@ -1,0 +1,232 @@
+---
+source: crates/svugy-parse/tests/d2.rs
+expression: parsed
+---
+D2Parse {
+    document: D2Document {
+        statements: [
+            Field(
+                FieldAssignment {
+                    target: KeyPath {
+                        parent_references: 0,
+                        segments: [],
+                        span: 83..83,
+                    },
+                    field: Direction(
+                        Scalar {
+                            text: "right",
+                            span: 94..99,
+                        },
+                    ),
+                    span: 83..99,
+                },
+            ),
+            Shape(
+                ShapeDeclaration {
+                    path: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "cloud",
+                                span: 101..106,
+                            },
+                        ],
+                        span: 101..106,
+                    },
+                    label: Some(
+                        Scalar {
+                            text: "AWS",
+                            span: 108..111,
+                        },
+                    ),
+                    body: [
+                        Shape(
+                            ShapeDeclaration {
+                                path: KeyPath {
+                                    parent_references: 0,
+                                    segments: [
+                                        KeySegment {
+                                            name: "vpc",
+                                            span: 116..119,
+                                        },
+                                    ],
+                                    span: 116..119,
+                                },
+                                label: Some(
+                                    Scalar {
+                                        text: "Main VPC",
+                                        span: 121..131,
+                                    },
+                                ),
+                                body: [
+                                    Shape(
+                                        ShapeDeclaration {
+                                            path: KeyPath {
+                                                parent_references: 0,
+                                                segments: [
+                                                    KeySegment {
+                                                        name: "api",
+                                                        span: 138..141,
+                                                    },
+                                                ],
+                                                span: 138..141,
+                                            },
+                                            label: Some(
+                                                Scalar {
+                                                    text: "API server",
+                                                    span: 143..155,
+                                                },
+                                            ),
+                                            body: [],
+                                            span: 138..155,
+                                        },
+                                    ),
+                                    Shape(
+                                        ShapeDeclaration {
+                                            path: KeyPath {
+                                                parent_references: 0,
+                                                segments: [
+                                                    KeySegment {
+                                                        name: "db.primary",
+                                                        span: 160..172,
+                                                    },
+                                                ],
+                                                span: 160..172,
+                                            },
+                                            label: Some(
+                                                Scalar {
+                                                    text: "Primary DB",
+                                                    span: 174..184,
+                                                },
+                                            ),
+                                            body: [
+                                                Field(
+                                                    FieldAssignment {
+                                                        target: KeyPath {
+                                                            parent_references: 0,
+                                                            segments: [],
+                                                            span: 193..193,
+                                                        },
+                                                        field: Shape(
+                                                            Scalar {
+                                                                text: "cylinder",
+                                                                span: 200..208,
+                                                            },
+                                                        ),
+                                                        span: 193..208,
+                                                    },
+                                                ),
+                                                Field(
+                                                    FieldAssignment {
+                                                        target: KeyPath {
+                                                            parent_references: 0,
+                                                            segments: [],
+                                                            span: 215..215,
+                                                        },
+                                                        field: Link(
+                                                            Scalar {
+                                                                text: "cloud.vpc",
+                                                                span: 221..230,
+                                                            },
+                                                        ),
+                                                        span: 215..230,
+                                                    },
+                                                ),
+                                            ],
+                                            span: 160..236,
+                                        },
+                                    ),
+                                ],
+                                span: 116..240,
+                            },
+                        ),
+                    ],
+                    span: 101..242,
+                },
+            ),
+            Shape(
+                ShapeDeclaration {
+                    path: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "cloud",
+                                span: 244..249,
+                            },
+                            KeySegment {
+                                name: "vpc",
+                                span: 250..253,
+                            },
+                            KeySegment {
+                                name: "cache",
+                                span: 254..259,
+                            },
+                        ],
+                        span: 244..259,
+                    },
+                    label: Some(
+                        Scalar {
+                            text: "Redis",
+                            span: 261..266,
+                        },
+                    ),
+                    body: [],
+                    span: 244..266,
+                },
+            ),
+            Shape(
+                ShapeDeclaration {
+                    path: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "cloud",
+                                span: 268..273,
+                            },
+                            KeySegment {
+                                name: "vpc",
+                                span: 274..277,
+                            },
+                            KeySegment {
+                                name: "queue",
+                                span: 278..283,
+                            },
+                        ],
+                        span: 268..283,
+                    },
+                    label: None,
+                    body: [],
+                    span: 268..283,
+                },
+            ),
+            Shape(
+                ShapeDeclaration {
+                    path: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "edge.node",
+                                span: 284..295,
+                            },
+                            KeySegment {
+                                name: "with space",
+                                span: 296..308,
+                            },
+                        ],
+                        span: 284..308,
+                    },
+                    label: Some(
+                        Scalar {
+                            text: "unicode ✓",
+                            span: 310..321,
+                        },
+                    ),
+                    body: [],
+                    span: 284..321,
+                },
+            ),
+        ],
+    },
+    errors: [],
+    warnings: [],
+}

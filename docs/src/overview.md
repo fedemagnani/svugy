@@ -1,16 +1,23 @@
 # Overview
 
-svugy turns a text description of a system into an isometric SVG you can click into.
+svugy renders a diagram written in Markdown as an isometric SVG you can click into.
 
-The output is one SVG file with its CSS and JavaScript inside, so there's no server or library to install. The input is text, so you can diff and review diagrams like code. `svugy validate` reports every problem at once, in JSON if a script is reading it.
+- **Input:** a `.md` file with a nested list of components and a list of edges. Any Markdown preview shows it as an outline; it diffs like code.
+- **Output:** one `.svg` file with its CSS and JavaScript inside. Open it in a browser; nothing to install or serve.
+- **Errors:** `svugy validate` reports every problem in one run, with line and column; `--format json` for scripts and agents.
+- **d2:** `svugy render` also reads `.d2` files, and `svugy import` converts them to Markdown.
 
-Below, edit the d2 on the left and the diagram on the right re-renders as you type: svugy itself, compiled to wasm, running in this page. Click the `svugy` box to open it, then its slab to enter it, press Escape to step back, and hover anything for details.
+The editor below runs svugy compiled to wasm.
 
-<textarea id="svugy-source" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="d2 source">{{#include ../diagrams/pipeline.d2}}</textarea>
+<div class="svugy-live">
 
-<object id="svugy-preview" class="svugy" type="image/svg+xml" data="figures/pipeline.svg"></object>
+<textarea data-svugy-language="markdown">{{#include ../diagrams/pipeline.md}}</textarea>
 
-<ul id="svugy-diagnostics"></ul>
+<textarea data-svugy-language="d2" hidden>{{#include playground/sample.d2}}</textarea>
+
+<object class="svugy" type="image/svg+xml" data="figures/pipeline.svg"></object>
+
+</div>
 
 <script src="playground/svugy-wasm.js"></script>
 <script src="playground/playground.js"></script>

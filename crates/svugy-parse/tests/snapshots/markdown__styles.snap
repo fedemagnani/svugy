@@ -1,0 +1,91 @@
+---
+source: crates/svugy-parse/tests/markdown.rs
+expression: model_json
+---
+{
+  "elements": {
+    "api": {
+      "label": "api",
+      "caption": "a service",
+      "style": {
+        "fill": "#3478f6"
+      },
+      "span": {
+        "start": 281,
+        "end": 294
+      }
+    },
+    "archive": {
+      "label": "archive",
+      "caption": "a service",
+      "shape": "cylinder",
+      "style": {
+        "fill": "#3478f6"
+      },
+      "span": {
+        "start": 355,
+        "end": 379
+      }
+    },
+    "db": {
+      "label": "db",
+      "shape": "cylinder",
+      "style": {
+        "fill": "#d5dcea"
+      },
+      "span": {
+        "start": 342,
+        "end": 352
+      }
+    },
+    "worker": {
+      "label": "worker",
+      "caption": "drains the queue",
+      "style": {
+        "fill": "#3478f6"
+      },
+      "span": {
+        "start": 297,
+        "end": 339
+      }
+    }
+  },
+  "edges": [
+    {
+      "from": "api",
+      "to": "worker",
+      "ordinal": 0,
+      "label": "enqueue",
+      "style": {
+        "stroke-dash": "5"
+      },
+      "traveler": "envelope",
+      "span": {
+        "start": 392,
+        "end": 405
+      }
+    },
+    {
+      "from": "worker",
+      "to": "archive",
+      "ordinal": 0,
+      "span": {
+        "start": 467,
+        "end": 484
+      }
+    },
+    {
+      "from": "worker",
+      "to": "db",
+      "ordinal": 0,
+      "style": {
+        "stroke-dash": "5"
+      },
+      "traveler": "document",
+      "span": {
+        "start": 425,
+        "end": 437
+      }
+    }
+  ]
+}

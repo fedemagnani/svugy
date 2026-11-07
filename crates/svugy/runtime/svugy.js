@@ -90,7 +90,7 @@
   /** Wires navigation, detail panels, dimming and the elevator onto one diagram. */
   function bindRuntime(svg) {
     const layers = Layers.of(svg);
-    const initialLayer = Layers.initiallyShown(layers);
+    const initialLayer = layers[0];
     const rootLevel = Contract.levelAt(initialLayer, ROOT_LEVEL_PATH);
     if (rootLevel === null) {
       return;
@@ -115,11 +115,6 @@
       const layerGroups = Array.from(svg.querySelectorAll(LAYER_SELECTOR));
       const hasLayerGroups = layerGroups.length > 0;
       return hasLayerGroups ? layerGroups : [svg];
-    },
-
-    initiallyShown(layers) {
-      const renderedShownLayer = layers.find((layer) => layer.hasAttribute(SHOWN));
-      return renderedShownLayer ?? layers[0];
     },
   };
 
@@ -276,6 +271,22 @@
       return `${view.x} ${view.y} ${view.width} ${view.height}`;
     },
 
+    // width = max(w, h·A), height = width / A with A the canvas aspect; x, y = centred, then clamped into the canvas
+    fittedInside(view, canvas) {
+      const canvasAspect = canvas.width / canvas.height;
+      const viewAspect = view.width / view.height;
+      const isNarrowerThanCanvas = viewAspect < canvasAspect;
+      const width = isNarrowerThanCanvas ? view.height * canvasAspect : view.width;
+      const height = width / canvasAspect;
+      const centredX = view.x + (view.width - width) / 2;
+      const centredY = view.y + (view.height - height) / 2;
+      const rightmostX = canvas.x + canvas.width - width;
+      const lowestY = canvas.y + canvas.height - height;
+      const x = Math.max(canvas.x, Math.min(centredX, rightmostX));
+      const y = Math.max(canvas.y, Math.min(centredY, lowestY));
+      return { x, y, width, height };
+    },
+
     interpolate(start, target, fraction) {
       return {
         x: start.x + (target.x - start.x) * fraction,
@@ -292,15 +303,17 @@
     },
   };
 
-  /** Tweens the root viewBox toward a target view, or jumps under reduced motion. */
+  /** Tweens the root viewBox toward a target view fitted to the canvas, so no letterbox ever falls outside it; jumps under reduced motion. */
   class ViewBoxAnimator {
     constructor(svg) {
       this.svg = svg;
       this.frameRequest = 0;
+      this.canvasView = this.currentView();
     }
 
-    tweenTo(targetView, startView = this.currentView()) {
+    tweenTo(requestedView, startView = this.currentView()) {
       cancelAnimationFrame(this.frameRequest);
+      const targetView = View.fittedInside(requestedView, this.canvasView);
       const isMotionReduced = window.matchMedia(REDUCED_MOTION_QUERY).matches;
       if (isMotionReduced) {
         this.show(targetView);

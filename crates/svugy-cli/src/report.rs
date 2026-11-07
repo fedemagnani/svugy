@@ -4,7 +4,9 @@ use std::fmt;
 
 use miette::{
     Diagnostic, GraphicalReportHandler, JSONReportHandler, NamedSource, Severity, SourceCode,
+    SourceSpan,
 };
+use serde_json::Value;
 use svugy_model::problem::ErrorSeverity;
 use svugy_model::validate::ModelReport;
 
@@ -57,15 +59,46 @@ impl InputReport {
         eprint!("{rendered}");
     }
 
-    /// Render the report as miette's machine-readable JSON, one `related` entry per diagnostic.
+    /// Render the report as miette's machine-readable JSON, one `related` entry per diagnostic, each label located by line and column when the source is known.
     pub fn to_json(&self) -> String {
         let handler = JSONReportHandler::new();
-        let mut rendered = String::new();
+        let mut miette_json = String::new();
         handler
-            .render_report(&mut rendered, self)
+            .render_report(&mut miette_json, self)
             .expect("a JSON report renders into a string: unreadable spans are skipped");
-        rendered.push('\n');
-        rendered
+        let Some(source_code) = &self.source_code else {
+            miette_json.push('\n');
+            return miette_json;
+        };
+        let mut json_report: Value =
+            serde_json::from_str(&miette_json).expect("miette renders valid JSON");
+        Self::locate_every_label(&mut json_report, source_code);
+        let mut located_json = json_report.to_string();
+        located_json.push('\n');
+        located_json
+    }
+
+    /// Add to every label of every related diagnostic its span's 1-based `line` and `column`, as miette's graphical report counts them.
+    fn locate_every_label(json_report: &mut Value, source_code: &NamedSource<String>) {
+        let related_diagnostics = json_report["related"].as_array_mut().into_iter().flatten();
+        let labels = related_diagnostics
+            .flat_map(|diagnostic| diagnostic["labels"].as_array_mut())
+            .flatten();
+        for label in labels {
+            let span_offset = label["span"]["offset"].as_u64();
+            let span_length = label["span"]["length"].as_u64();
+            let (Some(span_offset), Some(span_length)) = (span_offset, span_length) else {
+                continue;
+            };
+            let span = SourceSpan::from((span_offset as usize, span_length as usize));
+            let Ok(span_contents) = source_code.read_span(&span, 0, 0) else {
+                continue;
+            };
+            let line = span_contents.line() + 1;
+            let column = span_contents.column() + 1;
+            label["line"] = Value::from(line);
+            label["column"] = Value::from(column);
+        }
     }
 
     /// Tell whether any diagnostic is an error, which stops every subcommand.

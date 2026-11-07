@@ -1,15 +1,37 @@
 # Render
 
-Render turns the scene into SVG text.
+Render writes a `Scene` as SVG text. Both outputs come from one `Renderer<P>`, so the static and the interactive SVG draw the same scene; only the profile `P` differs.
 
-The writer guarantees a valid, safe file. Numbers have fixed decimals, attributes are sorted, and text is XML-escaped. CSS and JavaScript are wrapped in comment-guarded CDATA instead of escaped, because escaping inside `<style>` or `<script>` breaks them. Links pass through a sanitiser that only lets safe URLs out. Your text never ends up in a CSS selector; element paths only travel as attribute values.
+## Components
 
-The theme holds colour tokens for light and dark, and each face's three shades are derived in Oklab.
+**Writer** produces valid, injection-free markup.
 
-There are two output profiles, built by one renderer: `Renderer<Static>` and `Renderer<Interactive>`. The static profile inlines every colour, draws text as glyph outlines and includes no script, so it looks identical in resvg, Figma or an `<img>` tag. Inlining matters: resvg draws `var(--x)` as black, which looks plausible and is wrong. The interactive profile uses CSS tokens, real `<text>`, animated flows and the embedded runtime. Both emit the `data-svugy-*` attributes the runtime reads.
+- Numbers have at most 3 decimals; attributes are sorted; text is XML-escaped.
+- CSS and JavaScript go in comment-guarded CDATA, since entity escaping breaks `<style>` and `<script>`.
+- Links pass only as `http`, `https` or `mailto` URLs or relative paths.
+- CSS selectors are built from static attribute names only; paths travel only as attribute values.
 
-The interactive profile writes every disclosed layer into one document. Each layer is laid out and projected on its own, then written as its own `<g data-svugy-layer>` group; the layers share one `<defs>` and one canvas that covers every layer's root view. The document is sized to layer 0, the only layer shown until the runtime switches, so an `<img>` shows layer 0. Paints are read from each layer's model, so a closed container takes a leaf's fill, not a slab's. The static profile writes only the last layer, which is the whole model, with no layer group around it.
+**Theme** holds the colours.
 
-Each animated connection carries a traveler: a `<use>` of a `<symbol>` from `<defs>`, moved along the arc by SMIL and painted like its edge. The model's traveler becomes a symbol type in one place, `profile/traveler.rs`, the same way a shape becomes a primitive, and only the symbols a document uses are written. The static profile has no travelers.
+- A dark and a light palette; the light one mirrors the dark in Oklab lightness, L ↦ 1.13 − L.
+- A solid's three face shades derive from one base in Oklab: top = base, left = 0.835·base, right = 0.72·base.
 
-The code is in `crates/svugy/src/render`: `writer/`, `theme/`, `profile/`, `contract.rs`.
+**Profiles** are the two flavours of the renderer.
+
+| | `Static` | `Interactive` |
+|---|---|---|
+| for | viewers without CSS, script or fonts | browsers |
+| colours | dark palette, inlined | CSS custom properties, light under `prefers-color-scheme: light` |
+| labels | glyph outlines from the bundled Inter | `<text>`, `textLength` pinned to the measured width |
+| content | the whole model | every layer, one `<g data-svugy-layer>` each |
+| extras | none | stub overlays, travelers, the embedded [runtime](runtime.md) |
+
+- Both write the `data-svugy-*` attributes the runtime reads.
+- The interactive file is sized to the canvas, the union of every layer's root view, and shows the deepest layer, so without script it shows the whole diagram.
+- Each layer is painted from its own model, so a closed container takes a leaf's fill, not a slab's.
+
+**Travelers** are `<symbol>`s in `<defs>`, one per traveler the file uses, moved along each arc by SMIL every 2.4 s.
+
+**`RuntimeContract`** spells every `data-svugy-*` attribute once; the [runtime contract](runtime-contract.md) defines them.
+
+Code: `crates/svugy/src/render/`.

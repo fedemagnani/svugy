@@ -58,8 +58,8 @@
       "link": "https://d2lang.com"
     },
     "import": {
-      "label": "svugy-import",
-      "caption": "d2 → model",
+      "label": "svugy-parse",
+      "caption": "text → model",
       "style": {
         "fill": "#2a2418"
       },
@@ -68,20 +68,20 @@
         "y": 0.0
       }
     },
-    "import.lex": {
-      "label": "lex",
-      "caption": "logos tokens",
+    "import.d2": {
+      "label": "d2",
+      "caption": "import",
       "style": {
         "fill": "#f0a020"
       },
       "position": {
-        "x": 18.0,
+        "x": 150.0,
         "y": 18.0
       }
     },
-    "import.lower": {
-      "label": "lower",
-      "caption": "AST → model",
+    "import.json": {
+      "label": "JSON",
+      "caption": "load · save",
       "style": {
         "fill": "#f0a020"
       },
@@ -90,14 +90,14 @@
         "y": 18.0
       }
     },
-    "import.parse": {
-      "label": "parse",
-      "caption": "chumsky + recovery",
+    "import.markdown": {
+      "label": "Markdown",
+      "caption": "parse · print",
       "style": {
         "fill": "#f0a020"
       },
       "position": {
-        "x": 150.0,
+        "x": 18.0,
         "y": 18.0
       }
     },
@@ -121,17 +121,6 @@
       "position": {
         "x": 150.0,
         "y": 18.0
-      }
-    },
-    "model.json": {
-      "label": "json",
-      "caption": "id-keyed schema",
-      "style": {
-        "fill": "#14f195"
-      },
-      "position": {
-        "x": 150.0,
-        "y": 180.0
       }
     },
     "model.path": {
@@ -214,7 +203,6 @@
     "pipeline.inter": {
       "label": "Inter",
       "shape": "cylinder",
-      "badge": true,
       "style": {
         "fill": "#d5dcea"
       },
@@ -346,7 +334,7 @@
     },
     "text": {
       "label": "your text",
-      "caption": "d2 · JSON · Rust builder",
+      "caption": "Markdown · d2 · JSON",
       "style": {
         "fill": "#3a3f4b"
       },
@@ -384,25 +372,10 @@
       "label": "①"
     },
     {
-      "from": "import.lex",
-      "to": "import.parse",
-      "ordinal": 0
-    },
-    {
-      "from": "import.parse",
-      "to": "import.lower",
-      "ordinal": 0
-    },
-    {
       "from": "model",
       "to": "pipeline",
       "ordinal": 0,
       "label": "②"
-    },
-    {
-      "from": "model.graph",
-      "to": "model.json",
-      "ordinal": 0
     },
     {
       "from": "model.graph",
@@ -455,7 +428,8 @@
       "from": "pipeline.metrics",
       "to": "pipeline.inter",
       "ordinal": 0,
-      "label": "measures"
+      "label": "measures",
+      "badge": true
     },
     {
       "from": "pipeline.metrics",
@@ -466,7 +440,8 @@
       "from": "pipeline.render.profile",
       "to": "pipeline.inter",
       "ordinal": 0,
-      "label": "outlines"
+      "label": "outlines",
+      "badge": true
     },
     {
       "from": "pipeline.render.profile",

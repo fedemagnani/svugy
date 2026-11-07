@@ -1,26 +1,35 @@
 # Quickstart
 
-Install the CLI, render a diagram, open it:
-
 ```sh
-cargo install --path crates/svugy-cli
-svugy render docs/diagrams/pipeline.d2 -o pipeline.svg
-open pipeline.svg
+cargo install --git https://github.com/fedemagnani/svugy svugy-cli
+svugy example -o webapp.md
+svugy render webapp.md -o webapp.svg --open
 ```
 
-That's the diagram from the overview. Open it in a browser and click around.
+`example` writes a sample diagram of a web app; `--open` opens the written SVG in your default browser.
 
-Before rendering something new, validate it. svugy reports every problem at once, and for d2 input each one points at its line. Errors stop a render; warnings don't. Add `--format json` if a script or an agent is reading the output.
+## Edit and validate
 
-```sh
-svugy validate my.d2
-svugy validate my.d2 --format json
-```
+Edit `webapp.md` ([Markdown](markdown.md) has every rule), then run `svugy validate webapp.md` before rendering.
 
-`render` writes the interactive SVG by default: themed, animated, explorable. Pass `--profile static` when the file is going somewhere scripts don't run, like an `<img>` tag, a README or Figma. The static profile has no script and draws text as paths, so it looks the same everywhere.
+- `validate` prints every error and warning in one run, each with line and column. Errors stop every command; warnings never do.
+- `--format json` prints one JSON object on stdout, even for a clean file.
+- `render --profile static` writes an SVG with no CSS, script, fonts or animation, text drawn as paths: for `<img>` tags, READMEs and design tools.
 
-The exit codes are the same for every command: `0` means success (warnings included), `1` means the input has errors, `2` is a usage error, and `3` means a file couldn't be read or written.
+| Exit code | Meaning |
+|---|---|
+| `0` | success, warnings included |
+| `1` | the input has errors |
+| `2` | usage error, e.g. an unknown flag or an input not ending in `.md`, `.d2` or `.json` |
+| `3` | a file can't be read, written or opened |
 
-`svugy import my.d2 -o my.json` saves the model as JSON, and `render` accepts JSON as well as d2.
+## Let Claude Code draw
+
+`svugy skill install` writes a skill teaching the Markdown format and the write, validate, render loop to `.claude/skills/svugy/`; `--user` writes it to `~/.claude/skills/svugy/`. `svugy skill` prints it.
+
+## Other inputs
+
+- `render`, `validate` and `import` read `.md`, `.d2` and `.json`, chosen by extension.
+- `svugy import my.d2 -o my.md` converts to Markdown; `-o my.json` writes the model as JSON.
 
 Next: [Writing diagrams](writing-diagrams.md)

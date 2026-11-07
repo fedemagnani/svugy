@@ -1,13 +1,31 @@
-//! Write a subcommand's product to a file or to stdout.
+//! Write a subcommand's product to a file or to stdout, choosing the text form of an imported model by the file's extension.
 
+use std::ffi::OsStr;
 use std::fs;
 use std::io::{self, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use clap::Args;
-use miette::{IntoDiagnostic, WrapErr};
+use miette::{IntoDiagnostic, WrapErr, miette};
+use svugy_model::model::Model;
+use svugy_parse::json::JsonPrinter;
+use svugy_parse::markdown::MarkdownPrinter;
 
 use crate::failure::Failure;
+
+/// Name the program that opens a file in the default browser, and the arguments it takes before the file.
+#[cfg(target_os = "macos")]
+const DEFAULT_BROWSER_OPENER: (&str, &[&str]) = ("open", &[]);
+/// Name the program that opens a file in the default browser, and the arguments it takes before the file.
+#[cfg(target_os = "windows")]
+const DEFAULT_BROWSER_OPENER: (&str, &[&str]) = ("cmd", &["/C", "start", ""]);
+/// Name the program that opens a file in the default browser, and the arguments it takes before the file.
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+const DEFAULT_BROWSER_OPENER: (&str, &[&str]) = ("xdg-open", &[]);
+
+/// Type the printer of one model text form: the model in, its text out, or why the form cannot say it.
+type PrintModel = fn(&Model) -> Result<String, Failure>;
 
 /// Target the file named by `-o`, or stdout when there is none.
 #[derive(Args)]
@@ -17,17 +35,42 @@ pub struct OutputTarget {
     output: Option<PathBuf>,
 }
 
+/// Pair the file `import` writes with the printer of the model text form its extension selects.
+#[derive(Clone)]
+pub struct ModelFile {
+    path: PathBuf,
+    print_model: PrintModel,
+}
+
 impl OutputTarget {
     /// Write `contents` to the output file, or to stdout when there is none.
     pub fn write(&self, contents: &str) -> Result<(), Failure> {
         let Some(output) = &self.output else {
             return Self::write_stdout(contents);
         };
+        Self::write_file(output, contents)
+    }
+
+    /// Open the output file in the default browser; stdout has nothing to open, and clap rejects `--open` without `-o`.
+    pub fn open_in_default_browser(&self) -> Result<(), Failure> {
+        let Some(output) = &self.output else {
+            return Ok(());
+        };
         let output_path = output.display();
-        fs::write(output, contents)
+        let (opener_program, opener_arguments) = DEFAULT_BROWSER_OPENER;
+        let opener_status = Command::new(opener_program)
+            .args(opener_arguments)
+            .arg(output)
+            .status()
             .into_diagnostic()
-            .wrap_err_with(|| format!("cannot write {output_path}"))
-            .map_err(Failure::Io)
+            .wrap_err_with(|| format!("cannot run `{opener_program}` to open {output_path}"))
+            .map_err(Failure::Io)?;
+        let is_opened = opener_status.success();
+        if is_opened {
+            return Ok(());
+        }
+        let opener_report = miette!("`{opener_program}` could not open {output_path}");
+        Err(Failure::Io(opener_report))
     }
 
     /// Write `contents` to stdout, a closed pipe being an I/O failure rather than a panic.
@@ -39,5 +82,51 @@ impl OutputTarget {
             .into_diagnostic()
             .wrap_err_with(|| "cannot write to stdout")
             .map_err(Failure::Io)
+    }
+
+    /// Write `contents` to the file at `path`, an unwritable path being an I/O failure.
+    pub fn write_file(path: &Path, contents: &str) -> Result<(), Failure> {
+        let output_path = path.display();
+        fs::write(path, contents)
+            .into_diagnostic()
+            .wrap_err_with(|| format!("cannot write {output_path}"))
+            .map_err(Failure::Io)
+    }
+}
+
+impl ModelFile {
+    /// Parse `argument` into a model file whose extension selects the text form: Markdown for `.md`, JSON for `.json`.
+    pub fn parse(argument: &str) -> Result<Self, String> {
+        let path = PathBuf::from(argument);
+        let extension = path.extension().and_then(OsStr::to_str);
+        let print_model: PrintModel = match extension {
+            Some("md") => Self::print_markdown,
+            Some("json") => Self::print_json,
+            _unsupported_extension => {
+                let unsupported_message =
+                    "expected a `.md` diagram or a `.json` model to write".to_owned();
+                return Err(unsupported_message);
+            }
+        };
+        Ok(Self { path, print_model })
+    }
+
+    /// Write `model` to the file in its text form, writing nothing when the form cannot say all of it.
+    pub fn write(&self, model: &Model) -> Result<(), Failure> {
+        let model_text = (self.print_model)(model)?;
+        OutputTarget::write_file(&self.path, &model_text)
+    }
+
+    /// Print `model` as a Markdown diagram, failing with every part of it Markdown cannot say.
+    fn print_markdown(model: &Model) -> Result<String, Failure> {
+        MarkdownPrinter::print(model)
+            .into_diagnostic()
+            .map_err(Failure::UnprintableModel)
+    }
+
+    /// Print `model` as pretty-printed JSON, which says every model.
+    fn print_json(model: &Model) -> Result<String, Failure> {
+        let model_json = JsonPrinter::print(model);
+        Ok(model_json)
     }
 }

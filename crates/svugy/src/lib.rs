@@ -60,6 +60,8 @@ mod tests {
     use svugy_model::builder::ModelBuilder;
     use svugy_model::model::{Edge, Element};
     use svugy_model::path::ElementPath;
+    use svugy_parse::diagnostic::SourceLanguage;
+    use svugy_parse::json::{JsonLanguage, JsonPrinter};
 
     use crate::geometry::{Badge, Connection};
 
@@ -135,15 +137,18 @@ mod tests {
 
     /// Reload `model` without the edges pointing to `target`, as if they had never been written.
     fn without_edges_into(model: &Model, target: &str) -> Model {
-        let saved = model.to_json();
+        let saved = JsonPrinter::print(model);
         let mut model_value: serde_json::Value = serde_json::from_str(&saved).expect("JSON");
         let edges = model_value["edges"]
             .as_array_mut()
             .expect("a model saves its edges as an array");
         edges.retain(|edge| edge["to"] != target);
         let pruned = model_value.to_string();
-        let admission = Model::load_json(&pruned).expect("well-formed JSON");
-        admission.model.expect("dropping edges keeps a sound model")
+        let import = JsonLanguage::import(&pruned);
+        let import_parts = import.into_admitted_parts();
+        import_parts
+            .model
+            .expect("dropping edges keeps a sound model")
     }
 
     /// Collect every badge of `scene`, the root's solids first, then each interior's in paint order.
@@ -190,12 +195,12 @@ mod tests {
         let a = builder.add_top_level("a", Element::new("app"));
         let b = builder.add_top_level("b", Element::new("bus"));
         let c = builder.add_top_level("c", Element::new("crank"));
-        let store = builder.add_top_level("store", Element::new("store").with_badge_target());
+        let store = builder.add_top_level("store", Element::new("store"));
         builder.add_edge(&a, &b, Edge::new());
         builder.add_edge(&b, &c, Edge::new().with_label("calls"));
         if is_written {
-            builder.add_edge(&a, &store, Edge::new());
-            builder.add_edge(&c, &store, Edge::new());
+            builder.add_edge(&a, &store, Edge::new().with_badge());
+            builder.add_edge(&c, &store, Edge::new().with_badge());
         }
         builder.build().model.expect("fixture model is valid")
     }
@@ -223,8 +228,8 @@ mod tests {
         let mut builder = ModelBuilder::new();
         let desk = builder.add_top_level("desk", Element::new("desk"));
         let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
-        let store = builder.add_top_level("store", Element::new("store").with_badge_target());
-        let writes = builder.add_edge(&quoter, &store, Edge::new());
+        let store = builder.add_top_level("store", Element::new("store"));
+        let writes = builder.add_edge(&quoter, &store, Edge::new().with_badge());
         let model = builder.build().model.expect("fixture model is valid");
         let font = BundledFont::new();
 

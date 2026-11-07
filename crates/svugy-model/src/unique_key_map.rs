@@ -8,13 +8,13 @@ use serde::de::{self, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
 
 /// Collect map entries, rejecting a key already seen.
-pub(crate) struct UniqueKeyMapVisitor<K, V> {
+pub struct UniqueKeyMapVisitor<K, V> {
     entry_types: PhantomData<(K, V)>,
 }
 
 impl<K, V> UniqueKeyMapVisitor<K, V> {
     /// Read a JSON object into an ordered map, failing on a repeated key instead of keeping the last value.
-    pub(crate) fn deserialize<'de, D>(deserializer: D) -> Result<BTreeMap<K, V>, D::Error>
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<BTreeMap<K, V>, D::Error>
     where
         D: Deserializer<'de>,
         K: Deserialize<'de> + Ord + fmt::Display,

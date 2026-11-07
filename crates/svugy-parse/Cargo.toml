@@ -1,0 +1,25 @@
+[package]
+name = "svugy-parse"
+edition.workspace = true
+version.workspace = true
+description = "Parse diagrams written in Markdown, d2 or JSON into the svugy model, and print them back"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+svugy-model.workspace = true
+logos.workspace = true
+chumsky.workspace = true
+miette.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+strum.workspace = true
+comrak = { version = "0.59", default-features = false }
+serde-saphyr = { version = "2.1", default-features = false, features = ["deserialize"] }
+
+[dev-dependencies]
+insta.workspace = true
+
+[lints]
+workspace = true

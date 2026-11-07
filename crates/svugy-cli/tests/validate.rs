@@ -35,6 +35,22 @@ fn a_clean_model_exits_0_and_prints_nothing() {
 }
 
 #[test]
+fn the_shipped_example_validates_with_no_diagnostics() {
+    let example_argument = scratch_file("webapp.md");
+    let example_run = run_svugy(&["example", "-o", &example_argument]);
+
+    let validate_run = run_svugy(&["validate", &example_argument, "--format", "json"]);
+
+    let json_report = parse_json_report(&validate_run.stdout);
+    let codes = related_codes(&json_report);
+    assert_eq!(example_run.status.code(), Some(0));
+    assert!(
+        codes.is_empty(),
+        "the example a new user renders first must stay clean as the language evolves: {codes:?}"
+    );
+}
+
+#[test]
 fn a_clean_model_prints_an_empty_json_report() {
     let model_argument = fixture("svugy.json");
 
@@ -64,7 +80,7 @@ fn a_broken_model_exits_1_with_its_error_code_in_the_json_report() {
 }
 
 #[test]
-fn a_d2_syntax_error_reports_its_byte_offset_and_source_name() {
+fn a_d2_syntax_error_reports_its_byte_offset_line_column_and_source_name() {
     let d2_argument = fixture("syntax_error.d2");
 
     let run = run_svugy(&["validate", &d2_argument, "--format", "json"]);
@@ -72,11 +88,14 @@ fn a_d2_syntax_error_reports_its_byte_offset_and_source_name() {
     let json_report = parse_json_report(&run.stdout);
     let codes = related_codes(&json_report);
     let first_diagnostic = &json_report["related"][0];
-    let first_label_offset = &first_diagnostic["labels"][0]["span"]["offset"];
+    let first_label = &first_diagnostic["labels"][0];
+    let first_label_offset = &first_label["span"]["offset"];
     assert_eq!(run.status.code(), Some(1));
     assert_eq!(codes, ["svugy::d2::syntax", "svugy::d2::syntax"]);
     assert_eq!(first_diagnostic["filename"], d2_argument.as_str());
     assert_eq!(first_label_offset, 37);
+    assert_eq!(first_label["line"], 4);
+    assert_eq!(first_label["column"], 3);
 }
 
 #[test]

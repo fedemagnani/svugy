@@ -1,9 +1,31 @@
 # The map
 
-[d2 import](import.md) parses your text into the [model](model.md). For an interactive SVG, the model is first disclosed into layers, one per container depth, each a model of its own. [Layout](layout.md) places boxes on a flat plane, [geometry](geometry.md) projects them into isometric shapes, and [render](render.md) writes the SVG, every layer into one file. The [runtime](runtime.md) embedded in that SVG handles clicking, zooming and switching layers. [Determinism](determinism.md) covers how the same input gives the same bytes on every machine.
+Parsers output a `Model`; layout, geometry and render take only a `Model`. Adding an input language touches only `svugy-parse`.
 
-There are five crates. `svugy-model` holds the model, its builder, JSON, validation and disclosure. `svugy-import` parses d2. `svugy` is the pipeline: disclosure (interactive only), metrics, layout, geometry, render. `svugy-cli` is the `svugy` binary. `svugy-wasm` runs the pipeline in the browser, behind the editor on the overview. The JavaScript and CSS embedded in every interactive SVG live in `crates/svugy/runtime/`.
+| Layer | Takes | Returns |
+|---|---|---|
+| [Model](model.md) | builder calls | an admitted `Model`, cut into layers |
+| [Parsing](parsing.md) | Markdown, d2, JSON | `Import`: model, errors, warnings |
+| [Layout](layout.md) | `Model` | `LevelPlans`: footprints, routes, stubs in plan space |
+| [Geometry](geometry.md) | `Model`, `LevelPlans` | `Scene`: projected faces, arcs, labels in paint order |
+| [Render](render.md) | `Scene` | SVG text |
+| [Runtime](runtime.md) | the interactive SVG | navigation, in the browser |
 
-The figure below is svugy, drawn by svugy. Click a crate to open it, then click its slab to step inside; Escape backs out. Its source, `examples/svugy.d2`, is also the golden test.
+- `StaticSvg::render`: lay out, project, write the whole model.
+- `InteractiveSvg::render`: cut the model into layers, lay out and project each, write all of them into one file.
+- Output is [deterministic](determinism.md): same input, same bytes on Linux, macOS and wasm.
+
+## Crates
+
+- **`svugy-model`:** `Model`, `ModelBuilder`, validation, layers. No svugy dependency.
+- **`svugy-parse`:** `markdown`, `d2`, `json`.
+- **`svugy`:** layout, geometry, render; embeds the runtime.
+- **`svugy-cli`:** the `svugy` binary.
+- **`svugy-wasm`:** Markdown or d2 to interactive SVG in the browser; runs this book's live editors.
+- **`svugy-dagre`:** dagre-dgl-rs, patched for deterministic output.
+
+## svugy, drawn by svugy
+
+Source: `examples/svugy.md`, also the golden test.
 
 <object class="svugy" type="image/svg+xml" data="../figures/svugy.svg"></object>

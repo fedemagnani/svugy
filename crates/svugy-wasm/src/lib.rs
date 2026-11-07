@@ -1,12 +1,20 @@
-//! Render d2 source into the interactive SVG inside a browser, through three plain exports and no bindings generator.
+//! Render a diagram, written in Markdown or d2, into the interactive SVG inside a browser, through three plain exports and no bindings generator.
 
 use std::cell::RefCell;
 
 use miette::Diagnostic;
 use serde::Serialize;
 use svugy::InteractiveSvg;
-use svugy_import::d2::{D2Parse, LabelledDiagnostic};
 use svugy_model::problem::ErrorSeverity;
+use svugy_parse::d2::D2Language;
+use svugy_parse::diagnostic::{LabelledDiagnostic, SourceLanguage};
+use svugy_parse::markdown::MarkdownLanguage;
+
+/// Name Markdown in a `render` call.
+const MARKDOWN_LANGUAGE_BYTE: u8 = 0;
+
+/// Name d2 in a `render` call.
+const D2_LANGUAGE_BYTE: u8 = 1;
 
 thread_local! {
     /// Hold the one playground the exports share, as wasm runs on a single thread.
@@ -16,16 +24,16 @@ thread_local! {
     };
 }
 
-/// Size the input buffer to `length` bytes and return where the caller writes the d2 source.
+/// Size the input buffer to `length` bytes and return where the caller writes the diagram source.
 #[unsafe(no_mangle)]
 pub extern "C" fn input_buffer(length: usize) -> *mut u8 {
     PLAYGROUND.with_borrow_mut(|playground| playground.input_buffer(length))
 }
 
-/// Render the d2 source in the input buffer and return the byte length of the JSON verdict.
+/// Render the source in the input buffer, read in the language `language_byte` names (0 Markdown, 1 d2), and return the byte length of the JSON verdict.
 #[unsafe(no_mangle)]
-pub extern "C" fn render() -> usize {
-    PLAYGROUND.with_borrow_mut(Playground::render_input)
+pub extern "C" fn render(language_byte: u8) -> usize {
+    PLAYGROUND.with_borrow_mut(|playground| playground.render_input(language_byte))
 }
 
 /// Return the output pointer: where the JSON verdict of the last render starts.
@@ -34,7 +42,7 @@ pub extern "C" fn output_pointer() -> *const u8 {
     PLAYGROUND.with_borrow(|playground| playground.output.as_ptr())
 }
 
-/// Hold the playground's d2 source a page writes in and the JSON verdict it reads back, so no pointer ever crosses the boundary inward.
+/// Hold the playground's source a page writes in and the JSON verdict it reads back, so no pointer ever crosses the boundary inward.
 #[derive(Default)]
 struct Playground {
     input: Vec<u8>,
@@ -69,20 +77,28 @@ impl Playground {
         self.input.as_mut_ptr()
     }
 
-    /// Serialise the verdict on the input buffer's source into the output, returning its byte length.
-    fn render_input(&mut self) -> usize {
+    /// Serialise the verdict on the input buffer's source, read in the language `language_byte` names, into the output, returning its byte length.
+    fn render_input(&mut self, language_byte: u8) -> usize {
         let source = String::from_utf8_lossy(&self.input);
-        let verdict = Verdict::of(&source);
+        let verdict = Verdict::of_language_byte(language_byte, &source);
         self.output = serde_json::to_string(&verdict).expect("a verdict serialises");
         self.output.len()
     }
 }
 
 impl Verdict {
-    /// Judge `source`: the interactive SVG when nothing is an error, and every diagnostic located in the source.
-    fn of(source: &str) -> Self {
-        let parsed = D2Parse::parse(source);
-        let import = parsed.lower();
+    /// Judge `source` in the language `language_byte` names, or report the byte when it names none.
+    fn of_language_byte(language_byte: u8, source: &str) -> Self {
+        match language_byte {
+            MARKDOWN_LANGUAGE_BYTE => Self::of::<MarkdownLanguage>(source),
+            D2_LANGUAGE_BYTE => Self::of::<D2Language>(source),
+            _unknown_language_byte => Self::unknown_language(language_byte),
+        }
+    }
+
+    /// Judge `source` in the language `L`: the interactive SVG when nothing is an error, and every diagnostic located in the source.
+    fn of<L: SourceLanguage>(source: &str) -> Self {
+        let import = L::import(source);
         let diagnostics = import
             .diagnostics()
             .into_iter()
@@ -91,6 +107,25 @@ impl Verdict {
         let admitted_model = import.admitted_model();
         let svg = admitted_model.map(InteractiveSvg::render);
         Self { svg, diagnostics }
+    }
+
+    /// Withhold the SVG behind one error naming the `language_byte` no language answers to.
+    fn unknown_language(language_byte: u8) -> Self {
+        let message = format!(
+            "no language has byte {language_byte}: pass {MARKDOWN_LANGUAGE_BYTE} for Markdown or {D2_LANGUAGE_BYTE} for d2"
+        );
+        let unknown_language_error = LocatedDiagnostic {
+            is_error: true,
+            message,
+            help: None,
+            line: None,
+            column: None,
+        };
+        let diagnostics = vec![unknown_language_error];
+        Self {
+            svg: None,
+            diagnostics,
+        }
     }
 }
 
@@ -131,25 +166,37 @@ mod tests {
 
     use super::*;
 
-    fn verdict_of(source: &str) -> Value {
-        let verdict = Verdict::of(source);
+    const MARKDOWN_SAMPLE: &str = include_str!("../../../docs/diagrams/pipeline.md");
+    const D2_SAMPLE: &str = include_str!("../../../docs/src/playground/sample.d2");
+
+    fn verdict_of(language_byte: u8, source: &str) -> Value {
+        let verdict = Verdict::of_language_byte(language_byte, source);
         serde_json::to_value(&verdict).expect("the verdict is JSON")
     }
 
     #[test]
-    fn a_sound_diagram_renders_the_interactive_svg_with_no_diagnostics() {
-        let verdict = verdict_of("a -> b: hello\n");
+    fn every_playground_sample_renders_the_interactive_svg_with_no_diagnostics() {
+        let samples = [
+            ("Markdown", MARKDOWN_LANGUAGE_BYTE, MARKDOWN_SAMPLE),
+            ("d2", D2_LANGUAGE_BYTE, D2_SAMPLE),
+        ];
+        for (language, language_byte, sample) in samples {
+            let verdict = verdict_of(language_byte, sample);
 
-        let svg = verdict["svg"].as_str().expect("an SVG");
-        let diagnostics = verdict["diagnostics"].as_array().expect("a list");
-        assert!(svg.starts_with("<svg "));
-        assert!(svg.contains("<script>"));
-        assert!(diagnostics.is_empty());
+            let svg = verdict["svg"].as_str().unwrap_or_default();
+            let diagnostics = &verdict["diagnostics"];
+            let has_interactive_svg = svg.contains("<script>");
+            let has_no_diagnostics = diagnostics.as_array().is_some_and(Vec::is_empty);
+            assert!(
+                has_interactive_svg && has_no_diagnostics,
+                "the playground opens the {language} sample on an interactive SVG with no diagnostics, got {diagnostics}"
+            );
+        }
     }
 
     #[test]
     fn an_error_withholds_the_svg_and_points_at_its_line_and_column() {
-        let verdict = verdict_of("a -> b\nc: { vars: { svugy: { height: tall } } }\n");
+        let verdict = verdict_of(MARKDOWN_LANGUAGE_BYTE, "## Components\n- a (colour=red)\n");
 
         let diagnostics = verdict["diagnostics"].as_array().expect("a list");
         let first = &diagnostics[0];
@@ -161,7 +208,10 @@ mod tests {
 
     #[test]
     fn a_warning_still_renders() {
-        let verdict = verdict_of("a: { shape: sql_table }\n");
+        let verdict = verdict_of(
+            MARKDOWN_LANGUAGE_BYTE,
+            "## Components\n- a (shape=cylinder)\n  - b\n",
+        );
 
         let diagnostics = verdict["diagnostics"].as_array().expect("a list");
         assert!(verdict["svg"].is_string());
@@ -169,14 +219,14 @@ mod tests {
     }
 
     #[test]
-    fn exports_render_what_the_input_buffer_holds() {
-        let source = b"a -> b\n";
+    fn exports_render_what_the_input_buffer_holds_in_the_language_named() {
+        let source = b"## Components\n- a\n- b\n\n## Edges\n- a -> b\n";
         let buffer = input_buffer(source.len());
         let input = PLAYGROUND.with_borrow_mut(|playground| playground.input.as_mut_ptr());
         assert_eq!(buffer, input);
         PLAYGROUND.with_borrow_mut(|playground| playground.input.copy_from_slice(source));
 
-        let output_length = render();
+        let output_length = render(MARKDOWN_LANGUAGE_BYTE);
 
         let output = PLAYGROUND.with_borrow(|playground| playground.output.clone());
         assert_eq!(output.len(), output_length);

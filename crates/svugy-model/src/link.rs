@@ -33,11 +33,16 @@ impl<'a> Link<'a> {
         let Self::Url(raw) = self else {
             return None;
         };
-        let has_url_character = raw.contains(URL_CHARACTERS);
-        if has_url_character {
+        let is_url_shaped = Self::is_url_shaped(raw);
+        if is_url_shaped {
             return None;
         }
         raw.parse().ok()
+    }
+
+    /// Tell whether `raw` holds a `:`, `/`, `?` or `#`, the characters that make a `link:` value a URL rather than a component reference.
+    pub fn is_url_shaped(raw: &str) -> bool {
+        raw.contains(URL_CHARACTERS)
     }
 }
 

@@ -1,0 +1,22 @@
+# A shop and its payments, nested two levels deep, with labelled and styled edges.
+web: Web app
+shop: Shop backend {
+  api: {
+    shape: cylinder
+  }
+  orders: {
+    shape: cylinder
+    style.fill: "#d5dcea"
+  }
+}
+payments: {
+  gateway
+  ledger
+}
+
+web -> shop.api: places order
+shop.api -> shop.orders
+shop.api -> payments.gateway: charges {
+  style.stroke-dash: 5
+}
+payments.gateway -> payments.ledger
