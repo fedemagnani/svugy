@@ -37,6 +37,7 @@ impl UncheckedModel {
         let model = Model {
             title,
             subtitle,
+            description: None,
             legend,
             elements,
             edges,
@@ -45,6 +46,13 @@ impl UncheckedModel {
             model,
             duplicate_declarations: Vec::new(),
         }
+    }
+
+    /// Describe the diagram in Markdown, shown in the side panel while nothing is focused.
+    pub fn with_description(mut self, description: impl Into<String>) -> Self {
+        let description = description.into();
+        self.model.description = Some(description);
+        self
     }
 
     /// Admit the model only when no check holds an error.

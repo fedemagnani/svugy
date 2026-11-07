@@ -8,6 +8,8 @@ svugy render webapp.md -o webapp.svg --open
 
 `example` writes a sample diagram of a web app; `--open` opens the written SVG in your default browser.
 
+`svugy view webapp.md` serves the diagram in your default browser and reloads it on every save of `webapp.md`, keeping the focused level.
+
 ## Edit and validate
 
 Edit `webapp.md` ([Markdown](markdown.md) has every rule), then run `svugy validate webapp.md` before rendering.
@@ -21,7 +23,7 @@ Edit `webapp.md` ([Markdown](markdown.md) has every rule), then run `svugy valid
 | `0` | success, warnings included |
 | `1` | the input has errors |
 | `2` | usage error, e.g. an unknown flag or an input not ending in `.md`, `.d2` or `.json` |
-| `3` | a file can't be read, written or opened |
+| `3` | a file can't be read, written or opened, or `view` can't listen on its port |
 
 ## Let Claude Code draw
 

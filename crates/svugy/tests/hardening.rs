@@ -1,6 +1,6 @@
 //! Render models at the edges validation admits and check the output stays sound.
 
-use svugy::StaticSvg;
+use svugy::{RenderSvg, StaticSvg};
 use svugy_model::builder::ModelBuilder;
 use svugy_model::model::{Element, MAX_MAGNITUDE, Position, Shape};
 

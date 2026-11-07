@@ -77,7 +77,7 @@ One JSON object per group, empty keys omitted:
 
 ## Runtime state
 
-- **`data-svugy-shown`:** rendered on layer D; at start the runtime moves it to layer 0, then to the layer it shows. Two layers carry it during a crossfade.
+- **`data-svugy-shown`:** rendered on layer D; at start the runtime moves it to layer 0, or to a level link's layer, then to the layer it shows. Two layers carry it during a crossfade.
 - **`data-svugy-entered=""`:** on exactly one level group of the shown layer, the focused one; `[data-svugy-shown] [data-svugy-entered] > [data-svugy-overlay]` is visible. Never rendered.
 - **`data-svugy-dimmed=""`:** on the element and edge groups the hovered group dims. Never rendered.
 
@@ -92,7 +92,9 @@ The runtime binds only to the SVG it lives in.
 
 ## Navigation
 
-The runtime keeps the shown layer K and the focused level F, whose view fills the screen. F is open in layer K, so depth(F) ≤ K. Start: K = 0, F = root.
+The runtime keeps the shown layer K and the focused level F, whose view fills the screen. F is open in layer K, so depth(F) ≤ K. Start: K = 0, F = root, unless the URL links a level.
+
+**Level link:** a URL fragment `#svugy=PATH`, PATH being a level's `data-svugy-level` encoded by `encodeURIComponent`. At start, K becomes the first layer holding that level and F the level, its view shown without animation. A PATH that names no level, or any other fragment, leaves the start as it is. The runtime reads the fragment of the document it runs in: the SVG file's URL, or the page's for an SVG inlined in HTML.
 
 - **Closed container,** even inside an open container below F: show layer K + 1, keep F. Every container of that depth opens at once, so an edge between children of two of them appears whichever was clicked.
 - **Inside an open container below F:** focus the outermost open container between F and the target, the slab that was clicked. A click outside F (visible at the edges once zoomed in) applies the same rule from the nearest open level containing it.

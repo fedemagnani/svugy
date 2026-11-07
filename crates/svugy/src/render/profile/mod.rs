@@ -17,7 +17,7 @@ use crate::geometry::{
     Scene, Solid,
 };
 use crate::metrics::LabelRole;
-use crate::render::contract::{ContractAnnotator, RuntimeContract};
+use crate::render::contract::{ContractAnnotator, DiagramDetails, RuntimeContract};
 use crate::render::theme::Token;
 use crate::render::writer::css::CssValue;
 use crate::render::writer::path_data::PathData;
@@ -168,7 +168,7 @@ impl<P: Profile> Renderer<P> {
 }
 
 impl InteractiveRenderer {
-    /// Write `layer_scenes`, disclosed from `model`, as the interactive document sized to the canvas covering every layer's root view, so changing layer never changes its aspect ratio: the model's title, the definitions every layer shares, one canvas under every layer's root view, then one group per layer, the deepest shown so a viewer without scripts sees the whole diagram.
+    /// Write `layer_scenes`, disclosed from `model`, as the interactive document sized to the canvas covering every layer's root view, so changing layer never changes its aspect ratio: the model's title, its diagram details, the definitions every layer shares, one canvas under every layer's root view, then one group per layer, the deepest shown so a viewer without scripts sees the whole diagram.
     pub(crate) fn write_layered_document(
         &self,
         model: &Model,
@@ -186,8 +186,9 @@ impl InteractiveRenderer {
             .iter()
             .map(|layer_scene| {
                 let layer_model = layer_scene.disclosure.model();
-                let annotator =
-                    ContractAnnotator::new(model).with_disclosure(layer_scene.disclosure);
+                let annotator = ContractAnnotator::new(model)
+                    .with_disclosure(layer_scene.disclosure)
+                    .with_descriptions();
                 let scene = &layer_scene.scene;
                 LayerPass::new(&self.profile, scene, layer_model, annotator, &definitions)
             })
@@ -203,6 +204,9 @@ impl InteractiveRenderer {
             if let Some(title) = model.title() {
                 let no_attributes = Attributes::new();
                 writer.text_element("title", &no_attributes, title);
+            }
+            if let Some(diagram_details) = DiagramDetails::of(model) {
+                diagram_details.write(writer);
             }
             definitions.write(writer, &self.profile);
             self.write_canvas(writer, canvas_view);
@@ -631,7 +635,7 @@ mod tests {
     use crate::layout::{LevelPlan, LevelPlans};
     use crate::metrics::{BundledFont, TextAnchor};
     use crate::render::theme::FaceShades;
-    use crate::{InteractiveSvg, StaticSvg};
+    use crate::{InteractiveSvg, RenderSvg, StaticSvg};
 
     const FORBIDDEN_STATIC_MARKUP: [&str; 6] = [
         "<text",

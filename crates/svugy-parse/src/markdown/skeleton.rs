@@ -1,5 +1,6 @@
-//! Read a diagram file's skeleton with comrak: its frontmatter, its sections, the nesting of its component items and each item's verbatim line.
+//! Read a diagram file's skeleton with comrak: its frontmatter, its description, its sections, the nesting of its component items, each item's verbatim line and the description under it.
 
+use chumsky::span::Spanned;
 use comrak::nodes::{AstNode, ListType, NodeValue, Sourcepos};
 use comrak::{Arena, Options, parse_document};
 
@@ -24,8 +25,9 @@ const COMMENT_OPENING: &str = "<!--";
 const COMMENT_CLOSING: &str = "-->";
 /// Spell the error of a block a section cannot hold.
 const NOT_A_BULLET_LIST: &str = "a section holds bullet lists only";
-/// Spell the error of an item spanning more than its first line.
-const NOT_ONE_LINE: &str = "a list item is one line";
+/// Spell the error of a block a description cannot hold.
+const NOT_A_DESCRIPTION_BLOCK: &str =
+    "a description holds paragraphs, numbered lists, quotes and code blocks only";
 
 /// Hold a stretch of the source verbatim, with the byte offset it starts at.
 #[derive(Debug, Clone, Copy)]
@@ -34,19 +36,27 @@ pub(crate) struct SourceText<'src> {
     pub(crate) offset: usize,
 }
 
-/// Hold a diagram file's skeleton: its frontmatter text, its component tree and the verbatim lines of its edges and legend.
+/// Hold a diagram file's skeleton: its frontmatter text, its description, its component tree and the items of its edges and legend.
 #[derive(Debug, Default)]
 pub(crate) struct Skeleton<'src> {
     pub(crate) frontmatter: Option<SourceText<'src>>,
+    pub(crate) description: Option<String>,
     pub(crate) components: Vec<ComponentNode<'src>>,
-    pub(crate) edges: Vec<SourceText<'src>>,
+    pub(crate) edges: Vec<DescribedLine<'src>>,
     pub(crate) legend: Option<LegendSkeleton<'src>>,
 }
 
-/// Nest a component item's verbatim line over its children's.
+/// Hold an item's verbatim line and the Markdown indented under it that describes it, dedented to the item's content column.
+#[derive(Debug)]
+pub(crate) struct DescribedLine<'src> {
+    pub(crate) line: SourceText<'src>,
+    pub(crate) description: Option<Spanned<String>>,
+}
+
+/// Nest a component item over its children's.
 #[derive(Debug)]
 pub(crate) struct ComponentNode<'src> {
-    pub(crate) line: SourceText<'src>,
+    pub(crate) item: DescribedLine<'src>,
     pub(crate) is_indented_but_not_nested: bool,
     pub(crate) children: Vec<ComponentNode<'src>>,
 }
@@ -68,11 +78,33 @@ enum Section {
     Unknown,
 }
 
-/// Read each comrak block against the source, turning source positions into byte offsets and items into verbatim lines.
+/// Classify a block outside a heading: a comment the language ignores, a bullet list of items, a block a description holds, or none of them.
+#[derive(Debug, Clone, Copy)]
+enum BlockRole {
+    Comment,
+    BulletList,
+    Description,
+    Unsupported,
+}
+
+/// Span the source lines a description runs over, 1-based and inclusive.
+#[derive(Debug, Clone, Copy)]
+struct LineRange {
+    first: usize,
+    last: usize,
+}
+
+/// Read each comrak block against the source, turning source positions into byte offsets and items into verbatim lines and descriptions.
 struct BlockReader<'src, 'diagnostics> {
     source: &'src str,
     line_starts: Vec<usize>,
     diagnostics: &'diagnostics mut Diagnostics,
+}
+
+/// Hold an item as read: its line and description, and the bullet lists nested after them.
+struct ItemBlocks<'src, 'node> {
+    item: DescribedLine<'src>,
+    nested_lists: Vec<&'node AstNode<'node>>,
 }
 
 /// Collect the component items of one parent's lists, flagging a later list indented deeper than the first, which a comment split off.
@@ -83,7 +115,7 @@ struct ComponentLists<'src> {
 }
 
 impl<'src> Skeleton<'src> {
-    /// Read the skeleton of `source`, recording every block out of place and every item that is not one line.
+    /// Read the skeleton of `source`, recording every block out of place.
     pub(crate) fn read(source: &'src str, diagnostics: &mut Diagnostics) -> Self {
         let content_start = Self::content_start(source);
         let content = &source[content_start..];
@@ -99,6 +131,7 @@ impl<'src> Skeleton<'src> {
         let mut last_known_section = Section::Preamble;
         let mut components_heading_span = None;
         let mut has_component_list = false;
+        let mut description_lines = None;
         for block in root.children() {
             let ast = block.data.borrow();
             let block_span = reader.span(ast.sourcepos);
@@ -108,7 +141,6 @@ impl<'src> Skeleton<'src> {
                         Self::frontmatter_body(source, content_start, frontmatter);
                     skeleton.frontmatter = Some(frontmatter_body);
                 }
-                NodeValue::HtmlBlock(html) if html.block_type == COMMENT_BLOCK_TYPE => {}
                 NodeValue::Heading(heading) => {
                     let heading_line = reader.first_line(ast.sourcepos);
                     let heading_text = Self::heading_text(heading_line.text);
@@ -138,39 +170,49 @@ impl<'src> Skeleton<'src> {
                     }
                     section = opened_section;
                 }
-                NodeValue::List(list) if list.list_type == ListType::Bullet => match section {
-                    Section::Components => {
-                        has_component_list = true;
-                        components.push_list(block, &mut reader);
-                    }
-                    Section::Edges => {
-                        let edge_lines = reader.read_flat_list(block);
-                        skeleton.edges.extend(edge_lines);
-                    }
-                    Section::Legend => {
-                        let legend_lines = reader.read_flat_list(block);
-                        if let Some(legend) = skeleton.legend.as_mut() {
-                            legend.lines.extend(legend_lines);
+                block_value => {
+                    let block_role = BlockRole::of(block_value);
+                    match (block_role, section) {
+                        (BlockRole::Comment, _any_section) => {}
+                        (_any_role, Section::Unknown) => {}
+                        (BlockRole::BulletList, Section::Components) => {
+                            has_component_list = true;
+                            components.push_list(block, &mut reader);
+                        }
+                        (BlockRole::BulletList, Section::Edges) => {
+                            let edge_items = reader.read_flat_list(block);
+                            skeleton.edges.extend(edge_items);
+                        }
+                        (BlockRole::BulletList, Section::Legend) => {
+                            let legend_lines = reader.read_legend_list(block);
+                            if let Some(legend) = skeleton.legend.as_mut() {
+                                legend.lines.extend(legend_lines);
+                            }
+                        }
+                        (BlockRole::BulletList, Section::Preamble) => {
+                            let message = "a bullet list belongs under a section: `## Components`, `## Edges` or `## Legend`; number a list that describes the diagram";
+                            reader.diagnostics.record_error(message, block_span);
+                        }
+                        (BlockRole::Description, Section::Preamble) => {
+                            let block_lines = LineRange::of(ast.sourcepos);
+                            let extended_lines = LineRange::extend(description_lines, block_lines);
+                            description_lines = Some(extended_lines);
+                        }
+                        (BlockRole::Unsupported, Section::Preamble) => {
+                            reader
+                                .diagnostics
+                                .record_error(NOT_A_DESCRIPTION_BLOCK, block_span);
+                        }
+                        (
+                            BlockRole::Description | BlockRole::Unsupported,
+                            Section::Components | Section::Edges | Section::Legend,
+                        ) => {
+                            reader
+                                .diagnostics
+                                .record_error(NOT_A_BULLET_LIST, block_span);
                         }
                     }
-                    Section::Preamble => {
-                        let message = "a list belongs under a section: `## Components`, `## Edges` or `## Legend`";
-                        reader.diagnostics.record_error(message, block_span);
-                    }
-                    Section::Unknown => {}
-                },
-                _other_block => match section {
-                    Section::Preamble => {
-                        let message = "text before the first section goes in a comment, `<!-- … -->`, or in the frontmatter `subtitle`";
-                        reader.diagnostics.record_error(message, block_span);
-                    }
-                    Section::Components | Section::Edges | Section::Legend => {
-                        reader
-                            .diagnostics
-                            .record_error(NOT_A_BULLET_LIST, block_span);
-                    }
-                    Section::Unknown => {}
-                },
+                }
             }
         }
         match (components_heading_span, has_component_list) {
@@ -185,6 +227,8 @@ impl<'src> Skeleton<'src> {
             }
             (Some(_heading_span), true) => {}
         }
+        let description = description_lines.and_then(|lines| reader.read_description(lines, 0));
+        skeleton.description = description.map(|description| description.inner);
         skeleton.components = components.nodes;
         skeleton
     }
@@ -237,6 +281,27 @@ impl<'src> Skeleton<'src> {
         let (_legend_keyword, title) = heading_text.split_once(':')?;
         let title = title.trim();
         Some(title)
+    }
+}
+
+impl Skeleton<'_> {
+    /// Tell whether `indented_description`, `description` indented under an item after a blank line, reads back as `description` with a child item after it still nested.
+    pub(crate) fn reads_back_as_description(description: &str, indented_description: &str) -> bool {
+        let source = format!("## Components\n- item\n\n{indented_description}\n  - child\n");
+        let mut diagnostics = Diagnostics::default();
+        let skeleton = Skeleton::read(&source, &mut diagnostics);
+        let has_errors = !diagnostics.errors.is_empty();
+        if has_errors {
+            return false;
+        }
+        let Some(node) = skeleton.components.first() else {
+            return false;
+        };
+        let has_one_child = node.children.len() == 1;
+        let read_description = node.item.description.as_ref();
+        let read_text = read_description.map(|read_description| read_description.inner.as_str());
+        let is_read_back_verbatim = read_text == Some(description);
+        has_one_child && is_read_back_verbatim
     }
 }
 
@@ -295,54 +360,136 @@ impl<'src, 'diagnostics> BlockReader<'src, 'diagnostics> {
         Some(section)
     }
 
-    /// Read each item of a list that does not nest, as the edges and the legend are, into its verbatim line.
-    fn read_flat_list<'node>(&mut self, list: &'node AstNode<'node>) -> Vec<SourceText<'src>> {
+    /// Read each item of a legend list into its verbatim line, recording a description under one.
+    fn read_legend_list<'node>(&mut self, list: &'node AstNode<'node>) -> Vec<SourceText<'src>> {
+        let legend_items = self.read_flat_list(list);
         let mut lines = Vec::new();
-        for item in list.children() {
-            let Some(line) = self.read_item_line(item) else {
-                continue;
-            };
-            let nested_blocks = item.children().skip(1);
-            for nested_block in nested_blocks {
-                let nested_ast = nested_block.data.borrow();
-                let nested_span = self.span(nested_ast.sourcepos);
-                let is_nested_list = matches!(nested_ast.value, NodeValue::List(_list));
-                let message = if is_nested_list {
-                    "only `## Components` items nest"
-                } else {
-                    NOT_ONE_LINE
-                };
-                self.diagnostics.record_error(message, nested_span);
+        for legend_item in legend_items {
+            let DescribedLine { line, description } = legend_item;
+            if let Some(description) = description {
+                let message =
+                    "a legend item takes no description: the legend holds one line of text per item";
+                self.diagnostics.record_error(message, description.span);
             }
             lines.push(line);
         }
         lines
     }
 
-    /// Return the verbatim first line of `item` without its trailing comments, recording an item with no text on its marker's line or with more than one line.
-    fn read_item_line<'node>(&mut self, item: &'node AstNode<'node>) -> Option<SourceText<'src>> {
-        let item_ast = item.data.borrow();
-        let item_span = self.span(item_ast.sourcepos);
+    /// Read each item of a list that does not nest, as the edges and the legend are, into its line and description, recording a list nested under one.
+    fn read_flat_list<'node>(&mut self, list: &'node AstNode<'node>) -> Vec<DescribedLine<'src>> {
+        let mut items = Vec::new();
+        for item in list.children() {
+            let Some(item_blocks) = self.read_item(item) else {
+                continue;
+            };
+            let ItemBlocks {
+                item,
+                nested_lists,
+            } = item_blocks;
+            for nested_list in nested_lists {
+                let nested_sourcepos = nested_list.data.borrow().sourcepos;
+                let nested_span = self.span(nested_sourcepos);
+                self.diagnostics
+                    .record_error("only `## Components` items nest", nested_span);
+            }
+            items.push(item);
+        }
+        items
+    }
+
+    /// Read `item` into its first line, the description under it and the bullet lists nested after them, recording a block no description holds and a description after a nested list; `None` for an item with no text on its marker's line.
+    fn read_item<'node>(&mut self, item: &'node AstNode<'node>) -> Option<ItemBlocks<'src, 'node>> {
+        let item_sourcepos = item.data.borrow().sourcepos;
         let first_block = item.first_child();
         let paragraph = first_block.filter(|block| {
             let block_ast = block.data.borrow();
             matches!(block_ast.value, NodeValue::Paragraph)
         });
         let Some(paragraph) = paragraph else {
+            let item_span = self.span(item_sourcepos);
             self.diagnostics
                 .record_error("an empty list item", item_span);
             return None;
         };
         let paragraph_sourcepos = paragraph.data.borrow().sourcepos;
+        let first_line = self.first_line(paragraph_sourcepos);
+        let line = first_line.without_trailing_comments();
+        let content_indent = paragraph_sourcepos.start.column.saturating_sub(1);
         let is_multiline = paragraph_sourcepos.end.line > paragraph_sourcepos.start.line;
-        if is_multiline {
-            let paragraph_span = self.span(paragraph_sourcepos);
-            self.diagnostics.record_error(NOT_ONE_LINE, paragraph_span);
-            return None;
+        let continuation_lines = LineRange {
+            first: paragraph_sourcepos.start.line + 1,
+            last: paragraph_sourcepos.end.line,
+        };
+        let mut description_lines = is_multiline.then_some(continuation_lines);
+        let mut nested_lists = Vec::new();
+        let nested_blocks = item.children().skip(1);
+        for nested_block in nested_blocks {
+            let nested_ast = nested_block.data.borrow();
+            let nested_sourcepos = nested_ast.sourcepos;
+            let block_role = BlockRole::of(&nested_ast.value);
+            match block_role {
+                BlockRole::Comment => {}
+                BlockRole::BulletList => nested_lists.push(nested_block),
+                BlockRole::Description => {
+                    let has_nested_lists = !nested_lists.is_empty();
+                    if has_nested_lists {
+                        let nested_span = self.span(nested_sourcepos);
+                        let message = "a description goes between its item's line and the items nested under it";
+                        self.diagnostics.record_error(message, nested_span);
+                        continue;
+                    }
+                    let block_lines = LineRange::of(nested_sourcepos);
+                    let extended_lines = LineRange::extend(description_lines, block_lines);
+                    description_lines = Some(extended_lines);
+                }
+                BlockRole::Unsupported => {
+                    let nested_span = self.span(nested_sourcepos);
+                    self.diagnostics
+                        .record_error(NOT_A_DESCRIPTION_BLOCK, nested_span);
+                }
+            }
         }
-        let line = self.first_line(paragraph_sourcepos);
-        let item_line = line.without_trailing_comments();
-        Some(item_line)
+        let description =
+            description_lines.and_then(|lines| self.read_description(lines, content_indent));
+        let item = DescribedLine { line, description };
+        Some(ItemBlocks { item, nested_lists })
+    }
+
+    /// Return the source `lines` as a description: each line stripped of up to `content_indent` leading spaces, the blank lines around them dropped; `None` when only blank lines remain.
+    fn read_description(&self, lines: LineRange, content_indent: usize) -> Option<Spanned<String>> {
+        let line_indices = lines.first..=lines.last;
+        let source_lines: Vec<SourceText<'src>> = line_indices
+            .map(|line| {
+                let start = self.offset(line, 1);
+                let rest_of_source = &self.source[start..];
+                let line_length = rest_of_source.find('\n').unwrap_or(rest_of_source.len());
+                let line_text = &rest_of_source[..line_length];
+                let text = line_text.strip_suffix('\r').unwrap_or(line_text);
+                SourceText {
+                    text,
+                    offset: start,
+                }
+            })
+            .collect();
+        let first_content_index = source_lines
+            .iter()
+            .position(|source_line| !source_line.text.trim().is_empty())?;
+        let last_content_index = source_lines
+            .iter()
+            .rposition(|source_line| !source_line.text.trim().is_empty())?;
+        let content_lines = &source_lines[first_content_index..=last_content_index];
+        let dedented_lines: Vec<&str> = content_lines
+            .iter()
+            .map(|content_line| content_line.dedented(content_indent))
+            .collect();
+        let text = dedented_lines.join("\n");
+        let first_content_line = content_lines.first()?;
+        let last_content_line = content_lines.last()?;
+        let description_start = first_content_line.offset;
+        let description_end = last_content_line.span().end;
+        let span = Span::from(description_start..description_end);
+        Some(Spanned { inner: text, span })
     }
 
     /// Return the source from where `sourcepos` starts to the end of that line, trailing whitespace dropped.
@@ -392,40 +539,24 @@ impl<'src> ComponentLists<'src> {
             let first_item_column = *self.first_item_column.get_or_insert(item_column);
             let is_list_start = item_index == 0;
             let is_indented_but_not_nested = is_list_start && item_column > first_item_column;
-            let Some(node) = Self::read_item(item, is_indented_but_not_nested, reader) else {
+            let Some(item_blocks) = reader.read_item(item) else {
                 continue;
+            };
+            let ItemBlocks {
+                item,
+                nested_lists,
+            } = item_blocks;
+            let mut children = Self::default();
+            for nested_list in nested_lists {
+                children.push_list(nested_list, reader);
+            }
+            let node = ComponentNode {
+                item,
+                is_indented_but_not_nested,
+                children: children.nodes,
             };
             self.nodes.push(node);
         }
-    }
-
-    /// Read a component item into its line and the items of every list nested under it.
-    fn read_item<'node>(
-        item: &'node AstNode<'node>,
-        is_indented_but_not_nested: bool,
-        reader: &mut BlockReader<'src, '_>,
-    ) -> Option<ComponentNode<'src>> {
-        let line = reader.read_item_line(item)?;
-        let mut children = Self::default();
-        let nested_blocks = item.children().skip(1);
-        for nested_block in nested_blocks {
-            let nested_ast = nested_block.data.borrow();
-            match &nested_ast.value {
-                NodeValue::List(list) if list.list_type == ListType::Bullet => {
-                    children.push_list(nested_block, reader);
-                }
-                NodeValue::HtmlBlock(html) if html.block_type == COMMENT_BLOCK_TYPE => {}
-                _other_block => {
-                    let nested_span = reader.span(nested_ast.sourcepos);
-                    reader.diagnostics.record_error(NOT_ONE_LINE, nested_span);
-                }
-            }
-        }
-        Some(ComponentNode {
-            line,
-            is_indented_but_not_nested,
-            children: children.nodes,
-        })
     }
 }
 
@@ -437,6 +568,39 @@ impl Section {
             "Edges" => Some(Self::Edges),
             "Legend" => Some(Self::Legend),
             _unknown_name => None,
+        }
+    }
+}
+
+impl BlockRole {
+    /// Classify a block written before the first section or nested in an item; a numbered list is description, a bullet list always holds items.
+    fn of(value: &NodeValue) -> Self {
+        match value {
+            NodeValue::HtmlBlock(html) if html.block_type == COMMENT_BLOCK_TYPE => Self::Comment,
+            NodeValue::List(list) if list.list_type == ListType::Bullet => Self::BulletList,
+            NodeValue::Paragraph | NodeValue::BlockQuote => Self::Description,
+            NodeValue::List(_numbered_list) => Self::Description,
+            NodeValue::CodeBlock(_code_block) => Self::Description,
+            _other_block => Self::Unsupported,
+        }
+    }
+}
+
+impl LineRange {
+    /// Span the lines `sourcepos` covers.
+    fn of(sourcepos: Sourcepos) -> Self {
+        Self {
+            first: sourcepos.start.line,
+            last: sourcepos.end.line,
+        }
+    }
+
+    /// Span from the first line of `earlier`, when there is one, to the last line of `later`.
+    fn extend(earlier: Option<Self>, later: Self) -> Self {
+        let first = earlier.map_or(later.first, |earlier| earlier.first);
+        Self {
+            first,
+            last: later.last,
         }
     }
 }
@@ -455,6 +619,13 @@ impl<'src> SourceText<'src> {
             text,
             offset: self.offset,
         }
+    }
+
+    /// Return the text without up to `indent` leading spaces.
+    fn dedented(&self, indent: usize) -> &'src str {
+        let leading_space_count = self.text.len() - self.text.trim_start_matches(' ').len();
+        let stripped_count = leading_space_count.min(indent);
+        &self.text[stripped_count..]
     }
 
     /// Return the byte range the text covers in the source.

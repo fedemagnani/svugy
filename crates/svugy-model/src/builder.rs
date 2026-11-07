@@ -31,6 +31,13 @@ impl ModelBuilder {
         self
     }
 
+    /// Describe the diagram in Markdown, shown in the side panel while nothing is focused.
+    pub fn with_description(mut self, description: impl Into<String>) -> Self {
+        let description = description.into();
+        self.unchecked.model.description = Some(description);
+        self
+    }
+
     /// Give the diagram a legend, as its top-level view shows it top-right.
     pub fn with_legend(mut self, legend: Legend) -> Self {
         self.unchecked.model.legend = Some(legend);

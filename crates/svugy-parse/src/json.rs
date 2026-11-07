@@ -27,7 +27,7 @@ pub type JsonImport = Import<JsonLanguage>;
 /// Print a model as pretty-printed, deterministic JSON, which says every model.
 pub struct JsonPrinter;
 
-/// Shape a model as its JSON file: the diagram's title, subtitle and legend, elements keyed by path, edges listed with their endpoints and ordinal.
+/// Shape a model as its JSON file: the diagram's title, subtitle, description and legend, elements keyed by path, edges listed with their endpoints and ordinal.
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ModelDocument {
@@ -35,6 +35,8 @@ struct ModelDocument {
     title: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     subtitle: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     legend: Option<Legend>,
     #[serde(default, deserialize_with = "UniqueKeyMapVisitor::deserialize")]
@@ -57,6 +59,8 @@ struct EdgeRecord {
     ordinal: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    description: Option<String>,
     #[serde(
         default,
         skip_serializing_if = "BTreeMap::is_empty",
@@ -137,12 +141,14 @@ impl ModelDocument {
     fn of(model: &Model) -> Self {
         let title = model.title().map(str::to_owned);
         let subtitle = model.subtitle().map(str::to_owned);
+        let description = model.description().map(str::to_owned);
         let legend = model.legend().cloned();
         let elements = model.elements().clone();
         let edges = model.edges().clone();
         Self {
             title,
             subtitle,
+            description,
             legend,
             elements,
             edges,
@@ -162,11 +168,16 @@ impl ModelDocument {
         let Self {
             title,
             subtitle,
+            description,
             legend,
             elements,
             edges,
         } = self;
-        UncheckedModel::from_parts(title, subtitle, legend, elements, edges)
+        let unchecked_model = UncheckedModel::from_parts(title, subtitle, legend, elements, edges);
+        match description {
+            Some(description) => unchecked_model.with_description(description),
+            None => unchecked_model,
+        }
     }
 }
 
@@ -188,6 +199,7 @@ impl EdgeRecord {
         let to = id.to().clone();
         let ordinal = id.ordinal();
         let label = edge.label().map(str::to_owned);
+        let description = edge.description().map(str::to_owned);
         let style = edge.style().clone();
         let traveler = edge.traveler();
         let badge = edge.is_badge();
@@ -197,6 +209,7 @@ impl EdgeRecord {
             to,
             ordinal,
             label,
+            description,
             style,
             traveler,
             badge,
@@ -210,6 +223,9 @@ impl EdgeRecord {
         let mut edge = Edge::new();
         if let Some(label) = self.label {
             edge = edge.with_label(label);
+        }
+        if let Some(description) = self.description {
+            edge = edge.with_description(description);
         }
         for (key, value) in self.style {
             edge = edge.with_style(key, value);

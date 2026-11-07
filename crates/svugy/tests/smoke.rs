@@ -2,9 +2,9 @@
 
 mod support;
 
-use dagre_dgl_rs::{EdgeLabel, Graph, GraphLabel, NodeLabel, Point, layout};
 use glam::{DMat3, DVec3};
 use kurbo::{BezPath, ParamCurve, ParamCurveArclen, Point as KurboPoint};
+use svugy_dagre::LeftToRightLayout;
 use taffy::prelude::*;
 use ttf_parser::{Face, OutlineBuilder};
 
@@ -52,69 +52,33 @@ impl OutlineBuilder for OutlineCommandCounter {
     }
 }
 
-#[derive(Debug, PartialEq)]
-struct DagreLayoutSnapshot {
-    node_centers: Vec<(String, f64, f64)>,
-    edge_points: Vec<Vec<Point>>,
-}
-
-fn lay_out_a_graph_with_long_edges_and_crossings() -> DagreLayoutSnapshot {
-    let node_ids = [
-        "gateway", "auth", "orders", "billing", "ledger", "db", "cache", "queue",
-    ];
-    let edge_pairs = [
-        ("gateway", "auth"),
-        ("gateway", "orders"),
-        ("gateway", "db"),
-        ("orders", "billing"),
-        ("orders", "cache"),
-        ("auth", "cache"),
-        ("billing", "ledger"),
-        ("billing", "queue"),
-        ("ledger", "db"),
-        ("queue", "auth"),
-    ];
-    let mut graph = Graph::with_options(true, true, false);
-    let left_to_right = Some("LR".to_owned());
-    graph.set_graph(GraphLabel {
-        rankdir: left_to_right,
-        ..Default::default()
-    });
-    for node_id in node_ids {
-        let node_label = NodeLabel {
+fn lay_out_a_graph_with_long_edges_and_crossings() -> Vec<svugy_dagre::Point> {
+    let node_count = 8;
+    let node_sizes = vec![
+        svugy_dagre::Size {
             width: 120.0,
             height: 48.0,
-            ..Default::default()
         };
-        graph.set_node(node_id, node_label);
-    }
-    for (from, to) in edge_pairs {
-        graph.set_edge(from, to, EdgeLabel::default(), None);
-    }
-
-    layout(&mut graph);
-
-    let node_centers = node_ids
-        .iter()
-        .map(|node_id| {
-            let node = graph.node(node_id);
-            let center_x = node.x.expect("layout sets x");
-            let center_y = node.y.expect("layout sets y");
-            (node_id.to_string(), center_x, center_y)
-        })
-        .collect();
-    let edge_points = graph
-        .edges()
-        .iter()
-        .map(|edge| {
-            let edge_label = graph.edge(edge).expect("edge exists");
-            edge_label.points.clone().expect("layout sets points")
-        })
-        .collect();
-    DagreLayoutSnapshot {
-        node_centers,
-        edge_points,
-    }
+        node_count
+    ];
+    let (gateway, auth, orders, billing, ledger, db, cache, queue) = (0, 1, 2, 3, 4, 5, 6, 7);
+    let edges = [
+        (gateway, auth),
+        (gateway, orders),
+        (gateway, db),
+        (orders, billing),
+        (orders, cache),
+        (auth, cache),
+        (billing, ledger),
+        (billing, queue),
+        (ledger, db),
+        (queue, auth),
+    ];
+    let layout = LeftToRightLayout {
+        node_gap: 50.0,
+        rank_gap: 50.0,
+    };
+    layout.node_centres(&node_sizes, &edges)
 }
 
 #[test]

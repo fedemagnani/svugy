@@ -1,20 +1,19 @@
-//! Snapshot the svugy golden as JSON, as static and interactive SVG text and as its static raster, and guard its twins.
+//! Snapshot the svugy golden, examples/svugy.md, as static and interactive SVG text and as its static raster, and guard its d2 and JSON twins.
 
 mod support;
 
-#[path = "golden/svugy.rs"]
-mod svugy_example;
-
 use serde_json::Value;
 use support::pixel_snapshot_test;
-use svugy::{InteractiveSvg, StaticSvg};
-use svugy_example::SvugyExample;
+use svugy::{InteractiveSvg, RenderSvg, StaticSvg};
+use svugy_model::model::Model;
 use svugy_parse::d2::D2Parse;
-use svugy_parse::json::JsonPrinter;
+use svugy_parse::diagnostic::SourceLanguage;
+use svugy_parse::json::{JsonLanguage, JsonPrinter};
 use svugy_parse::markdown::MarkdownParse;
 
 const SVUGY_MD: &str = include_str!("../../../examples/svugy.md");
 const SVUGY_D2: &str = include_str!("../../../examples/svugy.d2");
+const SVUGY_JSON: &str = include_str!("../../../examples/svugy.json");
 
 const MARKUP_ONLY_LIVE_VIEWERS_RUN: [&str; 8] = [
     "<script",
@@ -28,13 +27,6 @@ const MARKUP_ONLY_LIVE_VIEWERS_RUN: [&str; 8] = [
 ];
 
 #[test]
-fn svugy_example_model_saves_as_stable_json() {
-    let model = SvugyExample::model();
-    let saved = JsonPrinter::print(&model);
-    insta::assert_snapshot!(saved);
-}
-
-#[test]
 fn svugy_example_renders_as_stable_static_svg() {
     let static_svg = render_svugy_example();
     insta::assert_snapshot!(static_svg);
@@ -42,14 +34,14 @@ fn svugy_example_renders_as_stable_static_svg() {
 
 #[test]
 fn svugy_example_renders_as_stable_interactive_svg() {
-    let model = SvugyExample::model();
+    let model = svugy_example_model();
     let interactive_svg = InteractiveSvg::render(&model);
     insta::assert_snapshot!(interactive_svg);
 }
 
 #[test]
 fn svugy_example_renders_the_same_interactive_bytes_twice() {
-    let model = SvugyExample::model();
+    let model = svugy_example_model();
     let first_render = InteractiveSvg::render(&model);
     let second_render = InteractiveSvg::render(&model);
     assert!(first_render == second_render);
@@ -57,7 +49,7 @@ fn svugy_example_renders_the_same_interactive_bytes_twice() {
 
 #[test]
 fn svugy_example_interactive_svg_parses_as_xml() {
-    let model = SvugyExample::model();
+    let model = svugy_example_model();
     let interactive_svg = InteractiveSvg::render(&model);
     let options = usvg::Options::default();
     let parse_result = usvg::Tree::from_str(&interactive_svg, &options);
@@ -75,16 +67,8 @@ fn svugy_example_static_svg_needs_no_css_script_font_or_animation() {
 
 #[test]
 fn svugy_example_twins_describe_the_same_model() {
-    let builder_model = SvugyExample::model();
-    let builder_json = JsonPrinter::print(&builder_model);
-    let builder_json_without_spans = without_spans(&builder_json);
-
-    let markdown_parse = MarkdownParse::parse(SVUGY_MD);
-    let markdown_import = markdown_parse.lower();
-    let markdown_model = markdown_import
-        .admitted_model()
-        .expect("examples/svugy.md lowers into a sound model");
-    let markdown_json = JsonPrinter::print(markdown_model);
+    let markdown_model = svugy_example_model();
+    let markdown_json = JsonPrinter::print(&markdown_model);
     let markdown_json_without_spans = without_spans(&markdown_json);
 
     let d2_parse = D2Parse::parse(SVUGY_D2);
@@ -95,25 +79,42 @@ fn svugy_example_twins_describe_the_same_model() {
     let d2_json = JsonPrinter::print(d2_model);
     let d2_json_without_spans = without_spans(&d2_json);
 
-    let invariant = "examples/svugy.md, examples/svugy.d2 and golden/svugy.rs must describe the same model, spans aside";
+    let json_import = JsonLanguage::import(SVUGY_JSON);
+    let json_model = json_import
+        .admitted_model()
+        .expect("examples/svugy.json loads into a sound model");
+    let json_json = JsonPrinter::print(json_model);
+    let json_json_without_spans = without_spans(&json_json);
+
+    let invariant = "examples/svugy.d2 and examples/svugy.json must describe the same model as examples/svugy.md, spans aside";
     assert_eq!(
-        markdown_json_without_spans, builder_json_without_spans,
-        "{invariant}: examples/svugy.md differs"
+        d2_json_without_spans, markdown_json_without_spans,
+        "{invariant}: examples/svugy.d2 differs"
     );
     assert_eq!(
-        d2_json_without_spans, builder_json_without_spans,
-        "{invariant}: examples/svugy.d2 differs"
+        json_json_without_spans, markdown_json_without_spans,
+        "{invariant}: examples/svugy.json differs"
     );
 }
 
 pixel_snapshot_test!(svugy_example_static_raster, render_svugy_example());
 
 fn render_svugy_example() -> String {
-    let model = SvugyExample::model();
+    let model = svugy_example_model();
     StaticSvg::render(&model)
 }
 
-/// Re-print model JSON without the `span` and `link_span` of each element and edge, the import provenance a builder never records.
+/// Parse examples/svugy.md into its admitted model.
+fn svugy_example_model() -> Model {
+    let markdown_parse = MarkdownParse::parse(SVUGY_MD);
+    let markdown_import = markdown_parse.lower();
+    let import_parts = markdown_import.into_admitted_parts();
+    import_parts
+        .model
+        .expect("examples/svugy.md lowers into a sound model")
+}
+
+/// Re-print model JSON without the `span` and `link_span` of each element and edge, source provenance the snapshot and twin comparison leave out.
 fn without_spans(model_json: &str) -> String {
     let mut model: Value = serde_json::from_str(model_json).expect("a model saves as JSON");
     let elements = model["elements"]

@@ -12,10 +12,18 @@ use super::RuntimeContract;
 use crate::render::writer::url::SafeUrl;
 use crate::render::writer::{Attributes, SvgWriter};
 
-/// Annotates element, edge and stub groups with the contract, reading labels, captions, metadata and links from the source model, and closed containers and merged edges from the layer's disclosure.
+/// Annotates element, edge and stub groups with the contract, reading labels, captions, metadata, links and descriptions from the source model, and closed containers and merged edges from the layer's disclosure.
 pub(crate) struct ContractAnnotator<'m> {
     model: &'m Model,
     disclosure: Option<&'m DisclosedModel>,
+    carries_descriptions: bool,
+}
+
+/// Describes the diagram as the runtime's description panel reads it at the root.
+#[derive(Serialize)]
+#[serde(tag = "kind", rename = "diagram")]
+pub(crate) struct DiagramDetails<'m> {
+    description: &'m str,
 }
 
 /// Wraps one group's content in the contract's markup: an anchor for a URL link, the group's attributes, its `<title>`, then its details.
@@ -37,6 +45,8 @@ struct ElementDetails<'a> {
     caption: &'a str,
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     metadata: &'a BTreeMap<String, String>,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    description: &'a str,
 }
 
 /// Describes an edge as the runtime's detail panel reads it, empty keys left out.
@@ -48,6 +58,8 @@ struct EdgeDetails<'a> {
     to: &'a ElementPath,
     #[serde(skip_serializing_if = "str::is_empty")]
     label: &'a str,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    description: &'a str,
 }
 
 /// Describes a lifted connection as the runtime's detail panel reads it: the shown endpoints it is drawn between and every source edge it stands for.
@@ -83,12 +95,19 @@ impl<'m> ContractAnnotator<'m> {
         Self {
             model,
             disclosure: None,
+            carries_descriptions: false,
         }
     }
 
     /// Read closed containers and merged edges from `disclosure`, the layer of the source model this annotator's groups are drawn in.
     pub(crate) fn with_disclosure(mut self, disclosure: &'m DisclosedModel) -> Self {
         self.disclosure = Some(disclosure);
+        self
+    }
+
+    /// Carry the authored descriptions in the details, for the runtime's description panel.
+    pub(crate) fn with_descriptions(mut self) -> Self {
+        self.carries_descriptions = true;
         self
     }
 
@@ -106,7 +125,9 @@ impl<'m> ContractAnnotator<'m> {
             let bare_details = ElementDetails::bare(path);
             return ContractGroup::new(attributes, path_value, &bare_details);
         };
-        let details = ElementDetails::of(path, element);
+        let authored_description = element.description();
+        let description = self.carried_description(authored_description);
+        let details = ElementDetails::of(path, element, description);
         let title = element.label().to_owned();
         let Some(raw_link) = element.link() else {
             return ContractGroup::new(attributes, title, &details);
@@ -236,7 +257,7 @@ impl<'m> ContractAnnotator<'m> {
         ConnectionDetails::Lifted(lifted_details)
     }
 
-    /// Describe edge `edge_id` as the detail panel reads it, its label empty when unlabelled.
+    /// Describe edge `edge_id` as the detail panel reads it, its label and description empty when absent.
     fn edge_details<'e>(&self, edge_id: &'e EdgeId) -> EdgeDetails<'e>
     where
         'm: 'e,
@@ -244,6 +265,8 @@ impl<'m> ContractAnnotator<'m> {
         let edge = self.model.edge(edge_id);
         let authored_label = edge.and_then(Edge::label);
         let label = authored_label.unwrap_or_default();
+        let authored_description = edge.and_then(Edge::description);
+        let description = self.carried_description(authored_description);
         let edge_value = edge_id.to_string();
         let from = edge_id.from();
         let to = edge_id.to();
@@ -252,7 +275,14 @@ impl<'m> ContractAnnotator<'m> {
             from,
             to,
             label,
+            description,
         }
+    }
+
+    /// Return `authored` when this annotator carries descriptions, else the empty description the details leave out.
+    fn carried_description(&self, authored: Option<&'m str>) -> &'m str {
+        let carried = authored.filter(|_description| self.carries_descriptions);
+        carried.unwrap_or_default()
     }
 
     /// Join the labels of `edge_id`'s endpoints with an arrow, each falling back to its path.
@@ -315,16 +345,35 @@ impl ContractGroup {
         writer.open_element("g", &self.attributes);
         let no_attributes = Attributes::new();
         writer.text_element("title", &no_attributes, &self.title);
-        let details_attributes = Attributes::new().with_text(RuntimeContract::DETAILS, "");
-        writer.text_element("desc", &details_attributes, &self.details);
+        write_details_carrier(writer, &self.details);
         write_content(writer);
         writer.close_element();
     }
 }
 
+impl<'m> DiagramDetails<'m> {
+    /// Describe `model`'s diagram by its description, or nothing when it has none.
+    pub(crate) fn of(model: &'m Model) -> Option<Self> {
+        let description = model.description()?;
+        Some(Self { description })
+    }
+
+    /// Write the diagram's details `<desc>`.
+    pub(crate) fn write(&self, writer: &mut SvgWriter) {
+        let details = serde_json::to_string(self).expect("details are plain strings");
+        write_details_carrier(writer, &details);
+    }
+}
+
+/// Write `details` JSON as the `<desc>` the runtime reads them from.
+fn write_details_carrier(writer: &mut SvgWriter, details: &str) {
+    let details_attributes = Attributes::new().with_text(RuntimeContract::DETAILS, "");
+    writer.text_element("desc", &details_attributes, details);
+}
+
 impl<'a> ElementDetails<'a> {
-    /// Describe `element`, held at `path`, by its label, caption and metadata.
-    fn of(path: &'a ElementPath, element: &'a Element) -> Self {
+    /// Describe `element`, held at `path`, by its label, caption, metadata and the `description` carried for it.
+    fn of(path: &'a ElementPath, element: &'a Element, description: &'a str) -> Self {
         let label = element.label();
         let authored_caption = element.caption();
         let caption = authored_caption.unwrap_or_default();
@@ -334,6 +383,7 @@ impl<'a> ElementDetails<'a> {
             label,
             caption,
             metadata,
+            description,
         }
     }
 
@@ -345,6 +395,7 @@ impl<'a> ElementDetails<'a> {
             label: "",
             caption: "",
             metadata: &NO_METADATA,
+            description: "",
         }
     }
 }

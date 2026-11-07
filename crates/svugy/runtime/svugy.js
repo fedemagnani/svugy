@@ -2,6 +2,7 @@
   'use strict';
 
   const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+  const XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
 
   const CONTRACT = 'data-svugy-contract';
   const LAYER = 'data-svugy-layer';
@@ -15,12 +16,9 @@
   const TO = 'data-svugy-to';
   const STUB = 'data-svugy-stub';
   const GOTO = 'data-svugy-goto';
-  const OVERLAY = 'data-svugy-overlay';
-  const TRAVELER = 'data-svugy-traveler';
   const DETAILS = 'data-svugy-details';
   const ENTERED = 'data-svugy-entered';
   const DIMMED = 'data-svugy-dimmed';
-  const CONTRACT_ATTRIBUTE_PREFIX = 'data-svugy-';
 
   const LAYER_SELECTOR = `[${LAYER}]`;
   const LEVEL_SELECTOR = `[${LEVEL}]`;
@@ -31,10 +29,11 @@
   const DIMMED_SELECTOR = `[${DIMMED}]`;
   const INTERACTIVE_SELECTOR = `[${ELEMENT}],[${EDGE}],[${STUB}]`;
   const ELEMENT_OR_LEVEL_SELECTOR = `[${ELEMENT}],[${LEVEL}]`;
-  const NON_PAINTING_SELECTOR = `[${OVERLAY}],[${TRAVELER}],title,desc`;
-  const MINIATURE_STRIPPED_ATTRIBUTES = new Set(['id', 'tabindex', 'role', 'aria-label', 'style']);
 
   const ROOT_LEVEL_PATH = '';
+  const LEVEL_LINK_PREFIX = '#svugy=';
+  const LEVEL_LINK_PATH_KEY = 'svugy';
+  const LEVEL_LINK_LAYER_KEY = 'layer';
   const TWEEN_DURATION_MS = 450;
   const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
   const FADE_IN_KEYFRAMES = [{ opacity: 0 }, { opacity: 1 }];
@@ -47,19 +46,21 @@
   const PANEL_VIEW_MARGIN_PX = 6;
   const PANEL_MAX_LINE_CHARACTERS = 72;
 
-  const ELEVATOR_PADDING_PX = 6;
-  const ELEVATOR_VIEW_MARGIN_PX = 10;
-  const ELEVATOR_ROW_HEIGHT_PX = 20;
-  const ELEVATOR_ROW_BASELINE_PX = 14;
-  const ELEVATOR_FLOOR_INDENT_PX = 10;
-  const ELEVATOR_LABEL_INSET_PX = 8;
-  const ELEVATOR_MAP_MAX_WIDTH_PX = 176;
-  const ELEVATOR_MAP_MAX_HEIGHT_PX = 120;
-  const ROOT_FLOOR_FALLBACK_LABEL = 'root';
+  const DESCRIPTION_WIDTH_PX = 320;
+  const DESCRIPTION_VIEW_MARGIN_PX = 12;
+  const FLOWS_HEADING = 'Flows';
+
+  const LIST_BLOCK = 'list';
+  const PARAGRAPH_BLOCK = 'paragraph';
+  const LIST_ITEM_PATTERN = /^\s*-\s+(.*)$/;
+  const INDENTED_LINE_PATTERN = /^\s/;
+  const INLINE_PATTERN = /`([^`]+)`|\*\*(.+?)\*\*|\*([^*\s][^*]*)\*|\[([^\]]+)\]\(([^()\s]+)\)/g;
+  const CONTROL_OR_SPACE_PATTERN = /[\u0000-\u0020\u007f]/;
+  const HTTP_SCHEME_PATTERN = /^https?:/i;
+  const ANY_SCHEME_PATTERN = /^[^/?#]*:/;
 
   const ARROW = '\u2192';
   const ELLIPSIS = '\u2026';
-  const TOGGLE_GLYPH = '\u21c4';
 
   /** Binds the runtime to its enclosing diagram once the document is parsed. */
   function start() {
@@ -87,10 +88,25 @@
     return isDocumentRootDiagram ? documentRoot : null;
   }
 
-  /** Wires navigation, detail panels, dimming and the elevator onto one diagram. */
+  /** Reads the level path and layer index a `#svugy=PATH&layer=K` fragment of the document's URL links to, PATH URL-encoded, `&layer=K` optional; null without one. */
+  function levelLink() {
+    const fragment = window.location.hash;
+    const isOtherFragment = !fragment.startsWith(LEVEL_LINK_PREFIX);
+    if (isOtherFragment) {
+      return null;
+    }
+    const fragmentParameters = new URLSearchParams(fragment.slice(1));
+    const path = fragmentParameters.get(LEVEL_LINK_PATH_KEY);
+    const layerText = fragmentParameters.get(LEVEL_LINK_LAYER_KEY);
+    const layerIndex = layerText === null ? 0 : Number(layerText);
+    return { path, layerIndex };
+  }
+
+  /** Wires navigation, the detail and description panels and dimming onto one diagram. */
   function bindRuntime(svg) {
     const layers = Layers.of(svg);
     const initialLayer = layers[0];
+    const deepestLayer = layers[layers.length - 1];
     const rootLevel = Contract.levelAt(initialLayer, ROOT_LEVEL_PATH);
     if (rootLevel === null) {
       return;
@@ -100,13 +116,19 @@
     const navigator = new LayerNavigator(svg, layers, initialLayer, rootLevel, animator, fader);
     const panel = new DetailPanel(svg);
     const dimmer = new UnrelatedGroupDimmer(svg);
-    const elevator = new Elevator(svg, (level) => navigator.focus(level));
+    const descriptionPanel = new DescriptionPanel(svg, deepestLayer);
     navigator.addNavigationListener((focusedLevel) => {
       panel.hide();
       dimmer.clear();
-      elevator.showFor(focusedLevel);
+      const focusedPath = focusedLevel.getAttribute(LEVEL);
+      descriptionPanel.describeFocusedLevel(focusedPath);
     });
-    Interactions.bind(svg, navigator, panel, dimmer);
+    descriptionPanel.describeFocusedLevel(ROOT_LEVEL_PATH);
+    Interactions.bind(svg, navigator, panel, dimmer, descriptionPanel);
+    const link = levelLink();
+    if (link !== null) {
+      navigator.jumpTo(link.path, link.layerIndex);
+    }
   }
 
   /** Lists the layers a document draws, in increasing depth; a document without layer groups is its own single layer. */
@@ -159,16 +181,11 @@
     },
 
     depthOf(level) {
-      const levelsFromRoot = Contract.levelsFromRootTo(level);
-      return levelsFromRoot.length - 1;
-    },
-
-    levelsFromRootTo(level) {
-      const levels = [];
-      for (let ancestor = level; ancestor !== null; ancestor = Contract.enclosingLevelOf(ancestor)) {
-        levels.unshift(ancestor);
+      let depth = 0;
+      for (let ancestor = Contract.enclosingLevelOf(level); ancestor !== null; ancestor = Contract.enclosingLevelOf(ancestor)) {
+        depth += 1;
       }
-      return levels;
+      return depth;
     },
 
     interiorLevelOf(group) {
@@ -227,6 +244,14 @@
       const interiorLevel = Contract.interiorLevelOf(group);
       const isOpenContainer = interiorLevel !== null;
       return hasGoto || isStub || isClosedContainer || isOpenContainer;
+    },
+
+    isLeaf(group) {
+      const isElement = group.hasAttribute(ELEMENT);
+      const isClosedContainer = group.hasAttribute(CLOSED);
+      const interiorLevel = Contract.interiorLevelOf(group);
+      const isOpenContainer = interiorLevel !== null;
+      return isElement && !isClosedContainer && !isOpenContainer;
     },
 
     titleOf(group) {
@@ -303,7 +328,7 @@
     },
   };
 
-  /** Tweens the root viewBox toward a target view fitted to the canvas, so no letterbox ever falls outside it; jumps under reduced motion. */
+  /** Tweens or jumps the root viewBox to a target view fitted to the canvas, so no letterbox ever falls outside it; tweens jump under reduced motion. */
   class ViewBoxAnimator {
     constructor(svg) {
       this.svg = svg;
@@ -312,13 +337,13 @@
     }
 
     tweenTo(requestedView, startView = this.currentView()) {
-      cancelAnimationFrame(this.frameRequest);
-      const targetView = View.fittedInside(requestedView, this.canvasView);
       const isMotionReduced = window.matchMedia(REDUCED_MOTION_QUERY).matches;
       if (isMotionReduced) {
-        this.show(targetView);
+        this.jumpTo(requestedView);
         return;
       }
+      cancelAnimationFrame(this.frameRequest);
+      const targetView = View.fittedInside(requestedView, this.canvasView);
       this.show(startView);
       let startTime = null;
       const step = (now) => {
@@ -333,6 +358,12 @@
         }
       };
       this.frameRequest = requestAnimationFrame(step);
+    }
+
+    jumpTo(requestedView) {
+      cancelAnimationFrame(this.frameRequest);
+      const targetView = View.fittedInside(requestedView, this.canvasView);
+      this.show(targetView);
     }
 
     currentView() {
@@ -403,6 +434,28 @@
     /** Calls `listener(focusedLevel)` after every change of the shown layer or the focused level. */
     addNavigationListener(listener) {
       this.navigationListeners.push(listener);
+    }
+
+    /** Shows layer `layerIndex` focused on level `path`, without animation, or the first layer holding that level when layer `layerIndex` does not; a path that is no level changes nothing. */
+    jumpTo(path, layerIndex) {
+      const requestedLayer = this.layers[layerIndex];
+      const levelInRequestedLayer = requestedLayer === undefined ? null : Contract.levelAt(requestedLayer, path);
+      const isLevelInRequestedLayer = levelInRequestedLayer !== null;
+      const firstOpeningLayer = this.layers.find((layer) => Contract.levelAt(layer, path) !== null);
+      const openingLayer = isLevelInRequestedLayer ? requestedLayer : firstOpeningLayer;
+      if (openingLayer === undefined) {
+        return;
+      }
+      const linkedLevel = Contract.levelAt(openingLayer, path);
+      this.shownLayer.removeAttribute(SHOWN);
+      openingLayer.setAttribute(SHOWN, '');
+      this.shownLayer = openingLayer;
+      this.moveEnteredMarkTo(linkedLevel);
+      this.announceNavigation();
+      const targetView = this.viewOf(linkedLevel);
+      if (targetView !== null) {
+        this.animator.jumpTo(targetView);
+      }
     }
 
     /** Follows a click on `group` and tells whether the view moved; when it did not, the group's details are due. */
@@ -837,6 +890,15 @@
       return { elements: subtree, isCoreEdge };
     },
 
+    /** One group per edge with an endpoint at `element` or inside it, in document order. */
+    edgesTouching(element, layer) {
+      const core = Relatives.coreOfElement(element);
+      const layerEdges = Array.from(layer.querySelectorAll(EDGE_SELECTOR));
+      const touchingEdges = layerEdges.filter(core.isCoreEdge);
+      const edgeGroupsByName = new Map(touchingEdges.map((edge) => [edge.getAttribute(EDGE), edge]));
+      return Array.from(edgeGroupsByName.values());
+    },
+
     /** Every group drawing the same edge, since a labelled edge has a second group for its label. */
     coreOfEdge(edge) {
       const edgeName = edge.getAttribute(EDGE);
@@ -845,77 +907,92 @@
     },
   };
 
-  /** Shows where the focused level sits, as a chain of floors or a mini-map, pinned top-right at a constant on-screen size; hidden at the root. */
-  class Elevator {
-    constructor(svg, focusLevel) {
+  /** Describes the focused level, or a clicked leaf, in a panel pinned top-right at a constant on-screen width; at the root, the diagram's description, else nothing. */
+  class DescriptionPanel {
+    constructor(svg, deepestLayer) {
       this.svg = svg;
-      const diagramTitle = Contract.titleOf(svg);
-      const rootLabel = diagramTitle ?? ROOT_FLOOR_FALLBACK_LABEL;
-      this.modes = [new FloorChain(rootLabel, focusLevel), new MiniMap(focusLevel)];
-      this.modeIndex = 0;
-      this.elevator = createSvgElement('g', { class: 'svugy-elevator', role: 'group', 'aria-label': 'elevator' });
-      this.elevator.addEventListener('click', (event) => event.stopPropagation());
-      this.focusedLevel = null;
+      this.deepestLayer = deepestLayer;
+      this.body = createXhtmlElement('aside', { class: 'svugy-description', 'aria-label': 'description' });
+      this.frame = createSvgElement('foreignObject', { class: 'svugy-description-frame' });
+      this.frame.appendChild(this.body);
+      this.panel = createSvgElement('g', { class: 'svugy-description-panel' });
+      this.panel.appendChild(this.frame);
+      this.panel.addEventListener('click', (event) => event.stopPropagation());
+      this.focusedPath = ROOT_LEVEL_PATH;
+      this.shownLeafPath = null;
       this.width = 0;
       const viewBoxObserver = new MutationObserver(() => this.place());
       viewBoxObserver.observe(svg, { attributes: true, attributeFilter: ['viewBox'] });
-      const resizeObserver = new ResizeObserver(() => this.place());
+      const resizeObserver = new ResizeObserver(() => {
+        this.fit();
+        this.place();
+      });
       resizeObserver.observe(svg);
     }
 
-    showFor(focusedLevel) {
-      this.focusedLevel = focusedLevel;
-      const parentLevel = Contract.enclosingLevelOf(focusedLevel);
-      const isFocusedLevelRoot = parentLevel === null;
-      if (isFocusedLevelRoot) {
-        this.hide();
-        return;
-      }
-      this.render();
+    describeFocusedLevel(path) {
+      this.focusedPath = path;
+      this.shownLeafPath = null;
+      const isRoot = path === ROOT_LEVEL_PATH;
+      const content = isRoot ? DescriptionContent.ofDiagram(this.svg) : DescriptionContent.ofElement(path, this.deepestLayer);
+      this.show(content);
     }
 
-    hide() {
-      const wasFocusInside = this.elevator.contains(document.activeElement);
-      this.elevator.remove();
+    describeLeaf(path) {
+      this.shownLeafPath = path;
+      const content = DescriptionContent.ofElement(path, this.deepestLayer);
+      this.show(content);
+    }
+
+    /** Goes back from a shown leaf to the focused level's description and tells whether a leaf was shown. */
+    stepBackFromLeaf() {
+      const isFocusedLevelShown = this.shownLeafPath === null;
+      if (isFocusedLevelShown) {
+        return false;
+      }
+      this.describeFocusedLevel(this.focusedPath);
+      return true;
+    }
+
+    show(content) {
+      const wasFocusInside = this.panel.contains(document.activeElement);
+      this.body.replaceChildren(...content);
       if (wasFocusInside) {
         this.svg.focus({ preventScroll: true });
       }
-    }
-
-    render() {
-      const wasFocusInside = this.elevator.contains(document.activeElement);
-      const mode = this.modes[this.modeIndex];
-      const nextModeIndex = (this.modeIndex + 1) % this.modes.length;
-      const nextMode = this.modes[nextModeIndex];
-      const plate = createSvgElement('rect', { class: 'svugy-elevator-plate', rx: 6 });
-      const toggle = ElevatorRow.create('svugy-elevator-toggle', `${TOGGLE_GLYPH} ${nextMode.name}`, 0);
-      toggle.setAttribute('transform', `translate(${ELEVATOR_PADDING_PX} ${ELEVATOR_PADDING_PX})`);
-      bindButton(toggle, `show the ${nextMode.name}`, () => this.switchToMode(nextModeIndex));
-      const contentTop = 2 * ELEVATOR_PADDING_PX + ELEVATOR_ROW_HEIGHT_PX;
-      const content = createSvgElement('g', { transform: `translate(${ELEVATOR_PADDING_PX} ${contentTop})` });
-      this.elevator.replaceChildren(plate, toggle, content);
-      this.svg.appendChild(this.elevator);
-      const toggleWidth = ElevatorRow.naturalWidthOf(toggle);
-      ElevatorRow.setWidth(toggle, toggleWidth);
-      const contentSize = mode.drawInto(content, this.focusedLevel);
-      const innerWidth = Math.max(toggleWidth, contentSize.width);
-      this.width = innerWidth + 2 * ELEVATOR_PADDING_PX;
-      const height = contentTop + contentSize.height + ELEVATOR_PADDING_PX;
-      plate.setAttribute('width', String(this.width));
-      plate.setAttribute('height', String(height));
-      this.place();
-      if (wasFocusInside) {
-        toggle.focus({ preventScroll: true });
+      const isContentless = content.length === 0;
+      if (isContentless) {
+        this.panel.remove();
+        return;
       }
+      const isDetached = !this.panel.isConnected;
+      if (isDetached) {
+        this.svg.appendChild(this.panel);
+      }
+      this.fit();
+      this.place();
+      this.body.scrollTop = 0;
     }
 
-    switchToMode(modeIndex) {
-      this.modeIndex = modeIndex;
-      this.render();
+    // w = min(W, client width − 2m), h = min(content height, client height − 2m): the panel never leaves the viewport
+    fit() {
+      const isDetached = !this.panel.isConnected;
+      if (isDetached) {
+        return;
+      }
+      const svgBounds = this.svg.getBoundingClientRect();
+      const viewportMargins = 2 * DESCRIPTION_VIEW_MARGIN_PX;
+      const availableWidth = Math.max(0, svgBounds.width - viewportMargins);
+      const availableHeight = Math.max(0, svgBounds.height - viewportMargins);
+      this.width = Math.min(DESCRIPTION_WIDTH_PX, availableWidth);
+      this.frame.setAttribute('width', String(this.width));
+      this.frame.setAttribute('height', String(availableHeight));
+      const contentHeight = this.body.offsetHeight;
+      this.frame.setAttribute('height', String(contentHeight));
     }
 
     place() {
-      const isDetached = !this.elevator.isConnected;
+      const isDetached = !this.panel.isConnected;
       if (isDetached) {
         return;
       }
@@ -928,178 +1005,213 @@
       const clientCorner = new DOMPoint(svgBounds.right, svgBounds.top);
       const userCorner = clientCorner.matrixTransform(screenToUserMatrix);
       const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
-      // x = corner.x − (m + w)·u, y = corner.y + m·u, with u user units per pixel, so the elevator sits m pixels inside the top-right corner
-      const x = userCorner.x - (ELEVATOR_VIEW_MARGIN_PX + this.width) * userUnitsPerPixel;
-      const y = userCorner.y + ELEVATOR_VIEW_MARGIN_PX * userUnitsPerPixel;
-      this.elevator.setAttribute('transform', `translate(${x} ${y}) scale(${userUnitsPerPixel})`);
+      // x = corner.x − (m + w)·u, y = corner.y + m·u, with u user units per pixel, so the panel sits m pixels inside the top-right corner
+      const x = userCorner.x - (DESCRIPTION_VIEW_MARGIN_PX + this.width) * userUnitsPerPixel;
+      const y = userCorner.y + DESCRIPTION_VIEW_MARGIN_PX * userUnitsPerPixel;
+      this.panel.setAttribute('transform', `translate(${x} ${y}) scale(${userUnitsPerPixel})`);
     }
   }
 
-  /** Draws the chain of floors from the root level down to the focused one; clicking a floor focuses its level. */
-  class FloorChain {
-    constructor(rootLabel, focusLevel) {
-      this.name = 'floors';
-      this.rootLabel = rootLabel;
-      this.focusLevel = focusLevel;
-    }
+  /** Builds the description panel's XHTML: the diagram's Markdown description, or an element's name, description and the flows touching it, each by its label, endpoints and description. */
+  const DescriptionContent = {
+    ofDiagram(svg) {
+      const details = Contract.detailsOf(svg);
+      return DescriptionContent.descriptionBlocksOf(details);
+    },
 
-    drawInto(container, focusedLevel) {
-      const levels = Contract.levelsFromRootTo(focusedLevel);
-      const floors = levels.map((level, depth) => {
-        const label = this.floorLabelOf(level);
-        const indent = depth * ELEVATOR_FLOOR_INDENT_PX;
-        const floor = ElevatorRow.create('svugy-elevator-floor', label, indent);
-        const floorTop = depth * ELEVATOR_ROW_HEIGHT_PX;
-        floor.setAttribute('transform', `translate(0 ${floorTop})`);
-        const isFocusedFloor = level === focusedLevel;
-        if (isFocusedFloor) {
-          floor.classList.add('svugy-elevator-floor-current');
-          return floor;
+    ofElement(path, deepestLayer) {
+      const element = Contract.elementAt(deepestLayer, path);
+      if (element === null) {
+        return [];
+      }
+      const name = DescriptionContent.nameOfElementAt(path, deepestLayer);
+      const nameNode = DescriptionContent.textElement('h2', 'svugy-description-name', name);
+      const details = Contract.detailsOf(element);
+      const descriptionNodes = DescriptionContent.descriptionBlocksOf(details);
+      const flowNodes = DescriptionContent.flowsOf(element, deepestLayer);
+      return [nameNode, ...descriptionNodes, ...flowNodes];
+    },
+
+    flowsOf(element, deepestLayer) {
+      const flowGroups = Relatives.edgesTouching(element, deepestLayer);
+      const isFlowless = flowGroups.length === 0;
+      if (isFlowless) {
+        return [];
+      }
+      const heading = DescriptionContent.textElement('h3', 'svugy-description-flows-heading', FLOWS_HEADING);
+      const items = flowGroups.map((flowGroup) => DescriptionContent.flowItemOf(flowGroup, deepestLayer));
+      const list = createXhtmlElement('ul', { class: 'svugy-description-flows' });
+      list.append(...items);
+      return [heading, list];
+    },
+
+    flowItemOf(flowGroup, deepestLayer) {
+      const [from, to] = Contract.endpointsOf(flowGroup);
+      const fromName = DescriptionContent.nameOfElementAt(from, deepestLayer);
+      const toName = DescriptionContent.nameOfElementAt(to, deepestLayer);
+      const endpointsText = `${fromName} ${ARROW} ${toName}`;
+      const details = Contract.detailsOf(flowGroup);
+      const label = details?.label;
+      const isLabelled = typeof label === 'string';
+      const labelText = isLabelled ? label : endpointsText;
+      const labelNode = DescriptionContent.textElement('p', 'svugy-description-flow-label', labelText);
+      const endpointsNode = DescriptionContent.textElement('p', 'svugy-description-flow-endpoints', endpointsText);
+      const endpointsNodes = isLabelled ? [endpointsNode] : [];
+      const descriptionNodes = DescriptionContent.descriptionBlocksOf(details);
+      const item = createXhtmlElement('li', { class: 'svugy-description-flow' });
+      item.append(labelNode, ...endpointsNodes, ...descriptionNodes);
+      return item;
+    },
+
+    descriptionBlocksOf(details) {
+      const description = details?.description;
+      const isDescribed = typeof description === 'string';
+      return isDescribed ? SafeMarkdown.blocksOf(description) : [];
+    },
+
+    nameOfElementAt(path, layer) {
+      const element = Contract.elementAt(layer, path);
+      const title = element === null ? null : Contract.titleOf(element);
+      return title ?? path;
+    },
+
+    textElement(name, className, text) {
+      const element = createXhtmlElement(name, { class: className });
+      element.textContent = text;
+      return element;
+    },
+  };
+
+  /** Renders a small Markdown subset as XHTML nodes: paragraphs, `-` lists, `**bold**`, `*em*`, `` `code` `` and `[text](url)` links to http(s) or relative URLs; author text only ever becomes text nodes, never markup. */
+  const SafeMarkdown = {
+    blocksOf(markdown) {
+      const blocks = SafeMarkdown.blockTextsOf(markdown);
+      return blocks.map(SafeMarkdown.nodeOfBlock);
+    },
+
+    // a blank line ends a block, `- ` starts a list item, an indented line continues the open item, any other line continues the open paragraph
+    blockTextsOf(markdown) {
+      const lines = markdown.split('\n');
+      const blocks = [];
+      let openBlock = null;
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        const isBlank = trimmedLine === '';
+        if (isBlank) {
+          openBlock = null;
+          continue;
         }
-        bindButton(floor, `focus ${label}`, () => this.focusLevel(level));
-        return floor;
-      });
-      container.replaceChildren(...floors);
-      const floorWidths = floors.map((floor) => ElevatorRow.naturalWidthOf(floor));
-      const width = Math.max(...floorWidths);
-      floors.forEach((floor) => ElevatorRow.setWidth(floor, width));
-      const height = floors.length * ELEVATOR_ROW_HEIGHT_PX;
-      return { width, height };
-    }
-
-    floorLabelOf(level) {
-      const owner = Contract.enclosingElementOf(level);
-      if (owner === null) {
-        return this.rootLabel;
+        const listItem = LIST_ITEM_PATTERN.exec(line);
+        const isListItem = listItem !== null;
+        const isIndented = INDENTED_LINE_PATTERN.test(line);
+        const isListOpen = openBlock?.kind === LIST_BLOCK;
+        const isItemContinuation = isListOpen && isIndented && !isListItem;
+        if (isItemContinuation) {
+          const lastItemIndex = openBlock.texts.length - 1;
+          openBlock.texts[lastItemIndex] += ` ${trimmedLine}`;
+          continue;
+        }
+        const kind = isListItem ? LIST_BLOCK : PARAGRAPH_BLOCK;
+        const text = isListItem ? listItem[1] : trimmedLine;
+        const isBlockOfKindOpen = openBlock?.kind === kind;
+        if (isBlockOfKindOpen) {
+          openBlock.texts.push(text);
+          continue;
+        }
+        openBlock = { kind, texts: [text] };
+        blocks.push(openBlock);
       }
-      const ownerTitle = Contract.titleOf(owner);
-      return ownerTitle ?? level.getAttribute(LEVEL);
-    }
-  }
-
-  /** Draws the mini-map: the shown layer cropped to the focused level's parent, framing the focused level; clicking it focuses the parent. */
-  class MiniMap {
-    constructor(focusLevel) {
-      this.name = 'map';
-      this.focusLevel = focusLevel;
-      this.miniatureSource = null;
-      this.miniature = null;
-    }
-
-    drawInto(container, focusedLevel) {
-      const levelsFromRoot = Contract.levelsFromRootTo(focusedLevel);
-      const rootLevel = levelsFromRoot[0];
-      const parentLevel = Contract.enclosingLevelOf(focusedLevel);
-      const parentViewText = parentLevel.getAttribute(VIEW);
-      const parentView = View.parse(parentViewText);
-      const focusedViewText = focusedLevel.getAttribute(VIEW);
-      const focusedView = View.parse(focusedViewText);
-      const isViewMissing = parentView === null || focusedView === null;
-      if (isViewMissing) {
-        container.replaceChildren();
-        return { width: 0, height: 0 };
-      }
-      // s = min(W / w, H / h): the largest scale that fits the parent's view in the map's maximum box
-      const mapScale = Math.min(ELEVATOR_MAP_MAX_WIDTH_PX / parentView.width, ELEVATOR_MAP_MAX_HEIGHT_PX / parentView.height);
-      const width = parentView.width * mapScale;
-      const height = parentView.height * mapScale;
-      const map = createSvgElement('g', { class: 'svugy-elevator-map' });
-      const backdrop = createSvgElement('rect', { class: 'svugy-elevator-map-backdrop', width, height, rx: 3 });
-      const viewport = createSvgElement('svg', { width, height, viewBox: parentViewText });
-      const miniature = this.miniatureOf(rootLevel);
-      const frame = createSvgElement('rect', {
-        class: 'svugy-elevator-map-frame',
-        x: focusedView.x,
-        y: focusedView.y,
-        width: focusedView.width,
-        height: focusedView.height,
-      });
-      viewport.append(miniature, frame);
-      map.append(backdrop, viewport);
-      bindButton(map, 'focus the parent level', () => this.focusLevel(parentLevel));
-      container.replaceChildren(map);
-      return { width, height };
-    }
-
-    miniatureOf(rootLevel) {
-      const isCachedSource = rootLevel === this.miniatureSource;
-      if (isCachedSource) {
-        return this.miniature;
-      }
-      this.miniature = Miniature.inertCloneOf(rootLevel);
-      this.miniatureSource = rootLevel;
-      return this.miniature;
-    }
-  }
-
-  /** Clones a level into a copy that only paints: no ids, contract attributes, tab stops, links, overlays, travelers or tooltips. */
-  const Miniature = {
-    inertCloneOf(level) {
-      const miniature = level.cloneNode(true);
-      const nonPaintingNodes = miniature.querySelectorAll(NON_PAINTING_SELECTOR);
-      nonPaintingNodes.forEach((node) => node.remove());
-      const descendants = Array.from(miniature.querySelectorAll('*'));
-      const nodes = [miniature, ...descendants];
-      nodes.forEach(Miniature.stripInteractiveAttributes);
-      miniature.setAttribute('class', 'svugy-elevator-miniature');
-      return miniature;
+      return blocks;
     },
 
-    stripInteractiveAttributes(node) {
-      const isLink = node.localName === 'a';
-      const attributeNames = node.getAttributeNames();
-      const strippedNames = attributeNames.filter((name) => {
-        const isContractAttribute = name.startsWith(CONTRACT_ATTRIBUTE_PREFIX);
-        const isInteractiveAttribute = MINIATURE_STRIPPED_ATTRIBUTES.has(name);
-        const isLinkTarget = isLink && name.endsWith('href');
-        return isContractAttribute || isInteractiveAttribute || isLinkTarget;
-      });
-      strippedNames.forEach((name) => node.removeAttribute(name));
+    nodeOfBlock(block) {
+      const isList = block.kind === LIST_BLOCK;
+      if (isList) {
+        const items = block.texts.map((text) => SafeMarkdown.elementHolding('li', text));
+        const list = createXhtmlElement('ul', {});
+        list.append(...items);
+        return list;
+      }
+      const paragraphText = block.texts.join(' ');
+      return SafeMarkdown.elementHolding('p', paragraphText);
+    },
+
+    elementHolding(name, text) {
+      const element = createXhtmlElement(name, {});
+      const inlineNodes = SafeMarkdown.inlineNodesOf(text);
+      element.append(...inlineNodes);
+      return element;
+    },
+
+    inlineNodesOf(text) {
+      const nodes = [];
+      let consumedLength = 0;
+      for (const match of text.matchAll(INLINE_PATTERN)) {
+        const precedingText = text.slice(consumedLength, match.index);
+        const precedingNode = document.createTextNode(precedingText);
+        const matchNode = SafeMarkdown.inlineNodeOf(match);
+        nodes.push(precedingNode, matchNode);
+        consumedLength = match.index + match[0].length;
+      }
+      const trailingText = text.slice(consumedLength);
+      const trailingNode = document.createTextNode(trailingText);
+      nodes.push(trailingNode);
+      return nodes;
+    },
+
+    inlineNodeOf(match) {
+      const [_source, code, bold, emphasis, linkText, linkUrl] = match;
+      if (code !== undefined) {
+        const codeNode = createXhtmlElement('code', {});
+        codeNode.textContent = code;
+        return codeNode;
+      }
+      if (bold !== undefined) {
+        return SafeMarkdown.elementHolding('strong', bold);
+      }
+      if (emphasis !== undefined) {
+        return SafeMarkdown.elementHolding('em', emphasis);
+      }
+      const isSafeUrl = SafeMarkdown.isSafeUrl(linkUrl);
+      if (isSafeUrl) {
+        const link = SafeMarkdown.elementHolding('a', linkText);
+        link.setAttribute('href', linkUrl);
+        link.setAttribute('target', '_blank');
+        link.setAttribute('rel', 'noopener noreferrer');
+        return link;
+      }
+      return SafeMarkdown.elementHolding('span', linkText);
+    },
+
+    // safe = no control or space character, and an http(s) scheme or none at all: no ':' before the first '/', '?' or '#'
+    isSafeUrl(url) {
+      const hasControlOrSpace = CONTROL_OR_SPACE_PATTERN.test(url);
+      if (hasControlOrSpace) {
+        return false;
+      }
+      const isHttp = HTTP_SCHEME_PATTERN.test(url);
+      const hasScheme = ANY_SCHEME_PATTERN.test(url);
+      return isHttp || !hasScheme;
     },
   };
 
-  /** Lays out one elevator row: a plate under a text label indented by `indent` pixels. */
-  const ElevatorRow = {
-    create(className, label, indent) {
-      const row = createSvgElement('g', { class: `svugy-elevator-row ${className}` });
-      const plate = createSvgElement('rect', { class: 'svugy-elevator-row-plate', rx: 4, height: ELEVATOR_ROW_HEIGHT_PX });
-      const textStart = indent + ELEVATOR_LABEL_INSET_PX;
-      const text = createSvgElement('text', { class: 'svugy-elevator-label', x: textStart, y: ELEVATOR_ROW_BASELINE_PX });
-      text.textContent = DetailLines.truncate(label);
-      row.append(plate, text);
-      return row;
-    },
-
-    naturalWidthOf(row) {
-      const text = row.lastElementChild;
-      const textStart = Number(text.getAttribute('x'));
-      const textLength = text.getComputedTextLength();
-      return textStart + textLength + ELEVATOR_LABEL_INSET_PX;
-    },
-
-    setWidth(row, width) {
-      const plate = row.firstElementChild;
-      plate.setAttribute('width', String(width));
-    },
-  };
-
-  /** Translates pointer, focus and key events into navigation, detail panels and dimming. */
+  /** Translates pointer, focus and key events into navigation, detail and description panels, and dimming. */
   const Interactions = {
-    bind(svg, navigator, panel, dimmer) {
+    bind(svg, navigator, panel, dimmer, descriptionPanel) {
       Interactions.makeGroupsFocusable(svg);
       svg.addEventListener('click', (event) => {
         const group = Interactions.groupAt(event.target);
         const clientPoint = { x: event.clientX, y: event.clientY };
         if (group === null) {
-          Interactions.exitOneStep(navigator, panel);
+          Interactions.exitOneStep(navigator, panel, descriptionPanel);
           return;
         }
-        Interactions.activate(group, clientPoint, navigator, panel);
+        Interactions.activate(group, clientPoint, navigator, panel, descriptionPanel);
       });
       svg.addEventListener('keydown', (event) => {
         const isEscape = event.key === 'Escape';
         if (isEscape) {
-          Interactions.exitOneStep(navigator, panel);
+          Interactions.exitOneStep(navigator, panel, descriptionPanel);
           return;
         }
         const isActivationKey = event.key === 'Enter' || event.key === ' ';
@@ -1108,7 +1220,7 @@
         if (isGroupActivated) {
           event.preventDefault();
           const groupCenter = clientCenterOf(event.target);
-          Interactions.activate(event.target, groupCenter, navigator, panel);
+          Interactions.activate(event.target, groupCenter, navigator, panel, descriptionPanel);
         }
       });
       svg.addEventListener('pointermove', (event) => {
@@ -1157,17 +1269,26 @@
       });
     },
 
-    activate(group, clientPoint, navigator, panel) {
+    activate(group, clientPoint, navigator, panel, descriptionPanel) {
       const hasViewMoved = navigator.followClickOn(group);
       if (hasViewMoved) {
         panel.hide();
         return;
       }
       panel.show(group, clientPoint);
+      const isLeaf = Contract.isLeaf(group);
+      if (isLeaf) {
+        const leafPath = group.getAttribute(ELEMENT);
+        descriptionPanel.describeLeaf(leafPath);
+      }
     },
 
-    exitOneStep(navigator, panel) {
+    exitOneStep(navigator, panel, descriptionPanel) {
       panel.hide();
+      const hasLeftLeaf = descriptionPanel.stepBackFromLeaf();
+      if (hasLeftLeaf) {
+        return;
+      }
       navigator.exitOneStep();
     },
 
@@ -1178,28 +1299,21 @@
 
   };
 
-  /** Makes a runtime-built node act as a button: focusable, labelled, and activated by a click, Enter or Space. */
-  function bindButton(node, label, action) {
-    node.setAttribute('role', 'button');
-    node.setAttribute('tabindex', '0');
-    node.setAttribute('aria-label', label);
-    node.addEventListener('click', () => action());
-    node.addEventListener('keydown', (event) => {
-      const isActivationKey = event.key === 'Enter' || event.key === ' ';
-      if (isActivationKey) {
-        event.preventDefault();
-        action();
-      }
-    });
-  }
-
   function clientCenterOf(node) {
     const bounds = node.getBoundingClientRect();
     return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
   }
 
   function createSvgElement(name, attributes) {
-    const element = document.createElementNS(SVG_NAMESPACE, name);
+    return createElementIn(SVG_NAMESPACE, name, attributes);
+  }
+
+  function createXhtmlElement(name, attributes) {
+    return createElementIn(XHTML_NAMESPACE, name, attributes);
+  }
+
+  function createElementIn(namespace, name, attributes) {
+    const element = document.createElementNS(namespace, name);
     Object.entries(attributes).forEach(([attribute, value]) => element.setAttribute(attribute, String(value)));
     return element;
   }

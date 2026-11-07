@@ -12,6 +12,7 @@ pub(crate) type Span = SimpleSpan<usize>;
 pub(crate) struct Document {
     pub(crate) title: Option<String>,
     pub(crate) subtitle: Option<String>,
+    pub(crate) description: Option<String>,
     pub(crate) styles: Vec<StyleDefinition>,
     pub(crate) components: Vec<ComponentItem>,
     pub(crate) edges: Vec<EdgeItem>,
@@ -25,22 +26,24 @@ pub(crate) struct StyleDefinition {
     pub(crate) entries: Vec<Entry>,
 }
 
-/// Declare a component by its item line `ID[: DISPLAY NAME] [(PROPERTIES)]`, with the items nested under it.
+/// Declare a component by its item line `ID[: DISPLAY NAME] [(PROPERTIES)]`, with its description and the items nested under it.
 #[derive(Debug)]
 pub(crate) struct ComponentItem {
     pub(crate) id: Spanned<String>,
     pub(crate) display_name: Option<String>,
     pub(crate) entries: Vec<Entry>,
+    pub(crate) description: Option<String>,
     pub(crate) children: Vec<ComponentItem>,
     pub(crate) span: Span,
 }
 
-/// Declare one edge per hop of the item line `REF -> REF ... [: LABEL] [(PROPERTIES)]`.
+/// Declare one edge per hop of the item line `REF -> REF ... [: LABEL] [(PROPERTIES)]`, with the description under it.
 #[derive(Debug)]
 pub(crate) struct EdgeItem {
     pub(crate) references: Vec<Reference>,
     pub(crate) label: Option<Spanned<String>>,
     pub(crate) properties: Option<Spanned<Vec<Entry>>>,
+    pub(crate) description: Option<Spanned<String>>,
 }
 
 /// Reference a component by a dotted suffix of its path.

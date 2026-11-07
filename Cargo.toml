@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/*", "vendor/svugy-dagre"]
+members = ["crates/*"]
 resolver = "3"
 
 [workspace.package]
@@ -17,7 +17,7 @@ unnecessary_lazy_evaluations = "allow"
 svugy-model = { path = "crates/svugy-model", version = "0.1.0" }
 svugy-parse = { path = "crates/svugy-parse", version = "0.1.0" }
 svugy = { path = "crates/svugy", version = "0.1.0" }
-svugy-dagre = { path = "vendor/svugy-dagre", version = "0.1.0" }
+svugy-dagre = { path = "crates/svugy-dagre", version = "0.1.0" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

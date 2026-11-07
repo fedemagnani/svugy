@@ -50,6 +50,7 @@ impl MarkdownParse {
         let Document {
             title,
             subtitle,
+            description,
             styles,
             components,
             edges,
@@ -64,6 +65,9 @@ impl MarkdownParse {
         }
         if let Some(subtitle) = subtitle {
             builder = builder.with_subtitle(subtitle);
+        }
+        if let Some(description) = description {
+            builder = builder.with_description(description);
         }
         let mut lowering = Lowering::new(style_book, suffix_index, builder, diagnostics);
         lowering.lower_components(None, components);
@@ -100,12 +104,17 @@ impl Lowering {
                 id,
                 display_name,
                 entries,
+                description,
                 children,
                 span,
             } = component;
             let label = display_name.unwrap_or_else(|| id.inner.clone());
             let source_range = ByteRange::new(span.start, span.end);
             let element = Element::new(label).with_span(source_range);
+            let element = match description {
+                Some(description) => element.with_description(description),
+                None => element,
+            };
             let properties = self.styles.expand(&entries, &mut self.diagnostics);
             let element = self.build_component(element, properties);
             let element_ref = self.add_component(parent, &id, element);
@@ -265,12 +274,13 @@ impl Lowering {
         Some(path_text)
     }
 
-    /// Add one edge per hop of the item whose two references resolve, after checking all of them; a chain drops its label and properties after recording them.
+    /// Add one edge per hop of the item whose two references resolve, after checking all of them; a chain drops its label, properties and description after recording them.
     fn lower_edge(&mut self, edge: EdgeItem) {
         let EdgeItem {
             references,
             label,
             properties,
+            description,
         } = edge;
         let endpoints: Vec<Option<(ElementPath, Span)>> = references
             .iter()
@@ -296,6 +306,14 @@ impl Lowering {
             }
             properties => properties,
         };
+        let description = match description {
+            Some(description) if is_chain => {
+                let message = "a chain takes no description; write its hops on separate lines";
+                self.diagnostics.record_error(message, description.span);
+                None
+            }
+            description => description,
+        };
         let entries = properties
             .map(|properties| properties.inner)
             .unwrap_or_default();
@@ -303,6 +321,10 @@ impl Lowering {
         let edge = match label {
             Some(label) => Edge::new().with_label(label.inner),
             None => Edge::new(),
+        };
+        let edge = match description {
+            Some(description) => edge.with_description(description.inner),
+            None => edge,
         };
         let draft = self.build_edge(edge, expanded_properties);
         for hop in endpoints.windows(2) {

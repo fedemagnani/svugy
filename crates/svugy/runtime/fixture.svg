@@ -511,6 +511,7 @@
   const MINIATURE_STRIPPED_ATTRIBUTES = new Set(['id', 'tabindex', 'role', 'aria-label', 'style']);
 
   const ROOT_LEVEL_PATH = '';
+  const LEVEL_LINK_PREFIX = '#svugy=';
   const TWEEN_DURATION_MS = 450;
   const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
   const FADE_IN_KEYFRAMES = [{ opacity: 0 }, { opacity: 1 }];
@@ -563,6 +564,21 @@
     return isDocumentRootDiagram ? documentRoot : null;
   }
 
+  /** Reads the level path a `#svugy=PATH` fragment of the document's URL links to, PATH URL-encoded; null without one. */
+  function linkedLevelPath() {
+    const fragment = window.location.hash;
+    const isOtherFragment = !fragment.startsWith(LEVEL_LINK_PREFIX);
+    if (isOtherFragment) {
+      return null;
+    }
+    const encodedPath = fragment.slice(LEVEL_LINK_PREFIX.length);
+    try {
+      return decodeURIComponent(encodedPath);
+    } catch {
+      return null;
+    }
+  }
+
   /** Wires navigation, detail panels, dimming and the elevator onto one diagram. */
   function bindRuntime(svg) {
     const layers = Layers.of(svg);
@@ -583,6 +599,10 @@
       elevator.showFor(focusedLevel);
     });
     Interactions.bind(svg, navigator, panel, dimmer);
+    const linkedPath = linkedLevelPath();
+    if (linkedPath !== null) {
+      navigator.jumpTo(linkedPath);
+    }
   }
 
   /** Lists the layers a document draws, in increasing depth; a document without layer groups is its own single layer. */
@@ -779,7 +799,7 @@
     },
   };
 
-  /** Tweens the root viewBox toward a target view fitted to the canvas, so no letterbox ever falls outside it; jumps under reduced motion. */
+  /** Tweens or jumps the root viewBox to a target view fitted to the canvas, so no letterbox ever falls outside it; tweens jump under reduced motion. */
   class ViewBoxAnimator {
     constructor(svg) {
       this.svg = svg;
@@ -788,13 +808,13 @@
     }
 
     tweenTo(requestedView, startView = this.currentView()) {
-      cancelAnimationFrame(this.frameRequest);
-      const targetView = View.fittedInside(requestedView, this.canvasView);
       const isMotionReduced = window.matchMedia(REDUCED_MOTION_QUERY).matches;
       if (isMotionReduced) {
-        this.show(targetView);
+        this.jumpTo(requestedView);
         return;
       }
+      cancelAnimationFrame(this.frameRequest);
+      const targetView = View.fittedInside(requestedView, this.canvasView);
       this.show(startView);
       let startTime = null;
       const step = (now) => {
@@ -809,6 +829,12 @@
         }
       };
       this.frameRequest = requestAnimationFrame(step);
+    }
+
+    jumpTo(requestedView) {
+      cancelAnimationFrame(this.frameRequest);
+      const targetView = View.fittedInside(requestedView, this.canvasView);
+      this.show(targetView);
     }
 
     currentView() {
@@ -879,6 +905,24 @@
     /** Calls `listener(focusedLevel)` after every change of the shown layer or the focused level. */
     addNavigationListener(listener) {
       this.navigationListeners.push(listener);
+    }
+
+    /** Shows the first layer where `path` is a level, focused on it, without animation; a path that is no level changes nothing. */
+    jumpTo(path) {
+      const openingLayer = this.layers.find((layer) => Contract.levelAt(layer, path) !== null);
+      if (openingLayer === undefined) {
+        return;
+      }
+      const linkedLevel = Contract.levelAt(openingLayer, path);
+      this.shownLayer.removeAttribute(SHOWN);
+      openingLayer.setAttribute(SHOWN, '');
+      this.shownLayer = openingLayer;
+      this.moveEnteredMarkTo(linkedLevel);
+      this.announceNavigation();
+      const targetView = this.viewOf(linkedLevel);
+      if (targetView !== null) {
+        this.animator.jumpTo(targetView);
+      }
     }
 
     /** Follows a click on `group` and tells whether the view moved; when it did not, the group's details are due. */

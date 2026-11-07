@@ -13,7 +13,7 @@ use super::ast::{
 use super::diagnostic::Diagnostics;
 use super::frontmatter::{Frontmatter, StyleSource};
 use super::lex::Token;
-use super::skeleton::{ComponentNode, LegendSkeleton, Skeleton, SourceText};
+use super::skeleton::{ComponentNode, DescribedLine, LegendSkeleton, Skeleton, SourceText};
 use crate::prose::ProseList;
 
 /// Type the parser extra every line parser shares: chumsky's rich errors over line tokens.
@@ -80,6 +80,7 @@ impl Document {
     pub(crate) fn parse(skeleton: Skeleton<'_>, diagnostics: &mut Diagnostics) -> Self {
         let Skeleton {
             frontmatter,
+            description,
             components,
             edges,
             legend,
@@ -97,12 +98,13 @@ impl Document {
         let components = ComponentItem::parse_nodes(components, diagnostics);
         let edges = edges
             .into_iter()
-            .filter_map(|line| EdgeItem::parse_line(line, diagnostics))
+            .filter_map(|edge| EdgeItem::parse_described_line(edge, diagnostics))
             .collect();
         let legend = legend.map(|legend| LegendSection::parse(legend, diagnostics));
         Self {
             title,
             subtitle,
+            description,
             styles,
             components,
             edges,
@@ -158,12 +160,12 @@ impl StyleDefinition {
 }
 
 impl ComponentItem {
-    /// Parse each component node into its item, children first, recording each item a comment split off its parent's list; a broken item stays by its ID when that parses.
+    /// Parse each component node into its item with its description, children first, recording each item a comment split off its parent's list; a broken item stays by its ID when that parses.
     fn parse_nodes(nodes: Vec<ComponentNode<'_>>, diagnostics: &mut Diagnostics) -> Vec<Self> {
         let mut items = Vec::new();
         for node in nodes {
             let ComponentNode {
-                line,
+                item: DescribedLine { line, description },
                 is_indented_but_not_nested,
                 children,
             } = node;
@@ -180,8 +182,13 @@ impl ComponentItem {
                 );
                 diagnostics.record_error(message, item.span);
             }
-            let item = item.with_children(children);
-            items.push(item);
+            let description = description.map(|description| description.inner);
+            let described_item = Self {
+                description,
+                children,
+                ..item
+            };
+            items.push(described_item);
         }
         items
     }
@@ -206,16 +213,11 @@ impl ComponentItem {
             id,
             display_name: None,
             entries: Vec::new(),
+            description: None,
             children: Vec::new(),
             span: line_span,
         };
         Some(item)
-    }
-
-    /// Nest `children` under the item.
-    fn with_children(mut self, children: Vec<Self>) -> Self {
-        self.children = children;
-        self
     }
 }
 
@@ -240,10 +242,24 @@ impl LineGrammar for ComponentItem {
                     id,
                     display_name,
                     entries: entries.unwrap_or_default(),
+                    description: None,
                     children: Vec::new(),
                     span: line.span(),
                 }
             })
+    }
+}
+
+impl EdgeItem {
+    /// Parse an edge's line, then give it the description under it; `None` when nothing of the line parses.
+    fn parse_described_line(edge: DescribedLine<'_>, diagnostics: &mut Diagnostics) -> Option<Self> {
+        let DescribedLine { line, description } = edge;
+        let edge_item = Self::parse_line(line, diagnostics)?;
+        let described_edge_item = Self {
+            description,
+            ..edge_item
+        };
+        Some(described_edge_item)
     }
 }
 
@@ -275,6 +291,7 @@ impl LineGrammar for EdgeItem {
                     references,
                     label,
                     properties,
+                    description: None,
                 }
             })
     }

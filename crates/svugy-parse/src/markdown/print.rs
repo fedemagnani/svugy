@@ -13,6 +13,7 @@ use svugy_model::style::{ColorKey, NumberKey, NumberValue, StyleValue};
 use super::ast::Value;
 use super::parse::ItemLabel;
 use super::property::LineStyle;
+use super::skeleton::Skeleton;
 
 /// Name the style key an element's `color` lowers to.
 const FILL: &str = ColorKey::FILL.name();
@@ -62,9 +63,10 @@ pub struct Unprintable {
     pub reason: UnprintableReason,
 }
 
-/// Name the element, edge or legend an unprintable part belongs to.
+/// Name the diagram, element, edge or legend an unprintable part belongs to.
 #[derive(Clone, Debug, PartialEq)]
 pub enum UnprintableOwner {
+    Diagram,
     Element(ElementPath),
     Edge(EdgeId),
     Legend,
@@ -73,6 +75,7 @@ pub enum UnprintableOwner {
 impl fmt::Display for UnprintableOwner {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Diagram => formatter.write_str("the diagram"),
             Self::Element(path) => write!(formatter, "element `{path}`"),
             Self::Edge(id) => write!(formatter, "edge `{id}`"),
             Self::Legend => formatter.write_str("the legend"),
@@ -95,6 +98,10 @@ pub enum UnprintableReason {
     PaddedText { field: TextField, text: String },
     #[error("its {field} {text:?} holds `<!--`, which the language reads as a comment and drops")]
     CommentOpening { field: TextField, text: String },
+    #[error(
+        "its description does not read back verbatim it must hold only paragraphs, numbered lists, quotes and closed code blocks, and start and end with one of them"
+    )]
+    UnreadableDescription,
     #[error("its title ends with `#`, which Markdown reads as the heading's closing `#`s")]
     TitleEndingWithHash,
     #[error("it has an empty entry, which no list item can hold")]
@@ -178,6 +185,7 @@ impl<'a> MarkdownPrinter<'a> {
     pub fn print(model: &'a Model) -> Result<String, UnprintableModel> {
         let mut printer = Self::new(model);
         printer.write_frontmatter();
+        printer.write_diagram_description();
         printer.write_components();
         printer.write_edges();
         printer.write_legend();
@@ -207,11 +215,29 @@ impl<'a> MarkdownPrinter<'a> {
         self.markdown.push_str("---\n\n");
     }
 
-    /// Write one component item per element, in path order, nested two spaces per level.
+    /// Write the diagram's description before `## Components`, or report one that would not read back verbatim.
+    fn write_diagram_description(&mut self) {
+        let Some(description) = self.model.description() else {
+            return;
+        };
+        let description_spelling = Self::spell_description(description, "");
+        let mut reasons = Vec::new();
+        let spelled_description = Self::spelling_or_push_reason(description_spelling, &mut reasons);
+        self.markdown.push_str(&spelled_description);
+        self.markdown.push('\n');
+        self.report(reasons, || UnprintableOwner::Diagram);
+    }
+
+    /// Write one component item per element, in path order, nested two spaces per level, a blank line after each description.
     fn write_components(&mut self) {
         self.markdown.push_str("## Components\n");
         let model = self.model;
+        let mut is_after_description = false;
         for (path, element) in model.elements() {
+            if is_after_description {
+                self.markdown.push('\n');
+            }
+            is_after_description = element.description().is_some();
             let mut reasons = Vec::new();
             let item = self.component_item(path, element, &mut reasons);
             self.markdown.push_str(&item);
@@ -222,7 +248,7 @@ impl<'a> MarkdownPrinter<'a> {
         }
     }
 
-    /// Spell `- ID[: DISPLAY NAME] [(PROPERTIES)]` at the element's depth, the display name only when the label differs from the ID, pushing onto `reasons` what the language cannot say.
+    /// Spell `- ID[: DISPLAY NAME] [(PROPERTIES)]` at the element's depth, the display name only when the label differs from the ID, then its description, pushing onto `reasons` what the language cannot say.
     fn component_item(
         &self,
         path: &ElementPath,
@@ -250,7 +276,14 @@ impl<'a> MarkdownPrinter<'a> {
         };
         let properties = self.component_properties(element, reasons);
         let properties_list = Self::spell_properties_list(&properties);
-        format!("{indent}- {id}{display_name}{properties_list}\n")
+        let item_line = format!("{indent}- {id}{display_name}{properties_list}\n");
+        let Some(description) = element.description() else {
+            return item_line;
+        };
+        let description_indent = format!("{indent}  ");
+        let description_spelling = Self::spell_description(description, &description_indent);
+        let spelled_description = Self::spelling_or_push_reason(description_spelling, reasons);
+        format!("{item_line}\n{spelled_description}")
     }
 
     /// Spell the element's properties in the language's table order, from `caption` to `meta.NAME`, pushing onto `reasons` what the language cannot say.
@@ -356,7 +389,7 @@ impl<'a> MarkdownPrinter<'a> {
         }
     }
 
-    /// Write one edge item per edge, in edge order, under `## Edges` when the model has any.
+    /// Write one edge item per edge, in edge order, under `## Edges` when the model has any, a blank line after each description.
     fn write_edges(&mut self) {
         let model = self.model;
         let edges = model.edges();
@@ -367,7 +400,12 @@ impl<'a> MarkdownPrinter<'a> {
         self.markdown.push_str("\n## Edges\n");
         let mut previous_pair = None;
         let mut reading_ordinal = 0;
+        let mut is_after_description = false;
         for (id, edge) in edges {
+            if is_after_description {
+                self.markdown.push('\n');
+            }
+            is_after_description = edge.description().is_some();
             let from = id.from();
             let to = id.to();
             let pair = (from, to);
@@ -388,7 +426,7 @@ impl<'a> MarkdownPrinter<'a> {
         }
     }
 
-    /// Spell `- FROM -> TO[: LABEL] [(PROPERTIES)]`, each endpoint by its shortest unique reference, pushing onto `reasons` what the language cannot say, an edge it would number other than `reading_ordinal` included.
+    /// Spell `- FROM -> TO[: LABEL] [(PROPERTIES)]`, each endpoint by its shortest unique reference, then its description, pushing onto `reasons` what the language cannot say, an edge it would number other than `reading_ordinal` included.
     fn edge_item(
         &self,
         id: &EdgeId,
@@ -429,7 +467,13 @@ impl<'a> MarkdownPrinter<'a> {
         };
         let properties = Self::edge_properties(edge, reasons);
         let properties_list = Self::spell_properties_list(&properties);
-        format!("- {from_reference} -> {to_reference}{label}{properties_list}\n")
+        let item_line = format!("- {from_reference} -> {to_reference}{label}{properties_list}\n");
+        let Some(description) = edge.description() else {
+            return item_line;
+        };
+        let description_spelling = Self::spell_description(description, "  ");
+        let spelled_description = Self::spelling_or_push_reason(description_spelling, reasons);
+        format!("{item_line}\n{spelled_description}")
     }
 
     /// Spell the edge's properties in the language's table order, `line`, `color`, `traveler`, pushing onto `reasons` what the language cannot say.
@@ -715,6 +759,29 @@ impl<'a> MarkdownPrinter<'a> {
         let escaped = backslash_escaped.replace('"', "\\\"");
         let quoted = format!("\"{escaped}\"");
         Ok(quoted)
+    }
+
+    /// Spell each line of `description` after `indent`, or report a description that would not read back verbatim under an item.
+    fn spell_description(description: &str, indent: &str) -> Result<String, UnprintableReason> {
+        let item_spelling = Self::indented_lines(description, "  ");
+        let reads_back = Skeleton::reads_back_as_description(description, &item_spelling);
+        if !reads_back {
+            return Err(UnprintableReason::UnreadableDescription);
+        }
+        let spelled_description = Self::indented_lines(description, indent);
+        Ok(spelled_description)
+    }
+
+    /// Spell each line of `text` after `indent`, an empty line left empty, each ending with a line break.
+    fn indented_lines(text: &str, indent: &str) -> String {
+        let lines = text.split('\n').map(|line| {
+            let is_empty_line = line.is_empty();
+            if is_empty_line {
+                return "\n".to_owned();
+            }
+            format!("{indent}{line}\n")
+        });
+        lines.collect()
     }
 
     /// Spell a properties list as ` (a, b)`, or as nothing when there is no property.

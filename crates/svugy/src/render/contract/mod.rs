@@ -2,7 +2,7 @@
 
 mod annotation;
 
-pub(crate) use annotation::ContractAnnotator;
+pub(crate) use annotation::{ContractAnnotator, DiagramDetails};
 
 /// Names every attribute the runtime reads from a rendered document, spelled once for both sides; docs/src/architecture/runtime-contract.md gives their meaning.
 pub(crate) struct RuntimeContract;
@@ -41,7 +41,7 @@ impl RuntimeContract {
     pub(crate) const GOTO: &'static str = "data-svugy-goto";
     /// Mark a level's overlay, shown only while that level is entered.
     pub(crate) const OVERLAY: &'static str = "data-svugy-overlay";
-    /// Mark a group's details JSON.
+    /// Mark a group's details JSON, or the root's diagram details JSON.
     pub(crate) const DETAILS: &'static str = "data-svugy-details";
     /// Names the runtime-owned marker of the entered level, which rendering never emits.
     #[cfg(test)]
@@ -81,7 +81,7 @@ mod tests {
 
     use super::RuntimeContract;
     use crate::render::profile::Interactive;
-    use crate::{InteractiveSvg, StaticSvg};
+    use crate::{InteractiveSvg, RenderSvg, StaticSvg};
 
     const CDATA_END: &str = "]]>";
 
@@ -202,6 +202,30 @@ mod tests {
         assert_eq!(traveler_uses, [dot_use, envelope_use]);
         assert_eq!(static_symbol_ids, Vec::<String>::new());
         assert_eq!(static_traveler_uses, Vec::<(String, String)>::new());
+    }
+
+    #[test]
+    fn descriptions_reach_the_interactive_details_and_never_the_static_document() {
+        let mut builder = ModelBuilder::new().with_description("diagram **story**");
+        let shop_element = Element::new("shop").with_description("shop story");
+        let shop = builder.add_top_level("shop", shop_element);
+        let ledger = builder.add_top_level("ledger", Element::new("ledger"));
+        let posting = Edge::new().with_description("posting story");
+        builder.add_edge(&shop, &ledger, posting);
+        let model = builder.build().model.expect("valid model");
+
+        let interactive_markup = InteractiveSvg::render(&model);
+        let static_markup = StaticSvg::render(&model);
+
+        let diagram_carrier = "<desc data-svugy-details=\"\">{\"kind\":\"diagram\",\"description\":\"diagram **story**\"}</desc>";
+        assert!(
+            interactive_markup.contains(diagram_carrier),
+            "{interactive_markup}"
+        );
+        for story in ["diagram **story**", "shop story", "posting story"] {
+            assert!(interactive_markup.contains(story), "interactive misses {story}");
+            assert!(!static_markup.contains(story), "static carries {story}");
+        }
     }
 
     #[test]

@@ -1,99 +1,58 @@
 use std::collections::BTreeMap;
 
-use dagre_dgl_rs::{EdgeLabel, Graph, GraphLabel, NodeLabel, layout};
 use kurbo::{Point, Rect};
+use svugy_dagre::LeftToRightLayout;
 use svugy_model::path::ElementPath;
 
 use super::{LevelLayout, SiblingGraph};
 
-/// Ranks advance along plan x, so a request path reads from the back left toward the front right.
-const RANK_DIRECTION: &str = "LR";
 /// Gap between neighbours within one rank, twice the example's gap between a container's packed children.
 const NODE_GAP: f64 = 48.0;
 /// Gap between consecutive ranks, wider than the node gap so the arcs between ranks have room.
 const RANK_GAP: f64 = 72.0;
+/// Ranks advance along plan x, so a request path reads from the back left toward the front right.
+const LEFT_TO_RIGHT_LAYOUT: LeftToRightLayout = LeftToRightLayout {
+    node_gap: NODE_GAP,
+    rank_gap: RANK_GAP,
+};
 
 /// Places footprints in dagre ranks along plan x, so edges flow in one direction.
 pub(super) struct Layered;
 
 impl LevelLayout for Layered {
     fn place_footprints(&self, siblings: &SiblingGraph) -> BTreeMap<ElementPath, Rect> {
-        let is_graph_empty_which_dagre_cannot_order = siblings.sizes().is_empty();
-        if is_graph_empty_which_dagre_cannot_order {
-            return BTreeMap::new();
-        }
-        let node_names = Self::dagre_node_names_of(siblings);
-        let mut graph = Self::dagre_graph_of(siblings, &node_names);
-        layout(&mut graph);
-        siblings
-            .sizes()
+        let sizes = siblings.sizes();
+        let node_index_by_path: BTreeMap<&ElementPath, usize> = sizes
+            .keys()
+            .enumerate()
+            .map(|(node_index, path)| (path, node_index))
+            .collect();
+        let node_sizes: Vec<svugy_dagre::Size> = sizes
+            .values()
+            .map(|size| svugy_dagre::Size {
+                width: size.width,
+                height: size.height,
+            })
+            .collect();
+        let edges: Vec<(usize, usize)> = siblings
+            .joined_pairs()
             .iter()
-            .map(|(path, &size)| {
-                let node_name = &node_names[path];
-                let node = graph.node(node_name);
-                let center_x = node.x.expect("dagre positions every node");
-                let center_y = node.y.expect("dagre positions every node");
-                let center = Point::new(center_x, center_y);
+            .map(|(from, to)| {
+                let from_index = node_index_by_path[from];
+                let to_index = node_index_by_path[to];
+                (from_index, to_index)
+            })
+            .collect();
+        let centres = LEFT_TO_RIGHT_LAYOUT.node_centres(&node_sizes, &edges);
+        sizes
+            .iter()
+            .zip(centres)
+            .map(|((path, &size), centre)| {
+                let center = Point::new(centre.x, centre.y);
                 let footprint = Rect::from_center_size(center, size);
                 let path_key = path.clone();
                 (path_key, footprint)
             })
             .collect()
-    }
-}
-
-impl Layered {
-    /// Name each footprint's dagre node by its index in path order, so no element id can collide with dagre's own node names.
-    fn dagre_node_names_of(siblings: &SiblingGraph) -> BTreeMap<&ElementPath, String> {
-        siblings
-            .sizes()
-            .keys()
-            .enumerate()
-            .map(|(path_index, path)| {
-                let node_name = path_index.to_string();
-                (path, node_name)
-            })
-            .collect()
-    }
-
-    /// Build a dagre graph with one named node per footprint and one edge per pair of distinct joined siblings.
-    fn dagre_graph_of(
-        siblings: &SiblingGraph,
-        node_names: &BTreeMap<&ElementPath, String>,
-    ) -> Graph {
-        let is_directed = true;
-        let is_multigraph = false;
-        let is_compound = false;
-        let mut graph = Graph::with_options(is_directed, is_multigraph, is_compound);
-        let rank_direction = RANK_DIRECTION.to_owned();
-        let base_graph_label = GraphLabel::default();
-        let graph_label = GraphLabel {
-            rankdir: Some(rank_direction),
-            nodesep: Some(NODE_GAP),
-            ranksep: Some(RANK_GAP),
-            ..base_graph_label
-        };
-        graph.set_graph(graph_label);
-        for (path, size) in siblings.sizes() {
-            let base_node_label = NodeLabel::default();
-            let node = NodeLabel {
-                width: size.width,
-                height: size.height,
-                ..base_node_label
-            };
-            let node_name = &node_names[path];
-            graph.set_node(node_name, node);
-        }
-        for (from, to) in siblings.joined_pairs() {
-            let is_self_loop = from == to;
-            if is_self_loop {
-                continue;
-            }
-            let from_name = &node_names[from];
-            let to_name = &node_names[to];
-            let edge_label = EdgeLabel::default();
-            graph.set_edge(from_name, to_name, edge_label, None);
-        }
-        graph
     }
 }

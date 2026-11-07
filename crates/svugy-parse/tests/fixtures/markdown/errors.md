@@ -9,8 +9,8 @@ styles:
 <!-- Every error below is reported in one pass; each `expect` names the problem on the line after it. -->
 <!-- expect: the title goes in the frontmatter `title` -->
 # Every error at once
-<!-- expect: text before the first section goes in a comment, `<!-- … -->`, or in the frontmatter `subtitle` -->
-Prose before the first section.
+<!-- expect: a bullet list belongs under a section: `## Components`, `## Edges` or `## Legend`; number a list that describes the diagram -->
+- a list before the first section
 
 ## Components
 - orders <!-- a trailing comment is ignored -->
@@ -43,6 +43,12 @@ Prose before the first section.
 - mailer: Mail relay (SMTP only)
 <!-- expect: a label is either quoted whole or holds no `"` -->
 - notifier: "Notifier" service
+- gateway
+  <!-- expect: a description holds paragraphs, numbered lists, quotes and code blocks only -->
+  ### Routes
+  - edge
+  <!-- expect: a description goes between its item's line and the items nested under it -->
+  Prose after the nested items.
 
 <!-- expect: use `## Edges` -->
 ### Edges
@@ -60,6 +66,14 @@ Prose before the first section.
 - audit -> search (shape=cylinder)
 <!-- expect: an edge cannot join `audit` to itself -->
 - audit -> audit
+- vault -> worker -> audit
+  <!-- expect: a chain takes no description; write its hops on separate lines -->
+  Nightly.
+- audit -> reports
+  <!-- expect: only `## Components` items nest -->
+  - nested
 
 ## Legend
 - (optional) parts are grey
+  <!-- expect: a legend item takes no description: the legend holds one line of text per item -->
+  Grey parts ship later.

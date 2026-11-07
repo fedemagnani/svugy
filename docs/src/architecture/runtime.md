@@ -8,7 +8,7 @@ The renderer and the runtime share only the attributes of the [runtime contract]
 
 **Navigation** keeps one shown layer and one focused level.
 
-- Start: layer 0, containers closed, root focused.
+- Start: layer 0, containers closed, root focused; a `#svugy=PATH` fragment in the URL starts focused on level PATH instead.
 - Click a closed container: show the next layer, opening every container at that depth.
 - Click an open container's slab: zoom into it.
 - Click a stub: jump to the level of the edge's other end.

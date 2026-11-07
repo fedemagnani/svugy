@@ -71,6 +71,7 @@ pub enum Field {
     Label(Scalar),
     Direction(Scalar),
     Link(Scalar),
+    Tooltip(Scalar),
     Style(Vec<StyleProperty>),
     Svugy(Vec<SvugyProperty>),
 }
@@ -167,6 +168,7 @@ impl Field {
             Self::Label(_label) => Keyword::Label,
             Self::Direction(_direction) => Keyword::Direction,
             Self::Link(_link) => Keyword::Link,
+            Self::Tooltip(_tooltip) => Keyword::Tooltip,
             Self::Style(_properties) => Keyword::Style,
             Self::Svugy(_properties) => Keyword::Vars,
         }

@@ -196,12 +196,13 @@ impl Lowering {
         edge
     }
 
-    /// Apply one field of an edge's map, warning on it unless it is a label or a style, all the model's edges hold; the subset filter rejects a `vars` carrier on an edge.
+    /// Apply one field of an edge's map, warning on it unless it is a label, a tooltip or a style, all the model's edges hold; the subset filter rejects a `vars` carrier on an edge.
     fn apply_edge_field_or_warn(&mut self, edge: Edge, field: Field) -> Edge {
         let field_keyword = field.keyword();
         let keyword_name: &str = field_keyword.into();
         match field {
             Field::Label(label) => edge.with_label(label.text),
+            Field::Tooltip(tooltip) => edge.with_description(tooltip.text),
             Field::Style(properties) => properties.into_iter().fold(edge, |edge, property| {
                 edge.with_style(property.name.name, property.value.text)
             }),
@@ -257,6 +258,10 @@ impl Lowering {
             Field::Label(label) => {
                 self.elements
                     .edit_element(&target_key, |element| element.relabeled(label.text));
+            }
+            Field::Tooltip(tooltip) => {
+                self.elements
+                    .edit_element(&target_key, |element| element.with_description(tooltip.text));
             }
             Field::Link(link) => {
                 let link_range = ByteRange::from(link.span);
