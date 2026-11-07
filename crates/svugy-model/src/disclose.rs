@@ -89,7 +89,15 @@ impl DisclosedModel {
         for ((shown_from, shown_to), lifted_edges) in lifted_edges_by_shown_pair {
             let merged_edge = match lifted_edges.as_slice() {
                 [(_only_id, only_edge)] => (*only_edge).clone(),
-                _several_edges => Edge::new(),
+                several_edges => {
+                    let is_every_merged_edge_badge =
+                        several_edges.iter().all(|(_id, edge)| edge.is_badge());
+                    let unlabelled_edge = Edge::new();
+                    Edge {
+                        badge: is_every_merged_edge_badge,
+                        ..unlabelled_edge
+                    }
+                }
             };
             let merged_id = disclosed_model.insert_edge_with_next_free_ordinal(
                 shown_from,

@@ -57,10 +57,7 @@ pub enum Problem {
     IgnoredContainerHeight(IgnoredContainerHeight),
     #[error(transparent)]
     #[diagnostic(transparent)]
-    IgnoredContainerBadge(IgnoredContainerBadge),
-    #[error(transparent)]
-    #[diagnostic(transparent)]
-    ArcIntoBadgeTarget(ArcIntoBadgeTarget),
+    BadgeEdgeOnContainer(BadgeEdgeOnContainer),
     #[error(transparent)]
     #[diagnostic(transparent)]
     MalformedLegendDash(MalformedLegendDash),
@@ -296,25 +293,11 @@ pub struct IgnoredContainerHeight {
     pub span: Option<SourceSpan>,
 }
 
-/// Report a container marked badge, which v1 ignores: a container is entered, so edges into it stay arcs.
+/// Report a badge edge with a container at either end, since a badge is drawn from a leaf's top face as a mini of a leaf.
 #[derive(Debug, Error, Diagnostic)]
-#[error(
-    "element `{element}` is a container, so it is entered rather than badged and edges into it are drawn as arcs"
-)]
-#[diagnostic(code(svugy::ignored_container_badge), severity(Warning))]
-pub struct IgnoredContainerBadge {
-    pub element: ElementPath,
-    #[label("marked here")]
-    pub span: Option<SourceSpan>,
-}
-
-/// Report an edge from a container into a leaf marked badge, drawn as an arc since the container's top holds its interior.
-#[derive(Debug, Error, Diagnostic)]
-#[error(
-    "edge `{edge}` starts at a container, whose top holds its interior, so it is drawn as an arc instead of a badge"
-)]
-#[diagnostic(code(svugy::arc_into_badge_target), severity(Warning))]
-pub struct ArcIntoBadgeTarget {
+#[error("edge `{edge}` is a badge, which needs a leaf at both ends")]
+#[diagnostic(code(svugy::badge_edge_on_container))]
+pub struct BadgeEdgeOnContainer {
     pub edge: EdgeId,
     #[label("declared here")]
     pub span: Option<SourceSpan>,

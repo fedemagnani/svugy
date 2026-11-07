@@ -10,11 +10,11 @@ use crate::link::Link;
 use crate::model::{Element, MAX_MAGNITUDE, Model, PlacementHint, Shape};
 use crate::path::ElementPath;
 use crate::problem::{
-    AncestorDescendantEdge, ArcIntoBadgeTarget, ChildPlacementWithoutChildren,
-    DanglingEdgeEndpoint, DuplicateElement, EmptyGridHint, ErrorSeverity, IgnoredContainerBadge,
-    IgnoredContainerHeight, IgnoredContainerShape, ImpossibleHeight, LegendKey,
-    MalformedLegendDash, MismatchedStyleValue, MissingAncestor, Problem, StyleOwner, Suggestion,
-    UnboundedPosition, UncountablePackedTracks, UndrawnLegendKey, UnknownStyleKey, UnresolvedLink,
+    AncestorDescendantEdge, BadgeEdgeOnContainer, ChildPlacementWithoutChildren,
+    DanglingEdgeEndpoint, DuplicateElement, EmptyGridHint, ErrorSeverity, IgnoredContainerHeight,
+    IgnoredContainerShape, ImpossibleHeight, LegendKey, MalformedLegendDash, MismatchedStyleValue,
+    MissingAncestor, Problem, StyleOwner, Suggestion, UnboundedPosition, UncountablePackedTracks,
+    UndrawnLegendKey, UnknownStyleKey, UnresolvedLink,
 };
 use crate::style::AnyStyleKey;
 
@@ -63,7 +63,7 @@ impl UncheckedModel {
         let placement_problems = model.find_impossible_placement_hints();
         let height_problems = model.find_impossible_heights();
         let ignored_container_bodies = model.find_ignored_container_bodies();
-        let arcs_into_badge_targets = model.find_arcs_from_containers_into_badge_targets();
+        let badge_edges_on_containers = model.find_badge_edges_on_containers();
         let unresolved_links = model.find_unresolved_links();
         let legend_problems = model.find_legend_problems();
         let problems = duplicate_elements
@@ -76,7 +76,7 @@ impl UncheckedModel {
             .chain(placement_problems)
             .chain(height_problems)
             .chain(ignored_container_bodies)
-            .chain(arcs_into_badge_targets)
+            .chain(badge_edges_on_containers)
             .chain(unresolved_links)
             .chain(legend_problems)
             .collect();
@@ -298,7 +298,7 @@ impl Model {
         problems.collect()
     }
 
-    /// Report each container's authored body, a shape other than a slab, a height or a badge mark, which v1 ignores since every container is an enterable slab.
+    /// Report each container's authored body, a shape other than a slab or a height, which v1 ignores since every container is an enterable slab.
     fn find_ignored_container_bodies(&self) -> Vec<Problem> {
         let elements = self.elements().iter();
         let containers = elements.filter(|(path, _element)| self.is_container(path));
@@ -306,27 +306,31 @@ impl Model {
         for (path, element) in containers {
             let ignored_shape = element.check_container_shape_is_slab(path);
             let ignored_height = element.check_container_height_is_unset(path);
-            let ignored_badge = element.check_container_is_unbadged(path);
             problems.extend(ignored_shape);
             problems.extend(ignored_height);
-            problems.extend(ignored_badge);
         }
         problems
     }
 
-    /// Report each edge from a container into a leaf marked badge, drawn as an arc since a container's top holds its interior.
-    fn find_arcs_from_containers_into_badge_targets(&self) -> Vec<Problem> {
+    /// Report each badge edge with a container at either end, since a badge needs a leaf at both.
+    fn find_badge_edges_on_containers(&self) -> Vec<Problem> {
         let edges = self.edges().iter();
-        let arcs_into_badge_targets =
-            edges.filter(|(id, _edge)| self.is_arc_from_container_into_badge_target(id));
-        let problems = arcs_into_badge_targets.map(|(id, edge)| {
+        let badge_edges = edges.filter(|(_id, edge)| edge.is_badge());
+        let badge_edges_on_containers = badge_edges.filter(|(id, _edge)| {
+            let from = id.from();
+            let to = id.to();
+            let is_from_container = self.is_container(from);
+            let is_to_container = self.is_container(to);
+            is_from_container || is_to_container
+        });
+        let problems = badge_edges_on_containers.map(|(id, edge)| {
             let span = edge.source_span();
             let edge_id = id.clone();
-            let arc_into_badge_target = ArcIntoBadgeTarget {
+            let badge_edge_on_container = BadgeEdgeOnContainer {
                 edge: edge_id,
                 span,
             };
-            Problem::ArcIntoBadgeTarget(arc_into_badge_target)
+            Problem::BadgeEdgeOnContainer(badge_edge_on_container)
         });
         problems.collect()
     }
@@ -404,7 +408,7 @@ impl Model {
         Some(problem)
     }
 
-    /// Report a badge key no badge edge points to, suggesting the closest element marked badge.
+    /// Report a badge key no badge edge points to, suggesting the closest target a badge edge points to.
     fn check_badge_key_is_drawn(&self, target: &ElementPath) -> Option<Problem> {
         let mut badge_edges = self.badge_edges();
         let is_drawn = badge_edges.any(|id| id.to() == target);
@@ -412,10 +416,7 @@ impl Model {
             return None;
         }
         let target_text = target.to_string();
-        let elements = self.elements().iter();
-        let badge_targets = elements
-            .filter(|(_path, element)| element.is_badge_target())
-            .map(|(path, _element)| path.clone());
+        let badge_targets = self.badge_edges().map(|id| id.to().clone());
         let suggestion = Suggestion::closest_to(&target_text, badge_targets);
         let undrawn_target = target.clone();
         let key = LegendKey::Badge(undrawn_target);
@@ -558,22 +559,6 @@ impl Element {
             span,
         };
         let problem = Problem::IgnoredContainerHeight(ignored_height);
-        Some(problem)
-    }
-
-    /// Check that this container is not marked badge, which v1 ignores.
-    fn check_container_is_unbadged(&self, path: &ElementPath) -> Option<Problem> {
-        let is_unbadged = !self.is_badge_target();
-        if is_unbadged {
-            return None;
-        }
-        let span = self.source_span();
-        let container_path = path.clone();
-        let ignored_badge = IgnoredContainerBadge {
-            element: container_path,
-            span,
-        };
-        let problem = Problem::IgnoredContainerBadge(ignored_badge);
         Some(problem)
     }
 }

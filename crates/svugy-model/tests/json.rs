@@ -119,7 +119,7 @@ fn saved_json_loads_back_into_the_same_model() {
 }
 
 #[test]
-fn a_legend_and_a_badge_mark_round_trip_through_json_keyed_by_dash_and_by_path() {
+fn a_legend_and_a_badge_edge_round_trip_through_json_keyed_by_dash_and_by_path() {
     let mut builder = ModelBuilder::new();
     let store_path = parse("pipeline.\"inter.v4\"");
     let legend = Legend::new()
@@ -132,9 +132,8 @@ fn a_legend_and_a_badge_mark_round_trip_through_json_keyed_by_dash_and_by_path()
     builder = builder.with_legend(legend);
     let pipeline = builder.add_top_level("pipeline", Element::new("pipeline"));
     let layout = builder.add_child(&pipeline, "layout", Element::new("layout"));
-    let store_element = Element::new("Inter").with_badge_target();
-    let store = builder.add_child(&pipeline, "inter.v4", store_element);
-    let _writes = builder.add_edge(&layout, &store, Edge::new());
+    let store = builder.add_child(&pipeline, "inter.v4", Element::new("Inter"));
+    let _writes = builder.add_edge(&layout, &store, Edge::new().with_badge());
     let bus = Edge::new().with_style("stroke-dash", "1.5");
     let _bus = builder.add_edge(&layout, &layout, bus);
     let model = builder.build().model.expect("valid model");
@@ -151,15 +150,25 @@ fn a_legend_and_a_badge_mark_round_trip_through_json_keyed_by_dash_and_by_path()
         saved_legend["badges"]["pipeline.\"inter.v4\""],
         "reads the bundled font"
     );
-    assert_eq!(
-        saved_value["elements"]["pipeline.\"inter.v4\""]["badge"],
-        true
-    );
-    let has_unmarked_badge = saved_value["elements"]["pipeline.layout"]
+    let [writes_record, bus_record] = saved_value["edges"]
+        .as_array()
+        .expect("edges save as a list")
+        .as_slice()
+    else {
+        panic!("the badge into inter.v4 and the bus self-loop are saved: {saved}");
+    };
+    let has_unmarked_badge = bus_record
         .as_object()
-        .expect("an element saves as an object")
+        .expect("an edge saves as an object")
         .contains_key("badge");
+    assert_eq!(writes_record["badge"], true);
     assert!(!has_unmarked_badge);
+    let badge_on_element = r#"{ "elements": { "a": { "label": "A", "badge": true } } }"#;
+    let badge_on_element_message = load_syntax_message(badge_on_element);
+    assert!(
+        badge_on_element_message.contains("unknown field `badge`"),
+        "a badge belongs to the edge, so an element marked badge is malformed: {badge_on_element_message}"
+    );
 }
 
 #[test]

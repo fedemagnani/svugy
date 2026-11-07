@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::iter;
+use std::ops::Bound;
 
 use miette::Diagnostic;
 use svugy_model::builder::{ElementRef, ModelBuilder};
@@ -74,7 +75,7 @@ struct ElementDraft {
     element: Element,
     d2_shape: Option<Shape>,
     svugy_shape: Option<Shape>,
-    is_badge: bool,
+    is_badge_target: bool,
 }
 
 /// Merge the root carrier's legend attributes, the last write winning as in d2; badge keys wait as written until every shape is declared.
@@ -395,8 +396,8 @@ impl Lowering {
                     self.elements
                         .edit_element(element_key, |element| element.with_height(height));
                 }
-                ElementAttribute::BadgeMark(is_badge) => {
-                    self.elements.draft_mut(element_key).is_badge = is_badge;
+                ElementAttribute::BadgeMark(is_badge_target) => {
+                    self.elements.draft_mut(element_key).is_badge_target = is_badge_target;
                 }
                 ElementAttribute::Position(position) => {
                     self.elements
@@ -443,8 +444,12 @@ impl Lowering {
         elements: ElementDrafts,
         edges: Vec<EdgeDraft>,
     ) -> ModelAdmission {
+        let badged_edges: Vec<EdgeDraft> = edges
+            .into_iter()
+            .map(|edge_draft| edge_draft.badged_if_from_leaf_into_badge_target(&elements))
+            .collect();
         let element_refs = elements.add_to(&mut builder);
-        for edge_draft in edges {
+        for edge_draft in badged_edges {
             let EdgeDraft {
                 from_key,
                 to_key,
@@ -558,6 +563,20 @@ impl ElementDrafts {
         element_refs
     }
 
+    /// Tell whether the element drafted under `element_key` was last marked a badge target by `vars.svugy.badge`.
+    fn is_badge_target(&self, element_key: &ElementPath) -> bool {
+        let draft = self.drafts.get(element_key);
+        draft.is_some_and(|draft| draft.is_badge_target)
+    }
+
+    /// Tell whether the element drafted under `element_key` has a drafted child, which is what makes it a container.
+    fn is_container(&self, element_key: &ElementPath) -> bool {
+        let after_element_key = (Bound::Excluded(element_key), Bound::Unbounded);
+        let mut later_drafts = self.drafts.range::<ElementPath, _>(after_element_key);
+        let next_draft = later_drafts.next();
+        next_draft.is_some_and(|(next_key, _draft)| element_key.is_ancestor_of(next_key))
+    }
+
     /// Return the draft of the element `declare_path` declared under `element_key`.
     fn draft_mut(&mut self, element_key: &ElementPath) -> &mut ElementDraft {
         self.drafts
@@ -614,30 +633,44 @@ impl ElementDraft {
             element,
             d2_shape: None,
             svugy_shape: None,
-            is_badge: false,
+            is_badge_target: false,
         }
     }
 
-    /// Split the draft into its key name and its element, marked badge by its last mark, shaped by the carrier first and d2 second, kept apart until now as d2's `rectangle` resets its shape.
+    /// Split the draft into its key name and its element, shaped by the carrier first and d2 second, kept apart until now as d2's `rectangle` resets its shape.
     fn into_named_element(self) -> (String, Element) {
         let Self {
             name,
             element,
             d2_shape,
             svugy_shape,
-            is_badge,
+            is_badge_target: _badge_target_mark,
         } = self;
-        let marked_element = if is_badge {
-            element.with_badge_target()
-        } else {
-            element
-        };
         let shape = svugy_shape.or(d2_shape);
         let Some(shape) = shape else {
-            return (name, marked_element);
+            return (name, element);
         };
-        let shaped_element = marked_element.with_shape(shape);
+        let shaped_element = element.with_shape(shape);
         (name, shaped_element)
+    }
+}
+
+impl EdgeDraft {
+    /// Badge the edge when it runs from a leaf into an element marked a badge target, the edges `vars.svugy.badge` stands for.
+    fn badged_if_from_leaf_into_badge_target(self, elements: &ElementDrafts) -> Self {
+        let is_from_container = elements.is_container(&self.from_key);
+        if is_from_container {
+            return self;
+        }
+        let is_into_unmarked_element = !elements.is_badge_target(&self.to_key);
+        if is_into_unmarked_element {
+            return self;
+        }
+        let badged_edge = self.edge.with_badge();
+        Self {
+            edge: badged_edge,
+            ..self
+        }
     }
 }
 

@@ -54,13 +54,13 @@ impl Model {
     /// Yield the layoutable edges drawn as arcs: every one Layout may see but the badges.
     pub fn arc_edges(&self) -> impl Iterator<Item = (&EdgeId, &Edge)> {
         self.layoutable_edges()
-            .filter(|(id, _edge)| !self.is_badge_edge(id))
+            .filter(|(_id, edge)| !edge.is_badge())
     }
 
     /// Yield the edges drawn as badges, in edge order.
     pub fn badge_edges(&self) -> impl Iterator<Item = &EdgeId> {
-        let edge_ids = self.edges.keys();
-        edge_ids.filter(|id| self.is_badge_edge(id))
+        let badge_edges = self.edges.iter().filter(|(_id, edge)| edge.is_badge());
+        badge_edges.map(|(id, _edge)| id)
     }
 
     /// Yield the edges drawn as badges on `source`, in edge order.
@@ -74,34 +74,14 @@ impl Model {
         let from_source_onwards = self.edges.range(first_edge_from_source..);
         let edges_from_source =
             from_source_onwards.take_while(move |(id, _edge)| id.from() == source);
-        let edge_ids = edges_from_source.map(|(id, _edge)| id);
-        edge_ids.filter(|id| self.is_badge_edge(id))
+        let badge_edges_from_source = edges_from_source.filter(|(_id, edge)| edge.is_badge());
+        badge_edges_from_source.map(|(id, _edge)| id)
     }
 
-    /// Tell whether `id` is drawn as a badge on its source's top face instead of an arc: its target is a leaf marked badge and its source a leaf.
+    /// Tell whether `id` is drawn as a badge on its source's top face instead of an arc, as its edge is marked.
     pub fn is_badge_edge(&self, id: &EdgeId) -> bool {
-        let target = id.to();
-        let source = id.from();
-        let is_badged_target = self.is_badged_leaf(target);
-        let is_source_leaf = !self.is_container(source);
-        is_badged_target && is_source_leaf
-    }
-
-    /// Tell whether `id` runs from a container into a leaf marked badge, so it stays an arc although its target is badged.
-    pub(crate) fn is_arc_from_container_into_badge_target(&self, id: &EdgeId) -> bool {
-        let target = id.to();
-        let source = id.from();
-        let is_badged_target = self.is_badged_leaf(target);
-        let is_source_container = self.is_container(source);
-        is_badged_target && is_source_container
-    }
-
-    /// Tell whether `path` is a leaf marked badge, the only kind of element edges are badged into.
-    fn is_badged_leaf(&self, path: &ElementPath) -> bool {
-        let element = self.element(path);
-        let is_badge_target = element.is_some_and(Element::is_badge_target);
-        let is_leaf = !self.is_container(path);
-        is_badge_target && is_leaf
+        let edge = self.edge(id);
+        edge.is_some_and(Edge::is_badge)
     }
 
     /// Yield the elements one level below `parent`; the root yields the top-level elements.
@@ -178,8 +158,6 @@ pub struct Element {
     shape: Option<Shape>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     height: Option<f64>,
-    #[serde(rename = "badge", default, skip_serializing_if = "std::ops::Not::not")]
-    badge_target: bool,
     #[serde(
         default,
         skip_serializing_if = "BTreeMap::is_empty",
@@ -213,7 +191,6 @@ impl Element {
             caption: None,
             shape: None,
             height: None,
-            badge_target: false,
             style: BTreeMap::new(),
             child_placement: None,
             position: None,
@@ -246,12 +223,6 @@ impl Element {
     /// Stand a leaf's top face `height` plan units above its floor instead of its primitive's default; validation bounds it.
     pub fn with_height(mut self, height: f64) -> Self {
         self.height = Some(height);
-        self
-    }
-
-    /// Mark this leaf a badge target: every edge into it is drawn as a mini of it on its source's top face instead of an arc.
-    pub fn with_badge_target(mut self) -> Self {
-        self.badge_target = true;
         self
     }
 
@@ -320,11 +291,6 @@ impl Element {
     /// Return the authored height, or `None` to stand at the primitive's default height.
     pub fn height(&self) -> Option<f64> {
         self.height
-    }
-
-    /// Tell whether the element is marked a badge target; `Model::is_badge_edge` decides which edges that badges.
-    pub fn is_badge_target(&self) -> bool {
-        self.badge_target
     }
 
     /// Return the element's raw style entries, keyed by style name.
@@ -517,6 +483,7 @@ pub struct Edge {
     pub(crate) label: Option<String>,
     pub(crate) style: BTreeMap<String, String>,
     pub(crate) traveler: Option<Traveler>,
+    pub(crate) badge: bool,
     pub(crate) span: Option<ByteRange>,
 }
 
@@ -547,6 +514,12 @@ impl Edge {
         self
     }
 
+    /// Draw the edge as a mini of its target on its source's top face instead of an arc.
+    pub fn with_badge(mut self) -> Self {
+        self.badge = true;
+        self
+    }
+
     /// Record where in an imported source this edge was declared.
     pub fn with_span(mut self, span: ByteRange) -> Self {
         self.span = Some(span);
@@ -566,6 +539,11 @@ impl Edge {
     /// Return the symbol the edge carries along its path, if one was set instead of the default dot.
     pub fn traveler(&self) -> Option<Traveler> {
         self.traveler
+    }
+
+    /// Tell whether the edge is marked to be drawn as a badge.
+    pub fn is_badge(&self) -> bool {
+        self.badge
     }
 
     /// Return where in an imported source this edge was declared, as a byte range.

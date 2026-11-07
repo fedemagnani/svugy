@@ -161,7 +161,6 @@ impl SvugyExample {
 
         let pipeline_inter_element = Element::new("Inter")
             .with_shape(Shape::Cylinder)
-            .with_badge_target()
             .with_style("fill", STORE_FILL)
             .with_position(Position { x: 780.0, y: 54.0 });
         let pipeline_inter = builder.add_child(&pipeline, "inter", pipeline_inter_element);
@@ -317,13 +316,14 @@ impl SvugyExample {
             &pipeline_render,
             pipeline_geometry_to_pipeline_render,
         );
-        let pipeline_metrics_to_pipeline_inter = Edge::new().with_label("measures");
+        let pipeline_metrics_to_pipeline_inter = Edge::new().with_label("measures").with_badge();
         builder.add_edge(
             &pipeline_metrics,
             &pipeline_inter,
             pipeline_metrics_to_pipeline_inter,
         );
-        let pipeline_render_profile_to_pipeline_inter = Edge::new().with_label("outlines");
+        let pipeline_render_profile_to_pipeline_inter =
+            Edge::new().with_label("outlines").with_badge();
         builder.add_edge(
             &pipeline_render_profile,
             &pipeline_inter,

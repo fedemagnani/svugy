@@ -593,6 +593,7 @@ desk: {
   cache: { vars: { svugy: { badge: TRUE } } }
   quoter
   quoter -> sqlite
+  quoter -> cache
 }
 desk.cache.vars: { svugy.badge: false }
 "#;
@@ -615,10 +616,11 @@ desk.cache.vars: { svugy.badge: false }
         legend.badge_description(&sqlite_path),
         Some("writes to SQLite")
     );
-    let sqlite = model.element(&sqlite_path).expect("sqlite is declared");
-    let cache = model.element(&cache_path).expect("cache is declared");
-    assert!(sqlite.is_badge_target());
-    assert!(!cache.is_badge_target());
+    let quoter_path = ElementPath::from_segments(["desk", "quoter"]);
+    let writes = EdgeId::new(quoter_path.clone(), sqlite_path, 0);
+    let caches = EdgeId::new(quoter_path, cache_path, 0);
+    assert!(model.is_badge_edge(&writes));
+    assert!(!model.is_badge_edge(&caches));
 }
 
 #[test]
@@ -626,6 +628,7 @@ fn malformed_legend_and_badge_values_are_spanned_errors_that_drop_only_themselve
     let source = r#"vars: { svugy: { legend: { entries: one line; dashes: { dotted: bus; 2: kept }; badges: { desk.nowhere: lost; desk.sqlite: kept }; rows: x } } }
 desk.sqlite: { vars: { svugy: { badge: yes; caption: [a; b] } } }
 vars: { svugy: { legend: { entries: ["kept"; [nested]; { map: 1 }] } } }
+desk.quoter -> desk.sqlite
 "#;
 
     let import = import(source);
@@ -682,11 +685,12 @@ vars: { svugy: { legend: { entries: ["kept"; [nested]; { map: 1 }] } } }
     let legend = model.legend().expect("the root carries a legend");
     let sqlite_path = ElementPath::from_segments(["desk", "sqlite"]);
     let sqlite = model.element(&sqlite_path).expect("sqlite is declared");
+    let has_badge_edges = model.badge_edges().next().is_some();
     assert_eq!(legend.entries(), ["kept"]);
     let dash_keys: Vec<String> = legend.dashes().keys().map(DashKey::to_string).collect();
     assert_eq!(dash_keys, ["2"]);
     assert_eq!(legend.badge_description(&sqlite_path), Some("kept"));
-    assert!(!sqlite.is_badge_target());
+    assert!(!has_badge_edges);
     assert_eq!(sqlite.caption(), None);
 }
 

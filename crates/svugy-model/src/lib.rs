@@ -10,5 +10,6 @@ pub mod model;
 pub mod path;
 pub mod problem;
 pub mod style;
+pub mod text;
 mod unique_key_map;
 pub mod validate;

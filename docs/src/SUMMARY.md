@@ -20,5 +20,6 @@
 
 # Reference
 
+- [The svugy language (draft)](reference/language.md)
 - [Runtime contract](reference/runtime-contract.md)
 - [d2 limits](reference/d2-limits.md)

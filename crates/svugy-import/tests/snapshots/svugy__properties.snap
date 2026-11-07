@@ -1,0 +1,110 @@
+---
+source: crates/svugy-import/tests/svugy.rs
+expression: model_json
+---
+{
+  "elements": {
+    "cache": {
+      "label": "cache",
+      "caption": "*not* emphasis, `not` code, snake_case_kept",
+      "shape": "cylinder",
+      "height": 40.0,
+      "style": {
+        "fill": "#d5dcea80"
+      },
+      "span": {
+        "start": 384,
+        "end": 489
+      }
+    },
+    "gateway": {
+      "label": "API gateway",
+      "caption": "edge, rate limits",
+      "style": {
+        "fill": "#9945ff",
+        "stroke": "navy",
+        "stroke-dash": "5"
+      },
+      "position": {
+        "x": 0.0,
+        "y": 40.0
+      },
+      "link": "https://example.com",
+      "link_span": {
+        "start": 253,
+        "end": 272
+      },
+      "metadata": {
+        "owner": "platform team",
+        "tier": "1"
+      },
+      "span": {
+        "start": 139,
+        "end": 314
+      }
+    },
+    "queue": {
+      "label": "queue",
+      "shape": "disc",
+      "height": 12.0,
+      "style": {
+        "fill": "transparent"
+      },
+      "position": {
+        "x": 260.0,
+        "y": 0.0
+      },
+      "span": {
+        "start": 317,
+        "end": 381
+      }
+    },
+    "services": {
+      "label": "services",
+      "caption": "four of them",
+      "child_placement": {
+        "grid": {
+          "columns": 2
+        }
+      },
+      "span": {
+        "start": 492,
+        "end": 549
+      }
+    },
+    "services.a": {
+      "label": "a",
+      "span": {
+        "start": 554,
+        "end": 555
+      }
+    },
+    "services.b": {
+      "label": "b",
+      "link": "queue",
+      "link_span": {
+        "start": 568,
+        "end": 573
+      },
+      "span": {
+        "start": 560,
+        "end": 574
+      }
+    },
+    "services.c": {
+      "label": "c",
+      "span": {
+        "start": 579,
+        "end": 580
+      }
+    },
+    "services.d": {
+      "label": "d",
+      "span": {
+        "start": 585,
+        "end": 586
+      }
+    }
+  },
+  "edges": []
+}

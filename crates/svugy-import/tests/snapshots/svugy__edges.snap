@@ -1,0 +1,138 @@
+---
+source: crates/svugy-import/tests/svugy.rs
+expression: model_json
+---
+{
+  "elements": {
+    "billing": {
+      "label": "billing",
+      "span": {
+        "start": 154,
+        "end": 161
+      }
+    },
+    "billing.api": {
+      "label": "api",
+      "span": {
+        "start": 166,
+        "end": 169
+      }
+    },
+    "billing.store": {
+      "label": "store",
+      "shape": "cylinder",
+      "span": {
+        "start": 174,
+        "end": 196
+      }
+    },
+    "client": {
+      "label": "client",
+      "span": {
+        "start": 101,
+        "end": 107
+      }
+    },
+    "orders": {
+      "label": "orders",
+      "span": {
+        "start": 110,
+        "end": 116
+      }
+    },
+    "orders.api": {
+      "label": "api",
+      "span": {
+        "start": 121,
+        "end": 124
+      }
+    },
+    "orders.store": {
+      "label": "store",
+      "shape": "cylinder",
+      "span": {
+        "start": 129,
+        "end": 151
+      }
+    }
+  },
+  "edges": [
+    {
+      "from": "billing.api",
+      "to": "billing.store",
+      "ordinal": 0,
+      "badge": true,
+      "span": {
+        "start": 424,
+        "end": 452
+      }
+    },
+    {
+      "from": "client",
+      "to": "billing.api",
+      "ordinal": 0,
+      "label": "pays",
+      "span": {
+        "start": 248,
+        "end": 269
+      }
+    },
+    {
+      "from": "client",
+      "to": "orders.api",
+      "ordinal": 0,
+      "span": {
+        "start": 209,
+        "end": 229
+      }
+    },
+    {
+      "from": "orders.api",
+      "to": "billing.api",
+      "ordinal": 0,
+      "label": "charges",
+      "traveler": "envelope",
+      "span": {
+        "start": 280,
+        "end": 305
+      }
+    },
+    {
+      "from": "orders.api",
+      "to": "billing.api",
+      "ordinal": 1,
+      "label": "refunds",
+      "style": {
+        "stroke": "#5b6170",
+        "stroke-dash": "5"
+      },
+      "traveler": "parcel",
+      "span": {
+        "start": 339,
+        "end": 364
+      }
+    },
+    {
+      "from": "orders.api",
+      "to": "orders.store",
+      "ordinal": 0,
+      "span": {
+        "start": 219,
+        "end": 245
+      }
+    },
+    {
+      "from": "orders.store",
+      "to": "billing.store",
+      "ordinal": 0,
+      "style": {
+        "stroke-dash": "2"
+      },
+      "traveler": "document",
+      "span": {
+        "start": 468,
+        "end": 497
+      }
+    }
+  ]
+}

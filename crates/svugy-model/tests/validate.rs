@@ -403,16 +403,14 @@ fn a_json_model_with_only_warnings_loads() {
 }
 
 #[test]
-fn edges_from_leaves_into_a_leaf_marked_badge_are_badges_and_every_other_edge_an_arc() {
+fn edges_marked_badge_are_badges_and_every_other_edge_an_arc() {
     let mut builder = ModelBuilder::new();
     let desk = builder.add_top_level("desk", Element::new("desk"));
     let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
-    let store_element = Element::new("SQLite").with_badge_target();
-    let store = builder.add_child(&desk, "sqlite", store_element);
+    let store = builder.add_child(&desk, "sqlite", Element::new("SQLite"));
     let app = builder.add_top_level("app", Element::new("app"));
-    let writes = builder.add_edge(&quoter, &store, Edge::new());
-    let app_writes = builder.add_edge(&app, &store, Edge::new());
-    let desk_writes = builder.add_edge(&desk, &store, Edge::new());
+    let writes = builder.add_edge(&quoter, &store, Edge::new().with_badge());
+    let app_writes = builder.add_edge(&app, &store, Edge::new().with_badge());
     let reads = builder.add_edge(&store, &quoter, Edge::new());
     let admission = builder.build();
     let model = admission.model.expect("the model has no error");
@@ -424,50 +422,39 @@ fn edges_from_leaves_into_a_leaf_marked_badge_are_badges_and_every_other_edge_an
 
     assert!(model.is_badge_edge(&writes));
     assert!(model.is_badge_edge(&app_writes));
-    assert!(!model.is_badge_edge(&desk_writes));
     assert!(!model.is_badge_edge(&reads));
     assert_eq!(quoter_badges, [&writes]);
     assert_eq!(badges, [&app_writes, &writes]);
     assert_eq!(arcs, [&reads]);
-    let problems = admission.report.problems();
-    let [first_problem, second_problem] = problems else {
-        panic!("a down edge and an arc into a badge target: {problems:?}");
-    };
-    let is_ancestor_descendant_edge = matches!(
-        first_problem,
-        Problem::AncestorDescendantEdge(_ancestor_descendant_edge)
+    assert!(
+        admission.report.problems().is_empty(),
+        "{:?}",
+        admission.report
     );
-    assert!(is_ancestor_descendant_edge);
-    let Problem::ArcIntoBadgeTarget(arc_into_badge_target) = second_problem else {
-        panic!("an edge from a container into a badge target warns: {second_problem:?}");
-    };
-    assert_eq!(arc_into_badge_target.edge, desk_writes);
-    assert!(!second_problem.is_error());
 }
 
 #[test]
-fn a_container_marked_badge_warns_that_it_is_entered_and_its_edges_stay_arcs() {
+fn a_badge_edge_with_a_container_at_either_end_is_an_error_labelled_at_the_edge() {
     let mut builder = ModelBuilder::new();
-    let desk_element = Element::new("desk")
-        .with_badge_target()
-        .with_span(ByteRange::new(0, 4));
-    let desk = builder.add_top_level("desk", desk_element);
-    let _quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
+    let desk = builder.add_top_level("desk", Element::new("desk"));
+    let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
     let app = builder.add_top_level("app", Element::new("app"));
-    let calls = builder.add_edge(&app, &desk, Edge::new());
+    let calls_desk = Edge::new().with_badge().with_span(ByteRange::new(0, 4));
+    let calls = builder.add_edge(&app, &desk, calls_desk);
+    let _quotes = builder.add_edge(&quoter, &app, Edge::new().with_badge());
 
-    let admission = builder.build();
+    let report = rejected_report(builder);
 
-    let model = admission.model.expect("the model has no error");
-    assert!(!model.is_badge_edge(&calls));
-    let problems = admission.report.problems();
-    let [Problem::IgnoredContainerBadge(ignored_badge)] = problems else {
-        panic!("only the ignored badge mark is reported: {problems:?}");
+    let problems = report.problems();
+    let [Problem::BadgeEdgeOnContainer(badge_on_container)] = problems else {
+        panic!(
+            "only the badge into a container is reported, a badge from a leaf being sound: {problems:?}"
+        );
     };
-    assert_eq!(ignored_badge.element, parse("desk"));
+    assert_eq!(badge_on_container.edge, calls);
     let labels: Vec<_> = problems[0]
         .labels()
-        .expect("the warning is labelled")
+        .expect("the error is labelled")
         .collect();
     assert_eq!(labels[0].offset(), 0);
 }
@@ -483,10 +470,11 @@ fn a_legend_describing_what_the_diagram_never_draws_warns_with_the_closest_badge
     builder = builder.with_legend(legend);
     let app = builder.add_top_level("app", Element::new("app"));
     let api = builder.add_top_level("api", Element::new("api"));
-    let sqlite = builder.add_top_level("sqlite", Element::new("SQLite").with_badge_target());
-    let _ledger = builder.add_top_level("ledger", Element::new("ledger").with_badge_target());
+    let sqlite = builder.add_top_level("sqlite", Element::new("SQLite"));
+    let ledger = builder.add_top_level("ledger", Element::new("ledger"));
     let _calls = builder.add_edge(&app, &api, Edge::new());
-    let _writes = builder.add_edge(&app, &sqlite, Edge::new());
+    let _writes = builder.add_edge(&app, &sqlite, Edge::new().with_badge());
+    let _settles = builder.add_edge(&api, &ledger, Edge::new().with_badge());
 
     let report = admitted_report(builder);
 
@@ -528,18 +516,17 @@ fn every_problem_kind_reaches_the_machine_readable_report_with_its_severity() {
         .with_child_placement(PlacementHint::Grid { columns: 0 })
         .with_shape(Shape::Disc)
         .with_height(30.0)
-        .with_badge_target()
         .with_span(ByteRange::new(0, 4));
     let desk = builder.add_top_level("desk", desk_element);
     let wide_grid = PlacementHint::Grid { columns: 40_000 };
     let wide_element = Element::new("wide").with_child_placement(wide_grid);
     let wide = builder.add_top_level("wide", wide_element);
     let _cell = builder.add_child(&wide, "cell", Element::new("cell"));
-    let ledger = builder.add_top_level("ledger", Element::new("ledger").with_badge_target());
+    let ledger = builder.add_top_level("ledger", Element::new("ledger"));
     let _wide_writes = builder.add_edge(
         &wide,
         &ledger,
-        Edge::new().with_span(ByteRange::new(60, 74)),
+        Edge::new().with_badge().with_span(ByteRange::new(60, 74)),
     );
     let quoter_element = Element::new("quoter")
         .with_child_placement(PlacementHint::Column)

@@ -443,10 +443,10 @@ mod tests {
         let a = builder.add_top_level("a", Element::new("app"));
         let b = builder.add_top_level("b", Element::new("bus"));
         let c = builder.add_top_level("c", Element::new("crank"));
-        let store = builder.add_top_level("store", Element::new("store").with_badge_target());
+        let store = builder.add_top_level("store", Element::new("store"));
         builder.add_edge(&a, &b, Edge::new());
         builder.add_edge(&b, &c, Edge::new().with_style("stroke-dash", "2"));
-        builder.add_edge(&a, &store, Edge::new());
+        builder.add_edge(&a, &store, Edge::new().with_badge());
         let model = builder.build().model.expect("fixture model is valid");
         let plans = LevelPlans::lay_out(&model, &FixedAdvanceMeasure);
         Scene::project(&model, &plans, &FixedAdvanceMeasure)

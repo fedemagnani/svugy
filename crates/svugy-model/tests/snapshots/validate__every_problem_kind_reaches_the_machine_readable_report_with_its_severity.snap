@@ -6,7 +6,7 @@ expression: pretty
   "causes": [],
   "code": "svugy::model_report",
   "labels": [],
-  "message": "the model has 9 error(s) and 9 warning(s)",
+  "message": "the model has 10 error(s) and 7 warning(s)",
   "related": [
     {
       "causes": [],
@@ -172,23 +172,7 @@ expression: pretty
     },
     {
       "causes": [],
-      "code": "svugy::ignored_container_badge",
-      "labels": [
-        {
-          "label": "marked here",
-          "span": {
-            "length": 4,
-            "offset": 0
-          }
-        }
-      ],
-      "message": "element `desk` is a container, so it is entered rather than badged and edges into it are drawn as arcs",
-      "related": [],
-      "severity": "warning"
-    },
-    {
-      "causes": [],
-      "code": "svugy::arc_into_badge_target",
+      "code": "svugy::badge_edge_on_container",
       "labels": [
         {
           "label": "declared here",
@@ -198,9 +182,9 @@ expression: pretty
           }
         }
       ],
-      "message": "edge `(wide -> ledger)[0]` starts at a container, whose top holds its interior, so it is drawn as an arc instead of a badge",
+      "message": "edge `(wide -> ledger)[0]` is a badge, which needs a leaf at both ends",
       "related": [],
-      "severity": "warning"
+      "severity": "error"
     },
     {
       "causes": [],

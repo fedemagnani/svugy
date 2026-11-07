@@ -190,12 +190,12 @@ mod tests {
         let a = builder.add_top_level("a", Element::new("app"));
         let b = builder.add_top_level("b", Element::new("bus"));
         let c = builder.add_top_level("c", Element::new("crank"));
-        let store = builder.add_top_level("store", Element::new("store").with_badge_target());
+        let store = builder.add_top_level("store", Element::new("store"));
         builder.add_edge(&a, &b, Edge::new());
         builder.add_edge(&b, &c, Edge::new().with_label("calls"));
         if is_written {
-            builder.add_edge(&a, &store, Edge::new());
-            builder.add_edge(&c, &store, Edge::new());
+            builder.add_edge(&a, &store, Edge::new().with_badge());
+            builder.add_edge(&c, &store, Edge::new().with_badge());
         }
         builder.build().model.expect("fixture model is valid")
     }
@@ -223,8 +223,8 @@ mod tests {
         let mut builder = ModelBuilder::new();
         let desk = builder.add_top_level("desk", Element::new("desk"));
         let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
-        let store = builder.add_top_level("store", Element::new("store").with_badge_target());
-        let writes = builder.add_edge(&quoter, &store, Edge::new());
+        let store = builder.add_top_level("store", Element::new("store"));
+        let writes = builder.add_edge(&quoter, &store, Edge::new().with_badge());
         let model = builder.build().model.expect("fixture model is valid");
         let font = BundledFont::new();
 

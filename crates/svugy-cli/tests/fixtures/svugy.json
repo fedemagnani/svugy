@@ -214,7 +214,6 @@
     "pipeline.inter": {
       "label": "Inter",
       "shape": "cylinder",
-      "badge": true,
       "style": {
         "fill": "#d5dcea"
       },
@@ -455,7 +454,8 @@
       "from": "pipeline.metrics",
       "to": "pipeline.inter",
       "ordinal": 0,
-      "label": "measures"
+      "label": "measures",
+      "badge": true
     },
     {
       "from": "pipeline.metrics",
@@ -466,7 +466,8 @@
       "from": "pipeline.render.profile",
       "to": "pipeline.inter",
       "ordinal": 0,
-      "label": "outlines"
+      "label": "outlines",
+      "badge": true
     },
     {
       "from": "pipeline.render.profile",

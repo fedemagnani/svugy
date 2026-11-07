@@ -79,6 +79,8 @@ struct EdgeRecord {
     style: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     traveler: Option<Traveler>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    badge: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     span: Option<ByteRange>,
 }
@@ -103,6 +105,7 @@ impl EdgeRecord {
         let label = edge.label.clone();
         let style = edge.style.clone();
         let traveler = edge.traveler;
+        let badge = edge.badge;
         let span = edge.span;
         Self {
             from,
@@ -111,6 +114,7 @@ impl EdgeRecord {
             label,
             style,
             traveler,
+            badge,
             span,
         }
     }
@@ -122,6 +126,7 @@ impl EdgeRecord {
             label: self.label,
             style: self.style,
             traveler: self.traveler,
+            badge: self.badge,
             span: self.span,
         };
         (id, edge)
