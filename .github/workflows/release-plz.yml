@@ -16,7 +16,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: read
-      # crates.io trusted publishing, once configured there
+      # lets crates-io-auth-action prove the job's identity to crates.io
       id-token: write
     steps:
       - name: Checkout repository
@@ -35,14 +35,17 @@ jobs:
           private-key: ${{ secrets.RELEASE_PLZ_APP_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: read
+      # trades the job's identity for a crates.io token revoked when the job ends
+      - name: Authenticate with crates.io
+        id: crates-io-auth
+        uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
       - name: Run release-plz
         uses: release-plz/action@66b324fd6c72d05d2a08568492ecdd62bfb8a62b # v0.5
         with:
           command: release
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          # TODO: temporary until trusted publishing is configured on crates.io after v0.1.0.
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ steps.crates-io-auth.outputs.token }}
 
   # opens or updates the PR bumping versions and changelogs from conventional commits
   release-pr:
