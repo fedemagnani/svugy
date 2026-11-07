@@ -1,4 +1,4 @@
-//! Prove `svugy import` turns a d2 file into model JSON that `svugy render` accepts.
+//! Prove `svugy import` turns a d2 file into a diagram and model JSON that `svugy render` draws alike.
 
 mod support;
 
@@ -7,19 +7,26 @@ use std::fs;
 use support::{fixture, run_svugy, scratch_file, stderr_text};
 
 #[test]
-fn import_writes_model_json_that_renders_like_the_d2_file() {
-    let d2_argument = fixture("nesting.d2");
-    let json_argument = scratch_file("nesting.json");
+fn a_d2_file_imported_as_a_diagram_renders_like_it_and_imports_back_to_json() {
+    let d2_argument = fixture("checkout.d2");
+    let diagram_argument = scratch_file("checkout.md");
+    let json_argument = scratch_file("checkout_from_diagram.json");
 
-    let import_run = run_svugy(&["import", &d2_argument, "-o", &json_argument]);
-    let json_render_run = run_svugy(&["render", &json_argument]);
+    let d2_to_diagram_run = run_svugy(&["import", &d2_argument, "-o", &diagram_argument]);
+    let diagram_to_json_run = run_svugy(&["import", &diagram_argument, "-o", &json_argument]);
     let d2_render_run = run_svugy(&["render", &d2_argument]);
+    let diagram_render_run = run_svugy(&["render", &diagram_argument]);
+    let json_render_run = run_svugy(&["render", &json_argument]);
 
-    let model_json = fs::read_to_string(&json_argument).expect("import wrote the output file");
-    assert_eq!(import_run.status.code(), Some(0));
-    assert!(import_run.stdout.is_empty());
+    let diagram = fs::read_to_string(&diagram_argument).expect("import wrote the diagram");
+    let model_json = fs::read_to_string(&json_argument).expect("import wrote the model JSON");
+    assert_eq!(d2_to_diagram_run.status.code(), Some(0));
+    assert_eq!(diagram_to_json_run.status.code(), Some(0));
+    assert!(d2_to_diagram_run.stdout.is_empty());
+    assert!(diagram.contains("## Components"), "{diagram}");
     assert!(model_json.contains("\"elements\""), "{model_json}");
-    assert_eq!(json_render_run.status.code(), Some(0));
+    assert_eq!(diagram_render_run.status.code(), Some(0));
+    assert_eq!(diagram_render_run.stdout, d2_render_run.stdout);
     assert_eq!(json_render_run.stdout, d2_render_run.stdout);
 }
 

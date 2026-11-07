@@ -1,15 +1,32 @@
 # Layout
 
-Layout decides where things go on a flat plane called plan space; projection happens later, in geometry.
+Placement is a 2D problem, so layout solves it on the ground plane (plan space) and never projects; geometry projects and never places. `LevelPlans::lay_out` returns each level's footprints, routes and stubs.
 
-It starts by measuring every label with the bundled Inter font. Weights are resolved with CSS rules (450 becomes 500), not fontdb's, so the face that gets measured is the face that gets drawn.
+## Components
 
-Containers are laid out from the inside out. A container's children are placed first, then the container becomes one box in its parent. Pinned elements go exactly where you put them. Connected children get a layered layout from dagre, and grid, row or column hints are packed with taffy.
+**Metrics**
 
-An edge between two containers is placed at their lowest common ancestor, as if it ran between the two containers. Each edge leaves its box on the side facing the other end. Where an edge crosses out of a container, a stub slot marks the spot on that side; you see it once you step inside.
+- Labels are measured in the bundled Inter faces, picked by CSS weight matching: 450 uses the 500 face.
+- Layout sizes footprints and geometry places labels from the same measurements.
 
-An interactive render lays out each disclosed layer on its own. A closed container is a leaf of its layer's model, so it is placed like one, and layout knows nothing about layers. Pins hold in every layer, so a closed container that is smaller than its open self leaves a gap around it in a shallow layer.
+**Placement** fills each level, innermost first.
 
-Auto layout turns a chain of edges into a long diagonal. Pin elements to control the shape; the map of this book is pinned.
+- A container is sized by its placed interior; a leaf by its labels, at least 72 × 66.
+- Children with a `position` go exactly there; the rest are placed at least 18 units clear of them.
+- Default: dagre ranks along plan x, so a chain of edges becomes a screen diagonal. Pin elements to control the shape, as `examples/svugy.md` does.
+- `grid`, `row`, `column`: taffy packs the children in path order.
 
-The code is in `crates/svugy/src/metrics` and `crates/svugy/src/layout`: `place/`, `route.rs`, `stub.rs`, `nest.rs`.
+**Routing**
+
+- An edge is routed in its home level between its true endpoints; for ranking, it joins the two children of that level that hold them.
+- Each end attaches on the footprint side facing the other end.
+- Badge edges get no route.
+
+**Stubs** mark where edges leave a container: one boundary slot per external endpoint, on the side most of its edges cross, at their mean crossing point.
+
+**Layers**
+
+- Each [layer](model.md) is laid out on its own; a closed container is placed as the leaf it is in its layer.
+- Pins hold in every layer, so a closed container leaves a gap where its open self would fit.
+
+Code: `crates/svugy/src/metrics/`, `crates/svugy/src/layout/`.

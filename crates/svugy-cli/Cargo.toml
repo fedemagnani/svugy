@@ -13,13 +13,13 @@ path = "src/main.rs"
 [dependencies]
 svugy-model.workspace = true
 svugy.workspace = true
-svugy-import.workspace = true
+svugy-parse.workspace = true
 clap.workspace = true
 miette = { workspace = true, features = ["fancy"] }
+serde_json.workspace = true
 
 [dev-dependencies]
 thiserror.workspace = true
-serde_json.workspace = true
 
 [lints]
 workspace = true

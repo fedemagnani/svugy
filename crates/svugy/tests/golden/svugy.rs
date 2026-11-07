@@ -5,7 +5,7 @@ use svugy_model::legend::Legend;
 use svugy_model::model::{Edge, Element, Model, Position, Shape};
 use svugy_model::path::ElementPath;
 
-const IMPORT_STAGE_FILL: &str = "#f0a020";
+const PARSE_LANGUAGE_FILL: &str = "#f0a020";
 const MODEL_MODULE_FILL: &str = "#14f195";
 const PIPELINE_STAGE_FILL: &str = "#1f3566";
 const PIPELINE_MODULE_FILL: &str = "#3478f6";
@@ -40,7 +40,7 @@ impl SvugyExample {
             .with_legend(legend);
 
         let text_element = Element::new("your text")
-            .with_caption("d2 · JSON · Rust builder")
+            .with_caption("Markdown · d2 · JSON")
             .with_style("fill", NEUTRAL_FILL)
             .with_position(Position { x: 0.0, y: 40.0 });
         let text = builder.add_top_level("text", text_element);
@@ -65,8 +65,8 @@ impl SvugyExample {
             });
         let d2 = builder.add_top_level("d2", d2_element);
 
-        let import_element = Element::new("svugy-import")
-            .with_caption("d2 → model")
+        let import_element = Element::new("svugy-parse")
+            .with_caption("text → model")
             .with_style("fill", "#2a2418")
             .with_position(Position { x: 260.0, y: 0.0 });
         let import = builder.add_top_level("import", import_element);
@@ -111,23 +111,23 @@ impl SvugyExample {
             });
         let svg = builder.add_top_level("svg", svg_element);
 
-        let import_lex_element = Element::new("lex")
-            .with_caption("logos tokens")
-            .with_style("fill", IMPORT_STAGE_FILL)
+        let import_markdown_element = Element::new("Markdown")
+            .with_caption("parse · print")
+            .with_style("fill", PARSE_LANGUAGE_FILL)
             .with_position(Position { x: 18.0, y: 18.0 });
-        let import_lex = builder.add_child(&import, "lex", import_lex_element);
+        let _import_markdown = builder.add_child(&import, "markdown", import_markdown_element);
 
-        let import_parse_element = Element::new("parse")
-            .with_caption("chumsky + recovery")
-            .with_style("fill", IMPORT_STAGE_FILL)
+        let import_d2_element = Element::new("d2")
+            .with_caption("import")
+            .with_style("fill", PARSE_LANGUAGE_FILL)
             .with_position(Position { x: 150.0, y: 18.0 });
-        let import_parse = builder.add_child(&import, "parse", import_parse_element);
+        let _import_d2 = builder.add_child(&import, "d2", import_d2_element);
 
-        let import_lower_element = Element::new("lower")
-            .with_caption("AST → model")
-            .with_style("fill", IMPORT_STAGE_FILL)
+        let import_json_element = Element::new("JSON")
+            .with_caption("load · save")
+            .with_style("fill", PARSE_LANGUAGE_FILL)
             .with_position(Position { x: 282.0, y: 18.0 });
-        let import_lower = builder.add_child(&import, "lower", import_lower_element);
+        let _import_json = builder.add_child(&import, "json", import_json_element);
 
         let model_path_element = Element::new("path")
             .with_caption("ids")
@@ -146,12 +146,6 @@ impl SvugyExample {
             .with_style("fill", MODEL_MODULE_FILL)
             .with_position(Position { x: 18.0, y: 180.0 });
         let model_validate = builder.add_child(&model, "validate", model_validate_element);
-
-        let model_json_element = Element::new("json")
-            .with_caption("id-keyed schema")
-            .with_style("fill", MODEL_MODULE_FILL)
-            .with_position(Position { x: 150.0, y: 180.0 });
-        let model_json = builder.add_child(&model, "json", model_json_element);
 
         let pipeline_metrics_element = Element::new("metrics")
             .with_caption("measures labels")
@@ -252,16 +246,10 @@ impl SvugyExample {
         let pipeline_render_writer =
             builder.add_child(&pipeline_render, "writer", pipeline_render_writer_element);
 
-        let import_lex_to_import_parse = Edge::new();
-        builder.add_edge(&import_lex, &import_parse, import_lex_to_import_parse);
-        let import_parse_to_import_lower = Edge::new();
-        builder.add_edge(&import_parse, &import_lower, import_parse_to_import_lower);
         let model_path_to_model_graph = Edge::new();
         builder.add_edge(&model_path, &model_graph, model_path_to_model_graph);
         let model_graph_to_model_validate = Edge::new();
         builder.add_edge(&model_graph, &model_validate, model_graph_to_model_validate);
-        let model_graph_to_model_json = Edge::new();
-        builder.add_edge(&model_graph, &model_json, model_graph_to_model_json);
         let pipeline_layout_place_to_pipeline_layout_route = Edge::new();
         builder.add_edge(
             &pipeline_layout_place,

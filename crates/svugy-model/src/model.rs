@@ -5,7 +5,8 @@ use std::fmt;
 use std::ops::Bound;
 
 use miette::SourceSpan;
-use serde::{Deserialize, Serialize};
+use serde::de;
+use serde::{Deserialize, Deserializer, Serialize};
 use strum::{EnumString, IntoStaticStr, VariantNames};
 
 use crate::legend::Legend;
@@ -148,6 +149,10 @@ impl Model {
     }
 }
 
+/// Reject an element's `badge` field, which moved onto edges, naming where it went instead of serde's bare unknown field.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+struct MovedElementBadge;
+
 /// Describe an element: a component or container, everything except its path and its children.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -181,6 +186,8 @@ pub struct Element {
     metadata: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     span: Option<ByteRange>,
+    #[serde(default, rename = "badge", skip_serializing)]
+    moved_badge: MovedElementBadge,
 }
 
 impl Element {
@@ -199,6 +206,7 @@ impl Element {
             link_span: None,
             metadata: BTreeMap::new(),
             span: None,
+            moved_badge: MovedElementBadge,
         }
     }
 
@@ -332,6 +340,14 @@ impl Element {
     /// Return where in an imported source this element was declared, as a miette span.
     pub fn source_span(&self) -> Option<SourceSpan> {
         self.span.map(SourceSpan::from)
+    }
+}
+
+impl<'de> Deserialize<'de> for MovedElementBadge {
+    fn deserialize<D: Deserializer<'de>>(_deserializer: D) -> Result<Self, D::Error> {
+        let moved_badge_message = "`badge` moved from elements to edges: set `\"badge\": true` on each edge into this element";
+        let moved_badge_error = de::Error::custom(moved_badge_message);
+        Err(moved_badge_error)
     }
 }
 

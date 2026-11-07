@@ -1,13 +1,13 @@
 //! Validate a model and report what the author must fix, with did-you-mean suggestions.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 use miette::{Diagnostic, JSONReportHandler, Severity, SourceSpan};
 
-use crate::legend::DashKey;
+use crate::legend::{DashKey, Legend};
 use crate::link::Link;
-use crate::model::{Element, MAX_MAGNITUDE, Model, PlacementHint, Shape};
+use crate::model::{Edge, EdgeId, Element, MAX_MAGNITUDE, Model, PlacementHint, Shape};
 use crate::path::ElementPath;
 use crate::problem::{
     AncestorDescendantEdge, BadgeEdgeOnContainer, ChildPlacementWithoutChildren,
@@ -20,14 +20,27 @@ use crate::style::AnyStyleKey;
 
 /// Assemble a model whose references are not yet checked, recording duplicate declarations; only `admit` hands it out.
 #[derive(Debug, Default)]
-pub(crate) struct UncheckedModel {
+pub struct UncheckedModel {
     pub(crate) model: Model,
     pub(crate) duplicate_declarations: Vec<(ElementPath, Element)>,
 }
 
 impl UncheckedModel {
-    /// Hold `model` unchecked, with no duplicate declaration recorded.
-    pub(crate) fn new(model: Model) -> Self {
+    /// Hold the model of these parts unchecked, elements keyed by path and edges by id as a text form wrote them, with no duplicate declaration recorded.
+    pub fn from_parts(
+        title: Option<String>,
+        subtitle: Option<String>,
+        legend: Option<Legend>,
+        elements: BTreeMap<ElementPath, Element>,
+        edges: BTreeMap<EdgeId, Edge>,
+    ) -> Self {
+        let model = Model {
+            title,
+            subtitle,
+            legend,
+            elements,
+            edges,
+        };
         Self {
             model,
             duplicate_declarations: Vec::new(),
@@ -35,7 +48,7 @@ impl UncheckedModel {
     }
 
     /// Admit the model only when no check holds an error.
-    pub(crate) fn admit(self) -> ModelAdmission {
+    pub fn admit(self) -> ModelAdmission {
         let report = self.validate();
         let has_errors = report.has_errors();
         if has_errors {
@@ -416,7 +429,8 @@ impl Model {
             return None;
         }
         let target_text = target.to_string();
-        let badge_targets = self.badge_edges().map(|id| id.to().clone());
+        let badge_edges = self.badge_edges();
+        let badge_targets: BTreeSet<ElementPath> = badge_edges.map(EdgeId::to).cloned().collect();
         let suggestion = Suggestion::closest_to(&target_text, badge_targets);
         let undrawn_target = target.clone();
         let key = LegendKey::Badge(undrawn_target);

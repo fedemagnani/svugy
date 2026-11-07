@@ -1,0 +1,204 @@
+---
+source: crates/svugy-parse/tests/d2_lower.rs
+expression: import.model.to_json()
+---
+{
+  "elements": {
+    "a": {
+      "label": "a",
+      "span": {
+        "start": 115,
+        "end": 116
+      }
+    },
+    "api": {
+      "label": "api",
+      "span": {
+        "start": 58,
+        "end": 61
+      }
+    },
+    "b": {
+      "label": "b",
+      "span": {
+        "start": 122,
+        "end": 123
+      }
+    },
+    "c": {
+      "label": "c",
+      "span": {
+        "start": 129,
+        "end": 130
+      }
+    },
+    "cache": {
+      "label": "cache",
+      "span": {
+        "start": 91,
+        "end": 96
+      }
+    },
+    "client": {
+      "label": "client",
+      "span": {
+        "start": 37,
+        "end": 43
+      }
+    },
+    "cloud": {
+      "label": "cloud",
+      "span": {
+        "start": 131,
+        "end": 136
+      }
+    },
+    "cloud.vpc": {
+      "label": "vpc",
+      "span": {
+        "start": 131,
+        "end": 140
+      }
+    },
+    "cloud.vpc.api": {
+      "label": "api",
+      "span": {
+        "start": 131,
+        "end": 144
+      }
+    },
+    "\"db.primary\"": {
+      "label": "db.primary",
+      "span": {
+        "start": 148,
+        "end": 160
+      }
+    },
+    "gateway": {
+      "label": "gateway",
+      "span": {
+        "start": 47,
+        "end": 54
+      }
+    },
+    "logs": {
+      "label": "logs",
+      "span": {
+        "start": 110,
+        "end": 114
+      }
+    },
+    "worker": {
+      "label": "worker",
+      "span": {
+        "start": 76,
+        "end": 82
+      }
+    },
+    "x": {
+      "label": "x",
+      "span": {
+        "start": 217,
+        "end": 218
+      }
+    },
+    "y": {
+      "label": "y",
+      "span": {
+        "start": 222,
+        "end": 223
+      }
+    }
+  },
+  "edges": [
+    {
+      "from": "a",
+      "to": "b",
+      "ordinal": 0,
+      "span": {
+        "start": 115,
+        "end": 123
+      }
+    },
+    {
+      "from": "api",
+      "to": "cache",
+      "ordinal": 0,
+      "label": "sync",
+      "span": {
+        "start": 83,
+        "end": 96
+      }
+    },
+    {
+      "from": "api",
+      "to": "logs",
+      "ordinal": 0,
+      "span": {
+        "start": 103,
+        "end": 114
+      }
+    },
+    {
+      "from": "c",
+      "to": "b",
+      "ordinal": 0,
+      "span": {
+        "start": 122,
+        "end": 130
+      }
+    },
+    {
+      "from": "client",
+      "to": "gateway",
+      "ordinal": 0,
+      "label": "HTTPS",
+      "span": {
+        "start": 37,
+        "end": 54
+      }
+    },
+    {
+      "from": "cloud.vpc.api",
+      "to": "\"db.primary\"",
+      "ordinal": 0,
+      "label": "SQL over TLS",
+      "style": {
+        "stroke-dash": "3"
+      },
+      "span": {
+        "start": 131,
+        "end": 160
+      }
+    },
+    {
+      "from": "gateway",
+      "to": "api",
+      "ordinal": 0,
+      "label": "HTTPS",
+      "span": {
+        "start": 47,
+        "end": 61
+      }
+    },
+    {
+      "from": "worker",
+      "to": "api",
+      "ordinal": 0,
+      "span": {
+        "start": 69,
+        "end": 82
+      }
+    },
+    {
+      "from": "x",
+      "to": "y",
+      "ordinal": 0,
+      "label": "label with -> arrow and: colon",
+      "span": {
+        "start": 217,
+        "end": 223
+      }
+    }
+  ]
+}

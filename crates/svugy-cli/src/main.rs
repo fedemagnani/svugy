@@ -1,54 +1,71 @@
 //! Run the svugy command line.
 
+mod example;
 mod failure;
 mod input;
 mod output;
 mod report;
+mod skill;
 
 use std::process::ExitCode;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use svugy::{InteractiveSvg, StaticSvg};
 use svugy_model::model::Model;
+use svugy_parse::json::JsonPrinter;
 
+use crate::example::ExampleCommand;
 use crate::failure::Failure;
 use crate::input::{LoadedInput, ModelInput};
-use crate::output::OutputTarget;
+use crate::output::{ModelFile, OutputTarget};
 use crate::report::InputReport;
+use crate::skill::SkillCommand;
 
-/// Explain the input formats, where diagnostics go and the exit codes, after the top-level help.
+/// Point a new user at the example, then explain the input formats, where diagnostics go and the exit codes, after the top-level help.
 const EXIT_CODES_HELP: &str = "\
-INPUT is a JSON model (.json) or a d2 file (.d2), told apart by its extension.
-Diagnostics go to stderr, except for validate --format json, which prints them
-on stdout. Warnings never stop a subcommand; errors always do.
+New here? svugy example -o webapp.md writes an example diagram, and
+svugy render webapp.md -o webapp.svg --open draws it.
+
+INPUT is a Markdown diagram (.md), a d2 file (.d2) or a JSON model (.json), told
+apart by its extension. Diagnostics go to stderr, except for validate --format
+json, which prints them on stdout. Warnings never stop a subcommand; errors
+always do.
 
 Exit codes, identical for every subcommand:
   0  success, warnings included
-  1  the input has errors: d2 syntax, malformed JSON or model validation
-  2  usage error: unknown flag, missing argument, INPUT neither .json nor .d2
-  3  I/O failure: the input cannot be read or the output cannot be written";
+  1  the input has errors: Markdown syntax, d2 syntax, malformed JSON or model
+     validation; or import -o FILE.md meets a model Markdown cannot say
+  2  usage error: unknown flag, missing argument, INPUT not .md, .d2 or .json
+  3  I/O failure: a file cannot be read, written or opened";
 
 /// Explain the validate report's formats and its JSON report's fields, after validate's help.
 const VALIDATE_REPORT_HELP: &str = "\
 Formats:
-  human  miette's graphical report on stderr, with source snippets for d2 input
+  human  miette's graphical report on stderr, with source snippets for .md and
+         d2 input
   json   one JSON object on stdout, printed even when the input is clean
 
 The json report is miette's JSON report of the whole input:
   message   \"<INPUT>: <N> error(s), <M> warning(s)\"
   code      \"svugy::input_report\"
   severity  \"error\" if any diagnostic is one, else \"warning\", or \"advice\" when clean
-  related   one object per diagnostic: d2 syntax errors, then d2 subset warnings,
-            then model problems
+  related   one object per diagnostic: Markdown errors, d2 syntax errors then
+            d2 subset warnings, or the malformed-JSON error; then model problems
 Each related object:
-  message   what is wrong
-  code      stable diagnostic code, e.g. \"svugy::dangling_reference\", \"svugy::d2::syntax\"
+  message   what is wrong; a Markdown error ends with its did-you-mean
+  code      stable diagnostic code, e.g. \"svugy::markdown\", \"svugy::d2::syntax\",
+            \"svugy::dangling_reference\"
   severity  \"error\" or \"warning\"
-  help      the did-you-mean suggestion; the key is absent when there is none
-  filename  INPUT for a labelled diagnostic of a d2 input; \"\" or absent otherwise
-  labels    [{\"label\": text, \"span\": {\"offset\": byte offset, \"length\": bytes}}]
-            spans of a JSON model point into the d2 text it was imported from
-  causes    underlying error messages, e.g. the JSON parser's
+  help      the did-you-mean of a d2 diagnostic or model problem; the key is
+            absent when there is none
+  filename  INPUT for a labelled diagnostic of a .md or d2 input; \"\" or absent
+            otherwise
+  labels    [{\"label\": text, \"span\": {\"offset\": byte offset, \"length\": bytes},
+              \"line\": 1-based line, \"column\": 1-based byte column}]
+            line and column are absent for a JSON model, whose spans point
+            into the text it was imported from; a malformed-JSON message
+            ends with serde's line and column instead
+  causes    underlying error messages, when there are any
   related   always []";
 
 /// Parse the svugy command line and dispatch its subcommand.
@@ -67,14 +84,18 @@ enum Command {
     /// Validate a model and print every diagnostic, errors and warnings alike.
     #[command(after_long_help = VALIDATE_REPORT_HELP)]
     Validate(ValidateCommand),
-    /// Import a d2 file as model JSON.
+    /// Import a diagram as Markdown or model JSON, chosen by the output's extension.
     Import(ImportCommand),
+    /// Print the svugy skill for agents, or install it with `svugy skill install`.
+    Skill(SkillCommand),
+    /// Print an example diagram, a web app written in Markdown, or write it with -o.
+    Example(ExampleCommand),
 }
 
-/// Render the input as an SVG in the chosen profile, into a file or onto stdout.
+/// Render the input as an SVG in the chosen profile, into a file or onto stdout, and open the file if asked.
 #[derive(Args)]
 struct RenderCommand {
-    /// JSON model or d2 file to render.
+    /// Diagram (.md), d2 file or JSON model to render.
     #[arg(value_parser = ModelInput::parse)]
     input: ModelInput,
     /// Which SVG to write.
@@ -82,12 +103,15 @@ struct RenderCommand {
     profile: RenderProfile,
     #[command(flatten)]
     output: OutputTarget,
+    /// Open the written SVG in the default browser; needs -o.
+    #[arg(long, requires = "output")]
+    open: bool,
 }
 
 /// Validate the input and print its diagnostics in the chosen format.
 #[derive(Args)]
 struct ValidateCommand {
-    /// JSON model or d2 file to validate.
+    /// Diagram (.md), d2 file or JSON model to validate.
     #[arg(value_parser = ModelInput::parse)]
     input: ModelInput,
     /// How to print the diagnostics.
@@ -95,14 +119,15 @@ struct ValidateCommand {
     format: ReportFormat,
 }
 
-/// Import the input as pretty-printed model JSON, into a file or onto stdout.
+/// Import the input into the file's text form, or onto stdout as pretty-printed model JSON.
 #[derive(Args)]
 struct ImportCommand {
-    /// d2 file to import; a JSON model comes out in its canonical form.
+    /// Diagram (.md), d2 file or JSON model to import; it comes out in canonical form.
     #[arg(value_parser = ModelInput::parse)]
     input: ModelInput,
-    #[command(flatten)]
-    output: OutputTarget,
+    /// File to write: a Markdown diagram when it ends in .md, model JSON when it ends in .json; JSON on stdout when omitted.
+    #[arg(short, long, value_parser = ModelFile::parse)]
+    output: Option<ModelFile>,
 }
 
 /// Name the SVG profile `render` writes.
@@ -139,16 +164,23 @@ impl Command {
             Self::Render(render_command) => render_command.run(),
             Self::Validate(validate_command) => validate_command.run(),
             Self::Import(import_command) => import_command.run(),
+            Self::Skill(skill_command) => skill_command.run(),
+            Self::Example(example_command) => example_command.run(),
         }
     }
 }
 
 impl RenderCommand {
-    /// Run `render`: load the input, render it in the profile and write the SVG.
+    /// Run `render`: load the input, render it in the profile, write the SVG and open it when `--open` asks.
     fn run(self) -> Result<(), Failure> {
         let model = self.input.load_model_printing_diagnostics()?;
         let svg = self.profile.render(&model);
-        self.output.write(&svg)
+        self.output.write(&svg)?;
+        let is_open_requested = self.open;
+        if is_open_requested {
+            self.output.open_in_default_browser()?;
+        }
+        Ok(())
     }
 }
 
@@ -195,10 +227,13 @@ impl ReportFormat {
 }
 
 impl ImportCommand {
-    /// Run `import`: load the input and write its model as JSON.
+    /// Run `import`: load the input and write its model in the output file's text form, or as JSON on stdout.
     fn run(self) -> Result<(), Failure> {
         let model = self.input.load_model_printing_diagnostics()?;
-        let model_json = model.to_json();
-        self.output.write(&model_json)
+        let Some(model_file) = self.output else {
+            let model_json = JsonPrinter::print(&model);
+            return OutputTarget::write_stdout(&model_json);
+        };
+        model_file.write(&model)
     }
 }

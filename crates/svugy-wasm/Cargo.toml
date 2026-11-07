@@ -9,7 +9,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 svugy.workspace = true
-svugy-import.workspace = true
+svugy-parse.workspace = true
 svugy-model.workspace = true
 miette.workspace = true
 serde.workspace = true

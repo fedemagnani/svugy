@@ -1277,6 +1277,7 @@ dependencies = [
  "serde_json",
  "svugy-dagre",
  "svugy-model",
+ "svugy-parse",
  "taffy",
  "ttf-parser",
  "usvg",
@@ -1290,8 +1291,8 @@ dependencies = [
  "miette",
  "serde_json",
  "svugy",
- "svugy-import",
  "svugy-model",
+ "svugy-parse",
  "thiserror",
 ]
 
@@ -1300,23 +1301,6 @@ name = "svugy-dagre"
 version = "0.1.0"
 dependencies = [
  "indexmap",
-]
-
-[[package]]
-name = "svugy-import"
-version = "0.1.0"
-dependencies = [
- "chumsky",
- "comrak",
- "insta",
- "logos",
- "miette",
- "serde",
- "serde-saphyr",
- "serde_json",
- "strum",
- "svugy-model",
- "thiserror",
 ]
 
 [[package]]
@@ -1333,6 +1317,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "svugy-parse"
+version = "0.1.0"
+dependencies = [
+ "chumsky",
+ "comrak",
+ "insta",
+ "logos",
+ "miette",
+ "serde",
+ "serde-saphyr",
+ "serde_json",
+ "strum",
+ "svugy-model",
+ "thiserror",
+]
+
+[[package]]
 name = "svugy-wasm"
 version = "0.1.0"
 dependencies = [
@@ -1340,8 +1341,8 @@ dependencies = [
  "serde",
  "serde_json",
  "svugy",
- "svugy-import",
  "svugy-model",
+ "svugy-parse",
 ]
 
 [[package]]

@@ -1,0 +1,249 @@
+---
+source: crates/svugy-parse/tests/d2.rs
+expression: parsed
+---
+D2Parse {
+    document: D2Document {
+        statements: [
+            Field(
+                FieldAssignment {
+                    target: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "api",
+                                span: 63..66,
+                            },
+                        ],
+                        span: 63..66,
+                    },
+                    field: Style(
+                        [
+                            StyleProperty {
+                                name: KeySegment {
+                                    name: "fill",
+                                    span: 73..77,
+                                },
+                                value: Scalar {
+                                    text: "#f4a261",
+                                    span: 79..88,
+                                },
+                                span: 63..88,
+                            },
+                        ],
+                    ),
+                    span: 63..88,
+                },
+            ),
+            Field(
+                FieldAssignment {
+                    target: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "api",
+                                span: 89..92,
+                            },
+                        ],
+                        span: 89..92,
+                    },
+                    field: Style(
+                        [
+                            StyleProperty {
+                                name: KeySegment {
+                                    name: "stroke",
+                                    span: 104..110,
+                                },
+                                value: Scalar {
+                                    text: "navy",
+                                    span: 112..116,
+                                },
+                                span: 104..116,
+                            },
+                            StyleProperty {
+                                name: KeySegment {
+                                    name: "stroke-width",
+                                    span: 119..131,
+                                },
+                                value: Scalar {
+                                    text: "2",
+                                    span: 133..134,
+                                },
+                                span: 119..134,
+                            },
+                            StyleProperty {
+                                name: KeySegment {
+                                    name: "opacity",
+                                    span: 137..144,
+                                },
+                                value: Scalar {
+                                    text: "0.4",
+                                    span: 146..149,
+                                },
+                                span: 137..149,
+                            },
+                            StyleProperty {
+                                name: KeySegment {
+                                    name: "bold",
+                                    span: 152..156,
+                                },
+                                value: Scalar {
+                                    text: "true",
+                                    span: 158..162,
+                                },
+                                span: 152..162,
+                            },
+                        ],
+                    ),
+                    span: 89..164,
+                },
+            ),
+            Shape(
+                ShapeDeclaration {
+                    path: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "db",
+                                span: 165..167,
+                            },
+                        ],
+                        span: 165..167,
+                    },
+                    label: None,
+                    body: [
+                        Field(
+                            FieldAssignment {
+                                target: KeyPath {
+                                    parent_references: 0,
+                                    segments: [],
+                                    span: 173..173,
+                                },
+                                field: Shape(
+                                    Scalar {
+                                        text: "cylinder",
+                                        span: 180..188,
+                                    },
+                                ),
+                                span: 173..188,
+                            },
+                        ),
+                        Field(
+                            FieldAssignment {
+                                target: KeyPath {
+                                    parent_references: 0,
+                                    segments: [],
+                                    span: 191..191,
+                                },
+                                field: Style(
+                                    [
+                                        StyleProperty {
+                                            name: KeySegment {
+                                                name: "shadow",
+                                                span: 197..203,
+                                            },
+                                            value: Scalar {
+                                                text: "false",
+                                                span: 205..210,
+                                            },
+                                            span: 191..210,
+                                        },
+                                    ],
+                                ),
+                                span: 191..210,
+                            },
+                        ),
+                        Field(
+                            FieldAssignment {
+                                target: KeyPath {
+                                    parent_references: 0,
+                                    segments: [],
+                                    span: 213..213,
+                                },
+                                field: Style(
+                                    [
+                                        StyleProperty {
+                                            name: KeySegment {
+                                                name: "font-color",
+                                                span: 222..232,
+                                            },
+                                            value: Scalar {
+                                                text: "#FFF",
+                                                span: 234..240,
+                                            },
+                                            span: 222..240,
+                                        },
+                                        StyleProperty {
+                                            name: KeySegment {
+                                                name: "border-radius",
+                                                span: 242..255,
+                                            },
+                                            value: Scalar {
+                                                text: "10",
+                                                span: 257..259,
+                                            },
+                                            span: 242..259,
+                                        },
+                                    ],
+                                ),
+                                span: 213..261,
+                            },
+                        ),
+                    ],
+                    span: 165..263,
+                },
+            ),
+            Edge(
+                EdgeDeclaration {
+                    source: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "api",
+                                span: 264..267,
+                            },
+                        ],
+                        span: 264..267,
+                    },
+                    links: [
+                        EdgeLink {
+                            operator: Forward,
+                            operator_span: 268..270,
+                            target: KeyPath {
+                                parent_references: 0,
+                                segments: [
+                                    KeySegment {
+                                        name: "db",
+                                        span: 271..273,
+                                    },
+                                ],
+                                span: 271..273,
+                            },
+                        },
+                    ],
+                    label: None,
+                    fields: [
+                        Style(
+                            [
+                                StyleProperty {
+                                    name: KeySegment {
+                                        name: "animated",
+                                        span: 286..294,
+                                    },
+                                    value: Scalar {
+                                        text: "true",
+                                        span: 296..300,
+                                    },
+                                    span: 286..300,
+                                },
+                            ],
+                        ),
+                    ],
+                    span: 264..304,
+                },
+            ),
+        ],
+    },
+    errors: [],
+    warnings: [],
+}

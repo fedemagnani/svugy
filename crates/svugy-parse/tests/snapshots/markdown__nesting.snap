@@ -1,0 +1,60 @@
+---
+source: crates/svugy-parse/tests/markdown.rs
+expression: model_json
+---
+{
+  "title": "Order desk",
+  "subtitle": "How an order becomes a trade, from click to ledger.",
+  "elements": {
+    "client": {
+      "label": "client",
+      "span": {
+        "start": 249,
+        "end": 255
+      }
+    },
+    "desk": {
+      "label": "Order desk",
+      "span": {
+        "start": 258,
+        "end": 274
+      }
+    },
+    "desk.api": {
+      "label": "api",
+      "span": {
+        "start": 279,
+        "end": 282
+      }
+    },
+    "desk.engine": {
+      "label": "Matching engine",
+      "span": {
+        "start": 287,
+        "end": 312
+      }
+    },
+    "desk.engine.book": {
+      "label": "book",
+      "span": {
+        "start": 319,
+        "end": 323
+      }
+    },
+    "ledger": {
+      "label": "Ledger (append-only)",
+      "span": {
+        "start": 326,
+        "end": 356
+      }
+    },
+    "ledger.store": {
+      "label": "store",
+      "span": {
+        "start": 361,
+        "end": 366
+      }
+    }
+  },
+  "edges": []
+}

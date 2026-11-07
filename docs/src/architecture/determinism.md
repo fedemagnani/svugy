@@ -1,9 +1,20 @@
 # Determinism
 
-You commit SVGs and review their diffs, so the same input has to give the same bytes on every machine.
+SVGs are committed and reviewed as diffs, so the same input must give the same bytes on every machine.
 
-The font is bundled, so label widths never depend on what's installed. `std`'s `sin` and `cbrt` can differ in the last bit between platforms, so every transcendental goes through `libm`, and Clippy bans the `std` versions. Numbers have fixed decimals and attributes are sorted. dagre had a spot where `HashMap` iteration order leaked into the layout; it's vendored and patched.
+## Components
 
-Snapshot tests pin the model JSON and both SVG profiles, and a pixel golden pins the static raster. Three hundred random graphs are each rendered twice and compared. CI renders the same input on Linux, macOS and wasm and diffs the bytes.
+**Pinned inputs**
 
-The banned functions are in `clippy.toml`, every dagre patch is listed in `vendor/svugy-dagre/VENDORED.md`, the tests are in `crates/svugy/tests/determinism.rs`, and the CI jobs are in `.github/workflows/ci.yml`.
+- Inter is bundled, so label widths never depend on installed fonts.
+- `std` transcendentals can differ in the last bit across platforms, so every transcendental goes through `libm`; `clippy.toml` bans the `std` versions and the kurbo calls that use them.
+- Upstream dagre-dgl-rs broke ties in `HashMap` order and numbered nodes from a global counter; `vendor/svugy-dagre` patches both (`VENDORED.md`).
+- `Model` and `LevelPlans` keep their entries in `BTreeMap`s, iterated in key order.
+
+**One output spelling**: at most 3 decimals per number, attributes sorted.
+
+**Tests**
+
+- Snapshots pin the golden example's model JSON, both SVGs and the static raster (`crates/svugy/tests/golden_svugy.rs`).
+- 300 random graphs are each rendered twice and compared (`crates/svugy/tests/determinism.rs`).
+- CI renders `examples/svugy.d2` on Linux, macOS and wasm32-wasip1 and diffs each result against the committed `docs/svugy.svg`.

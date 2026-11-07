@@ -1,11 +1,31 @@
 # Geometry
 
-Geometry turns the flat boxes from layout into isometric shapes.
+Geometry is the only layer that knows the picture is isometric. It projects `LevelPlans` into a `Scene` in paint order, so render writes it in sequence.
 
-The projection uses exact constants, so there's no trigonometry at render time. There are four primitives: box, slab, cylinder and disc. Open containers are always slabs. A closed container is drawn like a leaf, with its own shape and height, and gets a sheet: its body's outline a fifth of a block thick, lowered just under it and painted faintly before its faces, as a hint that there is more inside. Solids are sorted back to front, the painter's algorithm, and every connection is drawn as an arc over the scene from port to port.
+## Components
 
-Labels are kept off faces and off each other. Stub plates lie flat on their slab, badges sit on top faces, and the title and legend stay fixed in document space. Every container gets its own coordinate frame, which is what lets the viewer zoom into it.
+**Projection**
 
-Stubs and badges take no ports and route nothing, so hiding them never moves a visible arc.
+- screen = ((x − y)·√3/2, (x + y)/2 − z), √3/2 stored as a literal, so no trigonometry runs.
+- Each level gets its own frame, mapping it into its parent, and its own view, the rectangle the runtime zooms to.
 
-The code is in `crates/svugy/src/geometry`: `projection.rs`, `primitive.rs`, `level.rs`, `depth.rs`, `connection.rs`, `stub.rs`, `badge.rs`, `obstruction.rs`.
+**Primitives**
+
+- Footprints extrude into a block (leaves, default 22.5 tall), slab (containers, 10.5), cylinder (25.5) or disc (10.5).
+- A closed container is drawn as a leaf over a faint 4.5-unit sheet hinting at its contents.
+
+**Depth** sorts each level's solids back to front: a footprint paints first when a sight line x − y = k meets it before the other.
+
+**Connections** are quadratic Béziers from port to port, the apex 20 + 0.2·span plan units above the higher port, so long arcs clear what they cross.
+
+**Plates** put each connection label, stub tag and badge at the candidate spot overlapping the fewest labels and earlier plates.
+
+**Stubs and badges** route nothing.
+
+- A stub tag lies flat on its container's slab by its slot.
+- A badge is its target shrunk to 19.2 screen units on its source's top face.
+- Adding or removing either moves no arc (tested in `crates/svugy/src/lib.rs`).
+
+**Heading and legend** sit in document space, outside every level's frame.
+
+Code: `crates/svugy/src/geometry/`.

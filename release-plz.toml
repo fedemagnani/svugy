@@ -18,7 +18,7 @@ version_group = "svugy"
 git_release_enable = false
 
 [[package]]
-name = "svugy-import"
+name = "svugy-parse"
 version_group = "svugy"
 git_release_enable = false
 

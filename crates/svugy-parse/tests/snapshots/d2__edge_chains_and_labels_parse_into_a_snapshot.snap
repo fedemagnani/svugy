@@ -1,0 +1,321 @@
+---
+source: crates/svugy-parse/tests/d2.rs
+expression: parsed
+---
+D2Parse {
+    document: D2Document {
+        statements: [
+            Edge(
+                EdgeDeclaration {
+                    source: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "client",
+                                span: 37..43,
+                            },
+                        ],
+                        span: 37..43,
+                    },
+                    links: [
+                        EdgeLink {
+                            operator: Forward,
+                            operator_span: 44..46,
+                            target: KeyPath {
+                                parent_references: 0,
+                                segments: [
+                                    KeySegment {
+                                        name: "gateway",
+                                        span: 47..54,
+                                    },
+                                ],
+                                span: 47..54,
+                            },
+                        },
+                        EdgeLink {
+                            operator: Forward,
+                            operator_span: 55..57,
+                            target: KeyPath {
+                                parent_references: 0,
+                                segments: [
+                                    KeySegment {
+                                        name: "api",
+                                        span: 58..61,
+                                    },
+                                ],
+                                span: 58..61,
+                            },
+                        },
+                    ],
+                    label: Some(
+                        Scalar {
+                            text: "HTTPS",
+                            span: 63..68,
+                        },
+                    ),
+                    fields: [],
+                    span: 37..68,
+                },
+            ),
+            Edge(
+                EdgeDeclaration {
+                    source: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "api",
+                                span: 69..72,
+                            },
+                        ],
+                        span: 69..72,
+                    },
+                    links: [
+                        EdgeLink {
+                            operator: Backward,
+                            operator_span: 73..75,
+                            target: KeyPath {
+                                parent_references: 0,
+                                segments: [
+                                    KeySegment {
+                                        name: "worker",
+                                        span: 76..82,
+                                    },
+                                ],
+                                span: 76..82,
+                            },
+                        },
+                    ],
+                    label: None,
+                    fields: [],
+                    span: 69..82,
+                },
+            ),
+            Edge(
+                EdgeDeclaration {
+                    source: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "api",
+                                span: 83..86,
+                            },
+                        ],
+                        span: 83..86,
+                    },
+                    links: [
+                        EdgeLink {
+                            operator: Bidirectional,
+                            operator_span: 87..90,
+                            target: KeyPath {
+                                parent_references: 0,
+                                segments: [
+                                    KeySegment {
+                                        name: "cache",
+                                        span: 91..96,
+                                    },
+                                ],
+                                span: 91..96,
+                            },
+                        },
+                    ],
+                    label: Some(
+                        Scalar {
+                            text: "sync",
+                            span: 98..102,
+                        },
+                    ),
+                    fields: [],
+                    span: 83..102,
+                },
+            ),
+            Edge(
+                EdgeDeclaration {
+                    source: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "api",
+                                span: 103..106,
+                            },
+                        ],
+                        span: 103..106,
+                    },
+                    links: [
+                        EdgeLink {
+                            operator: Undirected,
+                            operator_span: 107..109,
+                            target: KeyPath {
+                                parent_references: 0,
+                                segments: [
+                                    KeySegment {
+                                        name: "logs",
+                                        span: 110..114,
+                                    },
+                                ],
+                                span: 110..114,
+                            },
+                        },
+                    ],
+                    label: None,
+                    fields: [],
+                    span: 103..114,
+                },
+            ),
+            Edge(
+                EdgeDeclaration {
+                    source: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "a",
+                                span: 115..116,
+                            },
+                        ],
+                        span: 115..116,
+                    },
+                    links: [
+                        EdgeLink {
+                            operator: Forward,
+                            operator_span: 117..121,
+                            target: KeyPath {
+                                parent_references: 0,
+                                segments: [
+                                    KeySegment {
+                                        name: "b",
+                                        span: 122..123,
+                                    },
+                                ],
+                                span: 122..123,
+                            },
+                        },
+                        EdgeLink {
+                            operator: Backward,
+                            operator_span: 124..128,
+                            target: KeyPath {
+                                parent_references: 0,
+                                segments: [
+                                    KeySegment {
+                                        name: "c",
+                                        span: 129..130,
+                                    },
+                                ],
+                                span: 129..130,
+                            },
+                        },
+                    ],
+                    label: None,
+                    fields: [],
+                    span: 115..130,
+                },
+            ),
+            Edge(
+                EdgeDeclaration {
+                    source: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "cloud",
+                                span: 131..136,
+                            },
+                            KeySegment {
+                                name: "vpc",
+                                span: 137..140,
+                            },
+                            KeySegment {
+                                name: "api",
+                                span: 141..144,
+                            },
+                        ],
+                        span: 131..144,
+                    },
+                    links: [
+                        EdgeLink {
+                            operator: Forward,
+                            operator_span: 145..147,
+                            target: KeyPath {
+                                parent_references: 0,
+                                segments: [
+                                    KeySegment {
+                                        name: "db.primary",
+                                        span: 148..160,
+                                    },
+                                ],
+                                span: 148..160,
+                            },
+                        },
+                    ],
+                    label: Some(
+                        Scalar {
+                            text: "reads",
+                            span: 162..167,
+                        },
+                    ),
+                    fields: [
+                        Label(
+                            Scalar {
+                                text: "SQL over TLS",
+                                span: 179..191,
+                            },
+                        ),
+                        Style(
+                            [
+                                StyleProperty {
+                                    name: KeySegment {
+                                        name: "stroke-dash",
+                                        span: 200..211,
+                                    },
+                                    value: Scalar {
+                                        text: "3",
+                                        span: 213..214,
+                                    },
+                                    span: 194..214,
+                                },
+                            ],
+                        ),
+                    ],
+                    span: 131..216,
+                },
+            ),
+            Edge(
+                EdgeDeclaration {
+                    source: KeyPath {
+                        parent_references: 0,
+                        segments: [
+                            KeySegment {
+                                name: "x",
+                                span: 217..218,
+                            },
+                        ],
+                        span: 217..218,
+                    },
+                    links: [
+                        EdgeLink {
+                            operator: Forward,
+                            operator_span: 219..221,
+                            target: KeyPath {
+                                parent_references: 0,
+                                segments: [
+                                    KeySegment {
+                                        name: "y",
+                                        span: 222..223,
+                                    },
+                                ],
+                                span: 222..223,
+                            },
+                        },
+                    ],
+                    label: Some(
+                        Scalar {
+                            text: "label with -> arrow and: colon",
+                            span: 225..255,
+                        },
+                    ),
+                    fields: [],
+                    span: 217..255,
+                },
+            ),
+        ],
+    },
+    errors: [],
+    warnings: [],
+}

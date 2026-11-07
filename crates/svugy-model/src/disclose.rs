@@ -26,7 +26,7 @@ impl DisclosedModel {
         layers.map(|layer| Self::at_layer(model, layer)).collect()
     }
 
-    /// Disclose `model` as layer `layer` shows it: every element down to depth `layer + 1`, the containers at that depth closed, each edge reaching below it lifted onto the shown ancestors of its endpoints and merged per shown pair.
+    /// Disclose `model` as layer `layer` shows it: every element down to depth `layer + 1`, the containers at that depth closed, each edge reaching below it lifted onto the shown ancestors of its endpoints, merged per shown pair and drawn as an arc.
     fn at_layer(model: &Model, layer: usize) -> Self {
         let deepest_shown_depth = layer + 1;
         let shown_elements: BTreeMap<ElementPath, Element> = model
@@ -88,16 +88,15 @@ impl DisclosedModel {
         let mut lifted_origins = BTreeMap::new();
         for ((shown_from, shown_to), lifted_edges) in lifted_edges_by_shown_pair {
             let merged_edge = match lifted_edges.as_slice() {
-                [(_only_id, only_edge)] => (*only_edge).clone(),
-                several_edges => {
-                    let is_every_merged_edge_badge =
-                        several_edges.iter().all(|(_id, edge)| edge.is_badge());
-                    let unlabelled_edge = Edge::new();
-                    Edge {
-                        badge: is_every_merged_edge_badge,
-                        ..unlabelled_edge
+                [(only_id, only_edge)] => {
+                    let mut lifted_edge = (*only_edge).clone();
+                    let is_target_lifted = only_id.to() != &shown_to;
+                    if is_target_lifted {
+                        lifted_edge.badge = false;
                     }
+                    lifted_edge
                 }
+                _several_edges => Edge::new(),
             };
             let merged_id = disclosed_model.insert_edge_with_next_free_ordinal(
                 shown_from,

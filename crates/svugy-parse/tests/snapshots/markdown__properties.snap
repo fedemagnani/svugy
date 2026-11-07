@@ -1,0 +1,110 @@
+---
+source: crates/svugy-parse/tests/markdown.rs
+expression: model_json
+---
+{
+  "elements": {
+    "cache": {
+      "label": "cache",
+      "caption": "*not* emphasis, `not` code, snake_case_kept",
+      "shape": "cylinder",
+      "height": 40.0,
+      "style": {
+        "fill": "#d5dcea80"
+      },
+      "span": {
+        "start": 410,
+        "end": 515
+      }
+    },
+    "gateway": {
+      "label": "API gateway",
+      "caption": "edge, rate limits",
+      "style": {
+        "fill": "#9945ff",
+        "stroke": "navy",
+        "stroke-dash": "5"
+      },
+      "position": {
+        "x": 0.0,
+        "y": 40.0
+      },
+      "link": "https://example.com",
+      "link_span": {
+        "start": 279,
+        "end": 298
+      },
+      "metadata": {
+        "owner": "platform team",
+        "tier": "1"
+      },
+      "span": {
+        "start": 167,
+        "end": 340
+      }
+    },
+    "queue": {
+      "label": "queue",
+      "shape": "disc",
+      "height": 12.0,
+      "style": {
+        "fill": "transparent"
+      },
+      "position": {
+        "x": 260.0,
+        "y": 0.0
+      },
+      "span": {
+        "start": 343,
+        "end": 407
+      }
+    },
+    "services": {
+      "label": "services",
+      "caption": "four of them",
+      "child_placement": {
+        "grid": {
+          "columns": 2
+        }
+      },
+      "span": {
+        "start": 518,
+        "end": 573
+      }
+    },
+    "services.a": {
+      "label": "a",
+      "span": {
+        "start": 578,
+        "end": 579
+      }
+    },
+    "services.b": {
+      "label": "b",
+      "link": "queue",
+      "link_span": {
+        "start": 592,
+        "end": 597
+      },
+      "span": {
+        "start": 584,
+        "end": 598
+      }
+    },
+    "services.c": {
+      "label": "c",
+      "span": {
+        "start": 603,
+        "end": 604
+      }
+    },
+    "services.d": {
+      "label": "d",
+      "span": {
+        "start": 609,
+        "end": 610
+      }
+    }
+  },
+  "edges": []
+}

@@ -37,7 +37,7 @@ jobs:
           path: crates/svugy/tests/snapshots/*.snap.new*
           if-no-files-found: ignore
       - name: Wasm check
-        run: cargo check -p svugy-model -p svugy-import -p svugy -p svugy-wasm --target wasm32-unknown-unknown
+        run: cargo check -p svugy-model -p svugy-parse -p svugy -p svugy-wasm --target wasm32-unknown-unknown
 
   d2-accepts-fixtures:
     runs-on: ubuntu-latest

@@ -12,3 +12,6 @@ build-dir = "book"
 additional-css = ["theme/figures.css", "theme/playground.css"]
 default-theme = "navy"
 preferred-dark-theme = "navy"
+
+[output.html.print]
+enable = false

@@ -60,6 +60,8 @@ mod tests {
     use svugy_model::builder::ModelBuilder;
     use svugy_model::model::{Edge, Element};
     use svugy_model::path::ElementPath;
+    use svugy_parse::diagnostic::SourceLanguage;
+    use svugy_parse::json::{JsonLanguage, JsonPrinter};
 
     use crate::geometry::{Badge, Connection};
 
@@ -135,15 +137,18 @@ mod tests {
 
     /// Reload `model` without the edges pointing to `target`, as if they had never been written.
     fn without_edges_into(model: &Model, target: &str) -> Model {
-        let saved = model.to_json();
+        let saved = JsonPrinter::print(model);
         let mut model_value: serde_json::Value = serde_json::from_str(&saved).expect("JSON");
         let edges = model_value["edges"]
             .as_array_mut()
             .expect("a model saves its edges as an array");
         edges.retain(|edge| edge["to"] != target);
         let pruned = model_value.to_string();
-        let admission = Model::load_json(&pruned).expect("well-formed JSON");
-        admission.model.expect("dropping edges keeps a sound model")
+        let import = JsonLanguage::import(&pruned);
+        let import_parts = import.into_admitted_parts();
+        import_parts
+            .model
+            .expect("dropping edges keeps a sound model")
     }
 
     /// Collect every badge of `scene`, the root's solids first, then each interior's in paint order.

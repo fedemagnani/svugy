@@ -10,18 +10,18 @@ default:
 docs: figures playground
     mdbook build docs --open
 
-# Render every docs/diagrams/*.d2 and the golden examples/svugy.d2 as interactive SVGs.
+# Render every docs/diagrams/*.md and *.d2, the shipped example and the golden examples/svugy.md as interactive SVGs.
 figures:
     #!/usr/bin/env bash
     set -euo pipefail
     cargo build --quiet --release -p svugy-cli
     mkdir -p {{figures}}
-    for source in docs/diagrams/*.d2 examples/svugy.d2; do
-        name="$(basename "$source" .d2)"
+    for source in docs/diagrams/*.md docs/diagrams/*.d2 crates/svugy-cli/example/webapp.md examples/svugy.md; do
+        name="$(basename "${source%.*}")"
         {{svugy}} render "$source" -o "{{figures}}/$name.svg"
     done
 
-# Compile svugy to wasm and embed it, base64-encoded, in a script the overview loads, so the live editor works from file:// too.
+# Compile svugy to wasm and embed it, base64-encoded, in a script the live editors load, so they work from file:// too.
 playground:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -33,9 +33,9 @@ playground:
         printf '";\n'
     } > "{{playground}}/svugy-wasm.js"
 
-# Render crates/svugy/runtime/fixture.json, kept as JSON because d2 rejects edge travelers, as the interactive SVG the runtime is tested against.
+# Render the shipped web-app example, which draws every traveler, as the interactive SVG the runtime is tried against.
 fixture:
-    cargo run --quiet -p svugy-cli -- render crates/svugy/runtime/fixture.json -o crates/svugy/runtime/fixture.svg
+    cargo run --quiet -p svugy-cli -- render crates/svugy-cli/example/webapp.md -o crates/svugy/runtime/fixture.svg
 
 # Render examples/svugy.d2 as the static SVG the README shows.
 readme:

@@ -21,7 +21,7 @@ vars: {
 
 text: your text {
   style.fill: "#3a3f4b"
-  vars: { svugy: { caption: "d2 · JSON · Rust builder"; position: { x: 0; y: 40 } } }
+  vars: { svugy: { caption: "Markdown · d2 · JSON"; position: { x: 0; y: 40 } } }
 }
 
 cli: svugy-cli {
@@ -36,24 +36,22 @@ d2: d2 v0.9.0 {
   vars: { svugy: { caption: "reference grammar"; position: { x: 260; y: -220 } } }
 }
 
-import: svugy-import {
+import: svugy-parse {
   style.fill: "#2a2418"
-  vars: { svugy: { caption: "d2 → model"; position: { x: 260; y: 0 } } }
+  vars: { svugy: { caption: "text → model"; position: { x: 260; y: 0 } } }
 
-  lex: {
+  markdown: Markdown {
     style.fill: "#f0a020"
-    vars: { svugy: { caption: "logos tokens"; position: { x: 18; y: 18 } } }
+    vars: { svugy: { caption: "parse · print"; position: { x: 18; y: 18 } } }
   }
-  parse: {
+  d2: {
     style.fill: "#f0a020"
-    vars: { svugy: { caption: "chumsky + recovery"; position: { x: 150; y: 18 } } }
+    vars: { svugy: { caption: import; position: { x: 150; y: 18 } } }
   }
-  lower: {
+  json: JSON {
     style.fill: "#f0a020"
-    vars: { svugy: { caption: "AST → model"; position: { x: 282; y: 18 } } }
+    vars: { svugy: { caption: "load · save"; position: { x: 282; y: 18 } } }
   }
-  lex -> parse
-  parse -> lower
 }
 
 model: svugy-model {
@@ -72,13 +70,8 @@ model: svugy-model {
     style.fill: "#14f195"
     vars: { svugy: { caption: "problems · bounds"; position: { x: 18; y: 180 } } }
   }
-  json: {
-    style.fill: "#14f195"
-    vars: { svugy: { caption: "id-keyed schema"; position: { x: 150; y: 180 } } }
-  }
   path -> graph
   graph -> validate
-  graph -> json
 }
 
 pipeline: svugy {

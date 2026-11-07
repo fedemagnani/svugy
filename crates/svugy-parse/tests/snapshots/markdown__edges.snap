@@ -1,0 +1,156 @@
+---
+source: crates/svugy-parse/tests/markdown.rs
+assertion_line: 38
+expression: model_json
+---
+{
+  "elements": {
+    "api": {
+      "label": "api",
+      "span": {
+        "start": 176,
+        "end": 179
+      }
+    },
+    "billing": {
+      "label": "billing",
+      "span": {
+        "start": 226,
+        "end": 233
+      }
+    },
+    "billing.api": {
+      "label": "api",
+      "span": {
+        "start": 238,
+        "end": 241
+      }
+    },
+    "billing.store": {
+      "label": "store",
+      "shape": "cylinder",
+      "span": {
+        "start": 246,
+        "end": 268
+      }
+    },
+    "client": {
+      "label": "client",
+      "span": {
+        "start": 167,
+        "end": 173
+      }
+    },
+    "orders": {
+      "label": "orders",
+      "span": {
+        "start": 182,
+        "end": 188
+      }
+    },
+    "orders.api": {
+      "label": "api",
+      "span": {
+        "start": 193,
+        "end": 196
+      }
+    },
+    "orders.store": {
+      "label": "store",
+      "shape": "cylinder",
+      "span": {
+        "start": 201,
+        "end": 223
+      }
+    }
+  },
+  "edges": [
+    {
+      "from": "billing.api",
+      "to": "billing.store",
+      "ordinal": 0,
+      "badge": true,
+      "span": {
+        "start": 490,
+        "end": 518
+      }
+    },
+    {
+      "from": "client",
+      "to": "api",
+      "ordinal": 0,
+      "label": "health: ok -> degraded",
+      "span": {
+        "start": 599,
+        "end": 612
+      }
+    },
+    {
+      "from": "client",
+      "to": "billing.api",
+      "ordinal": 0,
+      "label": "pays",
+      "span": {
+        "start": 320,
+        "end": 341
+      }
+    },
+    {
+      "from": "client",
+      "to": "orders.api",
+      "ordinal": 0,
+      "span": {
+        "start": 281,
+        "end": 301
+      }
+    },
+    {
+      "from": "orders.api",
+      "to": "billing.api",
+      "ordinal": 0,
+      "label": "charges",
+      "traveler": "envelope",
+      "span": {
+        "start": 350,
+        "end": 375
+      }
+    },
+    {
+      "from": "orders.api",
+      "to": "billing.api",
+      "ordinal": 1,
+      "label": "refunds",
+      "style": {
+        "stroke": "#5b6170",
+        "stroke-dash": "5"
+      },
+      "traveler": "parcel",
+      "span": {
+        "start": 407,
+        "end": 432
+      }
+    },
+    {
+      "from": "orders.api",
+      "to": "orders.store",
+      "ordinal": 0,
+      "span": {
+        "start": 291,
+        "end": 317
+      }
+    },
+    {
+      "from": "orders.store",
+      "to": "billing.store",
+      "ordinal": 0,
+      "style": {
+        "stroke-dash": "2"
+      },
+      "traveler": "document",
+      "span": {
+        "start": 534,
+        "end": 563
+      }
+    }
+  ]
+}

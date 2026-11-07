@@ -1,9 +1,7 @@
 use miette::Diagnostic;
 use svugy_model::builder::ModelBuilder;
 use svugy_model::legend::Legend;
-use svugy_model::model::{
-    ByteRange, Edge, Element, MAX_MAGNITUDE, Model, PlacementHint, Position, Shape,
-};
+use svugy_model::model::{ByteRange, Edge, Element, MAX_MAGNITUDE, PlacementHint, Position, Shape};
 use svugy_model::path::ElementPath;
 use svugy_model::problem::{ErrorSeverity, Problem, StyleOwner, Suggestion};
 use svugy_model::style::AnyStyleKey;
@@ -384,16 +382,13 @@ fn resolved_links_urls_and_relative_paths_raise_nothing() {
 }
 
 #[test]
-fn a_json_model_with_only_warnings_loads() {
-    let warned = r#"{
-        "elements": {
-            "desk": { "label": "desk", "link": "dsk" },
-            "desk.quoter": { "label": "quoter" }
-        },
-        "edges": [ { "from": "desk", "to": "desk.quoter" } ]
-    }"#;
+fn a_model_with_only_warnings_is_admitted() {
+    let mut builder = ModelBuilder::new();
+    let desk = builder.add_top_level("desk", Element::new("desk").with_link("dsk"));
+    let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
+    let _desk_to_quoter = builder.add_edge(&desk, &quoter, Edge::new());
 
-    let admission = Model::load_json(warned).expect("well-formed JSON");
+    let admission = builder.build();
 
     let report = admission.report;
     let is_error_free = report.problems().iter().all(|problem| !problem.is_error());
@@ -441,17 +436,23 @@ fn a_badge_edge_with_a_container_at_either_end_is_an_error_labelled_at_the_edge(
     let app = builder.add_top_level("app", Element::new("app"));
     let calls_desk = Edge::new().with_badge().with_span(ByteRange::new(0, 4));
     let calls = builder.add_edge(&app, &desk, calls_desk);
+    let notifies = builder.add_edge(&desk, &app, Edge::new().with_badge());
     let _quotes = builder.add_edge(&quoter, &app, Edge::new().with_badge());
 
     let report = rejected_report(builder);
 
     let problems = report.problems();
-    let [Problem::BadgeEdgeOnContainer(badge_on_container)] = problems else {
+    let [
+        Problem::BadgeEdgeOnContainer(badge_into_container),
+        Problem::BadgeEdgeOnContainer(badge_from_container),
+    ] = problems
+    else {
         panic!(
-            "only the badge into a container is reported, a badge from a leaf being sound: {problems:?}"
+            "the badges into and from a container are reported, the badge between leaves being sound: {problems:?}"
         );
     };
-    assert_eq!(badge_on_container.edge, calls);
+    assert_eq!(badge_into_container.edge, calls);
+    assert_eq!(badge_from_container.edge, notifies);
     let labels: Vec<_> = problems[0]
         .labels()
         .expect("the error is labelled")

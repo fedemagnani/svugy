@@ -87,7 +87,7 @@ main:has(.svugy-playground) {
 .svugy-token-arrow { color: #ffcb6b; font-weight: bold; }
 .svugy-token-punctuation { color: #89a0b8; }
 
-#svugy-diagnostics {
+.svugy-diagnostics {
   list-style: none;
   padding: 0;
   margin: 0 0 1em;
@@ -95,15 +95,15 @@ main:has(.svugy-playground) {
   font-size: 12.5px;
 }
 
-#svugy-diagnostics li {
+.svugy-diagnostics li {
   padding: 4px 8px;
   border-left: 3px solid transparent;
 }
 
-#svugy-diagnostics li[data-line] {
+.svugy-diagnostics li[data-line] {
   cursor: pointer;
 }
 
-#svugy-diagnostics .svugy-diagnostic-error { border-color: #ff5370; }
-#svugy-diagnostics .svugy-diagnostic-warning { border-color: #ffcb6b; }
-#svugy-diagnostics .svugy-diagnostic-status { color: #7d8799; }
+.svugy-diagnostics .svugy-diagnostic-error { border-color: #ff5370; }
+.svugy-diagnostics .svugy-diagnostic-warning { border-color: #ffcb6b; }
+.svugy-diagnostics .svugy-diagnostic-status { color: #7d8799; }
