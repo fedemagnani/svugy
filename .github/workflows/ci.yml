@@ -21,6 +21,8 @@ jobs:
         run: cargo fmt --all --check
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: No bare `_` patterns
+        run: "! git grep -nE '\\|_\\||(^|[^a-zA-Z0-9_])_ =>|let _ =|[(,] ?_[,)]' -- 'crates/**/*.rs'"
       - name: Runtime syntax
         run: node --check crates/svugy/runtime/svugy.js
       - name: Test

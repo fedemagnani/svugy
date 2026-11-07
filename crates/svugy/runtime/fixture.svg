@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" data-svugy-contract="1" height="520" viewBox="-360 -160 820 520" width="820">
+<svg data-svugy-contract="2" height="422" viewBox="-318.5 -11 827.5 422" width="827.5" xmlns="http://www.w3.org/2000/svg">
 <style>/*<![CDATA[*/[data-svugy-overlay] { visibility: hidden; }
 [data-svugy-entered] > [data-svugy-overlay] { visibility: visible; }
 
@@ -36,150 +36,312 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
 .e { font-size: 11.5px; font-weight: 600; letter-spacing: 0.4px; fill: #8f98ad; }
 .f { font-size: 10.5px; font-weight: 500; }
 .r { font-size: 9px; font-weight: 600; text-anchor: start; letter-spacing: 0.3px; }
+/* TODO: temporary until step 1C. */
+[data-svugy-layer]:not([data-svugy-shown]) { visibility: hidden; }
 /*]]>*/</style>
 <defs>
 <marker id="arrowhead-0" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
+<path d="M0,1 L9,5 L0,9 Z" fill="#7aa2ff"/>
+</marker>
+<marker id="arrowhead-1" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
+<path d="M0,1 L9,5 L0,9 Z" fill="#9fe3d6"/>
+</marker>
+<marker id="arrowhead-2" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
 <path d="M0,1 L9,5 L0,9 Z" fill="#c9cfdd"/>
 </marker>
+<marker id="arrowhead-3" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
+<path d="M0,1 L9,5 L0,9 Z" fill="#f2b84b"/>
+</marker>
+<symbol id="traveler-dot" viewBox="-5 -5 10 10"><circle r="3"/></symbol>
+<symbol id="traveler-envelope" viewBox="-5 -5 10 10"><rect height="6" rx="0.8" width="9" x="-4.5" y="-3"/><path d="M-4.5,-3 L0,0.6 L4.5,-3" fill="none" stroke="#0a0b10" stroke-width="0.9"/></symbol>
+<symbol id="traveler-parcel" viewBox="-5 -5 10 10"><rect height="8" rx="0.8" width="8" x="-4" y="-4"/><path d="M0,-4 V4 M-4,-1 H4" fill="none" stroke="#0a0b10" stroke-width="0.9"/></symbol>
+<symbol id="traveler-document" viewBox="-5 -5 10 10"><path d="M-3.5,-4.5 H1.5 L3.5,-2.5 V4.5 H-3.5 Z"/><path d="M-2,-1 H2 M-2,1 H2 M-2,3 H1" fill="none" stroke="#0a0b10" stroke-width="0.8"/></symbol>
+<symbol id="traveler-key" viewBox="-5 -5 10 10"><circle cx="-2" r="2.4"/><rect height="1.4" width="5" x="-0.5" y="-0.7"/><rect height="2.2" width="1.2" x="3" y="0"/><circle cx="-2" fill="#0a0b10" r="0.9"/></symbol>
 </defs>
-<rect fill="#0a0b10" height="520" rx="14" width="820" x="-360" y="-160"/>
-<g data-svugy-level="" data-svugy-view="-360 -160 820 520">
+<rect fill="#0a0b10" height="581" rx="14" width="1104.6" x="-370.4" y="-11"/>
+<g data-svugy-layer="0" data-svugy-shown="">
+<g data-svugy-level="" data-svugy-view="-318.5 -11 827.5 422">
+<g data-svugy-element="C" data-svugy-goto="A.a1">
+<title>C · client</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;C&quot;,&quot;label&quot;:&quot;C · client&quot;,&quot;caption&quot;:&quot;link: A.a1&quot;}</desc>
+<path d="M-164.5,69 L-86.6,114 L-86.6,140 L-164.5,95 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-34.6,84 L-86.6,114 L-86.6,140 L-34.6,110 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-112.6,39 L-34.6,84 L-86.6,114 L-164.5,69 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="-99.6" y="80.5">C · client</text>
+</g>
+<g data-svugy-closed="" data-svugy-element="A">
+<title>A · desk</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A&quot;,&quot;label&quot;:&quot;A · desk&quot;,&quot;caption&quot;:&quot;order desk&quot;,&quot;metadata&quot;:{&quot;team&quot;:&quot;trading&quot;}}</desc>
+<path d="M86.6,152 L216.5,227 L216.5,231 L86.6,156 Z" fill="#2d313b" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M303.1,177 L216.5,227 L216.5,231 L303.1,181 Z" fill="#23262e" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M173.2,102 L303.1,177 L216.5,227 L86.6,152 Z" fill="#3b404d" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M86.6,126 L216.5,201 L216.5,225 L86.6,150 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M303.1,151 L216.5,201 L216.5,225 L303.1,175 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M173.2,76 L303.1,151 L216.5,201 L86.6,126 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="194.9" y="142.5">A · desk</text>
+</g>
+<g data-svugy-element="E">
+<title>E</title><desc data-svugy-details="">{"kind":"element", not json</desc>
+<path d="M-268.5,137 L-190.5,182 L-190.5,200 L-268.5,155 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-138.6,152 L-190.5,182 L-190.5,200 L-138.6,170 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-216.5,107 L-138.6,152 L-190.5,182 L-268.5,137 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="-203.5" y="148.5">E</text>
+</g>
+<g data-svugy-closed="" data-svugy-element="B">
+<title>B · ledger</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;B&quot;,&quot;label&quot;:&quot;B · ledger&quot;}</desc>
+<path d="M242.5,282 L372.4,357 L372.4,361 L242.5,286 Z" fill="#2d313b" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M459,307 L372.4,357 L372.4,361 L459,311 Z" fill="#23262e" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M329.1,232 L459,307 L372.4,357 L242.5,282 Z" fill="#3b404d" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M242.5,256 L372.4,331 L372.4,355 L242.5,280 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M459,281 L372.4,331 L372.4,355 L459,305 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M329.1,206 L459,281 L372.4,331 L242.5,256 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="350.7" y="272.5">B · ledger</text>
+</g>
+<g data-svugy-edge="(C -&gt; A)[0]" data-svugy-from="C" data-svugy-to="A">
+<title>calls</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.a1.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;calls&quot;}],&quot;label&quot;:&quot;calls&quot;}</desc>
+<path d="M-60.6,99 Q34.6,40.4 129.9,101" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#c9cfdd" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="key" fill="#c9cfdd" height="10" href="#traveler-key" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M-60.6,99 Q34.6,40.4 129.9,101" repeatCount="indefinite"/></use>
+<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="13.6" y="62.2"/><text class="f" fill="#c9cfdd" x="34.6" y="74.2">calls</text>
+</g>
+<g data-svugy-edge="(A -&gt; B)[0]" data-svugy-from="A" data-svugy-to="B">
+<title>A · desk → B · ledger</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;A&quot;,&quot;to&quot;:&quot;B&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;},{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}]}</desc>
+<path d="M259.8,176 Q272.8,176.3 285.8,231" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#c9cfdd" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#c9cfdd" height="10" href="#traveler-dot" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M259.8,176 Q272.8,176.3 285.8,231" repeatCount="indefinite"/></use>
+</g>
+<g data-svugy-overlay="">
+</g>
+</g>
+</g>
+<g data-svugy-layer="1">
+<g data-svugy-level="" data-svugy-view="-344.4 -1 1035.3 531">
+<g data-svugy-element="C" data-svugy-goto="A.a1">
+<title>C · client</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;C&quot;,&quot;label&quot;:&quot;C · client&quot;,&quot;caption&quot;:&quot;link: A.a1&quot;}</desc>
+<path d="M-181.9,79 L-103.9,124 L-103.9,150 L-181.9,105 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-52,94 L-103.9,124 L-103.9,150 L-52,120 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-129.9,49 L-52,94 L-103.9,124 L-181.9,79 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="-116.9" y="90.5">C · client</text>
+</g>
 <g data-svugy-element="A">
 <title>A · desk</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A&quot;,&quot;label&quot;:&quot;A · desk&quot;,&quot;caption&quot;:&quot;order desk&quot;,&quot;metadata&quot;:{&quot;team&quot;:&quot;trading&quot;}}</desc>
-<path d="M-190.5,110.0 L52.0,250.0 L52.0,238.0 L-190.5,98.0 Z" fill="#141b29" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M242.5,140.0 L52.0,250.0 L52.0,238.0 L242.5,128.0 Z" fill="#10161f" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M0.0,-12.0 L242.5,128.0 L52.0,238.0 L-190.5,98.0 Z" fill="#1b2436" stroke="#0a0b10" stroke-width="0.8"/>
-<g data-svugy-level="A" data-svugy-view="-220.520 -92.000 493.000 372.000" transform="translate(0.0 -12.0)">
-<g data-svugy-element="A.x">
-<title>x · router</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.x&quot;,&quot;label&quot;:&quot;x · router&quot;,&quot;caption&quot;:&quot;routes incoming orders&quot;,&quot;metadata&quot;:{&quot;language&quot;:&quot;Rust&quot;,&quot;owner&quot;:&quot;team-orders&quot;,&quot;replicas&quot;:3,&quot;endpoints&quot;:[&quot;grpc&quot;,&quot;http&quot;]}}</desc>
-<path d="M-57.2,57.0 L3.5,92.0 L3.5,48.0 L-57.2,13.0 Z" fill="#2c55a8" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M55.4,62.0 L3.5,92.0 L3.5,48.0 L55.4,18.0 Z" fill="#234585" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-5.2,-17.0 L55.4,18.0 L3.5,48.0 L-57.2,13.0 Z" fill="#3b6fd8" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="-0.9" y="19.5">x · router</text>
+<path d="M-17.3,200 L242.5,350 L242.5,360 L-17.3,210 Z" fill="#151b29" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M433,240 L242.5,350 L242.5,360 L433,250 Z" fill="#101620" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M173.2,90 L433,240 L242.5,350 L-17.3,200 Z" fill="#1b2436" stroke="#0a0b10" stroke-width="0.8"/>
+<g data-svugy-level="A" data-svugy-view="-47.3 60 510.3 330" transform="translate(173.2 90)">
+<g data-svugy-closed="" data-svugy-element="A.a1">
+<title>a1 · engine</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.a1&quot;,&quot;label&quot;:&quot;a1 · engine&quot;,&quot;caption&quot;:&quot;matching engine&quot;}</desc>
+<path d="M-77.9,77 L52,152 L52,156 L-77.9,81 Z" fill="#2d313b" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M129.9,107 L52,152 L52,156 L129.9,111 Z" fill="#23262e" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M0,32 L129.9,107 L52,152 L-77.9,77 Z" fill="#3b404d" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-77.9,51 L52,126 L52,150 L-77.9,75 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M129.9,81 L52,126 L52,150 L129.9,105 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M0,6 L129.9,81 L52,126 L-77.9,51 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="26" y="70">a1 · engine</text>
 </g>
-<g data-svugy-element="A.y">
-<title>y · engine</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.y&quot;,&quot;label&quot;:&quot;y · engine&quot;,&quot;caption&quot;:&quot;matching engine&quot;}</desc>
-<path d="M-64.1,157.0 L57.2,227.0 L57.2,217.0 L-64.1,147.0 Z" fill="#1a2438" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M204.4,142.0 L57.2,227.0 L57.2,217.0 L204.4,132.0 Z" fill="#141c2c" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M83.1,62.0 L204.4,132.0 L57.2,217.0 L-64.1,147.0 Z" fill="#24314a" stroke="#0a0b10" stroke-width="0.8"/>
-<g data-svugy-level="A.y" data-svugy-view="-94.084 -30.000 328.460 275.000" transform="translate(83.1 62.0)">
-<g data-svugy-element="A.y.p">
-<title>p · book</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.y.p&quot;,&quot;label&quot;:&quot;p · book&quot;,&quot;metadata&quot;:{&quot;storage&quot;:&quot;in-memory&quot;}}</desc>
-<path d="M-41.6,40.0 L1.7,65.0 L1.7,33.0 L-41.6,8.0 Z" fill="#23897a" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M41.6,42.0 L1.7,65.0 L1.7,33.0 L41.6,10.0 Z" fill="#1b6b5f" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-1.7,-15.0 L41.6,10.0 L1.7,33.0 L-41.6,8.0 Z" fill="#2fb7a0" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="0.0" y="13.0">p · book</text>
+<g data-svugy-element="A.a2">
+<title>a2 · router</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.a2&quot;,&quot;label&quot;:&quot;a2 · router&quot;,&quot;caption&quot;:&quot;routes incoming orders&quot;,&quot;metadata&quot;:{&quot;language&quot;:&quot;Rust&quot;,&quot;replicas&quot;:3,&quot;endpoints&quot;:[&quot;grpc&quot;,&quot;http&quot;]}}</desc>
+<path d="M-129.9,95 L-43.3,145 L-43.3,175 L-129.9,125 Z" fill="#2d54a4" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M4.3,117.5 L-43.3,145 L-43.3,175 L4.3,147.5 Z" fill="#234382" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-82.3,67.5 L4.3,117.5 L-43.3,145 L-129.9,95 Z" fill="#3b6fd8" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="-62.8" y="110.3">a2 · router</text>
 </g>
-<g data-svugy-element="A.y.q">
-<title>q · journal</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.y.q&quot;,&quot;label&quot;:&quot;q · journal&quot;}</desc>
-<path d="M-69.3,110.0 L-26.0,135.0 L-26.0,103.0 L-69.3,78.0 Z" fill="#6a51bd" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M13.9,112.0 L-26.0,135.0 L-26.0,103.0 L13.9,80.0 Z" fill="#523f93" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-29.4,55.0 L13.9,80.0 L-26.0,103.0 L-69.3,78.0 Z" fill="#8b6cf0" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="-27.7" y="83.0">q · journal</text>
-</g>
-<g data-svugy-edge="(A.y.p -&gt; A.y.q)[0]">
-<title>append</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.y.p -&gt; A.y.q)[0]&quot;,&quot;from&quot;:&quot;A.y.p&quot;,&quot;to&quot;:&quot;A.y.q&quot;,&quot;label&quot;:&quot;append&quot;}</desc>
-<path d="M0.0,9.0 Q-13.9,14.0 -27.7,79.0" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="#9fe3d6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<circle data-svugy-dot="" fill="#9fe3d6" r="3"><animateMotion dur="2.4s" path="M0.0,9.0 Q-13.9,14.0 -27.7,79.0" repeatCount="indefinite"/></circle>
-<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="50.400000000000006" x="-39.1" y="18.0"/><text class="f" fill="#9fe3d6" x="-13.9" y="30.0">append</text>
+<g data-svugy-edge="(A.a2 -&gt; A.a1)[0]" data-svugy-from="A.a2" data-svugy-to="A.a1">
+<title>feeds</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a2 -&gt; A.a1)[0]&quot;,&quot;from&quot;:&quot;A.a2&quot;,&quot;to&quot;:&quot;A.a1&quot;,&quot;label&quot;:&quot;feeds&quot;}</desc>
+<path d="M-39,92.5 Q-26,71.9 -13,88.5" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="#7aa2ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="parcel" fill="#7aa2ff" height="10" href="#traveler-parcel" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M-39,92.5 Q-26,71.9 -13,88.5" repeatCount="indefinite"/></use>
+<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="-47" y="73.2"/><text class="f" fill="#7aa2ff" x="-26" y="85.2">feeds</text>
 </g>
 <g data-svugy-overlay="">
-<g data-svugy-goto="B" data-svugy-stub="B.&quot;z.v2&quot;">
-<title>to B.&quot;z.v2&quot;</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;B.\&quot;z.v2\&quot;&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.y.p -&gt; B.\&quot;z.v2\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.y.p&quot;,&quot;to&quot;:&quot;B.\&quot;z.v2\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;}]}</desc>
-<path d="M98.7,70.0 L107.7,77.0 L98.7,84.0 L89.7,77.0 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="111.7" y="80.0">→ B.&quot;z.v2&quot;</text>
-</g>
-<g data-svugy-goto="A" data-svugy-stub="A.x">
-<title>to A.x</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;A.x&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.x -&gt; A.y.p)[0]&quot;,&quot;from&quot;:&quot;A.x&quot;,&quot;to&quot;:&quot;A.y.p&quot;,&quot;label&quot;:&quot;enqueue&quot;}]}</desc>
-<path d="M-98.7,56.0 L-89.7,63.0 L-98.7,70.0 L-107.7,63.0 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="-85.7" y="66.0">← A.x</text>
-</g>
-</g>
-</g>
-<text class="e" x="0.9" y="183.5">y · engine</text>
-</g>
-<g data-svugy-edge="(A.x -&gt; A.y.p)[0]">
-<title>enqueue</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.x -&gt; A.y.p)[0]&quot;,&quot;from&quot;:&quot;A.x&quot;,&quot;to&quot;:&quot;A.y.p&quot;,&quot;label&quot;:&quot;enqueue&quot;}</desc>
-<path d="M-0.9,15.5 Q41.1,3.3 83.1,71.0" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="#7aa2ff" stroke-dasharray="5 7" stroke-width="1.6"/>
-<circle data-svugy-dot="" fill="#7aa2ff" r="3"><animateMotion dur="2.4s" path="M-0.9,15.5 Q41.1,3.3 83.1,71.0" repeatCount="indefinite"/></circle>
-<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="56.800000000000004" x="12.7" y="12.3"/><text class="f" fill="#7aa2ff" x="41.1" y="24.3">enqueue</text>
-</g>
-<g data-svugy-overlay="">
-<g data-svugy-goto="B" data-svugy-stub="B.&quot;z.v2&quot;">
-<title>to B.&quot;z.v2&quot;</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;B.\&quot;z.v2\&quot;&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.y.p -&gt; B.\&quot;z.v2\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.y.p&quot;,&quot;to&quot;:&quot;B.\&quot;z.v2\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;},{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.x -&gt; B.\&quot;z.v2\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.x&quot;,&quot;to&quot;:&quot;B.\&quot;z.v2\&quot;&quot;}]}</desc>
-<path d="M211.3,145.0 L220.3,152.0 L211.3,159.0 L202.3,152.0 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="224.3" y="155.0">→ B.&quot;z.v2&quot; (2)</text>
+<g data-svugy-goto="B" data-svugy-stub="B.&quot;b.1&quot;">
+<title>to b.1 · store</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;},{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}]}]}</desc>
+<path d="M180.1,177 L189.1,184 L180.1,191 L171.1,184 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="r" fill="#f2b84b" x="193.1" y="187">→ B.&quot;b.1&quot; (2)</text>
 </g>
 <g data-svugy-goto="" data-svugy-stub="C">
-<title>to C</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;C&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.x&quot;,&quot;label&quot;:&quot;calls&quot;}]}</desc>
-<path d="M-150.7,120.0 L-141.7,127.0 L-150.7,134.0 L-159.7,127.0 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="-137.7" y="130.0">← C</text>
+<title>to C · client</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;C&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1&quot;,&quot;label&quot;:&quot;calls&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.a1.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;calls&quot;}]}]}</desc>
+<path d="M-84.9,54 L-75.9,61 L-84.9,68 L-93.9,61 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="r" fill="#f2b84b" x="-71.9" y="64">← C</text>
 </g>
 </g>
 </g>
-<text class="e" x="-64.9" y="169.5">A · desk</text>
+<text class="e" x="34.6" y="255">A · desk</text>
+</g>
+<g data-svugy-element="E">
+<title>E</title><desc data-svugy-details="">{"kind":"element", not json</desc>
+<path d="M-294.4,152 L-216.5,197 L-216.5,215 L-294.4,170 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-164.5,167 L-216.5,197 L-216.5,215 L-164.5,185 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-242.5,122 L-164.5,167 L-216.5,197 L-294.4,152 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="-229.5" y="163.5">E</text>
 </g>
 <g data-svugy-element="B">
 <title>B · ledger</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;B&quot;,&quot;label&quot;:&quot;B · ledger&quot;}</desc>
-<path d="M181.9,235.0 L329.1,320.0 L329.1,308.0 L181.9,223.0 Z" fill="#141b29" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M459.0,245.0 L329.1,320.0 L329.1,308.0 L459.0,233.0 Z" fill="#10161f" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M311.8,148.0 L459.0,233.0 L329.1,308.0 L181.9,223.0 Z" fill="#1b2436" stroke="#0a0b10" stroke-width="0.8"/>
-<g data-svugy-level="B" data-svugy-view="151.860 68.000 337.120 282.000" transform="translate(311.8 148.0)">
-<g data-svugy-element="B.&quot;z.v2&quot;">
-<title>z.v2 · store</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;B.\&quot;z.v2\&quot;&quot;,&quot;label&quot;:&quot;z.v2 · store&quot;,&quot;caption&quot;:&quot;a quoted segment with a dot&quot;,&quot;metadata&quot;:{&quot;engine&quot;:&quot;postgres&quot;}}</desc>
-<path d="M-39.8,78.0 L12.1,108.0 L12.1,68.0 L-39.8,38.0 Z" fill="#b04a62" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M60.6,80.0 L12.1,108.0 L12.1,68.0 L60.6,40.0 Z" fill="#8a3a4d" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M8.7,10.0 L60.6,40.0 L12.1,68.0 L-39.8,38.0 Z" fill="#e0607e" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="10.4" y="43.0">z.v2 · store</text>
+<path d="M329.1,370 L502.3,470 L502.3,480 L329.1,380 Z" fill="#151b29" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M640.9,390 L502.3,470 L502.3,480 L640.9,400 Z" fill="#101620" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M467.7,290 L640.9,390 L502.3,470 L329.1,370 Z" fill="#1b2436" stroke="#0a0b10" stroke-width="0.8"/>
+<g data-svugy-level="B" data-svugy-view="299.1 260 371.8 250" transform="translate(467.7 290)">
+<g data-svugy-element="B.&quot;b.1&quot;">
+<title>b.1 · store</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;b.1 · store&quot;,&quot;caption&quot;:&quot;a quoted segment with a dot&quot;,&quot;metadata&quot;:{&quot;engine&quot;:&quot;postgres&quot;}}</desc>
+<path d="M-52,46 L43.3,101 L43.3,135 L-52,80 Z" fill="#aa4960" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M95.3,71 L43.3,101 L43.3,135 L95.3,105 Z" fill="#863a4c" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M0,16 L95.3,71 L43.3,101 L-52,46 Z" fill="#e0607e" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="21.7" y="62.5">b.1 · store</text>
 </g>
 <g data-svugy-overlay="">
-<g data-svugy-goto="A.y" data-svugy-stub="A.y.p">
-<title>to A.y.p</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;A.y.p&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.y.p -&gt; B.\&quot;z.v2\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.y.p&quot;,&quot;to&quot;:&quot;B.\&quot;z.v2\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;}]}</desc>
-<path d="M-20.8,11.0 L-11.8,18.0 L-20.8,25.0 L-29.8,18.0 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="-7.8" y="21.0">← A.y.p</text>
-</g>
-<g data-svugy-goto="A" data-svugy-stub="A.x">
-<title>to A.x</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;A.x&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.x -&gt; B.\&quot;z.v2\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.x&quot;,&quot;to&quot;:&quot;B.\&quot;z.v2\&quot;&quot;}]}</desc>
-<path d="M-90.1,51.0 L-81.1,58.0 L-90.1,65.0 L-99.1,58.0 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="-77.1" y="61.0">← A.x</text>
+<g data-svugy-goto="A.a1" data-svugy-stub="A.a1">
+<title>to a1 · engine</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;A.a1&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;},{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}]}]}</desc>
+<path d="M-15.6,14 L-6.6,21 L-15.6,28 L-24.6,21 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="r" fill="#f2b84b" x="-2.6" y="24">← A.a1 (2)</text>
 </g>
 </g>
 </g>
-<text class="e" x="259.8" y="267.0">B · ledger</text>
+<text class="e" x="363.7" y="415">B · ledger</text>
 </g>
-<g data-svugy-element="C" data-svugy-goto="A.y">
-<title>C · client (link to A.y)</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;C&quot;,&quot;label&quot;:&quot;C · client&quot;,&quot;caption&quot;:&quot;link: A.y&quot;}</desc>
-<path d="M-246.8,202.5 L-186.2,237.5 L-186.2,201.5 L-246.8,166.5 Z" fill="#3a3f4b" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-138.6,210.0 L-186.2,237.5 L-186.2,201.5 L-138.6,174.0 Z" fill="#2e323c" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-199.2,139.0 L-138.6,174.0 L-186.2,201.5 L-246.8,166.5 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="-192.7" y="174.3">C · client</text>
+<g data-svugy-edge="(A.a1 -&gt; B.&quot;b.1&quot;)[0]" data-svugy-from="A.a1" data-svugy-to="B.&quot;b.1&quot;">
+<title>settle</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;}</desc>
+<path d="M277.1,186 Q363.7,184.9 450.3,316" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-3)" opacity="0.9" stroke="#f2b84b" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="envelope" fill="#f2b84b" height="10" href="#traveler-envelope" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M277.1,186 Q363.7,184.9 450.3,316" repeatCount="indefinite"/></use>
+<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="48" x="339.7" y="209.9"/><text class="f" fill="#f2b84b" x="363.7" y="221.9">settle</text>
+</g>
+<g data-svugy-edge="(A.a1 -&gt; B.&quot;b.1&quot;)[1]" data-svugy-from="A.a1" data-svugy-to="B.&quot;b.1&quot;">
+<title>audit</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}],&quot;label&quot;:&quot;audit&quot;}</desc>
+<path d="M251.1,201 Q342.1,196.3 433,326" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#9fe3d6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="document" fill="#9fe3d6" height="10" href="#traveler-document" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M251.1,201 Q342.1,196.3 433,326" repeatCount="indefinite"/></use>
+<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="321.1" y="221.9"/><text class="f" fill="#9fe3d6" x="342.1" y="233.9">audit</text>
+</g>
+<g data-svugy-edge="(C -&gt; A.a1)[0]" data-svugy-from="C" data-svugy-to="A.a1">
+<title>calls</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.a1.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;calls&quot;}],&quot;label&quot;:&quot;calls&quot;}</desc>
+<path d="M-77.9,109 Q28.1,48.7 134.2,118.5" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#c9cfdd" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="key" fill="#c9cfdd" height="10" href="#traveler-key" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M-77.9,109 Q28.1,48.7 134.2,118.5" repeatCount="indefinite"/></use>
+<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="7.1" y="73.2"/><text class="f" fill="#c9cfdd" x="28.1" y="85.2">calls</text>
+</g>
+<g data-svugy-overlay="">
+</g>
+</g>
+</g>
+<g data-svugy-layer="2">
+<g data-svugy-level="" data-svugy-view="-370.4 9 1104.6 561">
+<g data-svugy-element="C" data-svugy-goto="A.a1">
+<title>C · client</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;C&quot;,&quot;label&quot;:&quot;C · client&quot;,&quot;caption&quot;:&quot;link: A.a1&quot;}</desc>
+<path d="M-199.2,89 L-121.2,134 L-121.2,160 L-199.2,115 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-69.3,104 L-121.2,134 L-121.2,160 L-69.3,130 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-147.2,59 L-69.3,104 L-121.2,134 L-199.2,89 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="-134.2" y="100.5">C · client</text>
+</g>
+<g data-svugy-element="A">
+<title>A · desk</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A&quot;,&quot;label&quot;:&quot;A · desk&quot;,&quot;caption&quot;:&quot;order desk&quot;,&quot;metadata&quot;:{&quot;team&quot;:&quot;trading&quot;}}</desc>
+<path d="M-60.6,225 L251.1,405 L251.1,415 L-60.6,235 Z" fill="#151b29" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M485,270 L251.1,405 L251.1,415 L485,280 Z" fill="#101620" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M173.2,90 L485,270 L251.1,405 L-60.6,225 Z" fill="#1b2436" stroke="#0a0b10" stroke-width="0.8"/>
+<g data-svugy-level="A" data-svugy-view="-90.6 60 605.6 385" transform="translate(173.2 90)">
+<g data-svugy-element="A.a1">
+<title>a1 · engine</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.a1&quot;,&quot;label&quot;:&quot;a1 · engine&quot;,&quot;caption&quot;:&quot;matching engine&quot;}</desc>
+<path d="M-129.9,95 L69.3,210 L69.3,220 L-129.9,105 Z" fill="#1a2131" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M199.2,135 L69.3,210 L69.3,220 L199.2,145 Z" fill="#141a26" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M0,20 L199.2,135 L69.3,210 L-129.9,95 Z" fill="#222c40" stroke="#0a0b10" stroke-width="0.8"/>
+<g data-svugy-level="A.a1" data-svugy-view="13.3 80 389.1 260" transform="translate(0 20)">
+<g data-svugy-element="A.a1.x">
+<title>x · book</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;x · book&quot;,&quot;metadata&quot;:{&quot;storage&quot;:&quot;in-memory&quot;}}</desc>
+<path d="M-34.6,59 L52,109 L52,135 L-34.6,85 Z" fill="#248b7a" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M103.9,79 L52,109 L52,135 L103.9,105 Z" fill="#1c6e60" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M17.3,29 L103.9,79 L52,109 L-34.6,59 Z" fill="#2fb7a0" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="34.6" y="73">x · book</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="B" data-svugy-stub="B.&quot;b.1&quot;">
+<title>to b.1 · store</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}]}</desc>
+<path d="M128.2,137 L137.2,144 L128.2,151 L119.2,144 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="r" fill="#f2b84b" x="141.2" y="147">→ B.&quot;b.1&quot;</text>
+</g>
+<g data-svugy-goto="" data-svugy-stub="C">
+<title>to C · client</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;C&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.a1.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;calls&quot;}]}</desc>
+<path d="M-58.9,39 L-49.9,46 L-58.9,53 L-67.9,46 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="r" fill="#f2b84b" x="-45.9" y="49">← C</text>
+</g>
+</g>
+</g>
+<text class="e" x="-90.1" y="143">a1 · engine</text>
+</g>
+<g data-svugy-element="A.a2">
+<title>a2 · router</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.a2&quot;,&quot;label&quot;:&quot;a2 · router&quot;,&quot;caption&quot;:&quot;routes incoming orders&quot;,&quot;metadata&quot;:{&quot;language&quot;:&quot;Rust&quot;,&quot;replicas&quot;:3,&quot;endpoints&quot;:[&quot;grpc&quot;,&quot;http&quot;]}}</desc>
+<path d="M-34.6,200 L52,250 L52,280 L-34.6,230 Z" fill="#2d54a4" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M90.9,227.5 L52,250 L52,280 L90.9,257.5 Z" fill="#234382" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M4.3,177.5 L90.9,227.5 L52,250 L-34.6,200 Z" fill="#3b6fd8" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="28.1" y="217.8">a2 · router</text>
+</g>
+<g data-svugy-edge="(A.a2 -&gt; A.a1)[0]" data-svugy-from="A.a2" data-svugy-to="A.a1">
+<title>feeds</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a2 -&gt; A.a1)[0]&quot;,&quot;from&quot;:&quot;A.a2&quot;,&quot;to&quot;:&quot;A.a1&quot;,&quot;label&quot;:&quot;feeds&quot;}</desc>
+<path d="M47.6,202.5 Q8.7,142.3 -30.3,152.5" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="#7aa2ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="parcel" fill="#7aa2ff" height="10" href="#traveler-parcel" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M47.6,202.5 Q8.7,142.3 -30.3,152.5" repeatCount="indefinite"/></use>
+<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="-12.3" y="151.9"/><text class="f" fill="#7aa2ff" x="8.7" y="163.9">feeds</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="B" data-svugy-stub="B.&quot;b.1&quot;">
+<title>to b.1 · store</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;},{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}]}</desc>
+<path d="M214.8,217 L223.8,224 L214.8,231 L205.8,224 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="r" fill="#f2b84b" x="227.8" y="227">→ B.&quot;b.1&quot; (2)</text>
+</g>
+<g data-svugy-goto="" data-svugy-stub="C">
+<title>to C · client</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;C&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.a1.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;calls&quot;}]}</desc>
+<path d="M-102.2,64 L-93.2,71 L-102.2,78 L-111.2,71 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="r" fill="#f2b84b" x="-89.2" y="74">← C</text>
+</g>
+</g>
+</g>
+<text class="e" x="1.7" y="286">A · desk</text>
 </g>
 <g data-svugy-element="E">
-<title>E · malformed details</title><desc data-svugy-details="">{"kind":"element", not json</desc>
-<path d="M-112.6,275.0 L-69.3,300.0 L-69.3,276.0 L-112.6,251.0 Z" fill="#3a3f4b" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-34.6,280.0 L-69.3,300.0 L-69.3,276.0 L-34.6,256.0 Z" fill="#2e323c" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-77.9,231.0 L-34.6,256.0 L-69.3,276.0 L-112.6,251.0 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="-73.6" y="257.5">E</text>
+<title>E</title><desc data-svugy-details="">{"kind":"element", not json</desc>
+<path d="M-320.4,167 L-242.5,212 L-242.5,230 L-320.4,185 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-190.5,182 L-242.5,212 L-242.5,230 L-190.5,200 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-268.5,137 L-190.5,182 L-242.5,212 L-320.4,167 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="-255.5" y="178.5">E</text>
 </g>
-<g data-svugy-edge="(A.y.p -&gt; B.&quot;z.v2&quot;)[0]">
-<title>settle</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.y.p -&gt; B.\&quot;z.v2\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.y.p&quot;,&quot;to&quot;:&quot;B.\&quot;z.v2\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;}</desc>
-<path d="M83.1,59.0 Q202.6,53.0 322.2,187.0" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="#f2b84b" stroke-dasharray="5 7" stroke-width="1.6"/>
-<circle data-svugy-dot="" fill="#f2b84b" r="3"><animateMotion dur="2.4s" path="M83.1,59.0 Q202.6,53.0 322.2,187.0" repeatCount="indefinite"/></circle>
-<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="50.400000000000006" x="177.4" y="77.0"/><text class="f" fill="#f2b84b" x="202.6" y="89.0">settle</text>
+<g data-svugy-element="B">
+<title>B · ledger</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;B&quot;,&quot;label&quot;:&quot;B · ledger&quot;}</desc>
+<path d="M363.7,410 L536.9,510 L536.9,520 L363.7,420 Z" fill="#151b29" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M684.2,425 L536.9,510 L536.9,520 L684.2,435 Z" fill="#101620" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M511,325 L684.2,425 L536.9,510 L363.7,410 Z" fill="#1b2436" stroke="#0a0b10" stroke-width="0.8"/>
+<g data-svugy-level="B" data-svugy-view="333.7 295 380.4 255" transform="translate(511 325)">
+<g data-svugy-element="B.&quot;b.1&quot;">
+<title>b.1 · store</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;b.1 · store&quot;,&quot;caption&quot;:&quot;a quoted segment with a dot&quot;,&quot;metadata&quot;:{&quot;engine&quot;:&quot;postgres&quot;}}</desc>
+<path d="M-56.3,48.5 L39,103.5 L39,137.5 L-56.3,82.5 Z" fill="#aa4960" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M90.9,73.5 L39,103.5 L39,137.5 L90.9,107.5 Z" fill="#863a4c" stroke="#0a0b10" stroke-width="0.8"/>
+<path d="M-4.3,18.5 L90.9,73.5 L39,103.5 L-56.3,48.5 Z" fill="#e0607e" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="t" x="17.3" y="65">b.1 · store</text>
 </g>
-<g data-svugy-edge="(A.x -&gt; B.&quot;z.v2&quot;)[0]">
-<title>(A.x -&gt; B.&quot;z.v2&quot;)[0]</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.x -&gt; B.\&quot;z.v2\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.x&quot;,&quot;to&quot;:&quot;B.\&quot;z.v2\&quot;&quot;}</desc>
-<path d="M-0.9,3.5 Q160.6,-14.7 322.2,187.0" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="#7aa2ff" stroke-dasharray="5 7" stroke-width="1.6"/>
-<circle data-svugy-dot="" fill="#7aa2ff" r="3"><animateMotion dur="2.4s" path="M-0.9,3.5 Q160.6,-14.7 322.2,187.0" repeatCount="indefinite"/></circle>
-
+<g data-svugy-overlay="">
+<g data-svugy-goto="A.a1" data-svugy-stub="A.a1">
+<title>to a1 · engine</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;A.a1&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;}]}</desc>
+<path d="M-15.6,14 L-6.6,21 L-15.6,28 L-24.6,21 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="r" fill="#f2b84b" x="-2.6" y="24">← A.a1</text>
 </g>
-<g data-svugy-edge="(C -&gt; A.x)[0]">
-<title>calls</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.x&quot;,&quot;label&quot;:&quot;calls&quot;}</desc>
-<path d="M-192.7,170.3 Q-96.8,26.9 -0.9,3.5" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="#c9cfdd" stroke-dasharray="5 7" stroke-width="1.6"/>
-<circle data-svugy-dot="" fill="#c9cfdd" r="3"><animateMotion dur="2.4s" path="M-192.7,170.3 Q-96.8,26.9 -0.9,3.5" repeatCount="indefinite"/></circle>
-<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="44" x="-118.8" y="45.9"/><text class="f" fill="#c9cfdd" x="-96.8" y="57.9">calls</text>
+<g data-svugy-goto="A.a1" data-svugy-stub="A.a1.x">
+<title>to x · book</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;A.a1.x&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}]}</desc>
+<path d="M-110.9,69 L-101.9,76 L-110.9,83 L-119.9,76 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
+<text class="r" fill="#f2b84b" x="-97.9" y="79">← A.a1.x</text>
 </g>
-<g data-svugy-overlay=""/>
+</g>
+</g>
+<text class="e" x="398.4" y="455">B · ledger</text>
+</g>
+<g data-svugy-edge="(A.a1 -&gt; B.&quot;b.1&quot;)[0]" data-svugy-from="A.a1" data-svugy-to="B.&quot;b.1&quot;">
+<title>settle</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;}</desc>
+<path d="M307.4,262.5 Q398.4,245.2 489.3,353.5" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-3)" opacity="0.9" stroke="#f2b84b" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="envelope" fill="#f2b84b" height="10" href="#traveler-envelope" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M307.4,262.5 Q398.4,245.2 489.3,353.5" repeatCount="indefinite"/></use>
+<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="48" x="374.4" y="268.6"/><text class="f" fill="#f2b84b" x="398.4" y="280.6">settle</text>
+</g>
+<g data-svugy-edge="(A.a1.x -&gt; B.&quot;b.1&quot;)[0]" data-svugy-from="A.a1.x" data-svugy-to="B.&quot;b.1&quot;">
+<title>audit</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}</desc>
+<path d="M251.1,204 Q361.6,203.6 472,363.5" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#9fe3d6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="document" fill="#9fe3d6" height="10" href="#traveler-document" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M251.1,204 Q361.6,203.6 472,363.5" repeatCount="indefinite"/></use>
+<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="340.6" y="235.7"/><text class="f" fill="#9fe3d6" x="361.6" y="247.7">audit</text>
+</g>
+<g data-svugy-edge="(C -&gt; A.a1.x)[0]" data-svugy-from="C" data-svugy-to="A.a1.x">
+<title>calls</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.a1.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;calls&quot;}</desc>
+<path d="M-95.3,119 Q34.6,59 164.5,154" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#c9cfdd" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="key" fill="#c9cfdd" height="10" href="#traveler-key" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M-95.3,119 Q34.6,59 164.5,154" repeatCount="indefinite"/></use>
+<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="13.6" y="89.7"/><text class="f" fill="#c9cfdd" x="34.6" y="101.7">calls</text>
+</g>
+<g data-svugy-overlay="">
+</g>
+</g>
 </g>
 <script>//<![CDATA[
 (() => {

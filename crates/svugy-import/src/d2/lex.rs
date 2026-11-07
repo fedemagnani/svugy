@@ -5,15 +5,9 @@ use std::fmt;
 use logos::Logos;
 
 use super::ast::{EdgeOperator, Span};
-use super::diagnostic::SyntaxError;
+use super::diagnostic::Diagnostics;
 
-/// Tokenize d2 source, keeping the lexically valid tokens and one error per invalid stretch.
-pub(crate) struct Tokens<'src> {
-    pub(crate) tokens: Vec<(Token<'src>, Span)>,
-    pub(crate) errors: Vec<SyntaxError>,
-}
-
-/// One lexeme of d2; unquoted text is split into pieces the parser joins back by span.
+/// Tag one lexeme of d2 as a token; unquoted text is split into pieces the parser joins back by span.
 #[derive(Logos, Debug, Clone, PartialEq)]
 #[logos(error = LexError)]
 #[logos(skip r"[ \t\f\r]+")]
@@ -61,7 +55,10 @@ pub(crate) enum Token<'src> {
     LessThan,
     #[token(">")]
     GreaterThan,
-    #[regex(r"--+|-+>|<-+|<-+>", |lexer| EdgeOperator::from_arrow(lexer.slice()))]
+    #[regex(r"--+|-+>|<-+|<-+>", |lexer| {
+        let arrow = lexer.slice();
+        EdgeOperator::from_arrow(arrow)
+    })]
     Edge(EdgeOperator),
     #[regex(r"\$\{[^}\n]*\}")]
     Substitution,
@@ -78,7 +75,7 @@ pub(crate) enum Token<'src> {
     BlockString,
 }
 
-/// Why a stretch of source is not a token.
+/// Name the lex error that keeps a stretch of source from being a token.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub(crate) enum LexError {
     #[default]
@@ -87,73 +84,78 @@ pub(crate) enum LexError {
     UnterminatedBlockString,
 }
 
-impl<'src> Tokens<'src> {
-    /// Lex `source`, turning a `|` right after `:` into a whole block string, as d2 only opens one at a value's start.
-    pub(crate) fn lex(source: &'src str) -> Self {
-        let mut lexer = Token::lexer(source);
-        let mut tokens: Vec<(Token<'src>, Span)> = Vec::new();
-        let mut errors = Vec::new();
+impl<'src> Token<'src> {
+    /// Lex all of `source` into tokens, recording one error per invalid stretch and turning a `|` right after `:` into a whole block string, as d2 only opens one at a value's start.
+    pub(crate) fn lex_all(source: &'src str, diagnostics: &mut Diagnostics) -> Vec<(Self, Span)> {
+        let mut lexer = Self::lexer(source);
+        let mut tokens: Vec<(Self, Span)> = Vec::new();
         while let Some(lexed) = lexer.next() {
             let start = lexer.span().start;
-            let is_value_start = matches!(tokens.last(), Some((Token::Colon, _colon_span)));
+            let last_token = tokens.last();
+            let is_value_start = matches!(last_token, Some((Token::Colon, _colon_span)));
             let lexed = match lexed {
-                Ok(Token::Pipe) if is_value_start => Self::bump_block_string(&mut lexer),
-                other => other,
+                Ok(Self::Pipe) if is_value_start => Self::bump_block_string(&mut lexer),
+                other_lexed => other_lexed,
             };
-            let span = Span::new(start, lexer.span().end);
+            let end = lexer.span().end;
+            let span = Span::new(start, end);
             match lexed {
                 Ok(token) => tokens.push((token, span)),
                 Err(error) => {
-                    let syntax_error = error.into_syntax_error(span);
-                    errors.push(syntax_error);
+                    let message = error.message();
+                    diagnostics.record_error(message, span);
                 }
             }
         }
-        Self { tokens, errors }
+        tokens
     }
 
     /// Consume a block string whose opening `|` was just lexed: the closer is the opening quote run followed by `|`.
-    fn bump_block_string(
-        lexer: &mut logos::Lexer<'src, Token<'src>>,
-    ) -> Result<Token<'src>, LexError> {
+    fn bump_block_string(lexer: &mut logos::Lexer<'src, Self>) -> Result<Self, LexError> {
         let after_pipe = lexer.remainder();
+        let after_pipe_length = after_pipe.len();
         let quote_length = after_pipe
             .find(|character: char| {
-                character.is_whitespace() || character.is_alphanumeric() || character == '_'
+                let is_whitespace = character.is_whitespace();
+                let is_alphanumeric = character.is_alphanumeric();
+                let is_underscore = character == '_';
+                is_whitespace || is_alphanumeric || is_underscore
             })
-            .unwrap_or(after_pipe.len());
+            .unwrap_or(after_pipe_length);
         let (quote, after_quote) = after_pipe.split_at(quote_length);
+        let after_quote_length = after_quote.len();
         let tag_length = after_quote
             .find(char::is_whitespace)
-            .unwrap_or(after_quote.len());
+            .unwrap_or(after_quote_length);
         let body = &after_quote[tag_length..];
         let closer = format!("{quote}|");
         let Some(closer_offset) = body.find(&closer) else {
-            lexer.bump(after_pipe.len());
+            lexer.bump(after_pipe_length);
             return Err(LexError::UnterminatedBlockString);
         };
         let block_length = quote_length + tag_length + closer_offset + closer.len();
         lexer.bump(block_length);
-        Ok(Token::BlockString)
+        Ok(Self::BlockString)
     }
-}
 
-impl Token<'_> {
     /// Decode a double-quoted string, quotes included in `raw`, through its backslash escapes.
     pub(crate) fn decode_double_quoted(raw: &str) -> String {
-        let inner = &raw[1..raw.len() - 1];
+        let closing_quote_index = raw.len() - 1;
+        let inner = &raw[1..closing_quote_index];
         Self::decode_escapes(inner)
     }
 
     /// Decode a single-quoted string, quotes included in `raw`, where only a doubled `''` escapes.
     pub(crate) fn decode_single_quoted(raw: &str) -> String {
-        let inner = &raw[1..raw.len() - 1];
+        let closing_quote_index = raw.len() - 1;
+        let inner = &raw[1..closing_quote_index];
         inner.replace("''", "'")
     }
 
     /// Decode d2's backslash escapes (`\n`, `\t`, …; any other escaped character stands for itself; `\` + newline vanishes).
     pub(crate) fn decode_escapes(raw: &str) -> String {
-        let mut decoded = String::with_capacity(raw.len());
+        let raw_length = raw.len();
+        let mut decoded = String::with_capacity(raw_length);
         let mut characters = raw.chars();
         while let Some(character) = characters.next() {
             let is_plain_character = character != '\\';
@@ -183,19 +185,20 @@ impl Token<'_> {
 }
 
 impl LexError {
+    /// Reject an unterminated string as a lex error, so logos reports it instead of a token.
     fn reject_unterminated_string<'src>(
         _lexer: &mut logos::Lexer<'src, Token<'src>>,
     ) -> Result<(), Self> {
         Err(Self::UnterminatedString)
     }
 
-    fn into_syntax_error(self, span: Span) -> SyntaxError {
-        let message = match self {
+    /// Spell the message of the syntax error the lex error is reported as.
+    fn message(&self) -> &'static str {
+        match self {
             Self::UnexpectedCharacter => "unexpected character",
             Self::UnterminatedString => "unterminated string: add the closing quote",
             Self::UnterminatedBlockString => "unterminated block string: add the closing `|`",
-        };
-        SyntaxError::new(message.to_owned(), span)
+        }
     }
 }
 

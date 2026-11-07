@@ -13,7 +13,7 @@ use svugy_model::model::Model;
 use crate::geometry::Scene;
 use crate::layout::LevelPlans;
 use crate::metrics::BundledFont;
-use crate::render::{InteractiveRenderer, Profile, Renderer, StaticRenderer};
+use crate::render::{Interactive, InteractiveRenderer, Static, StaticRenderer};
 
 /// Renders a model as the interactive SVG, the product: themed for light and dark, animated, explorable by its embedded runtime.
 pub struct InteractiveSvg;
@@ -22,24 +22,24 @@ pub struct InteractiveSvg;
 pub struct StaticSvg;
 
 impl InteractiveSvg {
+    /// Lay `model` out and project it in the bundled font, then write the scene as the interactive document.
     pub fn render(model: &Model) -> String {
-        InteractiveRenderer::render_model(model)
+        let font = BundledFont::new();
+        let plans = LevelPlans::lay_out(model, &font);
+        let scene = Scene::project(model, &plans, &font);
+        let renderer = InteractiveRenderer::new(model, Interactive);
+        renderer.write_document(&scene)
     }
 }
 
 impl StaticSvg {
+    /// Lay `model` out and project it in the bundled font, then write the scene as the static document, its labels outlined in that font.
     pub fn render(model: &Model) -> String {
-        StaticRenderer::render_model(model)
-    }
-}
-
-impl<P: Profile + Default> Renderer<'_, '_, P> {
-    /// Render `model` as a document in profile `P`: lay it out and project it in the bundled font, then write the scene.
-    fn render_model(model: &Model) -> String {
         let font = BundledFont::new();
         let plans = LevelPlans::lay_out(model, &font);
         let scene = Scene::project(model, &plans, &font);
-        let renderer = Renderer::<P>::new(model, &font);
+        let profile = Static::new(&font);
+        let renderer = StaticRenderer::new(model, profile);
         renderer.write_document(&scene)
     }
 }
@@ -112,7 +112,8 @@ mod tests {
         let connections = connections_of_every_level(&scene);
         let stubless_connections = connections_of_every_level(&stubless_scene);
         assert_eq!(connections, stubless_connections);
-        let renderer = StaticRenderer::new(&model, &font);
+        let profile = Static::new(&font);
+        let renderer = StaticRenderer::new(&model, profile);
         let static_svg = renderer.write_document(&scene);
         let stubless_static_svg = renderer.write_document(&stubless_scene);
         let static_svg_without_views = without_level_views(&static_svg);
@@ -180,7 +181,7 @@ mod tests {
         let a = builder.add_top_level("a", Element::new("app"));
         let b = builder.add_top_level("b", Element::new("bus"));
         let c = builder.add_top_level("c", Element::new("crank"));
-        let store = builder.add_top_level("store", Element::new("store").with_badge());
+        let store = builder.add_top_level("store", Element::new("store").with_badge_target());
         builder.add_edge(&a, &b, Edge::new());
         builder.add_edge(&b, &c, Edge::new().with_label("calls"));
         if is_written {
@@ -213,7 +214,7 @@ mod tests {
         let mut builder = ModelBuilder::new();
         let desk = builder.add_top_level("desk", Element::new("desk"));
         let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
-        let store = builder.add_top_level("store", Element::new("store").with_badge());
+        let store = builder.add_top_level("store", Element::new("store").with_badge_target());
         let writes = builder.add_edge(&quoter, &store, Edge::new());
         let model = builder.build().model.expect("fixture model is valid");
         let font = BundledFont::new();
@@ -225,8 +226,8 @@ mod tests {
             .level(&ElementPath::root())
             .expect("the root is planned");
         let desk_plan = plans.level(desk.path()).expect("desk is planned");
-        assert!(root_plan.routes.is_empty());
-        let store_stub = &desk_plan.stubs[store.path()];
+        assert!(root_plan.routes().is_empty());
+        let store_stub = &desk_plan.stubs()[store.path()];
         assert!(store_stub.edges.contains(&writes));
         assert!(connections_of_every_level(&scene).is_empty());
         let badges = badges_of_every_level(&scene);

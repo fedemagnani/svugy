@@ -1,7 +1,7 @@
 use svugy_model::builder::ModelBuilder;
 use svugy_model::model::{Edge, EdgeId, Element};
 use svugy_model::path::ElementPath;
-use svugy_model::validate::Problem;
+use svugy_model::problem::Problem;
 
 fn parse(text: &str) -> ElementPath {
     text.parse().expect("well-formed path")
@@ -135,7 +135,7 @@ fn a_duplicate_declaration_fails_the_build_instead_of_overwriting() {
     assert!(admission.model.is_none());
     assert_eq!(problems.len(), 1);
     assert!(
-        matches!(&problems[0], Problem::DuplicateElement(duplicate) if duplicate.path == parse("api"))
+        matches!(&problems[0], Problem::DuplicateElement(duplicate) if duplicate.element == parse("api"))
     );
 }
 

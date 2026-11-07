@@ -2,19 +2,57 @@
 
 use std::collections::BTreeMap;
 use std::fmt;
+use std::marker::PhantomData;
 
 use crate::color::Rgba;
-use crate::model::{Edge, Element};
-use crate::validate::MAX_MAGNITUDE;
+use crate::model::{Edge, MAX_MAGNITUDE};
 
+/// List the keywords a boolean style value spells.
 const BOOLEAN_KEYWORDS: [&str; 2] = ["false", "true"];
-const FILL_PATTERN_KEYWORDS: [&str; 5] = ["dots", "grain", "lines", "none", "paper"];
-const FONT_KEYWORDS: [&str; 1] = ["mono"];
-const TEXT_TRANSFORM_KEYWORDS: [&str; 4] = ["capitalize", "lowercase", "none", "uppercase"];
+/// Name the value kind `fill-pattern` accepts: one of its pattern keywords.
+const FILL_PATTERN_KIND: StyleValueKind =
+    StyleValueKind::Keyword(&["dots", "grain", "lines", "none", "paper"]);
+/// Name the value kind `font` accepts: one of its font keywords.
+const FONT_KIND: StyleValueKind = StyleValueKind::Keyword(&["mono"]);
+/// Name the value kind `text-transform` accepts: one of its transform keywords.
+const TEXT_TRANSFORM_KIND: StyleValueKind =
+    StyleValueKind::Keyword(&["capitalize", "lowercase", "none", "uppercase"]);
 
-/// Key a v1 style by its name, paired with the kind of value it accepts.
+/// Key a v1 style by its name, typed by the value `V` it reads, so a key can only be read as its own kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct StyleKey {
+pub struct StyleKey<V> {
+    name: &'static str,
+    value_type: PhantomData<V>,
+}
+
+/// Key a v1 style holding a color.
+pub type ColorKey = StyleKey<ColorValue>;
+
+/// Key a v1 style holding a number.
+pub type NumberKey = StyleKey<NumberValue>;
+
+/// Type the value a typed style key reads: the kind validation checks it against and what it parses into.
+pub trait StyleValue {
+    /// Name the kind validation checks this value against.
+    const KIND: StyleValueKind;
+    /// Type what a validated value of this kind is parsed into.
+    type Parsed;
+
+    /// Parse a value of this kind, `None` when it is not one.
+    fn parse(text: &str) -> Option<Self::Parsed>;
+}
+
+/// Read a style value as a color.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ColorValue;
+
+/// Read a style value as a number.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct NumberValue;
+
+/// Key a v1 style of any kind by its name, paired with the kind of value it accepts, for lookups by name.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AnyStyleKey {
     name: &'static str,
     value_kind: StyleValueKind,
 }
@@ -30,93 +68,137 @@ pub enum StyleValueKind {
     Keyword(&'static [&'static str]),
 }
 
-impl StyleKey {
+impl ColorKey {
     /// Base color of a solid's faces.
-    pub const FILL: StyleKey = StyleKey::new("fill", StyleValueKind::Color);
+    pub const FILL: ColorKey = StyleKey::new("fill");
     /// Outline color of a solid's faces, or stroke color of a connection.
-    pub const STROKE: StyleKey = StyleKey::new("stroke", StyleValueKind::Color);
+    pub const STROKE: ColorKey = StyleKey::new("stroke");
+}
+
+impl NumberKey {
     /// Dash length of a solid's outline, or of a connection's arc.
-    pub const STROKE_DASH: StyleKey = StyleKey::new("stroke-dash", StyleValueKind::Number);
+    pub const STROKE_DASH: NumberKey = StyleKey::new("stroke-dash");
+}
 
-    /// Every v1 style key: d2's style keywords at v0.9.0, sorted by name.
-    pub const ALL: [StyleKey; 20] = [
-        StyleKey::new("3d", StyleValueKind::Boolean),
-        StyleKey::new("animated", StyleValueKind::Boolean),
-        StyleKey::new("bold", StyleValueKind::Boolean),
-        StyleKey::new("border-radius", StyleValueKind::Number),
-        StyleKey::new("double-border", StyleValueKind::Boolean),
-        Self::FILL,
-        StyleKey::new(
-            "fill-pattern",
-            StyleValueKind::Keyword(&FILL_PATTERN_KEYWORDS),
-        ),
-        StyleKey::new("filled", StyleValueKind::Boolean),
-        StyleKey::new("font", StyleValueKind::Keyword(&FONT_KEYWORDS)),
-        StyleKey::new("font-color", StyleValueKind::Color),
-        StyleKey::new("font-size", StyleValueKind::Number),
-        StyleKey::new("italic", StyleValueKind::Boolean),
-        StyleKey::new("multiple", StyleValueKind::Boolean),
-        StyleKey::new("opacity", StyleValueKind::Number),
-        StyleKey::new("shadow", StyleValueKind::Boolean),
-        Self::STROKE,
-        Self::STROKE_DASH,
-        StyleKey::new("stroke-width", StyleValueKind::Number),
-        StyleKey::new(
-            "text-transform",
-            StyleValueKind::Keyword(&TEXT_TRANSFORM_KEYWORDS),
-        ),
-        StyleKey::new("underline", StyleValueKind::Boolean),
-    ];
+impl<V: StyleValue> StyleKey<V> {
+    /// Create a new key named `name`, reading values of kind `V`.
+    const fn new(name: &'static str) -> Self {
+        Self {
+            name,
+            value_type: PhantomData,
+        }
+    }
 
+    /// Erase the value type, keeping the name and the kind validation checks values against.
+    pub const fn erased(self) -> AnyStyleKey {
+        AnyStyleKey::new(self.name, V::KIND)
+    }
+
+    /// Read this key's value from `style`, already validated: `None` when unset.
+    pub fn read_from(self, style: &BTreeMap<String, String>) -> Option<V::Parsed> {
+        let value = style.get(self.name)?;
+        V::parse(value)
+    }
+
+    /// Return the key's name, as a style entry spells it.
+    pub const fn name(&self) -> &'static str {
+        self.name
+    }
+}
+
+impl StyleValue for ColorValue {
+    const KIND: StyleValueKind = StyleValueKind::Color;
+    type Parsed = Rgba;
+
+    fn parse(text: &str) -> Option<Rgba> {
+        Rgba::parse(text)
+    }
+}
+
+impl StyleValue for NumberValue {
+    const KIND: StyleValueKind = StyleValueKind::Number;
+    type Parsed = f64;
+
+    /// Parse a `Number` value: a non-negative plain decimal, and only when it is no greater than `MAX_MAGNITUDE`.
+    fn parse(text: &str) -> Option<f64> {
+        let number: f64 = text.parse().ok()?;
+        let is_plain_number = Self::is_plain_number(text);
+        let is_bounded = number <= MAX_MAGNITUDE;
+        let is_bounded_plain_number = is_plain_number && is_bounded;
+        is_bounded_plain_number.then_some(number)
+    }
+}
+
+impl NumberValue {
+    /// Tell whether `text` is a plain decimal `digits(.digits)?`, with no sign, exponent or unit.
+    fn is_plain_number(text: &str) -> bool {
+        let Some((integer_digits, fraction_digits)) = text.split_once('.') else {
+            return Self::is_ascii_digit_run(text);
+        };
+        let is_integer_part_valid = Self::is_ascii_digit_run(integer_digits);
+        let is_fraction_part_valid = Self::is_ascii_digit_run(fraction_digits);
+        is_integer_part_valid && is_fraction_part_valid
+    }
+
+    /// Tell whether `text` is a non-empty run of ASCII digits.
+    fn is_ascii_digit_run(text: &str) -> bool {
+        let has_digits = !text.is_empty();
+        let is_all_digits = text.bytes().all(|digit| digit.is_ascii_digit());
+        has_digits && is_all_digits
+    }
+}
+
+impl AnyStyleKey {
+    /// Create a new key named `name`, accepting values of `value_kind`.
     const fn new(name: &'static str, value_kind: StyleValueKind) -> Self {
         Self { name, value_kind }
     }
 
+    /// Every v1 style key: d2's style keywords at v0.9.0, sorted by name.
+    pub const ALL: [AnyStyleKey; 20] = [
+        AnyStyleKey::new("3d", StyleValueKind::Boolean),
+        AnyStyleKey::new("animated", StyleValueKind::Boolean),
+        AnyStyleKey::new("bold", StyleValueKind::Boolean),
+        AnyStyleKey::new("border-radius", StyleValueKind::Number),
+        AnyStyleKey::new("double-border", StyleValueKind::Boolean),
+        ColorKey::FILL.erased(),
+        AnyStyleKey::new("fill-pattern", FILL_PATTERN_KIND),
+        AnyStyleKey::new("filled", StyleValueKind::Boolean),
+        AnyStyleKey::new("font", FONT_KIND),
+        AnyStyleKey::new("font-color", StyleValueKind::Color),
+        AnyStyleKey::new("font-size", StyleValueKind::Number),
+        AnyStyleKey::new("italic", StyleValueKind::Boolean),
+        AnyStyleKey::new("multiple", StyleValueKind::Boolean),
+        AnyStyleKey::new("opacity", StyleValueKind::Number),
+        AnyStyleKey::new("shadow", StyleValueKind::Boolean),
+        ColorKey::STROKE.erased(),
+        NumberKey::STROKE_DASH.erased(),
+        AnyStyleKey::new("stroke-width", StyleValueKind::Number),
+        AnyStyleKey::new("text-transform", TEXT_TRANSFORM_KIND),
+        AnyStyleKey::new("underline", StyleValueKind::Boolean),
+    ];
+
     /// Find the v1 style key spelled exactly `name`.
-    pub fn find(name: &str) -> Option<StyleKey> {
+    pub fn find(name: &str) -> Option<AnyStyleKey> {
         let mut known_keys = Self::ALL.iter();
         let known_key = known_keys.find(|known_key| known_key.name == name);
         known_key.copied()
     }
 
-    /// Read this key's color from `style`: `None` when unset, or when the key takes no color.
-    fn color_in(self, style: &BTreeMap<String, String>) -> Option<Rgba> {
-        let is_other_kind = self.value_kind != StyleValueKind::Color;
-        if is_other_kind {
-            return None;
-        }
-        let value = style.get(self.name)?;
-        Rgba::parse(value)
-    }
-
-    /// Read this key's number from `style`: `None` when unset, or when the key takes no number.
-    fn number_in(self, style: &BTreeMap<String, String>) -> Option<f64> {
-        let is_other_kind = self.value_kind != StyleValueKind::Number;
-        if is_other_kind {
-            return None;
-        }
-        let value = style.get(self.name)?;
-        StyleValueKind::parse_number(value)
-    }
-
+    /// Return the key's name, as a style entry spells it.
     pub fn name(&self) -> &'static str {
         self.name
     }
 
+    /// Return the kind of value the key accepts.
     pub fn value_kind(&self) -> StyleValueKind {
         self.value_kind
     }
 }
 
-impl Element {
-    /// Read the color this element sets for `key`, already validated: `None` when unset or when `key` takes no color.
-    pub fn style_color(&self, key: StyleKey) -> Option<Rgba> {
-        key.color_in(self.style())
-    }
-
-    /// Read the number this element sets for `key`, already validated: `None` when unset or when `key` takes no number.
-    pub fn style_number(&self, key: StyleKey) -> Option<f64> {
-        key.number_in(self.style())
+impl fmt::Display for AnyStyleKey {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.name)
     }
 }
 
@@ -124,21 +206,11 @@ impl Edge {
     /// Dash length an arc is drawn with when its edge sets no `stroke-dash`, the reference's flowing connections.
     pub const DEFAULT_STROKE_DASH: f64 = 5.0;
 
-    /// Read the color this edge sets for `key`, already validated: `None` when unset or when `key` takes no color.
-    pub fn style_color(&self, key: StyleKey) -> Option<Rgba> {
-        key.color_in(self.style())
-    }
-
     /// Return the dash length the edge's arc is drawn with: its validated `stroke-dash`, else the default; 0 draws it solid.
     pub fn stroke_dash(&self) -> f64 {
-        let authored_dash = StyleKey::STROKE_DASH.number_in(self.style());
+        let style = self.style();
+        let authored_dash = NumberKey::STROKE_DASH.read_from(style);
         authored_dash.unwrap_or(Self::DEFAULT_STROKE_DASH)
-    }
-}
-
-impl fmt::Display for StyleKey {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(self.name)
     }
 }
 
@@ -149,34 +221,10 @@ impl StyleValueKind {
         let text = lowercase_value.as_str();
         match self {
             Self::Color => Rgba::parse(text).is_some(),
-            Self::Number => Self::parse_number(text).is_some(),
+            Self::Number => NumberValue::parse(text).is_some(),
             Self::Boolean => BOOLEAN_KEYWORDS.contains(&text),
             Self::Keyword(keywords) => keywords.contains(&text),
         }
-    }
-
-    /// Parse a `Number` value: a non-negative plain decimal, and only when it is no greater than `MAX_MAGNITUDE`.
-    pub fn parse_number(text: &str) -> Option<f64> {
-        let number: f64 = text.parse().ok()?;
-        let is_plain_number = Self::is_plain_number(text);
-        let is_bounded = number <= MAX_MAGNITUDE;
-        let is_bounded_plain_number = is_plain_number && is_bounded;
-        is_bounded_plain_number.then_some(number)
-    }
-
-    fn is_plain_number(text: &str) -> bool {
-        let Some((integer_digits, fraction_digits)) = text.split_once('.') else {
-            return Self::is_ascii_digit_run(text);
-        };
-        let is_integer_part_valid = Self::is_ascii_digit_run(integer_digits);
-        let is_fraction_part_valid = Self::is_ascii_digit_run(fraction_digits);
-        is_integer_part_valid && is_fraction_part_valid
-    }
-
-    fn is_ascii_digit_run(text: &str) -> bool {
-        let has_digits = !text.is_empty();
-        let is_all_digits = text.bytes().all(|digit| digit.is_ascii_digit());
-        has_digits && is_all_digits
     }
 }
 
@@ -204,30 +252,31 @@ impl fmt::Display for StyleValueKind {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::Element;
 
     #[test]
     fn style_keys_are_sorted_and_unique() {
-        let is_sorted = StyleKey::ALL
+        let is_sorted = AnyStyleKey::ALL
             .windows(2)
             .all(|pair| pair[0].name < pair[1].name);
         assert!(is_sorted);
     }
 
     #[test]
-    fn typed_accessors_read_only_keys_of_their_kind() {
+    fn typed_keys_read_their_values_and_leave_unset_keys_none() {
         let element = Element::new("api")
             .with_style("fill", "RED")
             .with_style("stroke-dash", "5")
             .with_style("stroke-width", "2");
         let red = Rgba::from_packed(0xff0000ff);
-        assert_eq!(element.style_color(StyleKey::FILL), Some(red));
-        assert_eq!(element.style_color(StyleKey::STROKE), None);
-        assert_eq!(element.style_color(StyleKey::STROKE_DASH), None);
-        assert_eq!(element.style_number(StyleKey::STROKE_DASH), Some(5.0));
-        assert_eq!(element.style_number(StyleKey::FILL), None);
+        let element_style = element.style();
+        assert_eq!(ColorKey::FILL.read_from(element_style), Some(red));
+        assert_eq!(ColorKey::STROKE.read_from(element_style), None);
+        assert_eq!(NumberKey::STROKE_DASH.read_from(element_style), Some(5.0));
         let edge = Edge::new().with_style("stroke", "#14f195");
         let green = Rgba::from_packed(0x14f195ff);
-        assert_eq!(edge.style_color(StyleKey::STROKE), Some(green));
+        let edge_style = edge.style();
+        assert_eq!(ColorKey::STROKE.read_from(edge_style), Some(green));
     }
 
     #[test]
@@ -249,18 +298,10 @@ mod tests {
             (StyleValueKind::Number, "10000000000000", false),
             (StyleValueKind::Boolean, "TRUE", true),
             (StyleValueKind::Boolean, "yes", false),
-            (StyleValueKind::Keyword(&FONT_KEYWORDS), "mono", true),
-            (StyleValueKind::Keyword(&FONT_KEYWORDS), "serif", false),
-            (
-                StyleValueKind::Keyword(&TEXT_TRANSFORM_KEYWORDS),
-                "Capitalize",
-                true,
-            ),
-            (
-                StyleValueKind::Keyword(&TEXT_TRANSFORM_KEYWORDS),
-                "title",
-                false,
-            ),
+            (FONT_KIND, "mono", true),
+            (FONT_KIND, "serif", false),
+            (TEXT_TRANSFORM_KIND, "Capitalize", true),
+            (TEXT_TRANSFORM_KIND, "title", false),
         ];
         for (value_kind, value, is_expected_accepted) in cases {
             let is_accepted = value_kind.accepts(value);

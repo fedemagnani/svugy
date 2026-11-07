@@ -5,8 +5,10 @@ use std::fmt;
 use miette::{
     Diagnostic, GraphicalReportHandler, JSONReportHandler, NamedSource, Severity, SourceCode,
 };
+use svugy_model::problem::ErrorSeverity;
 use svugy_model::validate::ModelReport;
 
+/// Box an importer diagnostic so diagnostics of every importer stage share one list.
 pub type BoxedDiagnostic = Box<dyn Diagnostic + Send + Sync>;
 
 /// Collect an input's importer diagnostics and model problems into one report whose severity is its worst diagnostic's.
@@ -19,6 +21,7 @@ pub struct InputReport {
 }
 
 impl InputReport {
+    /// Create a new report of `input_name` holding its importer diagnostics, without source code or model report.
     pub fn new(input_name: String, importer_diagnostics: Vec<BoxedDiagnostic>) -> Self {
         Self {
             input_name,
@@ -28,11 +31,13 @@ impl InputReport {
         }
     }
 
+    /// Set the source code the diagnostics' spans point into, so snippets are shown.
     pub fn with_source_code(mut self, source_code: NamedSource<String>) -> Self {
         self.source_code = Some(source_code);
         self
     }
 
+    /// Set the model report whose problems follow the importer diagnostics.
     pub fn with_model_report(mut self, model_report: ModelReport) -> Self {
         self.model_report = Some(model_report);
         self
@@ -65,9 +70,10 @@ impl InputReport {
 
     /// Tell whether any diagnostic is an error, which stops every subcommand.
     pub fn has_errors(&self) -> bool {
-        self.diagnostics().any(Self::is_error)
+        self.diagnostics().any(|diagnostic| diagnostic.is_error())
     }
 
+    /// List every diagnostic: the importer's first, then the model's problems.
     fn diagnostics(&self) -> impl Iterator<Item = &dyn Diagnostic> {
         let importer_diagnostics = self
             .importer_diagnostics
@@ -80,12 +86,6 @@ impl InputReport {
             .map(|problem| problem as &dyn Diagnostic);
         importer_diagnostics.chain(model_problems)
     }
-
-    fn is_error(diagnostic: &dyn Diagnostic) -> bool {
-        let severity = diagnostic.severity();
-        let severity_or_error = severity.unwrap_or(Severity::Error);
-        severity_or_error == Severity::Error
-    }
 }
 
 impl fmt::Display for InputReport {
@@ -93,7 +93,7 @@ impl fmt::Display for InputReport {
         let input_name = &self.input_name;
         let error_count = self
             .diagnostics()
-            .filter(|diagnostic| Self::is_error(*diagnostic))
+            .filter(|diagnostic| diagnostic.is_error())
             .count();
         let diagnostic_count = self.diagnostics().count();
         let warning_count = diagnostic_count - error_count;

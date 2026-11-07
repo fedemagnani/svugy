@@ -4,7 +4,7 @@ use std::process::ExitCode;
 
 use miette::Report;
 
-/// Stop a subcommand for a reason that maps to one documented exit code.
+/// Name the failure that stops a subcommand, for a reason that maps to one documented exit code.
 #[derive(Debug)]
 pub enum Failure {
     InvalidInput,

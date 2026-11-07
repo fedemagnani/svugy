@@ -1,44 +1,84 @@
 //! Set the diagram's legend top-right of the top-level view, its key rows sampled from what the diagram draws.
 
-use kurbo::{Line, Point, Rect, Vec2};
+use kurbo::{Affine, Line, Point, Rect, Vec2};
 use svugy_model::legend::Legend;
 use svugy_model::model::{EdgeId, Model};
 use svugy_model::path::ElementPath;
 
 use super::badge::BadgeIcon;
 use super::obstruction::Obstructions;
-use super::{Connection, Face, Group, KeyRow, KeySample, Label, LegendPanel, Scene};
+use super::{Connection, Face, Group, Heading, KeyRow, KeySample, Label, LegendPanel};
 use crate::layout::LevelPlans;
 use crate::metrics::{LabelRole, TextAnchor, TextMeasure};
 
-impl Scene {
-    /// Set `model`'s legend top-right of the root view, beside the heading, else just right of the content when drawables take that spot; the view grown to frame it.
-    pub(super) fn add_legend(
-        &mut self,
+impl LegendPanel {
+    /// Length of a stroke sample, from the panel's left edge.
+    const SAMPLE_LENGTH: f64 = 30.0;
+
+    /// Set `model`'s legend top-right of `root`'s view, beside `heading`, else just right of the content when drawables take that spot, or `None` when it has nothing to draw.
+    pub(super) fn set_top_right_of(
+        root: &Group,
+        heading: Option<&Heading>,
         model: &Model,
         plans: &LevelPlans,
         measure: &impl TextMeasure,
-    ) {
-        let Some(legend) = model.legend() else {
-            return;
-        };
-        let drawn_keys = DrawnKeys::described_in(legend, model, plans);
-        let unplaced_panel = LegendPanel::set_from(legend, &drawn_keys, Point::ORIGIN, measure);
-        let Some(unplaced_bounds) = unplaced_panel.bounds() else {
-            return;
-        };
-        let legend_offset = self.legend_offset(unplaced_bounds);
-        let legend_top_left = legend_offset.to_point();
-        let legend_bounds = unplaced_bounds + legend_offset;
-        let framed_legend = legend_bounds.inflate(Group::VIEW_MARGIN, Group::VIEW_MARGIN);
-        self.root.view = self.root.view.union(framed_legend);
-        let legend_panel = LegendPanel::set_from(legend, &drawn_keys, legend_top_left, measure);
-        self.legend = Some(legend_panel);
+    ) -> Option<Self> {
+        let legend = model.legend()?;
+        let drawn_dashes = DrawnDash::all_described_in(legend, model);
+        let drawn_badges = DrawnBadge::all_described_in(legend, model, plans);
+        let unplaced_panel = Self::set_from(legend, &drawn_dashes, &drawn_badges, measure)?;
+        let unplaced_bounds = unplaced_panel.bounds;
+        let legend_offset = Self::offset_to_top_right_of(root, heading, unplaced_bounds);
+        unplaced_panel.translated(legend_offset)
     }
 
-    /// Move a panel bounded by `unplaced_bounds` to the root view's top-right corner inside its margin, or, when anything drawn there overlaps it, one margin right of the view.
-    fn legend_offset(&self, unplaced_bounds: Rect) -> Vec2 {
-        let view = self.root.view;
+    /// Set `legend`'s title, entries and the rows of `drawn_dashes` then `drawn_badges`, one under the other from the origin, or `None` when they draw nothing.
+    fn set_from(
+        legend: &Legend,
+        drawn_dashes: &[DrawnDash],
+        drawn_badges: &[DrawnBadge],
+        measure: &impl TextMeasure,
+    ) -> Option<Self> {
+        let mut lines = LineStack::new();
+        let mut title = None;
+        if let Some(title_text) = legend.title() {
+            let title_line = lines.set_title(title_text, measure);
+            title = Some(title_line);
+        }
+        let mut entries = Vec::new();
+        for entry_text in legend.entries() {
+            let entry = lines.set_entry(entry_text, measure);
+            entries.push(entry);
+        }
+        let mut key_rows = KeyRow::sampling(drawn_dashes, &mut lines, measure);
+        let badge_key_rows = KeyRow::sampling(drawn_badges, &mut lines, measure);
+        key_rows.extend(badge_key_rows);
+        Self::bounding(title, entries, key_rows)
+    }
+
+    /// Bound `title`, `entries` and `key_rows` as one panel by the union of every line's box and every key row's bounds, or `None` when they draw nothing.
+    fn bounding(title: Option<Label>, entries: Vec<Label>, key_rows: Vec<KeyRow>) -> Option<Self> {
+        let labels = title.iter().chain(&entries);
+        let label_bounds = labels.map(Label::bounds);
+        let key_row_bounds = key_rows.iter().map(|key_row| key_row.bounds);
+        let every_bounds = label_bounds.chain(key_row_bounds);
+        let bounds = every_bounds.reduce(|bounds, next_bounds| bounds.union(next_bounds))?;
+        let panel = Self {
+            title,
+            entries,
+            key_rows,
+            bounds,
+        };
+        Some(panel)
+    }
+
+    /// Return the offset moving a panel bounded by `unplaced_bounds` to `root`'s view's top-right corner inside its margin, or, when anything drawn there or `heading` overlaps it, one margin right of the view.
+    fn offset_to_top_right_of(
+        root: &Group,
+        heading: Option<&Heading>,
+        unplaced_bounds: Rect,
+    ) -> Vec2 {
+        let view = root.view;
         let top = view.y0 + Group::VIEW_MARGIN;
         let right_aligned_left = view.x1 - Group::VIEW_MARGIN - unplaced_bounds.width();
         let top_right_offset = Vec2::new(
@@ -46,20 +86,43 @@ impl Scene {
             top - unplaced_bounds.y0,
         );
         let top_right_bounds = unplaced_bounds + top_right_offset;
-        let drawn_outlines = Obstructions::around_document(&self.root, &self.heading);
-        let is_spot_taken = drawn_outlines.is_overlapped_by_rect(top_right_bounds);
+        let drawn_outlines = Obstructions::around_document(root, heading);
+        let overlap_count = drawn_outlines.count_overlapped_by(&top_right_bounds);
+        let is_spot_taken = overlap_count > 0;
         if is_spot_taken {
             let beside_content_left = view.x1 - unplaced_bounds.x0;
             return Vec2::new(beside_content_left, top_right_offset.y);
         }
         top_right_offset
     }
+
+    /// Return the panel translated by `offset`, bounded again around its translated lines and rows, or `None` when it draws nothing.
+    fn translated(self, offset: Vec2) -> Option<Self> {
+        let title = self.title.map(|title| title.translated(offset));
+        let entries = self
+            .entries
+            .into_iter()
+            .map(|entry| entry.translated(offset))
+            .collect();
+        let key_rows = self
+            .key_rows
+            .into_iter()
+            .map(|key_row| key_row.translated(offset))
+            .collect();
+        Self::bounding(title, entries, key_rows)
+    }
 }
 
-/// Lists the key rows a legend describes among those the diagram draws, each kind in first-use order: arc dashes, then badge targets.
-struct DrawnKeys<'m> {
-    dashes: Vec<DrawnDash<'m>>,
-    badges: Vec<DrawnBadge<'m>>,
+/// Samples one way the diagram has drawn some edges, for the key row describing it.
+trait DrawnKey {
+    /// Return the legend's description of the sampled edges.
+    fn description(&self) -> &str;
+
+    /// Return the sample height the row's pitch must clear above its centre line.
+    fn height_to_clear(&self) -> f64;
+
+    /// Return the sample starting at `sample_start`, with its screen bounds.
+    fn sample_from(&self, sample_start: Point) -> (KeySample, Rect);
 }
 
 /// Holds one dash length some arcs are drawn with, those arcs and the legend's description of them.
@@ -69,39 +132,78 @@ struct DrawnDash<'m> {
     description: &'m str,
 }
 
-/// Holds one badge target, the icon its badges are drawn as and the legend's description of them.
-struct DrawnBadge<'m> {
-    target: &'m ElementPath,
-    icon: BadgeIcon,
-    description: &'m str,
-}
-
-impl<'m> DrawnKeys<'m> {
-    /// Collect every dash `model`'s arcs are drawn with and every target its badges point to, keeping those `legend` describes.
-    fn described_in(legend: &'m Legend, model: &'m Model, plans: &LevelPlans) -> Self {
+impl<'m> DrawnDash<'m> {
+    /// Collect every dash `model`'s arcs are drawn with, in first-use order, keeping all those `legend` has described.
+    fn all_described_in(legend: &'m Legend, model: &Model) -> Vec<Self> {
         let mut dash_edges: Vec<(f64, Vec<EdgeId>)> = Vec::new();
         for (edge_id, edge) in model.arc_edges() {
             let stroke_dash = edge.stroke_dash();
             let same_dash = dash_edges
                 .iter_mut()
                 .find(|(dash, _edges)| *dash == stroke_dash);
-            match same_dash {
-                Some((_dash, edges)) => edges.push(edge_id.clone()),
-                None => dash_edges.push((stroke_dash, vec![edge_id.clone()])),
-            }
+            let edge_id = edge_id.clone();
+            let Some((_dash, edges)) = same_dash else {
+                let first_edges = vec![edge_id];
+                let new_dash_entry = (stroke_dash, first_edges);
+                dash_edges.push(new_dash_entry);
+                continue;
+            };
+            edges.push(edge_id);
         }
-        let dashes = dash_edges
+        dash_edges
             .into_iter()
             .filter_map(|(stroke_dash, edges)| {
                 let description = legend.dash_description(stroke_dash)?;
-                let drawn_dash = DrawnDash {
+                let drawn_dash = Self {
                     stroke_dash,
                     edges,
                     description,
                 };
                 Some(drawn_dash)
             })
-            .collect();
+            .collect()
+    }
+}
+
+impl DrawnKey for DrawnDash<'_> {
+    fn description(&self) -> &str {
+        self.description
+    }
+
+    /// Return nothing to clear, since a stroke sample lies on its row's centre line.
+    fn height_to_clear(&self) -> f64 {
+        0.0
+    }
+
+    /// Return a stroke dashed like the arcs, one sample length long.
+    fn sample_from(&self, sample_start: Point) -> (KeySample, Rect) {
+        let sample_length = Vec2::new(LegendPanel::SAMPLE_LENGTH, 0.0);
+        let sample_end = sample_start + sample_length;
+        let line = Line::new(sample_start, sample_end);
+        let half_stroke_width = Connection::STROKE_WIDTH / 2.0;
+        let line_bounds = Rect::from_points(sample_start, sample_end);
+        let sample_bounds = line_bounds.inflate(half_stroke_width, half_stroke_width);
+        let edges = self.edges.clone();
+        let sample = KeySample::Stroke {
+            line,
+            stroke_dash: self.stroke_dash,
+            edges,
+        };
+        (sample, sample_bounds)
+    }
+}
+
+/// Holds one badge target, the upright faces its badges' icon is drawn as with their screen bounds, and the legend's description of them.
+struct DrawnBadge<'m> {
+    target: &'m ElementPath,
+    icon_faces: Vec<Face>,
+    icon_bounds: Rect,
+    description: &'m str,
+}
+
+impl<'m> DrawnBadge<'m> {
+    /// Collect every target `model`'s badges point to, in first-use order, keeping all those `legend` has described.
+    fn all_described_in(legend: &'m Legend, model: &'m Model, plans: &LevelPlans) -> Vec<Self> {
         let mut targets: Vec<&'m ElementPath> = Vec::new();
         for edge_id in model.badge_edges() {
             let target = edge_id.to();
@@ -110,146 +212,54 @@ impl<'m> DrawnKeys<'m> {
                 targets.push(target);
             }
         }
-        let badges = targets
+        targets
             .into_iter()
             .filter_map(|target| {
                 let description = legend.badge_description(target)?;
-                let target_element = model.element(target)?;
-                let target_footprint = plans.footprint_of(target)?;
-                let icon = BadgeIcon::of_target(target_element, target_footprint);
-                let drawn_badge = DrawnBadge {
+                let icon = BadgeIcon::of_target_in(model, plans, target)?;
+                let (icon_faces, icon_bounds) = icon.upright_faces_with_bounds();
+                let drawn_badge = Self {
                     target,
-                    icon,
+                    icon_faces,
+                    icon_bounds,
                     description,
                 };
                 Some(drawn_badge)
             })
-            .collect();
-        Self { dashes, badges }
+            .collect()
     }
 }
 
-impl LegendPanel {
-    /// Drop from the title's baseline to the first entry's.
-    const TITLE_PITCH: f64 = 20.0;
-    /// Drop from one entry or key row's baseline to the next.
-    const LINE_PITCH: f64 = 17.0;
-    /// Drop from the last authored line's baseline to the first key row's.
-    const KEY_PITCH: f64 = 31.0;
-    /// Length of a stroke sample, from the panel's left edge.
-    const SAMPLE_LENGTH: f64 = 30.0;
-    /// Rise of a sample's centre line above its row's baseline.
-    const SAMPLE_RISE: f64 = 4.0;
-    /// Indent of a key row's description from the panel's left edge, past its sample.
-    const DESCRIPTION_INDENT: f64 = 40.0;
-    /// Least gap between a badge sample and the row above.
-    const SAMPLE_GAP: f64 = 2.0;
-
-    /// Set `legend`'s title, entries and the rows of `drawn_keys`, one under the other from `top_left`.
-    fn set_from(
-        legend: &Legend,
-        drawn_keys: &DrawnKeys,
-        top_left: Point,
-        measure: &impl TextMeasure,
-    ) -> Self {
-        let mut lines = LineStack::from(top_left);
-        let title = legend.title().map(|title_text| {
-            lines.set_line(title_text, LabelRole::LegendTitle, 0.0, 0.0, measure)
-        });
-        let first_entry_pitch = if title.is_some() {
-            Self::TITLE_PITCH
-        } else {
-            Self::LINE_PITCH
-        };
-        let mut entries = Vec::new();
-        for entry_text in legend.entries() {
-            let is_first_entry = entries.is_empty();
-            let pitch = if is_first_entry {
-                first_entry_pitch
-            } else {
-                Self::LINE_PITCH
-            };
-            let entry = lines.set_line(entry_text, LabelRole::LegendLine, pitch, 0.0, measure);
-            entries.push(entry);
-        }
-        let mut key_rows = Vec::new();
-        for drawn_dash in &drawn_keys.dashes {
-            let is_first_key_row = key_rows.is_empty();
-            let key_row = KeyRow::sampling_dash(drawn_dash, is_first_key_row, &mut lines, measure);
-            key_rows.push(key_row);
-        }
-        for drawn_badge in &drawn_keys.badges {
-            let is_first_key_row = key_rows.is_empty();
-            let key_row =
-                KeyRow::sampling_badge(drawn_badge, is_first_key_row, &mut lines, measure);
-            key_rows.push(key_row);
-        }
-        Self {
-            title,
-            entries,
-            key_rows,
-        }
+impl DrawnKey for DrawnBadge<'_> {
+    fn description(&self) -> &str {
+        self.description
     }
 
-    /// Return the union of every line's box and every key row's bounds, or `None` for a legend with nothing to draw.
-    pub(crate) fn bounds(&self) -> Option<Rect> {
-        let labels = self.title.iter().chain(&self.entries);
-        let label_bounds = labels.map(Label::bounds);
-        let key_row_bounds = self.key_rows.iter().map(|key_row| key_row.bounds);
-        let every_bounds = label_bounds.chain(key_row_bounds);
-        every_bounds.reduce(|bounds, next_bounds| bounds.union(next_bounds))
+    fn height_to_clear(&self) -> f64 {
+        self.icon_bounds.height()
+    }
+
+    /// Return the icon with its screen bounding box centred half a sample length along.
+    fn sample_from(&self, sample_start: Point) -> (KeySample, Rect) {
+        let half_sample_length = Vec2::new(LegendPanel::SAMPLE_LENGTH / 2.0, 0.0);
+        let sample_center = sample_start + half_sample_length;
+        let icon_center = self.icon_bounds.center();
+        let offset = sample_center - icon_center;
+        let shift = Affine::translate(offset);
+        let faces: Vec<Face> = self
+            .icon_faces
+            .iter()
+            .map(|face| face.transformed(shift))
+            .collect();
+        let face_bounds = Face::bounds_of(&faces);
+        let sample_bounds = face_bounds.unwrap_or(Rect::ZERO);
+        let target = self.target.clone();
+        let sample = KeySample::Badge { target, faces };
+        (sample, sample_bounds)
     }
 }
 
 impl KeyRow {
-    /// Set the next row of `lines`: a stroke sample dashed like `drawn_dash`'s arcs, then its description.
-    fn sampling_dash(
-        drawn_dash: &DrawnDash,
-        is_first_key_row: bool,
-        lines: &mut LineStack,
-        measure: &impl TextMeasure,
-    ) -> Self {
-        let pitch = lines.key_row_pitch(0.0, is_first_key_row);
-        let description = lines.set_description(drawn_dash.description, pitch, measure);
-        let sample_start = lines.sample_start();
-        let sample_length = Vec2::new(LegendPanel::SAMPLE_LENGTH, 0.0);
-        let sample_end = sample_start + sample_length;
-        let line = Line::new(sample_start, sample_end);
-        let half_stroke_width = Connection::STROKE_WIDTH / 2.0;
-        let line_bounds = Rect::from_points(sample_start, sample_end);
-        let sample_bounds = line_bounds.inflate(half_stroke_width, half_stroke_width);
-        let sample = KeySample::Stroke {
-            line,
-            stroke_dash: drawn_dash.stroke_dash,
-            edges: drawn_dash.edges.clone(),
-        };
-        Self::new(sample, sample_bounds, description)
-    }
-
-    /// Set the next row of `lines`: `drawn_badge`'s icon centred on the sample, then its description.
-    fn sampling_badge(
-        drawn_badge: &DrawnBadge,
-        is_first_key_row: bool,
-        lines: &mut LineStack,
-        measure: &impl TextMeasure,
-    ) -> Self {
-        let unplaced_faces = drawn_badge.icon.faces_around(Point::ORIGIN);
-        let unplaced_icon_bounds = Face::bounds_of(&unplaced_faces).unwrap_or(Rect::ZERO);
-        let icon_height = unplaced_icon_bounds.height();
-        let pitch = lines.key_row_pitch(icon_height, is_first_key_row);
-        let description = lines.set_description(drawn_badge.description, pitch, measure);
-        let sample_start = lines.sample_start();
-        let half_sample_length = Vec2::new(LegendPanel::SAMPLE_LENGTH / 2.0, 0.0);
-        let sample_center = sample_start + half_sample_length;
-        let faces = drawn_badge.icon.faces_around(sample_center);
-        let sample_bounds = Face::bounds_of(&faces).unwrap_or(Rect::ZERO);
-        let sample = KeySample::Badge {
-            target: drawn_badge.target.clone(),
-            faces,
-        };
-        Self::new(sample, sample_bounds, description)
-    }
-
     /// Pair `sample`, bounded on screen by `sample_bounds`, with `description`.
     fn new(sample: KeySample, sample_bounds: Rect, description: Label) -> Self {
         let description_bounds = description.bounds();
@@ -260,63 +270,168 @@ impl KeyRow {
             bounds,
         }
     }
+
+    /// Return one key row sampling each key of `drawn_keys`, each set as the next key row of `lines`.
+    fn sampling<K: DrawnKey>(
+        drawn_keys: &[K],
+        lines: &mut LineStack,
+        measure: &impl TextMeasure,
+    ) -> Vec<Self> {
+        let mut key_rows = Vec::new();
+        for drawn_key in drawn_keys {
+            let description_text = drawn_key.description();
+            let height_to_clear = drawn_key.height_to_clear();
+            let (description, sample_start) =
+                lines.set_key_row(description_text, height_to_clear, measure);
+            let (sample, sample_bounds) = drawn_key.sample_from(sample_start);
+            let key_row = Self::new(sample, sample_bounds, description);
+            key_rows.push(key_row);
+        }
+        key_rows
+    }
+
+    /// Return the row translated by `offset`.
+    fn translated(self, offset: Vec2) -> Self {
+        let sample = self.sample.translated(offset);
+        let description = self.description.translated(offset);
+        let bounds = self.bounds + offset;
+        Self {
+            sample,
+            description,
+            bounds,
+        }
+    }
 }
 
-/// Stacks a legend's lines from its top-left corner, each baseline a pitch below the one before.
+impl KeySample {
+    /// Return the sample translated by `offset`.
+    fn translated(self, offset: Vec2) -> Self {
+        let shift = Affine::translate(offset);
+        match self {
+            Self::Stroke {
+                line,
+                stroke_dash,
+                edges,
+            } => Self::Stroke {
+                line: shift * line,
+                stroke_dash,
+                edges,
+            },
+            Self::Badge { target, faces } => {
+                let shifted_faces = faces.iter().map(|face| face.transformed(shift)).collect();
+                Self::Badge {
+                    target,
+                    faces: shifted_faces,
+                }
+            }
+        }
+    }
+}
+
+/// Stacks a legend's lines from the origin, each baseline a pitch below the one before, the pitch set by the part of the legend each of the two lines belongs to.
 struct LineStack {
-    top_left: Point,
-    previous_baseline: Option<f64>,
+    previous_line: Option<(LegendPart, f64)>,
+}
+
+/// Names the part of a legend one stacked line belongs to.
+#[derive(Clone, Copy)]
+enum LegendPart {
+    Title,
+    Entry,
+    KeyRow,
 }
 
 impl LineStack {
-    fn from(top_left: Point) -> Self {
+    /// Drop from the title's baseline to the first entry's.
+    const TITLE_PITCH: f64 = 20.0;
+    /// Drop from one entry or key row's baseline to the next.
+    const LINE_PITCH: f64 = 17.0;
+    /// Drop from the last authored line's baseline to the first key row's.
+    const KEY_PITCH: f64 = 31.0;
+    /// Least gap between a badge sample and the row above.
+    const SAMPLE_GAP: f64 = 2.0;
+    /// Indent of a key row's description from the panel's left edge, past its sample.
+    const DESCRIPTION_INDENT: f64 = 40.0;
+    /// Rise of a sample's centre line above its row's baseline.
+    const SAMPLE_RISE: f64 = 4.0;
+
+    /// Start a stack of no line yet, whose first line's box top lies on the top edge.
+    fn new() -> Self {
         Self {
-            top_left,
-            previous_baseline: None,
+            previous_line: None,
         }
     }
 
-    /// Set `text` in `role`'s font, start-anchored `indent` in from the left edge, `pitch` below the previous line, or with its box top on the top edge.
+    /// Set the legend's title flush left, as the stack's first line.
+    fn set_title(&mut self, text: &str, measure: &impl TextMeasure) -> Label {
+        let top_line_pitch = 0.0;
+        let flush_left = 0.0;
+        let role = LabelRole::LegendTitle;
+        self.set_line(
+            text,
+            role,
+            LegendPart::Title,
+            top_line_pitch,
+            flush_left,
+            measure,
+        )
+    }
+
+    /// Set an authored entry flush left, a title pitch below the title, else a line pitch below the entry before.
+    fn set_entry(&mut self, text: &str, measure: &impl TextMeasure) -> Label {
+        let is_below_title = matches!(self.previous_line, Some((LegendPart::Title, _baseline)));
+        let pitch = if is_below_title {
+            Self::TITLE_PITCH
+        } else {
+            Self::LINE_PITCH
+        };
+        let flush_left = 0.0;
+        let role = LabelRole::LegendLine;
+        self.set_line(text, role, LegendPart::Entry, pitch, flush_left, measure)
+    }
+
+    /// Set a key row's description indented past its sample, and return it with where the sample starts: on the left edge, risen above the row's baseline, a key pitch below authored lines, else a line pitch grown so a sample `sample_height` tall clears the row above.
+    fn set_key_row(
+        &mut self,
+        text: &str,
+        sample_height: f64,
+        measure: &impl TextMeasure,
+    ) -> (Label, Point) {
+        let is_below_key_row = matches!(self.previous_line, Some((LegendPart::KeyRow, _baseline)));
+        let clearing_pitch = sample_height + Self::SAMPLE_GAP;
+        let pitch = if is_below_key_row {
+            Self::LINE_PITCH.max(clearing_pitch)
+        } else {
+            Self::KEY_PITCH
+        };
+        let indent = Self::DESCRIPTION_INDENT;
+        let role = LabelRole::LegendLine;
+        let description = self.set_line(text, role, LegendPart::KeyRow, pitch, indent, measure);
+        let sample_y = description.baseline_origin.y - Self::SAMPLE_RISE;
+        let left_edge = 0.0;
+        let sample_start = Point::new(left_edge, sample_y);
+        (description, sample_start)
+    }
+
+    /// Set `text` in `role`'s font as the stack's next line, of the legend's `part`, start-anchored `indent` in from the left edge, `pitch` below the previous line, or with its box top on the top edge.
     fn set_line(
         &mut self,
         text: &str,
         role: LabelRole,
+        part: LegendPart,
         pitch: f64,
         indent: f64,
         measure: &impl TextMeasure,
     ) -> Label {
         let size = role.measure_text(text, measure);
-        let first_baseline = self.top_left.y + size.baseline_from_top;
-        let baseline = self
-            .previous_baseline
-            .map_or(first_baseline, |previous| previous + pitch);
-        self.previous_baseline = Some(baseline);
-        let line_left = self.top_left.x + indent;
-        let baseline_origin = Point::new(line_left, baseline);
+        let first_baseline = size.baseline_from_top;
+        let previous_baseline = self
+            .previous_line
+            .map(|(_previous_part, baseline)| baseline);
+        let baseline = previous_baseline.map_or(first_baseline, |previous| previous + pitch);
+        self.previous_line = Some((part, baseline));
+        let baseline_origin = Point::new(indent, baseline);
         Label::new(text, role, TextAnchor::Start, baseline_origin, size)
-    }
-
-    /// Set a key row's description `pitch` below the previous line, indented past its sample.
-    fn set_description(&mut self, text: &str, pitch: f64, measure: &impl TextMeasure) -> Label {
-        let indent = LegendPanel::DESCRIPTION_INDENT;
-        self.set_line(text, LabelRole::LegendLine, pitch, indent, measure)
-    }
-
-    /// Return where the last line's sample starts: on the left edge, risen above its baseline.
-    fn sample_start(&self) -> Point {
-        let baseline = self.previous_baseline.unwrap_or(self.top_left.y);
-        let sample_y = baseline - LegendPanel::SAMPLE_RISE;
-        Point::new(self.top_left.x, sample_y)
-    }
-
-    /// Return the drop to a key row whose sample stands `sample_height` tall: the key pitch below authored lines, else a line pitch grown so the sample clears the row above.
-    fn key_row_pitch(&self, sample_height: f64, is_first_key_row: bool) -> f64 {
-        let is_below_authored_lines = is_first_key_row && self.previous_baseline.is_some();
-        if is_below_authored_lines {
-            return LegendPanel::KEY_PITCH;
-        }
-        let clearing_pitch = sample_height + LegendPanel::SAMPLE_GAP;
-        LegendPanel::LINE_PITCH.max(clearing_pitch)
     }
 }
 
@@ -326,6 +441,7 @@ mod tests {
     use svugy_model::model::{Edge, Element};
 
     use super::*;
+    use crate::geometry::Scene;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
 
     /// Lay out and project `a -> b` flowing, `b -> c` dashed 2 and `a -> store` badged, under `builder`'s title and legend.
@@ -334,7 +450,7 @@ mod tests {
         let a = builder.add_top_level("a", Element::new("app"));
         let b = builder.add_top_level("b", Element::new("bus"));
         let c = builder.add_top_level("c", Element::new("crank"));
-        let store = builder.add_top_level("store", Element::new("store").with_badge());
+        let store = builder.add_top_level("store", Element::new("store").with_badge_target());
         builder.add_edge(&a, &b, Edge::new());
         builder.add_edge(&b, &c, Edge::new().with_style("stroke-dash", "2"));
         builder.add_edge(&a, &store, Edge::new());
@@ -394,13 +510,13 @@ mod tests {
             ]
         );
         let entry_drop = legend.entries[0].baseline_origin.y - title.baseline_origin.y;
-        assert_eq!(entry_drop, LegendPanel::TITLE_PITCH);
+        assert_eq!(entry_drop, LineStack::TITLE_PITCH);
         let first_row_drop =
             legend.key_rows[0].description.baseline_origin.y - legend.entries[0].baseline_origin.y;
-        assert_eq!(first_row_drop, LegendPanel::KEY_PITCH);
+        assert_eq!(first_row_drop, LineStack::KEY_PITCH);
         let description_indent =
             legend.key_rows[0].description.baseline_origin.x - title.baseline_origin.x;
-        assert_eq!(description_indent, LegendPanel::DESCRIPTION_INDENT);
+        assert_eq!(description_indent, LineStack::DESCRIPTION_INDENT);
     }
 
     #[test]
@@ -425,7 +541,7 @@ mod tests {
 
         let legend = scene.legend.expect("the title is drawn");
         let title = legend.title.as_ref().expect("the title is set");
-        let legend_bounds = legend.bounds().expect("the legend has a line");
+        let legend_bounds = legend.bounds;
         assert_eq!(title.plane, kurbo::Affine::IDENTITY);
         assert!((legend_bounds.x1 - (unlegended_view.x1 - Group::VIEW_MARGIN)).abs() < 1e-9);
         assert!((legend_bounds.y0 - (unlegended_view.y0 + Group::VIEW_MARGIN)).abs() < 1e-9);
@@ -447,9 +563,10 @@ mod tests {
         let scene = keyed_scene(builder);
 
         let legend = scene.legend.expect("the title is drawn");
-        let legend_bounds = legend.bounds().expect("the legend has a line");
+        let legend_bounds = legend.bounds;
         assert!((legend_bounds.x0 - headed_view.x1).abs() < 1e-9);
-        let heading_bounds = scene.heading.bounds().expect("the subtitle is set");
+        let heading = scene.heading.expect("the subtitle is set");
+        let heading_bounds = heading.bounds();
         assert!(!heading_bounds.overlaps(legend_bounds));
     }
 }

@@ -1,7 +1,7 @@
 //! Prove the d2 front end parses the v1 subset, recovers from broken lines and warns on unsupported constructs.
 
 use miette::{Diagnostic, Severity, SourceSpan};
-use svugy_import::d2::{Construct, D2Document, Field, KeyPath, Span, Statement, SyntaxError};
+use svugy_import::d2::{Construct, D2Parse, Field, KeyPath, Span, Statement, SyntaxError};
 
 const NESTING: &str = include_str!("fixtures/d2/nesting.d2");
 const EDGES: &str = include_str!("fixtures/d2/edges.d2");
@@ -9,21 +9,21 @@ const STYLES: &str = include_str!("fixtures/d2/styles.d2");
 
 #[test]
 fn nesting_and_quoted_keys_parse_into_a_snapshot() {
-    let parsed = D2Document::parse(NESTING);
+    let parsed = D2Parse::parse(NESTING);
 
     insta::assert_debug_snapshot!(parsed);
 }
 
 #[test]
 fn edge_chains_and_labels_parse_into_a_snapshot() {
-    let parsed = D2Document::parse(EDGES);
+    let parsed = D2Parse::parse(EDGES);
 
     insta::assert_debug_snapshot!(parsed);
 }
 
 #[test]
 fn styles_dotted_and_nested_parse_into_a_snapshot() {
-    let parsed = D2Document::parse(STYLES);
+    let parsed = D2Parse::parse(STYLES);
 
     insta::assert_debug_snapshot!(parsed);
 }
@@ -33,20 +33,20 @@ fn every_broken_line_is_reported_and_valid_lines_are_kept() {
     let source =
         "a -> b\nc ->\nd: {\n  e -> -> f\n  g\n}\nh: \"open\ni -> j\n}\nk: { l\nm.n: kept\n";
 
-    let parsed = D2Document::parse(source);
+    let parsed = D2Parse::parse(source);
 
     let error_texts: Vec<&str> = parsed
-        .errors
+        .errors()
         .iter()
         .map(|error| text_at(source, error.span))
         .collect();
     let top_level_paths: Vec<String> = parsed
-        .document
+        .document()
         .statements
         .iter()
         .map(statement_paths)
         .collect();
-    let Statement::Shape(container_d) = &parsed.document.statements[1] else {
+    let Statement::Shape(container_d) = &parsed.document().statements[1] else {
         panic!("`d` is kept as a shape");
     };
     let container_d_children: Vec<String> = container_d.body.iter().map(statement_paths).collect();
@@ -57,12 +57,12 @@ fn every_broken_line_is_reported_and_valid_lines_are_kept() {
 
 #[test]
 fn errors_and_warnings_are_distinguishable_diagnostics() {
-    let parsed = D2Document::parse("a ->\nb.icon: x.svg\n");
+    let parsed = D2Parse::parse("a ->\nb.icon: x.svg\n");
 
-    let error_severity = parsed.errors[0].severity();
-    let warning_severity = parsed.warnings[0].severity();
-    let error_code = parsed.errors[0].code().map(|code| code.to_string());
-    let warning_code = parsed.warnings[0].code().map(|code| code.to_string());
+    let error_severity = parsed.errors()[0].severity();
+    let warning_severity = parsed.warnings()[0].severity();
+    let error_code = parsed.errors()[0].code().map(|code| code.to_string());
+    let warning_code = parsed.warnings()[0].code().map(|code| code.to_string());
     assert_eq!(error_severity, Some(Severity::Error));
     assert_eq!(warning_severity, Some(Severity::Warning));
     assert_eq!(error_code.as_deref(), Some("svugy::d2::syntax"));
@@ -96,10 +96,10 @@ a.label.near: top-left
 kept -> edge: ok
 "#;
 
-    let parsed = D2Document::parse(source);
+    let parsed = D2Parse::parse(source);
 
     let warnings: Vec<(Construct, &str)> = parsed
-        .warnings
+        .warnings()
         .iter()
         .map(|warning| {
             let text = text_at(source, warning.span);
@@ -107,12 +107,12 @@ kept -> edge: ok
         })
         .collect();
     let kept_paths: Vec<String> = parsed
-        .document
+        .document()
         .statements
         .iter()
         .map(statement_paths)
         .collect();
-    assert_eq!(parsed.errors, Vec::<SyntaxError>::new());
+    assert_eq!(parsed.errors(), Vec::<SyntaxError>::new());
     assert_eq!(
         warnings,
         [
@@ -122,22 +122,16 @@ kept -> edge: ok
                 "classes: { big: { style.font-size: 30 } }"
             ),
             (Construct::Classes, "a.class: big"),
-            (
-                Construct::Board("layers".to_owned()),
-                "layers: { detail: { x } }"
-            ),
+            (Construct::Board("layers"), "layers: { detail: { x } }"),
             (Construct::Import, "...@base"),
             (Construct::Import, "@other.d2"),
             (Construct::Glob, "*.style.fill"),
             (Construct::EdgeReference, "(a -> b)[0].style.stroke: blue"),
             (
-                Construct::ReservedField("icon".to_owned()),
+                Construct::ReservedField("icon"),
                 "b.icon: https://icons.example/b.svg"
             ),
-            (
-                Construct::ReservedField("near".to_owned()),
-                "b.near: top-center"
-            ),
+            (Construct::ReservedField("near"), "b.near: top-center"),
             (Construct::BlockString, "|md\n  # Title, it's markdown\n|"),
             (Construct::BlockString, "||go\n  a | b\n||"),
             (Construct::Variables, "${name}"),
@@ -155,10 +149,10 @@ kept -> edge: ok
 fn a_map_beside_a_style_value_warns_and_the_value_is_kept() {
     let source = "a.style.fill: red { opacity: 0.5 }\nb.style: { stroke: blue { width: 2 } }\n";
 
-    let parsed = D2Document::parse(source);
+    let parsed = D2Parse::parse(source);
 
     let warnings: Vec<(Construct, &str)> = parsed
-        .warnings
+        .warnings()
         .iter()
         .map(|warning| {
             let text = text_at(source, warning.span);
@@ -166,7 +160,7 @@ fn a_map_beside_a_style_value_warns_and_the_value_is_kept() {
         })
         .collect();
     let kept_values: Vec<&str> = parsed
-        .document
+        .document()
         .statements
         .iter()
         .filter_map(|statement| match statement {
@@ -198,10 +192,10 @@ fn a_map_beside_a_style_value_warns_and_the_value_is_kept() {
 fn unknown_style_keys_warn_and_are_dropped_in_both_style_forms() {
     let source = "a.style: { fill: red; glow: 2 }\nb.style.Fill: blue\n";
 
-    let parsed = D2Document::parse(source);
+    let parsed = D2Parse::parse(source);
 
     let warnings: Vec<(Construct, &str)> = parsed
-        .warnings
+        .warnings()
         .iter()
         .map(|warning| {
             let text = text_at(source, warning.span);
@@ -209,12 +203,12 @@ fn unknown_style_keys_warn_and_are_dropped_in_both_style_forms() {
         })
         .collect();
     let kept_paths: Vec<String> = parsed
-        .document
+        .document()
         .statements
         .iter()
         .map(statement_paths)
         .collect();
-    let Statement::Field(assignment) = &parsed.document.statements[0] else {
+    let Statement::Field(assignment) = &parsed.document().statements[0] else {
         panic!("`a.style` is a field");
     };
     let Field::Style(properties) = &assignment.field else {
@@ -242,9 +236,9 @@ fn unknown_style_keys_warn_and_are_dropped_in_both_style_forms() {
 fn spans_point_at_the_source_bytes_of_each_node() {
     let source = "outer: {\n  \"a.b\" -> c: calls {style.stroke: red}\n}\n";
 
-    let parsed = D2Document::parse(source);
+    let parsed = D2Parse::parse(source);
 
-    let Statement::Shape(outer) = &parsed.document.statements[0] else {
+    let Statement::Shape(outer) = &parsed.document().statements[0] else {
         panic!("`outer` is a shape");
     };
     let Statement::Edge(edge) = &outer.body[0] else {
@@ -278,15 +272,15 @@ fn comments_separators_and_line_endings_are_skipped() {
     let source =
         "# heading\r\na; b -> c # trailing\r\n\"\"\"\nblock comment\n\"\"\"\nlong \\\n -> d\n";
 
-    let parsed = D2Document::parse(source);
+    let parsed = D2Parse::parse(source);
 
     let paths: Vec<String> = parsed
-        .document
+        .document()
         .statements
         .iter()
         .map(statement_paths)
         .collect();
-    assert_eq!(parsed.errors, Vec::<SyntaxError>::new());
+    assert_eq!(parsed.errors(), Vec::<SyntaxError>::new());
     assert_eq!(paths, ["a", "b -> c", "long -> d"]);
 }
 

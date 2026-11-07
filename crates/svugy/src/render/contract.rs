@@ -8,18 +8,30 @@ pub(crate) use annotation::ContractAnnotator;
 pub(crate) struct RuntimeContract;
 
 impl RuntimeContract {
+    /// Version the contract, bumped by any rename, removal or change of meaning.
     pub(crate) const VERSION: &'static str = "1";
 
+    /// Mark the root with the contract version.
     pub(crate) const CONTRACT: &'static str = "data-svugy-contract";
+    /// Mark a level group with its level path.
     pub(crate) const LEVEL: &'static str = "data-svugy-level";
+    /// Mark a level group with its view in document coordinates.
     pub(crate) const VIEW: &'static str = "data-svugy-view";
+    /// Mark a solid's group with its element path.
     pub(crate) const ELEMENT: &'static str = "data-svugy-element";
+    /// Mark a connection or badge group with its edge.
     pub(crate) const EDGE: &'static str = "data-svugy-edge";
+    /// Mark a connection's stroke, whose dash offset the runtime animates as flow.
     pub(crate) const FLOW: &'static str = "data-svugy-flow";
+    /// Mark a connection's animated dot.
     pub(crate) const DOT: &'static str = "data-svugy-dot";
+    /// Mark a stub marker's group with its external endpoint.
     pub(crate) const STUB: &'static str = "data-svugy-stub";
+    /// Mark a group with the level a click on it goes to.
     pub(crate) const GOTO: &'static str = "data-svugy-goto";
+    /// Mark a level's overlay, shown only while that level is entered.
     pub(crate) const OVERLAY: &'static str = "data-svugy-overlay";
+    /// Mark a group's details JSON.
     pub(crate) const DETAILS: &'static str = "data-svugy-details";
     /// Names the runtime-owned marker of the entered level, which rendering never emits.
     #[cfg(test)]

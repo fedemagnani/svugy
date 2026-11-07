@@ -35,7 +35,8 @@ impl LevelLayout for Layered {
                 let center_y = node.y.expect("dagre positions every node");
                 let center = Point::new(center_x, center_y);
                 let footprint = Rect::from_center_size(center, size);
-                (path.clone(), footprint)
+                let path_key = path.clone();
+                (path_key, footprint)
             })
             .collect()
     }
@@ -48,7 +49,10 @@ impl Layered {
             .sizes()
             .keys()
             .enumerate()
-            .map(|(path_index, path)| (path, path_index.to_string()))
+            .map(|(path_index, path)| {
+                let node_name = path_index.to_string();
+                (path, node_name)
+            })
             .collect()
     }
 
@@ -57,19 +61,25 @@ impl Layered {
         siblings: &SiblingGraph,
         node_names: &BTreeMap<&ElementPath, String>,
     ) -> Graph {
-        let mut graph = Graph::with_options(true, false, false);
+        let is_directed = true;
+        let is_multigraph = false;
+        let is_compound = false;
+        let mut graph = Graph::with_options(is_directed, is_multigraph, is_compound);
         let rank_direction = RANK_DIRECTION.to_owned();
-        graph.set_graph(GraphLabel {
+        let base_graph_label = GraphLabel::default();
+        let graph_label = GraphLabel {
             rankdir: Some(rank_direction),
             nodesep: Some(NODE_GAP),
             ranksep: Some(RANK_GAP),
-            ..GraphLabel::default()
-        });
+            ..base_graph_label
+        };
+        graph.set_graph(graph_label);
         for (path, size) in siblings.sizes() {
+            let base_node_label = NodeLabel::default();
             let node = NodeLabel {
                 width: size.width,
                 height: size.height,
-                ..NodeLabel::default()
+                ..base_node_label
             };
             let node_name = &node_names[path];
             graph.set_node(node_name, node);
@@ -81,7 +91,8 @@ impl Layered {
             }
             let from_name = &node_names[from];
             let to_name = &node_names[to];
-            graph.set_edge(from_name, to_name, EdgeLabel::default(), None);
+            let edge_label = EdgeLabel::default();
+            graph.set_edge(from_name, to_name, edge_label, None);
         }
         graph
     }

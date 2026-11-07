@@ -5,13 +5,14 @@ use std::fs;
 use std::path::PathBuf;
 
 use miette::{IntoDiagnostic, NamedSource, WrapErr};
-use svugy_import::d2::{D2Document, D2Import};
+use svugy_import::d2::D2Parse;
 use svugy_model::model::Model;
 use svugy_model::validate::ModelAdmission;
 
 use crate::failure::Failure;
 use crate::report::{BoxedDiagnostic, InputReport};
 
+/// Type the loader of one input format: its source in, its model and report out.
 type LoadSource = fn(NamedSource<String>) -> LoadedInput;
 
 /// Pair an input path with the loader its extension selects.
@@ -27,15 +28,24 @@ pub struct LoadedInput {
     pub report: InputReport,
 }
 
+/// Read a JSON model.
+struct Json;
+
+/// Import a d2 file.
+struct D2;
+
 impl ModelInput {
-    /// Select the loader by the extension of `argument`, the one place the input format is decided.
+    /// Parse `argument` into an input whose extension selects the loader, the one place the input format is decided.
     pub fn parse(argument: &str) -> Result<Self, String> {
         let path = PathBuf::from(argument);
         let extension = path.extension().and_then(OsStr::to_str);
         let load_source: LoadSource = match extension {
-            Some("json") => LoadedInput::load_json,
-            Some("d2") => LoadedInput::import_d2,
-            _ => return Err("expected a `.json` model or a `.d2` file".to_owned()),
+            Some("json") => Json::load,
+            Some("d2") => D2::load,
+            _unsupported_extension => {
+                let unsupported_message = "expected a `.json` model or a `.d2` file".to_owned();
+                return Err(unsupported_message);
+            }
         };
         Ok(Self { path, load_source })
     }
@@ -60,49 +70,43 @@ impl ModelInput {
     }
 }
 
-impl LoadedInput {
-    fn new(model: Option<Model>, report: InputReport) -> Self {
-        let has_errors = report.has_errors();
-        let admitted_model = if has_errors { None } else { model };
-        Self {
-            model: admitted_model,
-            report,
-        }
-    }
-
+impl Json {
     /// Load a JSON model without snippets: its spans, if any, point into the d2 text it was imported from.
-    fn load_json(source: NamedSource<String>) -> Self {
+    fn load(source: NamedSource<String>) -> LoadedInput {
         let input_name = source.name().to_owned();
-        let loaded_json = Model::load_json(source.inner());
+        let source_text = source.inner();
+        let loaded_json = Model::load_json(source_text);
         let admission = match loaded_json {
             Ok(admission) => admission,
             Err(malformed) => {
                 let malformed_diagnostic: BoxedDiagnostic = Box::new(malformed);
-                let report = InputReport::new(input_name, vec![malformed_diagnostic]);
-                return Self::new(None, report);
+                let importer_diagnostics = vec![malformed_diagnostic];
+                let report = InputReport::new(input_name, importer_diagnostics);
+                return LoadedInput {
+                    model: None,
+                    report,
+                };
             }
         };
         let ModelAdmission {
             model,
             report: model_report,
         } = admission;
-        let report = InputReport::new(input_name, Vec::new()).with_model_report(model_report);
-        Self::new(model, report)
+        let no_importer_diagnostics = Vec::new();
+        let report =
+            InputReport::new(input_name, no_importer_diagnostics).with_model_report(model_report);
+        LoadedInput { model, report }
     }
+}
 
+impl D2 {
     /// Import a d2 file, reporting its syntax errors, its subset warnings and its model problems against the d2 text.
-    fn import_d2(source: NamedSource<String>) -> Self {
+    fn load(source: NamedSource<String>) -> LoadedInput {
         let input_name = source.name().to_owned();
-        let parsed = D2Document::parse(source.inner());
-        let D2Import {
-            admission,
-            errors,
-            warnings,
-        } = parsed.lower();
-        let ModelAdmission {
-            model,
-            report: model_report,
-        } = admission;
+        let source_text = source.inner();
+        let parsed = D2Parse::parse(source_text);
+        let import = parsed.lower();
+        let (model, errors, warnings, model_report) = import.into_parts();
         let syntax_errors = errors
             .into_iter()
             .map(|error| Box::new(error) as BoxedDiagnostic);
@@ -113,6 +117,6 @@ impl LoadedInput {
         let report = InputReport::new(input_name, importer_diagnostics)
             .with_source_code(source)
             .with_model_report(model_report);
-        Self::new(model, report)
+        LoadedInput { model, report }
     }
 }

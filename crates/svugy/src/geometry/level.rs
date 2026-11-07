@@ -3,50 +3,30 @@
 use std::iter;
 
 use glam::DVec3;
-use kurbo::{Affine, Rect, Shape as _};
+use kurbo::{Affine, Rect};
 use svugy_model::model::{Edge, EdgeId, Model};
 use svugy_model::path::ElementPath;
 
-use super::badge::BadgeIcon;
+use super::badge::{BadgeIcon, BadgeSeater};
 use super::connection::LiftedArc;
 use super::depth::DepthOrder;
-use super::ground::GroundGrid;
 use super::obstruction::Obstructions;
 use super::primitive::ResolvedPrimitive;
 use super::projection::IsometricProjection;
-use super::{Connection, Group, Label, NestedInteriors, PlatedLabel, Scene, Solid};
-use crate::layout::{LevelPlan, LevelPlans};
+use super::{Connection, Group, PlatedLabel, Solid};
+use crate::layout::{LevelPlacement, LevelPlan, LevelPlans, Route};
 use crate::metrics::TextMeasure;
 
-impl Scene {
-    /// Project every level `plans` lays out into one scene: the ground grid under the root, each container's interior stacked on its solid, each edge arced in its home level or badged on its source, every container's stub markers over it, then the diagram's heading and legend above it all.
-    pub(crate) fn project(model: &Model, plans: &LevelPlans, measure: &impl TextMeasure) -> Self {
-        let root_path = ElementPath::root();
-        let root_plan = plans
-            .level(&root_path)
-            .expect("layout plans the root level");
-        let projector = LevelProjector::new(model, plans, measure);
-        let mut root = projector.project_level(&root_path, root_plan, Affine::IDENTITY);
-        root.overlay_stub_markers(model, plans, measure);
-        let root_boundary = root_plan.boundary();
-        let ground_grid = GroundGrid::covering(root_boundary);
-        let ground_lines = ground_grid.lines();
-        let mut scene = Self::new(ground_lines, root);
-        scene.head_with_title_and_subtitle(model, measure);
-        scene.add_legend(model, plans, measure);
-        scene
-    }
-}
-
 /// Projects levels top-down, each container's interior onto its solid's top.
-struct LevelProjector<'a, M> {
+pub(super) struct LevelProjector<'a, M> {
     model: &'a Model,
     plans: &'a LevelPlans,
     measure: &'a M,
 }
 
 impl<'a, M: TextMeasure> LevelProjector<'a, M> {
-    fn new(model: &'a Model, plans: &'a LevelPlans, measure: &'a M) -> Self {
+    /// Set up a projector of the levels `plans` lays out for `model`, its labels measured by `measure`.
+    pub(super) fn new(model: &'a Model, plans: &'a LevelPlans, measure: &'a M) -> Self {
         Self {
             model,
             plans,
@@ -54,35 +34,43 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
         }
     }
 
-    /// Project `level` as `plan` lays it out, mapped into its parent by `frame`: solids back to front with their interiors, arcs of the edges homed here with plates clear of the solids' labels, and a view framing them.
-    fn project_level(&self, level: &ElementPath, plan: &LevelPlan, frame: Affine) -> Group {
+    /// Project `level` as `plan` lays it out, mapped into its parent by `frame`: solids back to front with their interiors, then arcs of the edges homed here with plates clear of the solids' labels, its view left for the scene to frame.
+    pub(super) fn project_level(
+        &self,
+        level: &ElementPath,
+        plan: &LevelPlan,
+        frame: Affine,
+    ) -> Group {
         let solids = self.project_solids_back_to_front(plan);
-        let obstructions = Obstructions::around_level(&solids);
+        let obstructions = Obstructions::around_text_of(&solids);
         let connections = self.arc_connections_homed_at(level, plan, obstructions);
-        let boundary = plan.boundary();
-        let view = Group::framing_view(boundary, &solids, &connections);
-        let mut group = Group::new(frame, view);
-        group.solids = solids;
-        group.connections = connections;
-        group
+        let unframed_group = Group::new(frame, Rect::ZERO);
+        Group {
+            solids,
+            connections,
+            ..unframed_group
+        }
     }
 
     /// Project each footprint's element back to front, seating the badges of the edges it is the source of on its top, stacking the interior of every container the plans lay out there.
     fn project_solids_back_to_front(&self, plan: &LevelPlan) -> Vec<Solid> {
-        let depth_order = DepthOrder::new(&plan.footprints);
-        let back_to_front = depth_order.back_to_front();
+        let placed = plan.placed();
+        let footprints = placed.footprints();
+        let back_to_front = DepthOrder::back_to_front(footprints);
         back_to_front
             .into_iter()
             .filter_map(|path| {
                 let element = self.model.element(path)?;
-                let footprint = plan.footprints[path];
-                let is_container = self.model.is_container(path);
-                let primitive = ResolvedPrimitive::of_element(element, is_container);
+                let primitive = ResolvedPrimitive::of_path(self.model, path)?;
+                let footprint = footprints[path];
                 let drawn_solid = primitive.draw(path, element, footprint, self.measure);
                 let badge_icons = self.badge_icons_from(path);
-                let badged_solid =
-                    drawn_solid.with_badges(footprint, primitive.height, badge_icons);
-                let solid = self.stack_planned_interior(path, footprint, primitive, badged_solid);
+                let badge_seater =
+                    BadgeSeater::on_top_of(&drawn_solid, footprint, primitive.height);
+                let badges = badge_seater.seat_badges(badge_icons);
+                let badged_solid = drawn_solid.with_badges(badges);
+                let solid =
+                    self.stack_planned_interior(path, footprint, primitive.height, badged_solid);
                 Some(solid)
             })
             .collect()
@@ -92,29 +80,27 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
     fn badge_icons_from(&self, source: &ElementPath) -> Vec<(EdgeId, BadgeIcon)> {
         let badge_edges = self.model.badge_edges_from(source);
         badge_edges
-            .filter_map(|edge| {
-                let target = self.model.element(edge.to())?;
-                let target_footprint = self.plans.footprint_of(edge.to())?;
-                let icon = BadgeIcon::of_target(target, target_footprint);
-                Some((edge.clone(), icon))
+            .filter_map(|edge_id| {
+                let target = edge_id.to();
+                let icon = BadgeIcon::of_target_in(self.model, self.plans, target)?;
+                let badge_edge_id = edge_id.clone();
+                Some((badge_edge_id, icon))
             })
             .collect()
     }
 
-    /// Stack the planned interior of `path`, if any, on its solid: the interior's origin is the footprint's top-left corner raised to the primitive's top.
+    /// Stack the planned interior of `path`, if any, on its solid: the interior's origin is the footprint's top-left corner raised to the primitive's top, `primitive_height` up.
     fn stack_planned_interior(
         &self,
         path: &ElementPath,
         footprint: Rect,
-        primitive: ResolvedPrimitive,
+        primitive_height: f64,
         drawn_solid: Solid,
     ) -> Solid {
-        let plans = self.plans;
-        let interior_plan = plans.level(path);
-        let Some(interior_plan) = interior_plan else {
+        let Some(interior_plan) = self.plans.level(path) else {
             return drawn_solid;
         };
-        let raised_origin = DVec3::new(footprint.x0, footprint.y0, primitive.height);
+        let raised_origin = DVec3::new(footprint.x0, footprint.y0, primitive_height);
         let projected_origin = IsometricProjection::project(raised_origin);
         let interior_offset = projected_origin.to_vec2();
         let interior_frame = Affine::translate(interior_offset);
@@ -122,113 +108,62 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
         drawn_solid.with_interior(interior)
     }
 
-    /// Arc the route of every edge homed at `level`, its ports raised by the solids under them, plating each label where its arc is least obstructed, in route order.
+    /// Arc the route of every edge homed at `level`, plating each label where its arc is least obstructed, clear of the plates before it, in route order.
     fn arc_connections_homed_at(
         &self,
         level: &ElementPath,
         plan: &LevelPlan,
         mut obstructions: Obstructions,
     ) -> Vec<Connection> {
-        plan.routes
+        let routes = plan.routes();
+        routes
             .iter()
             .map(|(edge_id, route)| {
-                let source_elevation = self.elevation_above(level, edge_id.from());
-                let target_elevation = self.elevation_above(level, edge_id.to());
-                let arc = LiftedArc::over_route(route, source_elevation, target_elevation);
-                let stroked_path = arc.path_under_target_arrowhead();
-                let dot_path = arc.port_to_port_path();
-                let connection =
-                    Connection::new(edge_id.clone(), stroked_path).with_dot_path(dot_path);
-                let edge = self.model.edge(edge_id);
-                let edge_label = edge.and_then(Edge::label);
-                let Some(label_text) = edge_label else {
-                    return connection;
-                };
-                let plate_positions = arc.plate_positions_sliding_from_apex();
-                let plated_label = PlatedLabel::least_obstructed_along(
-                    label_text,
-                    &plate_positions,
-                    &obstructions,
-                    self.measure,
-                );
-                obstructions.record(&plated_label);
-                connection.with_label(plated_label)
+                self.arc_connection_homed_at(level, edge_id, route, &mut obstructions)
             })
             .collect()
     }
 
+    /// Arc `edge_id`'s `route`, homed at `level`, from its ports raised by the solids under them, its label, if any, plated where the arc is least obstructed and recorded among `obstructions`.
+    fn arc_connection_homed_at(
+        &self,
+        level: &ElementPath,
+        edge_id: &EdgeId,
+        route: &Route,
+        obstructions: &mut Obstructions,
+    ) -> Connection {
+        let source = edge_id.from();
+        let target = edge_id.to();
+        let source_elevation = self.elevation_above(level, source);
+        let target_elevation = self.elevation_above(level, target);
+        let arc = LiftedArc::over_route(route, source_elevation, target_elevation);
+        let stroked_path = arc.path_under_target_arrowhead();
+        let dot_path = arc.port_to_port_path();
+        let connection_edge_id = edge_id.clone();
+        let connection = Connection::new(connection_edge_id, stroked_path).with_dot_path(dot_path);
+        let edge = self.model.edge(edge_id);
+        let edge_label = edge.and_then(Edge::label);
+        let Some(label_text) = edge_label else {
+            return connection;
+        };
+        let plated_label =
+            PlatedLabel::place_least_obstructed_along(label_text, &arc, obstructions, self.measure);
+        connection.with_label(plated_label)
+    }
+
     /// Return how high `endpoint`'s top stands above the floor of `level`: the heights of the primitives from `level`'s child down to `endpoint`, summed.
     fn elevation_above(&self, level: &ElementPath, endpoint: &ElementPath) -> f64 {
-        let endpoint_itself = iter::once(endpoint.clone());
+        let endpoint_path = endpoint.clone();
+        let endpoint_itself = iter::once(endpoint_path);
         let ancestors = endpoint.ancestors();
         let endpoint_and_ancestors = endpoint_itself.chain(ancestors);
         endpoint_and_ancestors
             .filter(|path| level.is_ancestor_of(path))
             .filter_map(|path| {
-                let element = self.model.element(&path)?;
-                let is_container = self.model.is_container(&path);
-                let primitive = ResolvedPrimitive::of_element(element, is_container);
+                let primitive = ResolvedPrimitive::of_path(self.model, &path)?;
                 Some(primitive.height)
             })
             .sum()
-    }
-}
-
-impl Group {
-    /// Screen margin around the framed drawables.
-    pub(super) const VIEW_MARGIN: f64 = 24.0;
-
-    /// Frame every drawable, interiors included, plus a margin; an empty level frames its floor, and the ground grid may bleed past the view.
-    fn framing_view(boundary: Rect, solids: &[Solid], connections: &[Connection]) -> Rect {
-        let floor = IsometricProjection::horizontal_plane_at(0.0);
-        let floor_bounds = floor.transform_rect_bbox(boundary);
-        let content_bounds = Self::content_bounds(solids, connections);
-        let framed_bounds = content_bounds.unwrap_or(floor_bounds);
-        framed_bounds.inflate(Self::VIEW_MARGIN, Self::VIEW_MARGIN)
-    }
-
-    /// Return the union of every face, solid label, badge, path and plate, each nested interior's mapped through its frames, or `None` for an empty level.
-    fn content_bounds(solids: &[Solid], connections: &[Connection]) -> Option<Rect> {
-        let own_bounds = Self::drawable_bounds(solids, connections);
-        let nested_bounds = NestedInteriors::below(solids).flat_map(|interior| {
-            let group = interior.group;
-            let local_bounds = Self::drawable_bounds(&group.solids, &group.connections);
-            local_bounds.map(move |bounds| interior.to_outer.transform_rect_bbox(bounds))
-        });
-        let drawable_bounds = own_bounds.chain(nested_bounds);
-        drawable_bounds.reduce(|framed, bounds| framed.union(bounds))
-    }
-
-    /// Yield the local bounds of every face, solid label, badge, path and plate one level draws itself, interiors left out.
-    fn drawable_bounds<'g>(
-        solids: &'g [Solid],
-        connections: &'g [Connection],
-    ) -> impl Iterator<Item = Rect> + 'g {
-        let face_bounds = solids
-            .iter()
-            .flat_map(|solid| &solid.faces)
-            .map(|face| face.outline.bounding_box());
-        let solid_label_bounds = solids
-            .iter()
-            .flat_map(|solid| &solid.labels)
-            .map(Label::bounds);
-        let badge_face_bounds = solids
-            .iter()
-            .flat_map(|solid| &solid.badges)
-            .flat_map(|badge| &badge.faces)
-            .map(|face| face.outline.bounding_box());
-        let path_bounds = connections
-            .iter()
-            .map(|connection| connection.path.bounding_box());
-        let plate_bounds = connections
-            .iter()
-            .filter_map(|connection| connection.label.as_ref())
-            .map(PlatedLabel::bounds);
-        face_bounds
-            .chain(solid_label_bounds)
-            .chain(badge_face_bounds)
-            .chain(path_bounds)
-            .chain(plate_bounds)
     }
 }
 
@@ -236,13 +171,14 @@ impl Group {
 mod tests {
     use std::collections::{BTreeMap, BTreeSet};
 
-    use kurbo::{ParamCurve, Point, Size};
+    use kurbo::{ParamCurve, Point, Shape as _, Size};
     use svugy_model::builder::ModelBuilder;
-    use svugy_model::model::{EdgeId, Element, Shape};
+    use svugy_model::model::{Element, Shape};
 
     use super::*;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
-    use crate::layout::{Port, Route, Side, Stub};
+    use crate::geometry::{Label, Scene};
+    use crate::layout::{PlacedLevel, Port, Side, Stub};
 
     const SLAB_TOP: f64 = 10.5;
     const BLOCK_TOP: f64 = 22.5;
@@ -271,48 +207,47 @@ mod tests {
         fn three_nested_levels() -> Self {
             let relay_into_core = EdgeId::new(path("r"), path("a.b.c"), 0);
             let dealer_into_core = EdgeId::new(path("a.d"), path("a.b.c"), 0);
-            let mut root_plan = LevelPlan::new(Size::new(400.0, 300.0));
-            root_plan
-                .footprints
-                .insert(path("r"), Rect::new(0.0, 0.0, 60.0, 40.0));
-            root_plan
-                .footprints
-                .insert(path("a"), Rect::new(100.0, 20.0, 340.0, 260.0));
+            let root_footprints = BTreeMap::from([
+                (path("r"), Rect::new(0.0, 0.0, 60.0, 40.0)),
+                (path("a"), Rect::new(100.0, 20.0, 340.0, 260.0)),
+            ]);
             let relay_port = Port::new(Side::East, Point::new(60.0, 20.0));
             let core_west_port_in_root = Port::new(Side::West, Point::new(150.0, 90.0));
             let relay_route = Route::new(relay_port, core_west_port_in_root);
-            root_plan
-                .routes
-                .insert(relay_into_core.clone(), relay_route);
-            let mut outer_plan = LevelPlan::new(Size::new(240.0, 240.0));
-            outer_plan
-                .footprints
-                .insert(path("a.b"), Rect::new(30.0, 30.0, 150.0, 150.0));
-            outer_plan
-                .footprints
-                .insert(path("a.d"), Rect::new(180.0, 40.0, 220.0, 80.0));
+            let root_routes = BTreeMap::from([(relay_into_core.clone(), relay_route)]);
+            let root_extent = Size::new(400.0, 300.0);
+            let root_placed = PlacedLevel::new(root_extent, root_footprints);
+            let root_plan = LevelPlan::new(root_placed, root_routes, BTreeMap::new());
+            let outer_footprints = BTreeMap::from([
+                (path("a.b"), Rect::new(30.0, 30.0, 150.0, 150.0)),
+                (path("a.d"), Rect::new(180.0, 40.0, 220.0, 80.0)),
+            ]);
             let dealer_port = Port::new(Side::West, Point::new(180.0, 60.0));
             let core_east_port_in_outer = Port::new(Side::East, Point::new(110.0, 70.0));
             let dealer_route = Route::new(dealer_port, core_east_port_in_outer);
-            outer_plan
-                .routes
-                .insert(dealer_into_core.clone(), dealer_route);
+            let outer_routes = BTreeMap::from([(dealer_into_core.clone(), dealer_route)]);
             let outer_relay_slot = Port::new(Side::West, Point::new(0.0, 70.0));
             let outer_relay_edges = BTreeSet::from([relay_into_core.clone()]);
             let outer_relay_stub = Stub::new(outer_relay_slot, outer_relay_edges);
-            outer_plan.stubs.insert(path("r"), outer_relay_stub);
-            let mut inner_plan = LevelPlan::new(Size::new(120.0, 120.0));
-            inner_plan
-                .footprints
-                .insert(path("a.b.c"), Rect::new(20.0, 20.0, 80.0, 60.0));
+            let outer_stubs = BTreeMap::from([(path("r"), outer_relay_stub)]);
+            let outer_extent = Size::new(240.0, 240.0);
+            let outer_placed = PlacedLevel::new(outer_extent, outer_footprints);
+            let outer_plan = LevelPlan::new(outer_placed, outer_routes, outer_stubs);
+            let inner_footprints =
+                BTreeMap::from([(path("a.b.c"), Rect::new(20.0, 20.0, 80.0, 60.0))]);
             let inner_relay_slot = Port::new(Side::West, Point::new(0.0, 40.0));
             let inner_dealer_slot = Port::new(Side::East, Point::new(120.0, 40.0));
             let inner_relay_edges = BTreeSet::from([relay_into_core]);
             let inner_relay_stub = Stub::new(inner_relay_slot, inner_relay_edges);
-            inner_plan.stubs.insert(path("r"), inner_relay_stub);
             let inner_dealer_edges = BTreeSet::from([dealer_into_core]);
             let inner_dealer_stub = Stub::new(inner_dealer_slot, inner_dealer_edges);
-            inner_plan.stubs.insert(path("a.d"), inner_dealer_stub);
+            let inner_stubs = BTreeMap::from([
+                (path("r"), inner_relay_stub),
+                (path("a.d"), inner_dealer_stub),
+            ]);
+            let inner_extent = Size::new(120.0, 120.0);
+            let inner_placed = PlacedLevel::new(inner_extent, inner_footprints);
+            let inner_plan = LevelPlan::new(inner_placed, BTreeMap::new(), inner_stubs);
             let plans_by_level = BTreeMap::from([
                 (ElementPath::root(), root_plan),
                 (path("a"), outer_plan),
@@ -569,7 +504,7 @@ mod tests {
         let plan = LevelPlan::two_boxes_and_one_route();
         let plans = LevelPlans::root_only(plan.clone());
         let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
-        let (_edge_id, route) = plan.routes.iter().next().expect("fixture has a route");
+        let (_edge_id, route) = plan.routes().iter().next().expect("fixture has a route");
         let connection = &scene.root.connections[0];
         let dot_path = connection
             .dot_path
@@ -619,12 +554,18 @@ mod tests {
     #[test]
     fn view_frames_the_drawables_not_the_empty_floor() {
         let model = two_boxes_model();
-        let mut plan = LevelPlan::two_boxes_and_one_route();
-        plan.extent = Size::new(2_000.0, 2_000.0);
+        let two_boxes_plan = LevelPlan::two_boxes_and_one_route();
+        let floor_extent = Size::new(2_000.0, 2_000.0);
+        let two_boxes_placed = two_boxes_plan.placed();
+        let footprints = two_boxes_placed.footprints().clone();
+        let routes = two_boxes_plan.routes().clone();
+        let placed = PlacedLevel::new(floor_extent, footprints);
+        let placed_boundary = placed.boundary();
+        let plan = LevelPlan::new(placed, routes, BTreeMap::new());
         let plans = LevelPlans::root_only(plan.clone());
         let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
         let floor =
-            IsometricProjection::horizontal_plane_at(0.0).transform_rect_bbox(plan.boundary());
+            IsometricProjection::horizontal_plane_at(0.0).transform_rect_bbox(placed_boundary);
         let is_floor_framed = scene.root.view.union(floor) == scene.root.view;
         assert!(
             !is_floor_framed,
@@ -639,13 +580,15 @@ mod tests {
         builder.add_top_level("a_small_front", Element::new("front"));
         builder.add_top_level("z_long_back", Element::new("back"));
         let model = builder.build().model.expect("fixture model is valid");
-        let mut plan = LevelPlan::new(kurbo::Size::new(100.0, 20.0));
         let front = ElementPath::from_segments(["a_small_front"]);
         let back = ElementPath::from_segments(["z_long_back"]);
-        plan.footprints
-            .insert(front, Rect::new(10.0, 10.0, 20.0, 20.0));
-        plan.footprints
-            .insert(back, Rect::new(0.0, 0.0, 100.0, 10.0));
+        let footprints = BTreeMap::from([
+            (front, Rect::new(10.0, 10.0, 20.0, 20.0)),
+            (back, Rect::new(0.0, 0.0, 100.0, 10.0)),
+        ]);
+        let extent = Size::new(100.0, 20.0);
+        let placed = PlacedLevel::new(extent, footprints);
+        let plan = LevelPlan::new(placed, BTreeMap::new(), BTreeMap::new());
         let plans = LevelPlans::root_only(plan);
         let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
         let painted: Vec<String> = scene
@@ -671,7 +614,7 @@ mod tests {
 
         let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
 
-        let (_edge_id, route) = plan.routes.iter().next().expect("fixture has a route");
+        let (_edge_id, route) = plan.routes().iter().next().expect("fixture has a route");
         let (dot_start, _dot_end) = dot_path_ends(&scene.root.connections[0]);
         let tall_top = DVec3::new(route.source.point.x, route.source.point.y, 84.0);
         assert_eq!(dot_start, IsometricProjection::project(tall_top));
@@ -691,13 +634,15 @@ mod tests {
         let tall_back = Element::new("back").with_height(200.0);
         builder.add_top_level("z_long_back", tall_back);
         let model = builder.build().model.expect("fixture model is valid");
-        let mut plan = LevelPlan::new(kurbo::Size::new(100.0, 20.0));
         let front = ElementPath::from_segments(["a_small_front"]);
         let back = ElementPath::from_segments(["z_long_back"]);
-        plan.footprints
-            .insert(front, Rect::new(10.0, 10.0, 20.0, 20.0));
-        plan.footprints
-            .insert(back, Rect::new(0.0, 0.0, 100.0, 10.0));
+        let footprints = BTreeMap::from([
+            (front, Rect::new(10.0, 10.0, 20.0, 20.0)),
+            (back, Rect::new(0.0, 0.0, 100.0, 10.0)),
+        ]);
+        let extent = Size::new(100.0, 20.0);
+        let placed = PlacedLevel::new(extent, footprints);
+        let plan = LevelPlan::new(placed, BTreeMap::new(), BTreeMap::new());
         let plans = LevelPlans::root_only(plan);
         let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
         let painted: Vec<String> = scene
@@ -717,16 +662,19 @@ mod tests {
         let browser = builder.add_top_level("browser", Element::new("Browser"));
         let edge_id = builder.add_edge(&quoter, &browser, Edge::new());
         let model = builder.build().model.expect("fixture model is valid");
-        let mut plan = LevelPlan::new(kurbo::Size::new(300.0, 100.0));
         let desk_path = ElementPath::from_segments(["desk"]);
         let browser_path = ElementPath::from_segments(["browser"]);
-        plan.footprints
-            .insert(desk_path, Rect::new(0.0, 0.0, 100.0, 100.0));
-        plan.footprints
-            .insert(browser_path, Rect::new(200.0, 20.0, 260.0, 80.0));
+        let footprints = BTreeMap::from([
+            (desk_path, Rect::new(0.0, 0.0, 100.0, 100.0)),
+            (browser_path, Rect::new(200.0, 20.0, 260.0, 80.0)),
+        ]);
         let source = Port::new(Side::East, Point::new(100.0, 50.0));
         let target = Port::new(Side::West, Point::new(200.0, 50.0));
-        plan.routes.insert(edge_id, Route::new(source, target));
+        let route = Route::new(source, target);
+        let routes = BTreeMap::from([(edge_id, route)]);
+        let extent = Size::new(300.0, 100.0);
+        let placed = PlacedLevel::new(extent, footprints);
+        let plan = LevelPlan::new(placed, routes, BTreeMap::new());
         let plans = LevelPlans::root_only(plan);
         let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
         let connection = &scene.root.connections[0];
@@ -757,18 +705,18 @@ mod tests {
         let calls_id = builder.add_edge(&a, &b, calls);
         let replies_id = builder.add_edge(&a, &b, replies);
         let model = builder.build().model.expect("fixture model is valid");
-        let mut plan = LevelPlan::new(Size::new(520.0, 110.0));
         let a_footprint = Rect::new(20.0, 30.0, 80.0, 70.0);
         let b_footprint = Rect::new(440.0, 50.0, 500.0, 90.0);
-        plan.footprints.insert(path("a"), a_footprint);
-        plan.footprints.insert(path("b"), b_footprint);
+        let footprints = BTreeMap::from([(path("a"), a_footprint), (path("b"), b_footprint)]);
         let source_point = Point::new(80.0, 50.0);
         let target_point = Point::new(440.0, 70.0);
         let source = Port::new(Side::East, source_point);
         let target = Port::new(Side::West, target_point);
         let calls_route = Route::new(source, target);
-        plan.routes.insert(calls_id, calls_route.clone());
-        plan.routes.insert(replies_id, calls_route);
+        let routes = BTreeMap::from([(calls_id, calls_route.clone()), (replies_id, calls_route)]);
+        let extent = Size::new(520.0, 110.0);
+        let placed = PlacedLevel::new(extent, footprints);
+        let plan = LevelPlan::new(placed, routes, BTreeMap::new());
         let measure = FixedAdvanceMeasure;
         let plans = LevelPlans::root_only(plan);
         let scene = Scene::project(&model, &plans, &measure);

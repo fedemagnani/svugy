@@ -14,18 +14,21 @@ pub(crate) struct LevelViews {
 }
 
 impl LevelViews {
+    /// Collect the views of `root` and of every interior nested in it.
     pub(crate) fn collect(root: &Group) -> Self {
         let root_path = ElementPath::root();
-        let root_view = iter::once((root_path, root.view));
+        let root_view = (root_path, root.view);
+        let root_views = iter::once(root_view);
         let nested_views = root.nested_interiors().map(|interior| {
             let container = interior.container.clone();
             let outer_view = interior.outer_view();
             (container, outer_view)
         });
-        let views_by_level = root_view.chain(nested_views).collect();
+        let views_by_level = root_views.chain(nested_views).collect();
         Self { views_by_level }
     }
 
+    /// Return the document view of `level`.
     pub(crate) fn view_of(&self, level: &ElementPath) -> Rect {
         self.views_by_level[level]
     }

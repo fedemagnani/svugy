@@ -1111,6 +1111,7 @@ dependencies = [
  "serde_json",
  "svugy",
  "svugy-import",
+ "svugy-model",
 ]
 
 [[package]]

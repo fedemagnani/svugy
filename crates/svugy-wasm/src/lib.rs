@@ -2,13 +2,18 @@
 
 use std::cell::RefCell;
 
-use miette::{Diagnostic, Severity};
+use miette::Diagnostic;
 use serde::Serialize;
 use svugy::InteractiveSvg;
-use svugy_import::d2::D2Document;
+use svugy_import::d2::{D2Parse, LabelledDiagnostic};
+use svugy_model::problem::ErrorSeverity;
 
 thread_local! {
-    static PLAYGROUND: RefCell<Playground> = RefCell::new(Playground::default());
+    /// Hold the one playground the exports share, as wasm runs on a single thread.
+    static PLAYGROUND: RefCell<Playground> = {
+        let playground = Playground::default();
+        RefCell::new(playground)
+    };
 }
 
 /// Size the input buffer to `length` bytes and return where the caller writes the d2 source.
@@ -23,68 +28,27 @@ pub extern "C" fn render() -> usize {
     PLAYGROUND.with_borrow_mut(Playground::render_input)
 }
 
-/// Return where the JSON verdict of the last render starts.
+/// Return the output pointer: where the JSON verdict of the last render starts.
 #[unsafe(no_mangle)]
 pub extern "C" fn output_pointer() -> *const u8 {
     PLAYGROUND.with_borrow(|playground| playground.output.as_ptr())
 }
 
-/// Holds the d2 source a page writes in and the JSON verdict it reads back, so no pointer ever crosses the boundary inward.
+/// Hold the playground's d2 source a page writes in and the JSON verdict it reads back, so no pointer ever crosses the boundary inward.
 #[derive(Default)]
 pub struct Playground {
     input: Vec<u8>,
     output: String,
 }
 
-impl Playground {
-    /// Render `source` as the JSON verdict a page reads: the interactive SVG when nothing is an error, and every diagnostic.
-    pub fn verdict(source: &str) -> String {
-        let import = D2Document::parse(source).lower();
-        let diagnostics = import.diagnostics();
-        let errors = diagnostics
-            .iter()
-            .filter(|diagnostic| Self::is_error(**diagnostic));
-        let is_renderable = errors.count() == 0;
-        let located_diagnostics: Vec<LocatedDiagnostic> = diagnostics
-            .iter()
-            .map(|diagnostic| LocatedDiagnostic::locate(*diagnostic, source))
-            .collect();
-        let admitted_model = import.admission.model.filter(|_model| is_renderable);
-        let svg = admitted_model.as_ref().map(InteractiveSvg::render);
-        let verdict = Verdict {
-            svg,
-            diagnostics: located_diagnostics,
-        };
-        serde_json::to_string(&verdict).expect("a verdict serialises")
-    }
-
-    fn input_buffer(&mut self, length: usize) -> *mut u8 {
-        self.input.clear();
-        self.input.resize(length, 0);
-        self.input.as_mut_ptr()
-    }
-
-    fn render_input(&mut self) -> usize {
-        let source = String::from_utf8_lossy(&self.input);
-        self.output = Self::verdict(&source);
-        self.output.len()
-    }
-
-    /// Tell whether `diagnostic` blocks a render: an error, or a diagnostic that states no severity.
-    fn is_error(diagnostic: &dyn Diagnostic) -> bool {
-        let severity = diagnostic.severity().unwrap_or(Severity::Error);
-        severity == Severity::Error
-    }
-}
-
-/// Carries a render's outcome to the page: the SVG, absent while any diagnostic is an error, and every diagnostic.
+/// Carry a render's verdict to the page: the SVG, absent while any diagnostic is an error, and every diagnostic.
 #[derive(Serialize)]
 struct Verdict {
     svg: Option<String>,
     diagnostics: Vec<LocatedDiagnostic>,
 }
 
-/// Places one diagnostic in the editor by its first label's 1-based line and column.
+/// Place one diagnostic in the editor by its first label's 1-based line and column.
 #[derive(Serialize)]
 struct LocatedDiagnostic {
     is_error: bool,
@@ -97,14 +61,46 @@ struct LocatedDiagnostic {
     column: Option<usize>,
 }
 
+impl Playground {
+    /// Size the input buffer to `length` zeroed bytes and return where it starts.
+    fn input_buffer(&mut self, length: usize) -> *mut u8 {
+        self.input.clear();
+        self.input.resize(length, 0);
+        self.input.as_mut_ptr()
+    }
+
+    /// Serialise the verdict on the input buffer's source into the output, returning its byte length.
+    fn render_input(&mut self) -> usize {
+        let source = String::from_utf8_lossy(&self.input);
+        let verdict = Verdict::of(&source);
+        self.output = serde_json::to_string(&verdict).expect("a verdict serialises");
+        self.output.len()
+    }
+}
+
+impl Verdict {
+    /// Judge `source`: the interactive SVG when nothing is an error, and every diagnostic located in the source.
+    fn of(source: &str) -> Self {
+        let parsed = D2Parse::parse(source);
+        let import = parsed.lower();
+        let diagnostics = import
+            .diagnostics()
+            .into_iter()
+            .map(|diagnostic| LocatedDiagnostic::locate(diagnostic, source))
+            .collect();
+        let admitted_model = import.admitted_model();
+        let svg = admitted_model.map(InteractiveSvg::render);
+        Self { svg, diagnostics }
+    }
+}
+
 impl LocatedDiagnostic {
+    /// Locate `diagnostic` in `source` by its first label, carrying its severity, message and help.
     fn locate(diagnostic: &dyn Diagnostic, source: &str) -> Self {
-        let is_error = Playground::is_error(diagnostic);
+        let is_error = diagnostic.is_error();
         let message = diagnostic.to_string();
         let help = diagnostic.help().map(|help| help.to_string());
-        let mut labels = diagnostic.labels().into_iter().flatten();
-        let first_label = labels.next();
-        let label_offset = first_label.map(|label| label.offset());
+        let label_offset = diagnostic.first_label_offset();
         let line_and_column = label_offset.map(|offset| Self::line_and_column(source, offset));
         let line = line_and_column.map(|(line, _column)| line);
         let column = line_and_column.map(|(_line, column)| column);
@@ -119,7 +115,8 @@ impl LocatedDiagnostic {
 
     /// Count lines and characters before byte `offset`: line = 1 + newlines before it, column = 1 + characters since the last newline.
     fn line_and_column(source: &str, offset: usize) -> (usize, usize) {
-        let clamped_offset = offset.min(source.len());
+        let source_length = source.len();
+        let clamped_offset = offset.min(source_length);
         let before = source.get(..clamped_offset).unwrap_or(source);
         let line = 1 + before.matches('\n').count();
         let line_start = before.rfind('\n').map_or(0, |newline| newline + 1);
@@ -135,8 +132,8 @@ mod tests {
     use super::*;
 
     fn verdict_of(source: &str) -> Value {
-        let verdict = Playground::verdict(source);
-        serde_json::from_str(&verdict).expect("the verdict is JSON")
+        let verdict = Verdict::of(source);
+        serde_json::to_value(&verdict).expect("the verdict is JSON")
     }
 
     #[test]

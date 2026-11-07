@@ -1,19 +1,19 @@
 //! Prove examples/svugy.d2 imports into the model the golden builder saves as examples/svugy.json.
 
 use serde_json::Value;
-use svugy_import::d2::{D2Document, GRAMMAR_VERSION};
+use svugy_import::d2::{D2Parse, GRAMMAR_VERSION};
 
 const SVUGY_D2: &str = include_str!("../../../examples/svugy.d2");
 const SVUGY_JSON: &str = include_str!("../../../examples/svugy.json");
 
 #[test]
 fn svugy_d2_imports_into_the_golden_model() {
-    let parsed = D2Document::parse(SVUGY_D2);
+    let parsed = D2Parse::parse(SVUGY_D2);
     let import = parsed.lower();
 
     let diagnostic_count = import.diagnostics().len();
     let model = import
-        .admission
+        .into_admission()
         .model
         .expect("the twin lowers into a sound model");
     let imported_json = model.to_json();

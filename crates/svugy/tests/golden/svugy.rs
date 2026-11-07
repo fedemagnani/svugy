@@ -161,7 +161,7 @@ impl SvugyExample {
 
         let pipeline_inter_element = Element::new("Inter")
             .with_shape(Shape::Cylinder)
-            .with_badge()
+            .with_badge_target()
             .with_style("fill", STORE_FILL)
             .with_position(Position { x: 780.0, y: 54.0 });
         let pipeline_inter = builder.add_child(&pipeline, "inter", pipeline_inter_element);

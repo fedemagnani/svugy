@@ -3,29 +3,43 @@
 use glam::DVec3;
 use svugy_model::color::Rgb;
 
+/// Bound an 8-bit channel from above.
 const CHANNEL_MAX: f64 = 255.0;
+/// Tolerate rounding this far outside the unit sRGB cube.
 const GAMUT_TOLERANCE: f64 = 1e-6;
+/// Count the bisection steps of the gamut search.
 const GAMUT_SEARCH_ITERATIONS: usize = 24;
+/// Bound the linear segment of the sRGB decode.
 const SRGB_DECODE_THRESHOLD: f64 = 0.040_45;
+/// Bound the linear segment of the sRGB encode.
 const SRGB_ENCODE_THRESHOLD: f64 = 0.003_130_8;
+/// Scale the linear segment of the sRGB transfer.
 const SRGB_LINEAR_SLOPE: f64 = 12.92;
+/// Raise the power segment of the sRGB transfer.
 const SRGB_GAMMA: f64 = 2.4;
+/// Offset the power segment of the sRGB transfer.
 const SRGB_OFFSET: f64 = 0.055;
+/// Bound from below the Oklab lightness of a stroke that reads on the canvas.
+const READABLE_STROKE_LIGHTNESS: f64 = 0.5;
+/// Map linear sRGB to LMS cone responses, Ottosson's M₁ by rows.
 const LINEAR_SRGB_TO_LMS: [DVec3; 3] = [
     DVec3::new(0.412_221_470_8, 0.536_332_536_3, 0.051_445_992_9),
     DVec3::new(0.211_903_498_2, 0.680_699_545_1, 0.107_396_956_6),
     DVec3::new(0.088_302_461_9, 0.281_718_837_6, 0.629_978_700_5),
 ];
+/// Map cube-rooted LMS to Oklab, Ottosson's M₂ by rows.
 const LMS_CUBE_ROOT_TO_OKLAB: [DVec3; 3] = [
     DVec3::new(0.210_454_255_3, 0.793_617_785_0, -0.004_072_046_8),
     DVec3::new(1.977_998_495_1, -2.428_592_205_0, 0.450_593_709_9),
     DVec3::new(0.025_904_037_1, 0.782_771_766_2, -0.808_675_766_0),
 ];
+/// Map Oklab to cube-rooted LMS, M₂⁻¹ by rows.
 const OKLAB_TO_LMS_CUBE_ROOT: [DVec3; 3] = [
     DVec3::new(1.0, 0.396_337_777_4, 0.215_803_757_3),
     DVec3::new(1.0, -0.105_561_345_8, -0.063_854_172_8),
     DVec3::new(1.0, -0.089_484_177_5, -1.291_485_548_0),
 ];
+/// Map LMS to linear sRGB, M₁⁻¹ by rows.
 const LMS_TO_LINEAR_SRGB: [DVec3; 3] = [
     DVec3::new(4.076_741_662_1, -3.307_711_591_3, 0.230_969_929_2),
     DVec3::new(-1.268_438_004_6, 2.609_757_401_1, -0.341_319_396_5),
@@ -58,6 +72,11 @@ impl Oklab {
         }
     }
 
+    /// Tell whether arcs stroked in this color read on the canvas: L ≥ 0.5.
+    pub(crate) fn is_readable_as_stroke(self) -> bool {
+        self.lightness >= READABLE_STROKE_LIGHTNESS
+    }
+
     /// Dim to k·(L, a, b), the Oklab image of scaling linear sRGB by k³, so hue and chroma-to-lightness ratio stay.
     pub(crate) fn dimmed(self, factor: f64) -> Self {
         Oklab {
@@ -67,10 +86,10 @@ impl Oklab {
         }
     }
 
-    /// Quantises to 8-bit sRGB after gamut-mapping by scaling chroma, never by clamping channels.
+    /// Quantise to 8-bit sRGB after gamut-mapping by scaling chroma, never by clamping channels.
     pub(crate) fn to_rgb(self) -> Rgb {
         let chroma_scale = self.largest_in_gamut_chroma_scale();
-        let gamut_mapped = self.with_chroma_scaled(chroma_scale);
+        let gamut_mapped = self.chroma_scaled(chroma_scale);
         let linear_srgb = gamut_mapped.to_linear_srgb();
         let encoded = linear_srgb.map(Self::encode_srgb_transfer);
         let red = Self::quantise_channel(encoded.x);
@@ -91,7 +110,7 @@ impl Oklab {
         let mut out_of_gamut_scale = 1.0;
         for _iteration in 0..GAMUT_SEARCH_ITERATIONS {
             let middle_scale = (in_gamut_scale + out_of_gamut_scale) / 2.0;
-            let candidate = self.with_chroma_scaled(middle_scale);
+            let candidate = self.chroma_scaled(middle_scale);
             let is_candidate_in_gamut = candidate.is_in_srgb_gamut();
             if is_candidate_in_gamut {
                 in_gamut_scale = middle_scale;
@@ -102,6 +121,7 @@ impl Oklab {
         in_gamut_scale
     }
 
+    /// Tell whether the color lies in the sRGB cube, within the gamut tolerance.
     fn is_in_srgb_gamut(self) -> bool {
         let linear_srgb = self.to_linear_srgb();
         let lowest_channel = linear_srgb.min_element();
@@ -111,7 +131,8 @@ impl Oklab {
         is_above_black && is_below_white
     }
 
-    fn with_chroma_scaled(self, scale: f64) -> Self {
+    /// Scale the chroma to (L, s·a, s·b), lightness kept.
+    fn chroma_scaled(self, scale: f64) -> Self {
         Oklab {
             lightness: self.lightness,
             green_red: self.green_red * scale,
@@ -147,6 +168,7 @@ impl Oklab {
         (1.0 + SRGB_OFFSET) * powered - SRGB_OFFSET
     }
 
+    /// Multiply the matrix given by its `rows` with `vector`: (r₀·v, r₁·v, r₂·v).
     fn multiply_rows(rows: &[DVec3; 3], vector: DVec3) -> DVec3 {
         let first = rows[0].dot(vector);
         let second = rows[1].dot(vector);
@@ -154,6 +176,7 @@ impl Oklab {
         DVec3::new(first, second, third)
     }
 
+    /// Quantise an encoded channel to 8 bits: round(255 · c).
     fn quantise_channel(encoded: f64) -> u8 {
         let scaled = (encoded * CHANNEL_MAX).round();
         let is_channel_in_range = (0.0..=CHANNEL_MAX).contains(&scaled);

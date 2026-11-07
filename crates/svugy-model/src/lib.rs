@@ -7,5 +7,7 @@ pub mod legend;
 pub mod link;
 pub mod model;
 pub mod path;
+pub mod problem;
 pub mod style;
+mod unique_key_map;
 pub mod validate;

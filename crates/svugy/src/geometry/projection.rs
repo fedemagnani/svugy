@@ -9,6 +9,7 @@ pub(super) struct IsometricProjection;
 impl IsometricProjection {
     /// √3/2, the cosine of the 30° each ground axis makes with the screen's horizontal.
     const COS_30: f64 = 0.866_025_403_784_438_6;
+    /// 1/2, the sine of the 30° each ground axis makes with the screen's horizontal.
     const SIN_30: f64 = 0.5;
 
     /// screen = ((x − y)·cos 30°, (x + y)·sin 30° − z); the third row is always zero.
@@ -18,6 +19,7 @@ impl IsometricProjection {
         DVec3::new(0.0, -1.0, 0.0),
     );
 
+    /// Project `plan_point` onto the screen.
     pub(super) fn project(plan_point: DVec3) -> Point {
         let screen_point = Self::MATRIX * plan_point;
         Point::new(screen_point.x, screen_point.y)

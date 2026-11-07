@@ -15,38 +15,50 @@ pub use ast::{
     KeySegment, Scalar, ShapeDeclaration, Span, Statement, StyleProperty, SvugyProperty,
     SvugyValue,
 };
-pub use diagnostic::{Construct, SyntaxError, UnsupportedConstruct};
+pub use diagnostic::{Construct, LabelledDiagnostic, SyntaxError, UnsupportedConstruct};
 pub use lower::D2Import;
 
-use lex::Tokens;
+use diagnostic::Diagnostics;
+use lex::Token;
 use parse::SyntaxStatement;
 use subset::SubsetFilter;
 
 /// Collect what parsing a d2 file yields: its partial document, every syntax error and every ignored construct.
 #[derive(Debug, Clone, PartialEq)]
 pub struct D2Parse {
-    pub document: D2Document,
-    pub errors: Vec<SyntaxError>,
-    pub warnings: Vec<UnsupportedConstruct>,
+    document: D2Document,
+    errors: Vec<SyntaxError>,
+    warnings: Vec<UnsupportedConstruct>,
 }
 
-impl D2Document {
+impl D2Parse {
     /// Lex, parse and filter `source` to the v1 subset; broken statements are dropped and reported, never fatal.
-    pub fn parse(source: &str) -> D2Parse {
-        let Tokens {
-            tokens,
-            errors: lex_errors,
-        } = Tokens::lex(source);
-        let (syntax_statements, parse_errors) = SyntaxStatement::parse_all(&tokens, source);
-        let (document, warnings, subset_errors) = SubsetFilter::filter_document(syntax_statements);
-        let mut errors = lex_errors;
-        errors.extend(parse_errors);
-        errors.extend(subset_errors);
-        errors.sort_by_key(|error| error.span.offset());
-        D2Parse {
+    pub fn parse(source: &str) -> Self {
+        let mut diagnostics = Diagnostics::default();
+        let tokens = Token::lex_all(source, &mut diagnostics);
+        let syntax_statements = SyntaxStatement::parse_all(&tokens, source, &mut diagnostics);
+        let document = SubsetFilter::filter_document(syntax_statements, &mut diagnostics);
+        diagnostics.sort_by_source_offset();
+        let (errors, warnings) = diagnostics.into_parts();
+        Self {
             document,
             errors,
             warnings,
         }
+    }
+
+    /// Return the partial document, every broken statement dropped.
+    pub fn document(&self) -> &D2Document {
+        &self.document
+    }
+
+    /// Return every syntax error, in source order.
+    pub fn errors(&self) -> &[SyntaxError] {
+        &self.errors
+    }
+
+    /// Return every warning: each ignored construct, in source order.
+    pub fn warnings(&self) -> &[UnsupportedConstruct] {
+        &self.warnings
     }
 }

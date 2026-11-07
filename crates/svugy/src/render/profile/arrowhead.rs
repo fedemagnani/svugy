@@ -1,14 +1,18 @@
 //! Define one arrowhead marker per connection paint, since a marker's fill cannot follow the stroke without context-stroke.
 
 use std::collections::BTreeSet;
-use std::iter;
+
+use kurbo::{BezPath, Rect};
 
 use super::Profile;
 use super::paint::{ModelPaints, Paint};
 use crate::geometry::{ArrowheadMarker, Group};
-use crate::render::writer::{Attributes, FixedDecimal, SvgWriter};
+use crate::render::writer::path_data::PathData;
+use crate::render::writer::{Attributes, SvgWriter, ViewBox};
 
+/// Prefix every marker's id, followed by its paint's index.
 const MARKER_ID_PREFIX: &str = "arrowhead-";
+/// Orient each marker along its path, reversed at a path's start.
 const MARKER_ORIENTATION: &str = "auto-start-reverse";
 
 /// Defines the arrowhead markers of every paint a scene's connections are stroked with.
@@ -18,14 +22,15 @@ pub(crate) struct ArrowheadMarkers {
 
 impl ArrowheadMarkers {
     /// Collect the paint of every connection, interiors included, since each ends in an arrowhead.
-    pub(crate) fn collect(root: &Group, connection_paints: &ModelPaints) -> Self {
-        let nested_groups = root.nested_interiors().map(|interior| interior.group);
-        let groups = iter::once(root).chain(nested_groups);
-        let connections = groups.flat_map(|group| &group.connections);
-        let paints = connections
-            .map(|connection| connection_paints.connection(&connection.edge))
+    pub(crate) fn collect(root: &Group, paints: &ModelPaints) -> Self {
+        let levels = root.this_and_nested_levels();
+        let connections = levels.flat_map(|(group, _to_root)| &group.connections);
+        let connection_paints = connections
+            .map(|connection| paints.connection(&connection.edge))
             .collect();
-        Self { paints }
+        Self {
+            paints: connection_paints,
+        }
     }
 
     /// Write a `<defs>` holding one marker per collected paint, or nothing when none was collected.
@@ -63,27 +68,31 @@ impl ArrowheadMarkers {
     pub(crate) fn marker_reference(&self, paint: Paint) -> String {
         let collected_paints_before = self.paints.range(..paint);
         let marker_index = collected_paints_before.count();
-        debug_assert!(self.paints.contains(&paint), "uncollected paint {paint:?}");
+        let is_collected = self.paints.contains(&paint);
+        debug_assert!(is_collected, "uncollected paint {paint:?}");
         let marker_id = Self::marker_id(marker_index);
         format!("url(#{marker_id})")
     }
 
-    /// Spell the marker's square viewBox as `0 0 size size`.
+    /// Spell the marker's square viewBox, `0 0 size size`.
     fn marker_view_box() -> String {
-        let size = FixedDecimal(ArrowheadMarker::VIEW_BOX_SIZE);
-        format!("0 0 {size} {size}")
+        let size = ArrowheadMarker::VIEW_BOX_SIZE;
+        let marker_square = Rect::new(0.0, 0.0, size, size);
+        ViewBox(marker_square).to_string()
     }
 
-    /// Spell the triangle as `M x,y L x,y L x,y Z`, the comma-paired form the marker has always been written in.
+    /// Spell the triangle as path data, back top to tip to back bottom, closed.
     fn triangle_path_data() -> String {
-        let [back_top, tip, back_bottom] = ArrowheadMarker::TRIANGLE.map(|corner| {
-            let x = FixedDecimal(corner.x);
-            let y = FixedDecimal(corner.y);
-            format!("{x},{y}")
-        });
-        format!("M{back_top} L{tip} L{back_bottom} Z")
+        let [back_top, tip, back_bottom] = ArrowheadMarker::TRIANGLE;
+        let mut triangle = BezPath::new();
+        triangle.move_to(back_top);
+        triangle.line_to(tip);
+        triangle.line_to(back_bottom);
+        triangle.close_path();
+        PathData(&triangle).to_string()
     }
 
+    /// Name the marker of the paint collected at `marker_index`.
     fn marker_id(marker_index: usize) -> String {
         format!("{MARKER_ID_PREFIX}{marker_index}")
     }

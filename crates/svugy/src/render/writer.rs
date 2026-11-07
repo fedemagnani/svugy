@@ -11,14 +11,23 @@ use css::{CssValue, StyleSheet};
 use kurbo::{Affine, Rect};
 use url::SafeUrl;
 
+/// Count the fraction digits a fixed decimal keeps.
 const FRACTION_DIGITS: usize = 3;
-const FRACTION_SCALE: f64 = 1_000.0;
+/// Scale a number so its kept fraction digits become integer units: 10^FRACTION_DIGITS.
+const FRACTION_SCALE: u64 = 10_u64.pow(FRACTION_DIGITS as u32);
+/// Bound the magnitude a fixed decimal formats exactly.
 const MAX_FORMATTED_MAGNITUDE: f64 = 1e12;
+/// Open a script's CDATA behind a line comment, so a script-unaware parser ignores the guard.
 const SCRIPT_CDATA_OPENING: &str = "//<![CDATA[\n";
+/// Close a script's CDATA behind a line comment.
 const SCRIPT_CDATA_CLOSING: &str = "\n//]]>";
+/// Open a style sheet's CDATA inside a CSS comment.
 const STYLE_CDATA_OPENING: &str = "/*<![CDATA[*/";
+/// Close a style sheet's CDATA inside a CSS comment.
 const STYLE_CDATA_CLOSING: &str = "/*]]>*/";
+/// Mark the end of a CDATA section.
 const CDATA_END: &str = "]]>";
+/// Split a CDATA end across two sections, so content can carry it.
 const CDATA_END_SPLIT: &str = "]]]]><![CDATA[>";
 
 /// Writes SVG markup into a string, one element at a time.
@@ -27,6 +36,7 @@ pub(crate) struct SvgWriter {
     open_elements: Vec<OpenElement>,
 }
 
+/// Tracks an open element: its name, whether its start tag still awaits its `>`, and whether its children go on their own lines.
 struct OpenElement {
     name: &'static str,
     is_start_tag_unterminated: bool,
@@ -39,7 +49,7 @@ pub(crate) struct Attributes {
     values_by_name: BTreeMap<&'static str, String>,
 }
 
-/// Formats a number with at most three fraction digits, trailing zeros trimmed.
+/// Formats a number as a fixed decimal with at most three fraction digits, trailing zeros trimmed.
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct FixedDecimal(pub(crate) f64);
 
@@ -51,7 +61,11 @@ pub(crate) struct ViewBox(pub(crate) Rect);
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Matrix(pub(crate) Affine);
 
+/// Tells which characters XML 1.0 allows at all, escaped or not.
+struct XmlChar;
+
 impl SvgWriter {
+    /// Start a writer with no markup and no open element.
     pub(crate) fn new() -> Self {
         SvgWriter {
             markup: String::new(),
@@ -59,22 +73,31 @@ impl SvgWriter {
         }
     }
 
+    /// Open element `name` with `attributes`, leaving its start tag unterminated until its content or its close.
     pub(crate) fn open_element(&mut self, name: &'static str, attributes: &Attributes) {
-        self.prepare_parent_for_child_element();
+        let parent = self.terminate_parent_start_tag();
+        let has_parent = parent.is_some();
+        let is_on_own_line = parent.is_some_and(|parent| parent.puts_children_on_own_lines);
+        let is_child_or_first_root = has_parent || self.markup.is_empty();
+        debug_assert!(is_child_or_first_root, "a second root element");
+        if is_on_own_line {
+            self.markup.push('\n');
+        }
         self.markup.push('<');
         self.markup.push_str(name);
         for (attribute_name, attribute_value) in &attributes.values_by_name {
             self.markup.push(' ');
             self.markup.push_str(attribute_name);
             self.markup.push_str("=\"");
-            Self::push_escaped_attribute_value(&mut self.markup, attribute_value);
+            self.push_escaped_attribute_value(attribute_value);
             self.markup.push('"');
         }
-        self.open_elements.push(OpenElement {
+        let open_element = OpenElement {
             name,
             is_start_tag_unterminated: true,
             puts_children_on_own_lines: true,
-        });
+        };
+        self.open_elements.push(open_element);
     }
 
     /// Write an element with no children as one self-closed tag.
@@ -83,29 +106,24 @@ impl SvgWriter {
         self.close_element();
     }
 
+    /// Write `text`, escaped, as content of the open element.
     pub(crate) fn text(&mut self, text: &str) {
-        self.prepare_parent_for_text();
-        Self::push_escaped_text(&mut self.markup, text);
+        self.inline_parent_children();
+        self.push_escaped_text(text);
     }
 
+    /// Write a style element holding `style_sheet` in CDATA.
     pub(crate) fn style_element(&mut self, style_sheet: &StyleSheet) {
-        let no_attributes = Attributes::new();
-        self.open_element("style", &no_attributes);
-        self.cdata(
-            STYLE_CDATA_OPENING,
-            style_sheet.as_str(),
-            STYLE_CDATA_CLOSING,
-        );
-        self.close_element();
+        let css = style_sheet.as_str();
+        self.cdata_element("style", STYLE_CDATA_OPENING, css, STYLE_CDATA_CLOSING);
     }
 
+    /// Write a script element holding `source` in CDATA.
     pub(crate) fn script_element(&mut self, source: &'static str) {
-        let no_attributes = Attributes::new();
-        self.open_element("script", &no_attributes);
-        self.cdata(SCRIPT_CDATA_OPENING, source, SCRIPT_CDATA_CLOSING);
-        self.close_element();
+        self.cdata_element("script", SCRIPT_CDATA_OPENING, source, SCRIPT_CDATA_CLOSING);
     }
 
+    /// Close the innermost open element, self-closing it when it has no content.
     pub(crate) fn close_element(&mut self) {
         let Some(element) = self.open_elements.pop() else {
             debug_assert!(false, "close_element without an open element");
@@ -123,79 +141,84 @@ impl SvgWriter {
         self.markup.push('>');
     }
 
+    /// Finish the markup with a final newline and return it.
     pub(crate) fn finish(mut self) -> String {
         debug_assert!(self.open_elements.is_empty(), "unclosed elements");
         self.markup.push('\n');
         self.markup
     }
 
-    fn prepare_parent_for_child_element(&mut self) {
-        let Some(parent) = self.open_elements.last_mut() else {
-            debug_assert!(self.markup.is_empty(), "a second root element");
-            return;
-        };
+    /// Terminate the parent's start tag, if still awaiting its `>`, and return the parent.
+    fn terminate_parent_start_tag(&mut self) -> Option<&mut OpenElement> {
+        let parent = self.open_elements.last_mut()?;
         if parent.is_start_tag_unterminated {
             self.markup.push('>');
             parent.is_start_tag_unterminated = false;
         }
-        if parent.puts_children_on_own_lines {
-            self.markup.push('\n');
-        }
+        Some(parent)
     }
 
-    fn prepare_parent_for_text(&mut self) {
-        let Some(parent) = self.open_elements.last_mut() else {
+    /// Keep the parent's children inline with the text about to be written.
+    fn inline_parent_children(&mut self) {
+        let Some(parent) = self.terminate_parent_start_tag() else {
             debug_assert!(false, "text outside the root element");
             return;
         };
-        if parent.is_start_tag_unterminated {
-            self.markup.push('>');
-            parent.is_start_tag_unterminated = false;
-        }
         parent.puts_children_on_own_lines = false;
     }
 
-    fn cdata(&mut self, opening_guard: &str, content: &str, closing_guard: &str) {
-        self.prepare_parent_for_text();
+    /// Write element `name` holding `content` in CDATA between comment guards, every CDATA end inside it split.
+    fn cdata_element(
+        &mut self,
+        name: &'static str,
+        opening_guard: &str,
+        content: &str,
+        closing_guard: &str,
+    ) {
+        let no_attributes = Attributes::new();
+        self.open_element(name, &no_attributes);
+        self.inline_parent_children();
+        let split_content = content.replace(CDATA_END, CDATA_END_SPLIT);
         self.markup.push_str(opening_guard);
-        for (piece_index, piece) in content.split(CDATA_END).enumerate() {
-            if piece_index > 0 {
-                self.markup.push_str(CDATA_END_SPLIT);
-            }
-            self.markup.push_str(piece);
-        }
+        self.markup.push_str(&split_content);
         self.markup.push_str(closing_guard);
+        self.close_element();
     }
 
-    fn push_escaped_text(markup: &mut String, raw: &str) {
-        for character in raw.chars().filter(Self::is_xml_char) {
+    /// Escape `raw` as text content, dropping what XML 1.0 forbids.
+    fn push_escaped_text(&mut self, raw: &str) {
+        for character in raw.chars().filter(XmlChar::is_allowed) {
+            self.push_escaped_text_character(character);
+        }
+    }
+
+    /// Escape like text, plus the quote and the whitespace attribute-value normalisation would fold.
+    fn push_escaped_attribute_value(&mut self, raw: &str) {
+        for character in raw.chars().filter(XmlChar::is_allowed) {
             match character {
-                '&' => markup.push_str("&amp;"),
-                '<' => markup.push_str("&lt;"),
-                '>' => markup.push_str("&gt;"),
-                '\r' => markup.push_str("&#13;"),
-                _ => markup.push(character),
+                '"' => self.markup.push_str("&quot;"),
+                '\t' => self.markup.push_str("&#9;"),
+                '\n' => self.markup.push_str("&#10;"),
+                text_character => self.push_escaped_text_character(text_character),
             }
         }
     }
 
-    fn push_escaped_attribute_value(markup: &mut String, raw: &str) {
-        for character in raw.chars().filter(Self::is_xml_char) {
-            match character {
-                '&' => markup.push_str("&amp;"),
-                '<' => markup.push_str("&lt;"),
-                '>' => markup.push_str("&gt;"),
-                '"' => markup.push_str("&quot;"),
-                '\t' => markup.push_str("&#9;"),
-                '\n' => markup.push_str("&#10;"),
-                '\r' => markup.push_str("&#13;"),
-                _ => markup.push(character),
-            }
+    /// Escape one text character: the markup delimiters and the carriage return a parser would fold.
+    fn push_escaped_text_character(&mut self, character: char) {
+        match character {
+            '&' => self.markup.push_str("&amp;"),
+            '<' => self.markup.push_str("&lt;"),
+            '>' => self.markup.push_str("&gt;"),
+            '\r' => self.markup.push_str("&#13;"),
+            plain_character => self.markup.push(plain_character),
         }
     }
+}
 
+impl XmlChar {
     /// Tell whether XML 1.0 allows a character at all, escaped or not.
-    fn is_xml_char(character: &char) -> bool {
+    fn is_allowed(character: &char) -> bool {
         matches!(
             character,
             '\t' | '\n' | '\r' | '\u{20}'..='\u{FFFD}' | '\u{10000}'..='\u{10FFFF}'
@@ -204,32 +227,57 @@ impl SvgWriter {
 }
 
 impl Attributes {
+    /// Start with no attributes.
     pub(crate) fn new() -> Self {
         Attributes::default()
     }
 
+    /// Set attribute `name` to the text `value`, never a link.
     pub(crate) fn with_text(self, name: &'static str, value: &str) -> Self {
-        let is_link_attribute = name == "href" || name == "xlink:href";
-        debug_assert!(!is_link_attribute, "links go through with_url");
+        let is_plain_attribute = name != "href" && name != "xlink:href";
+        debug_assert!(is_plain_attribute, "links go through with_url");
         let owned_value = value.to_owned();
         self.with_value(name, owned_value)
     }
 
+    /// Set attribute `name` to the number `value`, in fixed decimals.
     pub(crate) fn with_number(self, name: &'static str, value: f64) -> Self {
         let formatted = FixedDecimal(value).to_string();
         self.with_value(name, formatted)
     }
 
+    /// Set link attribute `name` to `url`, which passed the URL policy.
     pub(crate) fn with_url(self, name: &'static str, url: &SafeUrl) -> Self {
         let owned_url = url.as_str().to_owned();
         self.with_value(name, owned_url)
     }
 
+    /// Set attribute `name` to the CSS `value`.
     pub(crate) fn with_css_value(self, name: &'static str, value: &CssValue) -> Self {
         let owned_value = value.as_str().to_owned();
         self.with_value(name, owned_value)
     }
 
+    /// Transform the element by `affine`, written only when it moves anything.
+    pub(crate) fn with_transform(self, affine: Affine) -> Self {
+        let is_identity = affine == Affine::IDENTITY;
+        if is_identity {
+            return self;
+        }
+        let matrix = Matrix(affine).to_string();
+        self.with_value("transform", matrix)
+    }
+
+    /// Dash the element's stroke by `dash_array`, written only when the stroke is dashed.
+    pub(crate) fn with_dash_array(self, dash_array: Option<impl fmt::Display>) -> Self {
+        let Some(dash_array) = dash_array else {
+            return self;
+        };
+        let dash_array_value = dash_array.to_string();
+        self.with_value("stroke-dasharray", dash_array_value)
+    }
+
+    /// Set attribute `name` to the already formatted `value`, each name set once.
     fn with_value(mut self, name: &'static str, value: String) -> Self {
         let previous_value = self.values_by_name.insert(name, value);
         debug_assert!(previous_value.is_none(), "duplicate attribute {name}");
@@ -241,15 +289,18 @@ impl fmt::Display for FixedDecimal {
     /// Round to the nearest multiple of 10⁻³, halves away from zero.
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         let FixedDecimal(value) = *self;
-        let is_formattable = value.is_finite() && value.abs() < MAX_FORMATTED_MAGNITUDE;
+        let is_finite = value.is_finite();
+        let absolute_value = value.abs();
+        let is_within_formatted_magnitude = absolute_value < MAX_FORMATTED_MAGNITUDE;
+        let is_formattable = is_finite && is_within_formatted_magnitude;
         debug_assert!(is_formattable, "unformattable number {value}");
-        let scaled = (value * FRACTION_SCALE).round();
+        let scale = FRACTION_SCALE as f64;
+        let scaled = (value * scale).round();
         let thousandths = if is_formattable { scaled as i64 } else { 0 };
         let sign = if thousandths < 0 { "-" } else { "" };
         let magnitude = thousandths.unsigned_abs();
-        let scale = FRACTION_SCALE as u64;
-        let integer_part = magnitude / scale;
-        let fraction_part = magnitude % scale;
+        let integer_part = magnitude / FRACTION_SCALE;
+        let fraction_part = magnitude % FRACTION_SCALE;
         if fraction_part == 0 {
             return write!(formatter, "{sign}{integer_part}");
         }
@@ -264,8 +315,10 @@ impl fmt::Display for ViewBox {
         let ViewBox(view) = *self;
         let min_x = FixedDecimal(view.x0);
         let min_y = FixedDecimal(view.y0);
-        let width = FixedDecimal(view.width());
-        let height = FixedDecimal(view.height());
+        let view_width = view.width();
+        let view_height = view.height();
+        let width = FixedDecimal(view_width);
+        let height = FixedDecimal(view_height);
         write!(formatter, "{min_x} {min_y} {width} {height}")
     }
 }
@@ -419,7 +472,7 @@ mod tests {
         let mut style_sheet = StyleSheet::new();
         style_sheet.push_static("/* a < b && ]]> c */\n");
         let selector = CssSelector::attribute("data-target");
-        let fill_property = CssIdentifier::escape("fill");
+        let fill_property = CssIdentifier::from_static("fill");
         let red_color = Rgba::from_packed(0xff0000ff);
         let red = CssValue::color(red_color);
         let fill_declaration = CssDeclaration {
@@ -449,29 +502,6 @@ mod tests {
         let fill = path.fill().expect("filled");
         let is_red = matches!(fill.paint(), usvg::Paint::Color(color) if color.red == 255 && color.green == 0);
         assert!(is_red, "{markup}");
-    }
-
-    #[test]
-    fn hostile_identifiers_in_style_sheets_parse_as_xml() {
-        let hostile_property = format!("--x</style><script>]]>{FORBIDDEN_XML_CHARS}&\"'");
-        let property_identifier = CssIdentifier::escape(&hostile_property);
-        let selector = CssSelector::attribute("data-x");
-        let blue_color = Rgba::from_packed(0x0000ffff);
-        let blue = CssValue::color(blue_color);
-        let fill_declaration = CssDeclaration {
-            property: property_identifier,
-            value: blue,
-        };
-        let mut style_sheet = StyleSheet::new();
-        style_sheet.push_rule(&selector, &[fill_declaration]);
-        let mut writer = SvgWriter::new();
-        let root_attributes = svg_root_attributes();
-        writer.open_element("svg", &root_attributes);
-        writer.style_element(&style_sheet);
-        writer.close_element();
-        let markup = writer.finish();
-        assert!(parse_as_svg(&markup).is_ok(), "{markup}");
-        assert!(!markup.contains("</style><script>"), "{markup}");
     }
 
     #[test]

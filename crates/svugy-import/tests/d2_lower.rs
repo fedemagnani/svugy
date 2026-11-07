@@ -1,10 +1,11 @@
 //! Prove d2 lowering merges repeated keys, declares endpoints and warns on every construct the model cannot hold.
 
 use miette::SourceSpan;
-use svugy_import::d2::{Construct, D2Document, D2Import, EdgeOperator};
+use svugy_import::d2::{Construct, D2Import, D2Parse, EdgeOperator};
+use svugy_model::legend::DashKey;
 use svugy_model::model::{Model, Shape};
 use svugy_model::path::ElementPath;
-use svugy_model::validate::Problem;
+use svugy_model::problem::Problem;
 
 const NESTING: &str = include_str!("fixtures/d2/nesting.d2");
 const EDGES: &str = include_str!("fixtures/d2/edges.d2");
@@ -25,12 +26,12 @@ fn edges_lower_into_a_model_snapshot() {
     let import = import(EDGES);
 
     let warning_constructs: Vec<Construct> = import
-        .warnings
+        .warnings()
         .iter()
         .map(|warning| warning.construct.clone())
         .collect();
     let model = import
-        .admission
+        .into_admission()
         .model
         .expect("the fixture lowers into a sound model");
     insta::assert_snapshot!(model.to_json());
@@ -79,8 +80,8 @@ fn fixtures_inside_the_mapped_subset_lower_without_diagnostics() {
         .into_iter()
         .map(|source| {
             let import = import(source);
-            let is_model_sound = import.admission.model.is_some();
             let diagnostic_count = import.diagnostics().len();
+            let is_model_sound = import.into_admission().model.is_some();
             (diagnostic_count, is_model_sound)
         })
         .collect();
@@ -93,7 +94,7 @@ fn unmapped_constructs_warn_at_their_source_text() {
     let import = import(UNMAPPED);
 
     let warnings: Vec<(Construct, &str)> = import
-        .warnings
+        .warnings()
         .iter()
         .map(|warning| {
             let text = text_at(UNMAPPED, warning.span);
@@ -106,11 +107,8 @@ fn unmapped_constructs_warn_at_their_source_text() {
             (Construct::UnmappedShape("queue".to_owned()), "queue"),
             (Construct::UnmappedDirection("left".to_owned()), "left"),
             (Construct::ArrowheadForm(EdgeOperator::Bidirectional), "<->"),
-            (Construct::FieldOnEdge("shape".to_owned()), "circle"),
-            (
-                Construct::FieldOnEdge("link".to_owned()),
-                "https://example.com"
-            ),
+            (Construct::FieldOnEdge("shape"), "circle"),
+            (Construct::FieldOnEdge("link"), "https://example.com"),
             (Construct::ArrowheadForm(EdgeOperator::Undirected), "--"),
             (Construct::UnmappedDirection("down".to_owned()), "down"),
             (Construct::SpecialShape("sql_table".to_owned()), "sql_table"),
@@ -125,12 +123,12 @@ fn parse_errors_and_warnings_survive_lowering_in_source_order() {
     let import = import(source);
 
     let error_texts: Vec<&str> = import
-        .errors
+        .errors()
         .iter()
         .map(|error| text_at(source, error.span))
         .collect();
     let warning_constructs: Vec<Construct> = import
-        .warnings
+        .warnings()
         .iter()
         .map(|warning| warning.construct.clone())
         .collect();
@@ -139,7 +137,7 @@ fn parse_errors_and_warnings_survive_lowering_in_source_order() {
         warning_constructs,
         [
             Construct::UnmappedShape("queue".to_owned()),
-            Construct::ReservedField("icon".to_owned()),
+            Construct::ReservedField("icon"),
         ]
     );
 }
@@ -151,14 +149,15 @@ fn unknown_style_keys_warn_and_mistyped_style_values_reach_the_model_report() {
     let import = import(source);
 
     let warnings: Vec<(Construct, &str)> = import
-        .warnings
+        .warnings()
         .iter()
         .map(|warning| {
             let text = text_at(source, warning.span);
             (warning.construct.clone(), text)
         })
         .collect();
-    let report = import.admission.report;
+    let admission = import.into_admission();
+    let report = &admission.report;
     let mismatches: Vec<(String, &str, &str)> = report
         .problems()
         .iter()
@@ -180,7 +179,7 @@ fn unknown_style_keys_warn_and_mistyped_style_values_reach_the_model_report() {
             "a.style.foo: x"
         )]
     );
-    assert!(import.admission.model.is_none());
+    assert!(admission.model.is_none());
     assert!(report.has_errors());
     assert_eq!(report.problems().len(), 1);
     assert_eq!(mismatches, [("element `b`".to_owned(), "notacolor", "b")]);
@@ -203,7 +202,7 @@ fn model_warnings_reach_the_import_in_source_order_with_the_importer_warnings() 
             (code.unwrap_or_default(), text)
         })
         .collect();
-    assert!(import.admission.model.is_some());
+    assert!(import.into_admission().model.is_some());
     assert_eq!(
         diagnostics,
         [
@@ -236,8 +235,8 @@ fn misplaced_or_overreaching_parent_references_are_errors() {
 
     let import = import(source);
 
-    let errors: Vec<(&str, &str)> = import
-        .errors
+    let syntax_errors = import.errors().to_vec();
+    let errors: Vec<(&str, &str)> = syntax_errors
         .iter()
         .map(|error| {
             let text = text_at(source, error.span);
@@ -245,7 +244,7 @@ fn misplaced_or_overreaching_parent_references_are_errors() {
         })
         .collect();
     let model = import
-        .admission
+        .into_admission()
         .model
         .expect("the rejected statements leave a sound model");
     let element_paths: Vec<String> = model.elements().keys().map(ToString::to_string).collect();
@@ -298,8 +297,9 @@ fn the_svugy_variable_carries_a_height_that_validation_then_bounds() {
 
     let import = import(source);
 
-    let impossible_heights: Vec<(String, f64, &str)> = import
-        .admission
+    let is_free_of_syntax_errors = import.errors().is_empty();
+    let admission = import.into_admission();
+    let impossible_heights: Vec<(String, f64, &str)> = admission
         .report
         .problems()
         .iter()
@@ -316,8 +316,8 @@ fn the_svugy_variable_carries_a_height_that_validation_then_bounds() {
             (element, impossible_height.height, text)
         })
         .collect();
-    assert!(import.errors.is_empty());
-    assert!(import.admission.model.is_none());
+    assert!(is_free_of_syntax_errors);
+    assert!(admission.model.is_none());
     assert_eq!(impossible_heights, [("flat".to_owned(), 0.0, "flat")]);
     let sound_source = source.replace("height: 0", "height: 7");
     let model = import_model(&sound_source);
@@ -342,8 +342,8 @@ fn a_malformed_height_is_a_spanned_error_that_drops_only_the_height() {
 
     let import = import(source);
 
-    let errors: Vec<(&str, &str)> = import
-        .errors
+    let syntax_errors = import.errors().to_vec();
+    let errors: Vec<(&str, &str)> = syntax_errors
         .iter()
         .map(|error| {
             let text = text_at(source, error.span);
@@ -351,7 +351,7 @@ fn a_malformed_height_is_a_spanned_error_that_drops_only_the_height() {
         })
         .collect();
     let model = import
-        .admission
+        .into_admission()
         .model
         .expect("a malformed height leaves a sound model");
     let app = model
@@ -376,7 +376,7 @@ fn the_root_label_titles_the_diagram_and_the_root_carrier_subtitles_it() {
 
     let diagnostic_count = import.diagnostics().len();
     let model = import
-        .admission
+        .into_admission()
         .model
         .expect("a titled diagram is a sound model");
     let element_paths: Vec<String> = model.elements().keys().map(ToString::to_string).collect();
@@ -392,8 +392,8 @@ fn the_root_carrier_rejects_element_attributes_and_elements_reject_a_subtitle() 
 
     let import = import(source);
 
-    let errors: Vec<(&str, &str)> = import
-        .errors
+    let syntax_errors = import.errors().to_vec();
+    let errors: Vec<(&str, &str)> = syntax_errors
         .iter()
         .map(|error| {
             let text = text_at(source, error.span);
@@ -401,7 +401,7 @@ fn the_root_carrier_rejects_element_attributes_and_elements_reject_a_subtitle() 
         })
         .collect();
     let warnings: Vec<(Construct, &str)> = import
-        .warnings
+        .warnings()
         .iter()
         .map(|warning| {
             let text = text_at(source, warning.span);
@@ -409,7 +409,7 @@ fn the_root_carrier_rejects_element_attributes_and_elements_reject_a_subtitle() 
         })
         .collect();
     let model = import
-        .admission
+        .into_admission()
         .model
         .expect("rejected carrier attributes leave a sound model");
     assert_eq!(
@@ -431,10 +431,7 @@ fn the_root_carrier_rejects_element_attributes_and_elements_reject_a_subtitle() 
     );
     assert_eq!(
         warnings,
-        [(
-            Construct::FieldOnRoot("shape".to_owned()),
-            "shape: cylinder"
-        )]
+        [(Construct::FieldOnRoot("shape"), "shape: cylinder")]
     );
     assert_eq!(model.title(), None);
     assert_eq!(model.subtitle(), None);
@@ -476,8 +473,8 @@ e -> f: { vars: { svugy: { caption: edge } } }
 
     let import = import(source);
 
-    let errors: Vec<(&str, &str)> = import
-        .errors
+    let syntax_errors = import.errors().to_vec();
+    let errors: Vec<(&str, &str)> = syntax_errors
         .iter()
         .map(|error| {
             let text = text_at(source, error.span);
@@ -485,7 +482,7 @@ e -> f: { vars: { svugy: { caption: edge } } }
         })
         .collect();
     let warnings: Vec<(Construct, &str)> = import
-        .warnings
+        .warnings()
         .iter()
         .map(|warning| {
             let text = text_at(source, warning.span);
@@ -493,7 +490,7 @@ e -> f: { vars: { svugy: { caption: edge } } }
         })
         .collect();
     let model = import
-        .admission
+        .into_admission()
         .model
         .expect("malformed carrier values leave a sound model");
     let a = model
@@ -535,7 +532,7 @@ e -> f: { vars: { svugy: { caption: edge } } }
         warnings,
         [
             (Construct::Variables, "color: red"),
-            (Construct::FieldOnEdge("vars".to_owned()), "caption: edge"),
+            (Construct::FieldOnEdge("vars"), "caption: edge"),
         ]
     );
     assert_eq!(model.title(), None);
@@ -589,9 +586,9 @@ desk.cache.vars: { svugy.badge: false }
 
     let import = import(source);
 
-    assert!(import.errors.is_empty(), "{:?}", import.errors);
+    assert!(import.errors().is_empty(), "{:?}", import.errors());
     let model = import
-        .admission
+        .into_admission()
         .model
         .expect("the legend lowers into a sound model");
     let legend = model.legend().expect("the root carries a legend");
@@ -621,7 +618,7 @@ vars: { svugy: { legend: { entries: ["kept"; [nested]; { map: 1 }] } } }
     let import = import(source);
 
     let errors: Vec<(&str, &str)> = import
-        .errors
+        .errors()
         .iter()
         .map(|error| {
             let text = text_at(source, error.span);
@@ -666,28 +663,29 @@ vars: { svugy: { legend: { entries: ["kept"; [nested]; { map: 1 }] } } }
         ]
     );
     let model = import
-        .admission
+        .into_admission()
         .model
         .expect("malformed legend values leave a sound model");
     let legend = model.legend().expect("the root carries a legend");
     let sqlite_path = ElementPath::from_segments(["desk", "sqlite"]);
     let sqlite = model.element(&sqlite_path).expect("sqlite is declared");
     assert_eq!(legend.entries(), ["kept"]);
-    assert_eq!(legend.dashes().keys().collect::<Vec<_>>(), ["2"]);
+    let dash_keys: Vec<String> = legend.dashes().keys().map(DashKey::to_string).collect();
+    assert_eq!(dash_keys, ["2"]);
     assert_eq!(legend.badge_description(&sqlite_path), Some("kept"));
     assert!(!sqlite.is_badge_target());
     assert_eq!(sqlite.caption(), None);
 }
 
 fn import(source: &str) -> D2Import {
-    let parsed = D2Document::parse(source);
+    let parsed = D2Parse::parse(source);
     parsed.lower()
 }
 
 fn import_model(source: &str) -> Model {
     let import = import(source);
     import
-        .admission
+        .into_admission()
         .model
         .expect("the fixture lowers into a sound model")
 }

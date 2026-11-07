@@ -43,9 +43,10 @@ impl LevelLayout for Packed {
                     width: leaf_width,
                     height: leaf_height,
                 };
+                let base_style = Style::default();
                 let leaf_style = Style {
                     size: leaf_size,
-                    ..Style::default()
+                    ..base_style
                 };
                 tree.new_leaf(leaf_style).expect("taffy accepts a leaf")
             })
@@ -66,25 +67,30 @@ impl LevelLayout for Packed {
                 let y = f64::from(leaf_layout.location.y);
                 let origin = Point::new(x, y);
                 let footprint = Rect::from_origin_size(origin, size);
-                (path.clone(), footprint)
+                let path_key = path.clone();
+                (path_key, footprint)
             })
             .collect()
     }
 }
 
 impl Packed {
+    /// Style the grid with this packing's column count of content-sized columns, gapped by the packed gap.
     fn grid_style(&self) -> Style {
-        let content_sized_column = vec![auto()];
+        let content_sized_track = auto();
+        let content_sized_column = vec![content_sized_track];
         let columns = repeat(self.column_count, content_sized_column);
+        let gap_length = length(PACKED_GAP);
         let gap = taffy::Size {
-            width: length(PACKED_GAP),
-            height: length(PACKED_GAP),
+            width: gap_length,
+            height: gap_length,
         };
+        let base_style = Style::default();
         Style {
             display: Display::Grid,
             grid_template_columns: vec![columns],
             gap,
-            ..Style::default()
+            ..base_style
         }
     }
 }
