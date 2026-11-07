@@ -1,5 +1,6 @@
 //! Project every laid-out level into nested scene groups.
 
+use std::collections::BTreeSet;
 use std::iter;
 
 use glam::DVec3;
@@ -17,24 +18,31 @@ use super::{Connection, Group, PlatedLabel, Solid};
 use crate::layout::{LevelPlacement, LevelPlan, LevelPlans, Route};
 use crate::metrics::TextMeasure;
 
-/// Projects levels top-down, each container's interior onto its solid's top.
+/// Projects levels top-down, each container's interior onto its solid's top, a sheet under each closed container.
 pub(super) struct LevelProjector<'a, M> {
     model: &'a Model,
+    closed_containers: &'a BTreeSet<ElementPath>,
     plans: &'a LevelPlans,
     measure: &'a M,
 }
 
 impl<'a, M: TextMeasure> LevelProjector<'a, M> {
-    /// Set up a projector of the levels `plans` lays out for `model`, its labels measured by `measure`.
-    pub(super) fn new(model: &'a Model, plans: &'a LevelPlans, measure: &'a M) -> Self {
+    /// Set up a projector of the levels `plans` lays out for `model`, closing `closed_containers`, its labels measured by `measure`.
+    pub(super) fn new(
+        model: &'a Model,
+        closed_containers: &'a BTreeSet<ElementPath>,
+        plans: &'a LevelPlans,
+        measure: &'a M,
+    ) -> Self {
         Self {
             model,
+            closed_containers,
             plans,
             measure,
         }
     }
 
-    /// Project `level` as `plan` lays it out, mapped into its parent by `frame`: solids back to front with their interiors, then arcs of the edges homed here with plates clear of the solids' labels, its view left for the scene to frame.
+    /// Project `level` as `plan` lays it out, mapped into its parent by `frame`: solids back to front with their interiors, then arcs of the edges homed here with plates clear of the solids' labels.
     pub(super) fn project_level(
         &self,
         level: &ElementPath,
@@ -44,15 +52,15 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
         let solids = self.project_solids_back_to_front(plan);
         let obstructions = Obstructions::around_text_of(&solids);
         let connections = self.arc_connections_homed_at(level, plan, obstructions);
-        let unframed_group = Group::new(frame, Rect::ZERO);
+        let empty_group = Group::new(frame);
         Group {
             solids,
             connections,
-            ..unframed_group
+            ..empty_group
         }
     }
 
-    /// Project each footprint's element back to front, seating the badges of the edges it is the source of on its top, stacking the interior of every container the plans lay out there.
+    /// Project each footprint's element back to front, stacking a sheet under it when closed, seating the badges of the edges it is the source of on its top, stacking the interior of every container the plans lay out there.
     fn project_solids_back_to_front(&self, plan: &LevelPlan) -> Vec<Solid> {
         let placed = plan.placed();
         let footprints = placed.footprints();
@@ -64,16 +72,34 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
                 let primitive = ResolvedPrimitive::of_path(self.model, path)?;
                 let footprint = footprints[path];
                 let drawn_solid = primitive.draw(path, element, footprint, self.measure);
+                let sheeted_solid =
+                    self.stack_sheet_if_closed(path, footprint, &primitive, drawn_solid);
                 let badge_icons = self.badge_icons_from(path);
                 let badge_seater =
-                    BadgeSeater::on_top_of(&drawn_solid, footprint, primitive.height);
+                    BadgeSeater::on_top_of(&sheeted_solid, footprint, primitive.height);
                 let badges = badge_seater.seat_badges(badge_icons);
-                let badged_solid = drawn_solid.with_badges(badges);
+                let badged_solid = sheeted_solid.with_badges(badges);
                 let solid =
                     self.stack_planned_interior(path, footprint, primitive.height, badged_solid);
                 Some(solid)
             })
             .collect()
+    }
+
+    /// Stack a sheet outlined from `primitive` over `footprint` under the solid of `path`, if `path` is a closed container.
+    fn stack_sheet_if_closed(
+        &self,
+        path: &ElementPath,
+        footprint: Rect,
+        primitive: &ResolvedPrimitive,
+        drawn_solid: Solid,
+    ) -> Solid {
+        let hides_no_children = !self.closed_containers.contains(path);
+        if hides_no_children {
+            return drawn_solid;
+        }
+        let sheet = primitive.sheet_under(footprint);
+        drawn_solid.with_sheet(sheet)
     }
 
     /// Shape the icon of every edge drawn as a badge on `source`, each its target shrunk, in edge order.
@@ -173,11 +199,12 @@ mod tests {
 
     use kurbo::{ParamCurve, Point, Shape as _, Size};
     use svugy_model::builder::ModelBuilder;
+    use svugy_model::disclose::DisclosedModel;
     use svugy_model::model::{Element, Shape};
 
     use super::*;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
-    use crate::geometry::{Label, Scene};
+    use crate::geometry::{Face, Label, Scene};
     use crate::layout::{PlacedLevel, Port, Side, Stub};
 
     const SLAB_TOP: f64 = 10.5;
@@ -340,8 +367,6 @@ mod tests {
         let inner_to_document = scene.root.frame * outer.frame * inner.frame;
         let walked_inner = walked[1];
         assert_eq!(walked_inner.to_outer, inner_to_document);
-        let inner_document_view = inner_to_document.transform_rect_bbox(inner.view);
-        assert_eq!(walked_inner.outer_view(), inner_document_view);
     }
 
     #[test]
@@ -438,20 +463,23 @@ mod tests {
         let scene = nested_scene();
         let outer = interior_of(&scene.root, "a");
         let inner = interior_of(outer, "a.b");
+        let outer_view = scene.view_of(&path("a"));
+        let inner_view = scene.view_of(&path("a.b"));
+        let root_view = scene.root_view();
         for stub_marker in inner.stub_markers.values() {
-            assert_contains(inner.view, stub_marker.tag.bounds());
+            assert_contains(inner_view, stub_marker.tag.bounds());
         }
         let inner_to_root = scene.root.frame * outer.frame * inner.frame;
         for face in &solid_of(inner, "a.b.c").faces {
-            assert_contains(inner.view, face.outline.bounding_box());
+            assert_contains(inner_view, face.outline.bounding_box());
             let face_in_root = inner_to_root * face.outline.clone();
-            assert_contains(scene.root.view, face_in_root.bounding_box());
+            assert_contains(root_view, face_in_root.bounding_box());
         }
         let outer_to_root = scene.root.frame * outer.frame;
         for connection in &outer.connections {
-            assert_contains(outer.view, connection.path.bounding_box());
+            assert_contains(outer_view, connection.path.bounding_box());
             let path_in_root = outer_to_root * connection.path.clone();
-            assert_contains(scene.root.view, path_in_root.bounding_box());
+            assert_contains(root_view, path_in_root.bounding_box());
         }
     }
 
@@ -537,17 +565,17 @@ mod tests {
         let scene = Scene::project(&model, &plans, &measure);
         for solid in &scene.root.solids {
             for face in &solid.faces {
-                assert_contains(scene.root.view, face.outline.bounding_box());
+                assert_contains(scene.root_view(), face.outline.bounding_box());
             }
             for label in &solid.labels {
-                assert_contains(scene.root.view, label.bounds());
+                assert_contains(scene.root_view(), label.bounds());
             }
         }
         for connection in &scene.root.connections {
-            assert_contains(scene.root.view, connection.path.bounding_box());
+            assert_contains(scene.root_view(), connection.path.bounding_box());
             let plated_label = connection.label.as_ref().expect("fixture edge is labelled");
-            assert_contains(scene.root.view, plated_label.plate.rect());
-            assert_contains(scene.root.view, plated_label.label.bounds());
+            assert_contains(scene.root_view(), plated_label.plate.rect());
+            assert_contains(scene.root_view(), plated_label.label.bounds());
         }
     }
 
@@ -566,11 +594,11 @@ mod tests {
         let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
         let floor =
             IsometricProjection::horizontal_plane_at(0.0).transform_rect_bbox(placed_boundary);
-        let is_floor_framed = scene.root.view.union(floor) == scene.root.view;
+        let is_floor_framed = scene.root_view().union(floor) == scene.root_view();
         assert!(
             !is_floor_framed,
             "view {:?} frames the floor",
-            scene.root.view
+            scene.root_view()
         );
     }
 
@@ -620,11 +648,11 @@ mod tests {
         assert_eq!(dot_start, IsometricProjection::project(tall_top));
         let tall_solid = solid_of(&scene.root, "a");
         for face in &tall_solid.faces {
-            assert_contains(scene.root.view, face.outline.bounding_box());
+            assert_contains(scene.root_view(), face.outline.bounding_box());
         }
         let plated_label = scene.root.connections[0].label.as_ref().expect("plated");
-        assert_contains(scene.root.view, plated_label.bounds());
-        assert!(scene.root.view.y0 < low_scene.root.view.y0);
+        assert_contains(scene.root_view(), plated_label.bounds());
+        assert!(scene.root_view().y0 < low_scene.root_view().y0);
     }
 
     #[test]
@@ -747,6 +775,39 @@ mod tests {
             assert!(!is_calls_over_a_label);
             assert!(!is_replies_over_a_label);
         }
+    }
+
+    #[test]
+    fn the_outermost_layer_stacks_a_peeking_sheet_under_its_closed_container_only() {
+        let mut builder = ModelBuilder::new();
+        let vault = builder.add_top_level("vault", Element::new("vault"));
+        let ledger = builder.add_child(&vault, "ledger", Element::new("ledger"));
+        let teller = builder.add_top_level("teller", Element::new("teller"));
+        builder.add_edge(&teller, &ledger, Edge::new());
+        let model = builder.build().model.expect("fixture model is valid");
+        let measure = FixedAdvanceMeasure;
+        let layers = DisclosedModel::every_layer_of(&model);
+        let outermost_layer = &layers[0];
+        let outermost_model = outermost_layer.model();
+        let outermost_plans = LevelPlans::lay_out(outermost_model, &measure);
+
+        let scene = Scene::project_disclosed(outermost_layer, &outermost_plans, &measure);
+
+        let closed_vault = solid_of(&scene.root, "vault");
+        let plain_teller = solid_of(&scene.root, "teller");
+        assert!(closed_vault.interior.is_none());
+        assert!(plain_teller.sheet.is_none());
+        let vault_sheet = closed_vault
+            .sheet
+            .as_ref()
+            .expect("closed container stacks a sheet");
+        let vault_sheet_bounds = vault_sheet.bounding_box();
+        let vault_box_bounds = Face::bounds_of(&closed_vault.faces).expect("vault has faces");
+        assert!(
+            vault_sheet_bounds.y1 > vault_box_bounds.y1,
+            "the sheet peeks out under the box's lower edges"
+        );
+        assert_contains(scene.root_view(), vault_sheet_bounds);
     }
 
     #[test]

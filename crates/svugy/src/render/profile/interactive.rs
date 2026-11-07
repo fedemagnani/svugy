@@ -42,9 +42,7 @@ impl Profile for Interactive {
         if is_letter_spaced {
             text_attributes = text_attributes.with_number("letter-spacing", spec.letter_spacing);
         }
-        writer.open_element("text", &text_attributes);
-        writer.text(&label.text);
-        writer.close_element();
+        writer.text_element("text", &text_attributes, &label.text);
     }
 
     fn write_live_only(

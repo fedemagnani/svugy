@@ -6,15 +6,16 @@ use std::iter;
 use miette::Diagnostic;
 use svugy_model::builder::{ElementRef, ModelBuilder};
 use svugy_model::legend::{DashKey, Legend};
-use svugy_model::model::{ByteRange, Edge, Element, Model, PlacementHint, Position, Shape};
+use svugy_model::model::{ByteRange, Edge, Element, Model, PlacementHint, Shape};
 use svugy_model::path::ElementPath;
 use svugy_model::validate::{ModelAdmission, ModelReport};
 
 use super::D2Parse;
 use super::ast::{
     EdgeDeclaration, EdgeLink, EdgeOperator, Field, FieldAssignment, KeyPath, KeySegment, Scalar,
-    ShapeDeclaration, Span, Statement, SvugyProperty, SvugyValue,
+    ShapeDeclaration, Span, Statement,
 };
+use super::carrier::{CarrierReader, ElementAttribute, LegendBadge, RootAttribute};
 use super::diagnostic::{
     Construct, Diagnostics, LabelledDiagnostic, SyntaxError, UnsupportedConstruct,
 };
@@ -34,23 +35,21 @@ const MAPPED_D2_SHAPES: [(&str, Option<Shape>); 5] = [
 /// Name the d2 shapes that draw a diagram of their own instead of one node (d2target at v0.9.0).
 const SPECIAL_D2_SHAPES: [&str; 4] = ["sql_table", "sequence_diagram", "class", "hierarchy"];
 
-/// Map each primitive the carrier's `svugy.shape` names, spelled as in the model's JSON, onto its shape.
-const SVUGY_PRIMITIVES: [(&str, Shape); 4] = [
-    ("box", Shape::Box),
-    ("slab", Shape::Slab),
-    ("cylinder", Shape::Cylinder),
-    ("disc", Shape::Disc),
-];
-
-/// Address the root carrier's one list attribute, the legend's lines.
-const LEGEND_ENTRIES_PATH: [&str; 2] = ["legend", "entries"];
-
 /// Collect what importing a d2 file yields: the model's admission, every syntax error, every construct the model does not hold.
 #[derive(Debug)]
 pub struct D2Import {
-    admission: ModelAdmission,
-    errors: Vec<SyntaxError>,
-    warnings: Vec<UnsupportedConstruct>,
+    pub admission: ModelAdmission,
+    pub errors: Vec<SyntaxError>,
+    pub warnings: Vec<UnsupportedConstruct>,
+}
+
+/// Split an import into its model, withheld while any diagnostic is an error, its syntax errors, its ignored constructs and the model's report.
+#[derive(Debug)]
+pub struct D2ImportParts {
+    pub model: Option<Model>,
+    pub errors: Vec<SyntaxError>,
+    pub warnings: Vec<UnsupportedConstruct>,
+    pub report: ModelReport,
 }
 
 /// Lower each statement into drafts of the diagram's title, subtitle, legend, elements and edges, recording every diagnostic on the way.
@@ -84,14 +83,7 @@ struct LegendDraft {
     title: Option<String>,
     entries: Vec<String>,
     dashes: Vec<(DashKey, String)>,
-    badges: Vec<BadgeDescriptionDraft>,
-}
-
-/// Describe the badges of the shape declared under `target_key`, which may be declared after the legend.
-struct BadgeDescriptionDraft {
-    target_key: ElementPath,
-    description: String,
-    span: Span,
+    badges: Vec<LegendBadge>,
 }
 
 /// Connect two element keys with an edge already carrying its label, style and span.
@@ -222,7 +214,7 @@ impl Lowering {
         edge
     }
 
-    /// Apply one field of an edge's map, warning on it unless it is a label or a style, all the model's edges hold.
+    /// Apply one field of an edge's map, warning on it unless it is a label, a style or the svugy carrier, all the model's edges hold.
     fn apply_edge_field_or_warn(&mut self, edge: Edge, field: Field) -> Edge {
         let keyword_name = field.keyword().name();
         match field {
@@ -236,11 +228,12 @@ impl Lowering {
                 edge
             }
             Field::Svugy(properties) => {
-                for property in properties {
-                    let construct = Construct::FieldOnEdge(keyword_name);
-                    self.diagnostics.record_warning(construct, property.span);
+                let mut carrier_reader = CarrierReader::new(&mut self.diagnostics);
+                let traveler = carrier_reader.read_edge_traveler(properties);
+                match traveler {
+                    Some(traveler) => edge.with_traveler(traveler),
+                    None => edge,
                 }
-                edge
             }
         }
     }
@@ -300,7 +293,11 @@ impl Lowering {
                     element.with_style(property.name.name, property.value.text)
                 })
             }),
-            Field::Svugy(properties) => self.lower_svugy_field(&target_key, properties, span),
+            Field::Svugy(properties) => {
+                let mut carrier_reader = CarrierReader::new(&mut self.diagnostics);
+                let element_attributes = carrier_reader.read_element(properties, span);
+                self.merge_element_carrier(&target_key, element_attributes);
+            }
         }
     }
 
@@ -311,9 +308,9 @@ impl Lowering {
         match field {
             Field::Label(label) => self.title = Some(label.text),
             Field::Svugy(properties) => {
-                for property in properties {
-                    self.lower_root_svugy_property(property);
-                }
+                let mut carrier_reader = CarrierReader::new(&mut self.diagnostics);
+                let root_attributes = carrier_reader.read_root(properties);
+                self.merge_root_carrier(root_attributes);
             }
             Field::Direction(direction) => self.lower_direction_field(&root_key, direction),
             _element_only_field => {
@@ -323,98 +320,22 @@ impl Lowering {
         }
     }
 
-    /// Apply one attribute of the root carrier, its subtitle or its legend, rejecting every other attribute: the title is the root's own `label`.
-    fn lower_root_svugy_property(&mut self, property: SvugyProperty) {
-        let SvugyProperty {
-            attribute_path,
-            value,
-            span: property_span,
-        } = property;
-        let scalar = match value {
-            SvugyValue::Scalar(scalar) => scalar,
-            SvugyValue::List { items, span } => {
-                self.lower_root_svugy_list(&attribute_path, items, span);
-                return;
+    /// Merge the root carrier's attributes in write order: the latest subtitle, legend title and entries win as in d2, dashes and badges accumulate.
+    fn merge_root_carrier(&mut self, attributes: Vec<RootAttribute>) {
+        for attribute in attributes {
+            match attribute {
+                RootAttribute::Subtitle(subtitle) => self.subtitle = Some(subtitle),
+                RootAttribute::LegendTitle(title) => self.legend_mut().title = Some(title),
+                RootAttribute::LegendEntries(entries) => self.legend_mut().entries = entries,
+                RootAttribute::LegendDash(dash_key, description) => {
+                    let dash_description = (dash_key, description);
+                    self.legend_mut().dashes.push(dash_description);
+                }
+                RootAttribute::LegendBadge(legend_badge) => {
+                    self.legend_mut().badges.push(legend_badge);
+                }
             }
-        };
-        let attribute_segments: Vec<&str> = attribute_path.iter().map(String::as_str).collect();
-        match attribute_segments.as_slice() {
-            ["subtitle"] => self.subtitle = Some(scalar.text),
-            ["legend", "title"] => self.legend_mut().retitle(scalar.text),
-            entries_path if entries_path == LEGEND_ENTRIES_PATH => {
-                let entries_carrier_path = SvugyProperty::spell_carrier_path(&LEGEND_ENTRIES_PATH);
-                let message = format!(
-                    "`{entries_carrier_path}` is a list of lines, e.g. `[\"① …\"; \"② …\"]`"
-                );
-                self.diagnostics.record_error(message, scalar.span);
-            }
-            ["legend", "dashes"] | ["legend", "badges"] => {
-                self.reject_root_svugy_attribute(&attribute_path, property_span);
-            }
-            ["legend", "dashes", dash_key_path @ ..] => {
-                self.lower_legend_dash(dash_key_path, scalar, property_span);
-            }
-            ["legend", "badges", target_path @ ..] => {
-                self.lower_legend_badge(target_path, scalar, property_span);
-            }
-            _unknown_attribute => self.reject_root_svugy_attribute(&attribute_path, property_span),
         }
-    }
-
-    /// Set the legend's entries from the one list attribute, the latest list replacing any earlier one as in d2; any other list is an error.
-    fn lower_root_svugy_list(&mut self, attribute_path: &[String], items: Vec<Scalar>, span: Span) {
-        let is_entries = attribute_path == LEGEND_ENTRIES_PATH;
-        if is_entries {
-            let entries = items.into_iter().map(|item| item.text).collect();
-            self.legend_mut().replace_entries(entries);
-            return;
-        }
-        self.reject_list(attribute_path, span);
-    }
-
-    /// Reject an attribute the root carrier does not hold.
-    fn reject_root_svugy_attribute(&mut self, attribute_path: &[String], span: Span) {
-        let carrier_path = SvugyProperty::spell_carrier_path(attribute_path);
-        let message = format!(
-            "`{carrier_path}` is not a svugy attribute of the root: expected `svugy.subtitle` or `svugy.legend` with `title`, `entries`, `dashes` or `badges`, and the title is the root's own `label`"
-        );
-        self.diagnostics.record_error(message, span);
-    }
-
-    /// Add the legend's description of the arcs dashed as long as `dash_key_path` spells, rejecting a key that is not a plain number.
-    fn lower_legend_dash(&mut self, dash_key_path: &[&str], description: Scalar, span: Span) {
-        let dash_key_segments = dash_key_path.iter().copied();
-        let dash_key = ElementPath::from_segments(dash_key_segments).to_string();
-        let Ok(parsed_dash_key) = dash_key.parse::<DashKey>() else {
-            let message = format!(
-                "`{dash_key}` is not a dash length: a `svugy.legend.dashes` key is a plain number like `5`, an arc's `stroke-dash`"
-            );
-            self.diagnostics.record_error(message, span);
-            return;
-        };
-        self.legend_mut()
-            .describe_dash(parsed_dash_key, description.text);
-    }
-
-    /// Add the legend's badge description of the shape `target_path` names, resolved once every shape is declared.
-    fn lower_legend_badge(&mut self, target_path: &[&str], description: Scalar, span: Span) {
-        let target_key = ElementDrafts::key_of(target_path);
-        let badge_description = BadgeDescriptionDraft {
-            target_key,
-            description: description.text,
-            span,
-        };
-        self.legend_mut().describe_badges(badge_description);
-    }
-
-    /// Reject a list given to an attribute that takes one value.
-    fn reject_list(&mut self, attribute_path: &[String], span: Span) {
-        let carrier_path = SvugyProperty::spell_carrier_path(attribute_path);
-        let entries_carrier_path = SvugyProperty::spell_carrier_path(&LEGEND_ENTRIES_PATH);
-        let message = format!(
-            "`{carrier_path}` is not a svugy list attribute: a list carries only the root's `{entries_carrier_path}`"
-        );
-        self.diagnostics.record_error(message, span);
     }
 
     /// Map `direction: right` onto layered placement, which the root already has; svugy's placement follows no other direction.
@@ -452,154 +373,37 @@ impl Lowering {
             self.diagnostics.record_warning(construct, shape.span);
             return;
         };
-        self.elements
-            .draft_mut(element_key)
-            .reshape_by_d2(*primitive);
+        self.elements.draft_mut(element_key).d2_shape = *primitive;
     }
 
-    /// Lower the `svugy` carrier field: apply its caption, primitive, height, badge mark and position, rejecting unknown attributes, lists and malformed values one by one.
-    fn lower_svugy_field(
+    /// Merge an element carrier's attributes into its draft in write order, the latest write winning as in d2; the carrier's primitive outranks d2's `shape`.
+    fn merge_element_carrier(
         &mut self,
         element_key: &ElementPath,
-        properties: Vec<SvugyProperty>,
-        span: Span,
+        attributes: Vec<ElementAttribute>,
     ) {
-        let mut position_x = None;
-        let mut position_y = None;
-        for property in properties {
-            let SvugyProperty {
-                attribute_path,
-                value,
-                span: property_span,
-            } = property;
-            let value = match value {
-                SvugyValue::Scalar(scalar) => scalar,
-                SvugyValue::List {
-                    items: _items,
-                    span: list_span,
-                } => {
-                    self.reject_list(&attribute_path, list_span);
-                    continue;
-                }
-            };
-            let attribute_segments: Vec<&str> = attribute_path.iter().map(String::as_str).collect();
-            match attribute_segments.as_slice() {
-                ["caption"] => {
+        for attribute in attributes {
+            match attribute {
+                ElementAttribute::Caption(caption) => {
                     self.elements
-                        .edit_element(element_key, |element| element.with_caption(value.text));
+                        .edit_element(element_key, |element| element.with_caption(caption));
                 }
-                ["shape"] => self.lower_svugy_shape(element_key, value),
-                ["height"] => self.lower_svugy_height(element_key, value),
-                ["badge"] => self.lower_svugy_badge(element_key, value),
-                ["position", "x"] => position_x = Some(value),
-                ["position", "y"] => position_y = Some(value),
-                _unknown_attribute => {
-                    self.reject_element_svugy_attribute(&attribute_path, property_span);
+                ElementAttribute::Primitive(shape) => {
+                    self.elements.draft_mut(element_key).svugy_shape = Some(shape);
+                }
+                ElementAttribute::Height(height) => {
+                    self.elements
+                        .edit_element(element_key, |element| element.with_height(height));
+                }
+                ElementAttribute::BadgeMark(is_badge) => {
+                    self.elements.draft_mut(element_key).is_badge = is_badge;
+                }
+                ElementAttribute::Position(position) => {
+                    self.elements
+                        .edit_element(element_key, |element| element.with_position(position));
                 }
             }
         }
-        self.lower_svugy_position(element_key, position_x, position_y, span);
-    }
-
-    /// Map the carrier's primitive name onto a shape through `SVUGY_PRIMITIVES`; it outranks d2's `shape`, which d2 itself still reads.
-    fn lower_svugy_shape(&mut self, element_key: &ElementPath, primitive: Scalar) {
-        let lowercase_primitive = primitive.text.to_ascii_lowercase();
-        let mut known_primitives = SVUGY_PRIMITIVES.iter();
-        let known_primitive = known_primitives
-            .find(|(primitive_name, _shape)| *primitive_name == lowercase_primitive);
-        let Some((_primitive_name, shape)) = known_primitive else {
-            let message = format!(
-                "`{}` is not a svugy primitive: expected `box`, `slab`, `cylinder` or `disc`",
-                primitive.text
-            );
-            self.diagnostics.record_error(message, primitive.span);
-            return;
-        };
-        self.elements
-            .draft_mut(element_key)
-            .reshape_by_carrier(*shape);
-    }
-
-    /// Stand the element as tall as the carrier's `height`; validation bounds the number.
-    fn lower_svugy_height(&mut self, element_key: &ElementPath, height: Scalar) {
-        let Some(height) = self.parse_decimal_or_reject(height, "`svugy.height`") else {
-            return;
-        };
-        self.elements
-            .edit_element(element_key, |element| element.with_height(height));
-    }
-
-    /// Mark or unmark the element a badge target, the latest mark winning as in d2; a value other than `true` or `false` is rejected.
-    fn lower_svugy_badge(&mut self, element_key: &ElementPath, mark: Scalar) {
-        let lowercase_mark = mark.text.to_ascii_lowercase();
-        let is_badge = match lowercase_mark.as_str() {
-            "true" => true,
-            "false" => false,
-            _not_a_boolean => {
-                let message = format!(
-                    "`{}` is not a boolean: `svugy.badge` is `true` or `false`",
-                    mark.text
-                );
-                self.diagnostics.record_error(message, mark.span);
-                return;
-            }
-        };
-        self.elements
-            .draft_mut(element_key)
-            .mark_badge_target(is_badge);
-    }
-
-    /// Reject an attribute an element's carrier does not hold.
-    fn reject_element_svugy_attribute(&mut self, attribute_path: &[String], span: Span) {
-        let carrier_path = SvugyProperty::spell_carrier_path(attribute_path);
-        let message = format!(
-            "`{carrier_path}` is not a svugy attribute: expected `svugy.caption`, `svugy.shape`, `svugy.height`, `svugy.badge` or `svugy.position` with `x` and `y`"
-        );
-        self.diagnostics.record_error(message, span);
-    }
-
-    /// Pin the element at the carrier's `x` and `y`, written together in one `vars` map so a position is never half-set.
-    fn lower_svugy_position(
-        &mut self,
-        element_key: &ElementPath,
-        x: Option<Scalar>,
-        y: Option<Scalar>,
-        span: Span,
-    ) {
-        let is_x_absent = x.is_none();
-        let is_y_absent = y.is_none();
-        let is_position_absent = is_x_absent && is_y_absent;
-        if is_position_absent {
-            return;
-        }
-        let (Some(x), Some(y)) = (x, y) else {
-            let message = "`svugy.position` needs both `x` and `y` in the same `vars` map";
-            self.diagnostics.record_error(message, span);
-            return;
-        };
-        let coordinate_attribute = "a `svugy.position` coordinate";
-        let Some(x) = self.parse_decimal_or_reject(x, coordinate_attribute) else {
-            return;
-        };
-        let Some(y) = self.parse_decimal_or_reject(y, coordinate_attribute) else {
-            return;
-        };
-        let position = Position { x, y };
-        self.elements
-            .edit_element(element_key, |element| element.with_position(position));
-    }
-
-    /// Parse `number` as the value of `attribute`, rejecting it at its span unless it is a decimal.
-    fn parse_decimal_or_reject(&mut self, number: Scalar, attribute: &str) -> Option<f64> {
-        let Ok(value) = number.text.parse() else {
-            let message = format!(
-                "`{}` is not a number: {attribute} is a plain decimal like `91.5`",
-                number.text
-            );
-            self.diagnostics.record_error(message, number.span);
-            return None;
-        };
-        Some(value)
     }
 
     /// Finish into the import: build the model through its admission, its legend's badge keys resolved first, and sort the diagnostics by source offset.
@@ -706,7 +510,7 @@ impl ElementDrafts {
     }
 
     /// Key the element at `path` from the root case-insensitively, as d2 matches keys.
-    fn key_of(path: &[&str]) -> ElementPath {
+    fn key_of(path: &[String]) -> ElementPath {
         let root_key = ElementPath::root();
         path.iter().fold(root_key, |parent_key, name| {
             Self::child_key(&parent_key, name)
@@ -763,27 +567,6 @@ impl ElementDrafts {
 }
 
 impl LegendDraft {
-    /// Retitle the legend, the latest title winning as in d2.
-    fn retitle(&mut self, title: String) {
-        self.title = Some(title);
-    }
-
-    /// Replace the legend's entries by `entries`, the latest list winning as in d2.
-    fn replace_entries(&mut self, entries: Vec<String>) {
-        self.entries = entries;
-    }
-
-    /// Describe the arcs dashed `dash_key`, after every earlier dash description.
-    fn describe_dash(&mut self, dash_key: DashKey, description: String) {
-        let dash_description = (dash_key, description);
-        self.dashes.push(dash_description);
-    }
-
-    /// Describe the badges of a shape whose key waits as written until every shape is declared.
-    fn describe_badges(&mut self, badge_description: BadgeDescriptionDraft) {
-        self.badges.push(badge_description);
-    }
-
     /// Resolve the draft into the model's legend, each badge key to the path its shape is declared under; a key naming no shape is an error dropping only its description.
     fn resolve(self, elements: &ElementDrafts, diagnostics: &mut Diagnostics) -> Legend {
         let Self {
@@ -800,12 +583,13 @@ impl LegendDraft {
         for (dash_key, description) in dashes {
             legend = legend.with_dash_description(dash_key, description);
         }
-        for badge_description in badges {
-            let BadgeDescriptionDraft {
-                target_key,
+        for legend_badge in badges {
+            let LegendBadge {
+                target_path,
                 description,
                 span,
-            } = badge_description;
+            } = legend_badge;
+            let target_key = ElementDrafts::key_of(&target_path);
             let Some(target) = elements.declared_path_of(&target_key) else {
                 let message = format!(
                     "`{target_key}` names no shape: a `svugy.legend.badges` key is the path of a badge target, e.g. `pipeline.inter`"
@@ -832,21 +616,6 @@ impl ElementDraft {
             svugy_shape: None,
             is_badge: false,
         }
-    }
-
-    /// Reshape the element by d2's `shape`, `None` restoring the renderer's default as d2's `rectangle` does; the latest d2 shape wins.
-    fn reshape_by_d2(&mut self, shape: Option<Shape>) {
-        self.d2_shape = shape;
-    }
-
-    /// Reshape the element by the carrier's primitive, which outranks any d2 shape; the latest primitive wins.
-    fn reshape_by_carrier(&mut self, shape: Shape) {
-        self.svugy_shape = Some(shape);
-    }
-
-    /// Mark or unmark the element a badge target, the latest mark winning as in d2.
-    fn mark_badge_target(&mut self, is_badge: bool) {
-        self.is_badge = is_badge;
     }
 
     /// Split the draft into its key name and its element, marked badge by its last mark, shaped by the carrier first and d2 second, kept apart until now as d2's `rectangle` resets its shape.
@@ -904,15 +673,8 @@ impl D2Import {
         self.admission.model.as_ref()
     }
 
-    /// Split the import into its model, withheld as `admitted_model` withholds it, its syntax errors, its ignored constructs and the model's report.
-    pub fn into_parts(
-        self,
-    ) -> (
-        Option<Model>,
-        Vec<SyntaxError>,
-        Vec<UnsupportedConstruct>,
-        ModelReport,
-    ) {
+    /// Split the import into its parts, its model withheld as `admitted_model` withholds it.
+    pub fn into_admitted_parts(self) -> D2ImportParts {
         let has_errors = self.has_errors();
         let Self {
             admission,
@@ -921,7 +683,12 @@ impl D2Import {
         } = self;
         let ModelAdmission { model, report } = admission;
         let admitted_model = if has_errors { None } else { model };
-        (admitted_model, errors, warnings, report)
+        D2ImportParts {
+            model: admitted_model,
+            errors,
+            warnings,
+            report,
+        }
     }
 
     /// Tell whether any diagnostic is an error: a d2 syntax error or an error of the model's checks.
@@ -929,20 +696,5 @@ impl D2Import {
         let has_syntax_errors = !self.errors.is_empty();
         let has_model_errors = self.admission.report.has_errors();
         has_syntax_errors || has_model_errors
-    }
-
-    /// Hand over the model's admission, its model and its full report, whatever the import's own errors.
-    pub fn into_admission(self) -> ModelAdmission {
-        self.admission
-    }
-
-    /// Return every syntax error of parsing and lowering, in source order.
-    pub fn errors(&self) -> &[SyntaxError] {
-        &self.errors
-    }
-
-    /// Return every warning: each ignored construct of parsing and lowering, in source order.
-    pub fn warnings(&self) -> &[UnsupportedConstruct] {
-        &self.warnings
     }
 }

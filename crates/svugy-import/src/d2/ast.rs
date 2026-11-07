@@ -1,11 +1,9 @@
 //! Represent the v1 subset of a d2 file as a tree of shapes, edges and fields, each carrying its source span.
 
 use std::fmt;
-use std::iter;
 use std::ops::Range;
 
 use svugy_model::model::ByteRange;
-use svugy_model::path::ElementPath;
 
 /// Hold the top-level statements of a d2 file that fall inside the v1 subset.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -176,14 +174,6 @@ impl Field {
 impl SvugyProperty {
     /// Name the d2 variable whose entries carry what d2 cannot say, e.g. `vars: { svugy: { caption: … } }`.
     pub const VARIABLE: &str = "svugy";
-
-    /// Spell the carrier path of `attribute_path` as a model path does, e.g. `svugy.position.x`, quoting a segment that holds a dot.
-    pub fn spell_carrier_path(attribute_path: &[impl AsRef<str>]) -> String {
-        let attribute_segments = attribute_path.iter().map(AsRef::as_ref);
-        let carrier_segments = iter::once(Self::VARIABLE).chain(attribute_segments);
-        let carrier_path = ElementPath::from_segments(carrier_segments);
-        carrier_path.to_string()
-    }
 }
 
 impl Keyword {

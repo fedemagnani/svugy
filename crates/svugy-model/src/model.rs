@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::fmt;
-use std::ops::{Bound, Deref};
+use std::ops::Bound;
 
 use miette::SourceSpan;
 use serde::{Deserialize, Serialize};
@@ -14,40 +14,9 @@ use crate::unique_key_map::UniqueKeyMapVisitor;
 /// Largest magnitude a numeric style value, a position coordinate or a height may take, so no valid model can explode the output.
 pub const MAX_MAGNITUDE: f64 = 1_000_000.0;
 
-/// Model a system whose content passed every error-level check: every edge endpoint and every ancestor of an element exists.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Model {
-    pub(crate) content: ModelContent,
-}
-
-impl Deref for Model {
-    type Target = ModelContent;
-
-    fn deref(&self) -> &ModelContent {
-        &self.content
-    }
-}
-
-/// Assemble a model's content whose references are not yet checked, recording duplicate declarations; only `admit` turns it into a `Model`.
-#[derive(Debug, Default)]
-pub(crate) struct UncheckedModel {
-    pub(crate) content: ModelContent,
-    pub(crate) duplicate_declarations: Vec<(ElementPath, Element)>,
-}
-
-impl UncheckedModel {
-    /// Hold `content` unchecked, with no duplicate declaration recorded.
-    pub(crate) fn new(content: ModelContent) -> Self {
-        Self {
-            content,
-            duplicate_declarations: Vec::new(),
-        }
-    }
-}
-
-/// Hold a model's content: the diagram's title, subtitle and legend, elements keyed by path, edges keyed by id.
+/// Model a system as the diagram's title, subtitle and legend, elements keyed by path and edges keyed by id; every model handed out of this crate has its edge endpoints and ancestors declared.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct ModelContent {
+pub struct Model {
     pub(crate) title: Option<String>,
     pub(crate) subtitle: Option<String>,
     pub(crate) legend: Option<Legend>,
@@ -55,21 +24,37 @@ pub struct ModelContent {
     pub(crate) edges: BTreeMap<EdgeId, Edge>,
 }
 
-impl ModelContent {
+impl Model {
+    /// Insert `edge` from `from` to `to` with the next free ordinal for that pair, so parallel edges stay distinct.
+    pub(crate) fn insert_edge_with_next_free_ordinal(
+        &mut self,
+        from: ElementPath,
+        to: ElementPath,
+        edge: Edge,
+    ) -> EdgeId {
+        let first_parallel_id = EdgeId::new(from, to, 0);
+        let last_parallel_id = first_parallel_id.parallel(u32::MAX);
+        let parallel_ids = &first_parallel_id..=&last_parallel_id;
+        let mut parallel_edges = self.edges.range::<EdgeId, _>(parallel_ids);
+        let last_parallel_edge = parallel_edges.next_back();
+        let ordinal = last_parallel_edge.map_or(0, |(id, _edge)| id.ordinal() + 1);
+        let id = first_parallel_id.parallel(ordinal);
+        let inserted_id = id.clone();
+        self.edges.insert(inserted_id, edge);
+        id
+    }
+
     /// Yield the edges Layout may see: every edge except those joining an element to its ancestor or descendant.
     pub fn layoutable_edges(&self) -> impl Iterator<Item = (&EdgeId, &Edge)> {
-        self.edges.iter().filter(|(id, _edge)| id.is_layoutable())
+        self.edges
+            .iter()
+            .filter(|(id, _edge)| !id.joins_ancestor_and_descendant())
     }
 
     /// Yield the layoutable edges drawn as arcs: every one Layout may see but the badges.
     pub fn arc_edges(&self) -> impl Iterator<Item = (&EdgeId, &Edge)> {
         self.layoutable_edges()
-            .filter(|(id, _edge)| self.is_arc_edge(id))
-    }
-
-    /// Tell whether `id` is drawn as an arc rather than as a badge.
-    fn is_arc_edge(&self, id: &EdgeId) -> bool {
-        !self.is_badge_edge(id)
+            .filter(|(id, _edge)| !self.is_badge_edge(id))
     }
 
     /// Yield the edges drawn as badges, in edge order.
@@ -337,7 +322,7 @@ impl Element {
         self.height
     }
 
-    /// Tell whether the element is marked a badge target; `ModelContent::is_badge_edge` decides which edges that badges.
+    /// Tell whether the element is marked a badge target; `Model::is_badge_edge` decides which edges that badges.
     pub fn is_badge_target(&self) -> bool {
         self.badge_target
     }
@@ -391,6 +376,17 @@ pub enum Shape {
     Slab,
     Cylinder,
     Disc,
+}
+
+/// Name the symbol an animated edge carries along its path.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Traveler {
+    Dot,
+    Envelope,
+    Parcel,
+    Document,
+    Key,
 }
 
 /// Hint the strategy a container places its children with.
@@ -482,11 +478,6 @@ impl EdgeId {
         Self { from, to, ordinal }
     }
 
-    /// Tell whether Layout can draw the edge: neither endpoint contains the other.
-    pub fn is_layoutable(&self) -> bool {
-        !self.joins_ancestor_and_descendant()
-    }
-
     /// Tell whether one endpoint contains the other, which Layout cannot draw.
     pub fn joins_ancestor_and_descendant(&self) -> bool {
         let is_from_ancestor = self.from.is_ancestor_of(&self.to);
@@ -523,9 +514,10 @@ impl fmt::Display for EdgeId {
 /// Describe an edge: a connection, everything except its identity.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Edge {
-    label: Option<String>,
-    style: BTreeMap<String, String>,
-    span: Option<ByteRange>,
+    pub(crate) label: Option<String>,
+    pub(crate) style: BTreeMap<String, String>,
+    pub(crate) traveler: Option<Traveler>,
+    pub(crate) span: Option<ByteRange>,
 }
 
 impl Edge {
@@ -549,6 +541,12 @@ impl Edge {
         self
     }
 
+    /// Set the symbol the edge carries along its path when animated, instead of the default dot.
+    pub fn with_traveler(mut self, traveler: Traveler) -> Self {
+        self.traveler = Some(traveler);
+        self
+    }
+
     /// Record where in an imported source this edge was declared.
     pub fn with_span(mut self, span: ByteRange) -> Self {
         self.span = Some(span);
@@ -563,6 +561,11 @@ impl Edge {
     /// Return the edge's raw style entries, keyed by style name.
     pub fn style(&self) -> &BTreeMap<String, String> {
         &self.style
+    }
+
+    /// Return the symbol the edge carries along its path, if one was set instead of the default dot.
+    pub fn traveler(&self) -> Option<Traveler> {
+        self.traveler
     }
 
     /// Return where in an imported source this edge was declared, as a byte range.

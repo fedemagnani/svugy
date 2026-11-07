@@ -66,7 +66,6 @@ impl Footprints {
 
     /// Size the extent from the origin to the farthest footprint corner plus the inset.
     pub(super) fn extent_enclosing(&self, inset: f64) -> Size {
-        let inset_offset = Vec2::new(inset, inset);
         let far_corner = self
             .by_path
             .values()
@@ -75,8 +74,9 @@ impl Footprints {
                 let y = far_corner.y.max(footprint.y1);
                 Point::new(x, y)
             });
-        let far_corner_with_inset = far_corner + inset_offset;
-        far_corner_with_inset.to_vec2().to_size()
+        let width = far_corner.x + inset;
+        let height = far_corner.y + inset;
+        Size::new(width, height)
     }
 
     /// Return the union of every footprint, `None` when there is none.

@@ -1,6 +1,6 @@
 //! Resolve an element's `link:` value into a drill-down target or a URL, the one place that decides which it is.
 
-use crate::model::ModelContent;
+use crate::model::Model;
 use crate::path::ElementPath;
 
 /// List the characters only a URL holds, never an element path's bare segments.
@@ -17,7 +17,7 @@ pub enum Link<'a> {
 
 impl<'a> Link<'a> {
     /// Resolve `raw` against `model`: an element when it parses as the path of one, otherwise a URL.
-    pub fn resolve(raw: &'a str, model: &ModelContent) -> Self {
+    pub fn resolve(raw: &'a str, model: &Model) -> Self {
         let Ok(path) = raw.parse::<ElementPath>() else {
             return Self::Url(raw);
         };
@@ -37,10 +37,7 @@ impl<'a> Link<'a> {
         if has_url_character {
             return None;
         }
-        let Ok(path) = raw.parse::<ElementPath>() else {
-            return None;
-        };
-        Some(path)
+        raw.parse().ok()
     }
 }
 

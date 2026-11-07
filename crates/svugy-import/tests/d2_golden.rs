@@ -13,7 +13,7 @@ fn svugy_d2_imports_into_the_golden_model() {
 
     let diagnostic_count = import.diagnostics().len();
     let model = import
-        .into_admission()
+        .admission
         .model
         .expect("the twin lowers into a sound model");
     let imported_json = model.to_json();

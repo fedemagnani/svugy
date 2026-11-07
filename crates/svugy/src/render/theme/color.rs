@@ -55,7 +55,7 @@ pub(crate) struct Oklab {
 }
 
 impl Oklab {
-    /// Convert 8-bit sRGB to Oklab = M₂ · ∛(M₁ · linear_srgb), with Ottosson's M₁ and M₂.
+    /// Convert an 8-bit sRGB `Rgb` to Oklab = M₂ · ∛(M₁ · linear_srgb), with Ottosson's M₁ and M₂.
     pub(crate) fn from_rgb(color: Rgb) -> Self {
         let red = f64::from(color.red);
         let green = f64::from(color.green);
@@ -86,7 +86,7 @@ impl Oklab {
         }
     }
 
-    /// Quantise to 8-bit sRGB after gamut-mapping by scaling chroma, never by clamping channels.
+    /// Quantise to an 8-bit sRGB `Rgb` after gamut-mapping by scaling chroma, never by clamping channels.
     pub(crate) fn to_rgb(self) -> Rgb {
         let chroma_scale = self.largest_in_gamut_chroma_scale();
         let gamut_mapped = self.chroma_scaled(chroma_scale);

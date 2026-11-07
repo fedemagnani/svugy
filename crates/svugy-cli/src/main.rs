@@ -121,7 +121,7 @@ enum ReportFormat {
     Json,
 }
 
-/// Run the parsed command line and exit with its failure's code, or success.
+/// Serve as the binary's main entry: run the parsed command line and exit with its failure's code, or success.
 fn main() -> ExitCode {
     let cli = Cli::parse();
     let outcome = cli.command.run();

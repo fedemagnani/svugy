@@ -9,22 +9,32 @@ pub(crate) struct RuntimeContract;
 
 impl RuntimeContract {
     /// Version the contract, bumped by any rename, removal or change of meaning.
-    pub(crate) const VERSION: &'static str = "1";
+    pub(crate) const VERSION: &'static str = "2";
 
     /// Mark the root with the contract version.
     pub(crate) const CONTRACT: &'static str = "data-svugy-contract";
+    /// Mark a layer's group with its disclosure depth.
+    pub(crate) const LAYER: &'static str = "data-svugy-layer";
+    /// Mark the layer a viewer sees, rendered on layer 0 and then moved by the runtime.
+    pub(crate) const SHOWN: &'static str = "data-svugy-shown";
     /// Mark a level group with its level path.
     pub(crate) const LEVEL: &'static str = "data-svugy-level";
     /// Mark a level group with its view in document coordinates.
     pub(crate) const VIEW: &'static str = "data-svugy-view";
     /// Mark a solid's group with its element path.
     pub(crate) const ELEMENT: &'static str = "data-svugy-element";
+    /// Mark the group of a container its layer draws closed.
+    pub(crate) const CLOSED: &'static str = "data-svugy-closed";
     /// Mark a connection or badge group with its edge.
     pub(crate) const EDGE: &'static str = "data-svugy-edge";
+    /// Mark a connection or badge group with the endpoint its layer draws it from.
+    pub(crate) const FROM: &'static str = "data-svugy-from";
+    /// Mark a connection or badge group with the endpoint its layer draws it to.
+    pub(crate) const TO: &'static str = "data-svugy-to";
     /// Mark a connection's stroke, whose dash offset the runtime animates as flow.
     pub(crate) const FLOW: &'static str = "data-svugy-flow";
-    /// Mark a connection's animated dot.
-    pub(crate) const DOT: &'static str = "data-svugy-dot";
+    /// Mark a connection's moving traveler with its name.
+    pub(crate) const TRAVELER: &'static str = "data-svugy-traveler";
     /// Mark a stub marker's group with its external endpoint.
     pub(crate) const STUB: &'static str = "data-svugy-stub";
     /// Mark a group with the level a click on it goes to.
@@ -36,17 +46,25 @@ impl RuntimeContract {
     /// Names the runtime-owned marker of the entered level, which rendering never emits.
     #[cfg(test)]
     pub(crate) const ENTERED: &'static str = "data-svugy-entered";
-
-    /// Lists the attributes rendering emits; `ENTERED` is left out because only the runtime sets it.
+    /// Names the runtime-owned marker of a group the hovered one dims, which rendering never emits.
     #[cfg(test)]
-    pub(crate) const RENDERED_ATTRIBUTES: [&'static str; 11] = [
+    pub(crate) const DIMMED: &'static str = "data-svugy-dimmed";
+
+    /// Lists the attributes rendering emits; `ENTERED` and `DIMMED` are left out because only the runtime sets them.
+    #[cfg(test)]
+    pub(crate) const RENDERED_ATTRIBUTES: [&'static str; 16] = [
         Self::CONTRACT,
+        Self::LAYER,
+        Self::SHOWN,
         Self::LEVEL,
         Self::VIEW,
         Self::ELEMENT,
+        Self::CLOSED,
         Self::EDGE,
+        Self::FROM,
+        Self::TO,
         Self::FLOW,
-        Self::DOT,
+        Self::TRAVELER,
         Self::STUB,
         Self::GOTO,
         Self::OVERLAY,
@@ -59,11 +77,11 @@ mod tests {
     use std::collections::BTreeSet;
 
     use svugy_model::builder::ModelBuilder;
-    use svugy_model::model::{Edge, Element, Model};
+    use svugy_model::model::{Edge, Element, Model, Traveler};
 
     use super::RuntimeContract;
-    use crate::InteractiveSvg;
     use crate::render::profile::Interactive;
+    use crate::{InteractiveSvg, StaticSvg};
 
     const CDATA_END: &str = "]]>";
 
@@ -91,10 +109,41 @@ mod tests {
             .collect()
     }
 
+    /// Collect the id of every `<symbol>` and the traveler name and reference of every `<use>` in `markup`, the uses sorted by name.
+    fn symbol_ids_and_traveler_uses(markup: &str) -> (Vec<String>, Vec<(String, String)>) {
+        let document = roxmltree::Document::parse(markup).expect("well-formed XML");
+        let elements: Vec<roxmltree::Node> = document
+            .descendants()
+            .filter(roxmltree::Node::is_element)
+            .collect();
+        let symbol_ids = elements
+            .iter()
+            .filter(|node| node.has_tag_name("symbol"))
+            .filter_map(|symbol| symbol.attribute("id"))
+            .map(str::to_owned)
+            .collect();
+        let mut traveler_uses: Vec<(String, String)> = elements
+            .iter()
+            .filter(|node| node.has_tag_name("use"))
+            .map(|traveler_use| {
+                let name_attribute = traveler_use.attribute(RuntimeContract::TRAVELER);
+                let href_attribute = traveler_use.attribute("href");
+                let traveler_name = name_attribute.unwrap_or_default().to_owned();
+                let symbol_reference = href_attribute.unwrap_or_default().to_owned();
+                (traveler_name, symbol_reference)
+            })
+            .collect();
+        traveler_uses.sort();
+        (symbol_ids, traveler_uses)
+    }
+
     impl RuntimeContract {
         /// Lists the contract attributes that neither runtime source mentions.
         fn attributes_unknown_to_runtime() -> Vec<&'static str> {
-            let runtime_attributes = Self::RENDERED_ATTRIBUTES.into_iter().chain([Self::ENTERED]);
+            let runtime_owned_attributes = [Self::ENTERED, Self::DIMMED];
+            let runtime_attributes = Self::RENDERED_ATTRIBUTES
+                .into_iter()
+                .chain(runtime_owned_attributes);
             runtime_attributes
                 .filter(|attribute| {
                     let is_missing_from_script = !Interactive::RUNTIME_SCRIPT.contains(attribute);
@@ -128,6 +177,31 @@ mod tests {
         assert!(!is_entered_rendered, "only the runtime enters a level");
         let client_entering_desk = "<g data-svugy-element=\"client\" data-svugy-goto=\"desk\">";
         assert!(markup.contains(client_entering_desk), "{markup}");
+    }
+
+    #[test]
+    fn an_envelope_edge_and_a_default_edge_each_move_their_own_traveler_only_live() {
+        let mut builder = ModelBuilder::new();
+        let client = builder.add_top_level("client", Element::new("client"));
+        let api = builder.add_top_level("api", Element::new("api"));
+        let db = builder.add_top_level("db", Element::new("db"));
+        let mailing = Edge::new().with_traveler(Traveler::Envelope);
+        builder.add_edge(&client, &api, mailing);
+        builder.add_edge(&api, &db, Edge::new());
+        let model = builder.build().model.expect("valid model");
+
+        let interactive_markup = InteractiveSvg::render(&model);
+        let static_markup = StaticSvg::render(&model);
+
+        let (symbol_ids, traveler_uses) = symbol_ids_and_traveler_uses(&interactive_markup);
+        let (static_symbol_ids, static_traveler_uses) =
+            symbol_ids_and_traveler_uses(&static_markup);
+        let envelope_use = ("envelope".to_owned(), "#traveler-envelope".to_owned());
+        let dot_use = ("dot".to_owned(), "#traveler-dot".to_owned());
+        assert_eq!(symbol_ids, ["traveler-dot", "traveler-envelope"]);
+        assert_eq!(traveler_uses, [dot_use, envelope_use]);
+        assert_eq!(static_symbol_ids, Vec::<String>::new());
+        assert_eq!(static_traveler_uses, Vec::<(String, String)>::new());
     }
 
     #[test]

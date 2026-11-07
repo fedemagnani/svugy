@@ -4,6 +4,8 @@ use std::collections::BTreeSet;
 
 use kurbo::{BezPath, Rect};
 
+use svugy_model::model::Model;
+
 use super::Profile;
 use super::paint::{ModelPaints, Paint};
 use crate::geometry::{ArrowheadMarker, Group};
@@ -21,28 +23,25 @@ pub(crate) struct ArrowheadMarkers {
 }
 
 impl ArrowheadMarkers {
-    /// Collect the paint of every connection, interiors included, since each ends in an arrowhead.
-    pub(crate) fn collect(root: &Group, paints: &ModelPaints) -> Self {
-        let levels = root.this_and_nested_levels();
-        let connections = levels.flat_map(|(group, _to_root)| &group.connections);
-        let connection_paints = connections
-            .map(|connection| paints.connection(&connection.edge))
-            .collect();
+    /// Collect the paint of every connection of `drawn_layers`, interiors included, each painted from the model its layer is drawn from, since each ends in an arrowhead.
+    pub(crate) fn collect(drawn_layers: &[(&Group, &Model)]) -> Self {
+        let mut connection_paints = BTreeSet::new();
+        for &(root, model) in drawn_layers {
+            let paints = ModelPaints::new(model);
+            let levels = root.this_and_nested_levels();
+            let connections = levels.flat_map(|(group, _to_root)| &group.connections);
+            let layer_paints = connections.map(|connection| paints.connection(&connection.edge));
+            connection_paints.extend(layer_paints);
+        }
         Self {
             paints: connection_paints,
         }
     }
 
-    /// Write a `<defs>` holding one marker per collected paint, or nothing when none was collected.
-    pub(crate) fn write_defs<P: Profile>(&self, writer: &mut SvgWriter, profile: &P) {
-        let has_no_marker = self.paints.is_empty();
-        if has_no_marker {
-            return;
-        }
-        let no_attributes = Attributes::new();
+    /// Write one marker per collected paint.
+    pub(crate) fn write_markers<P: Profile>(&self, writer: &mut SvgWriter, profile: &P) {
         let view_box = Self::marker_view_box();
         let triangle_path_data = Self::triangle_path_data();
-        writer.open_element("defs", &no_attributes);
         for (marker_index, &paint) in self.paints.iter().enumerate() {
             let marker_id = Self::marker_id(marker_index);
             let marker_attributes = Attributes::new()
@@ -61,7 +60,6 @@ impl ArrowheadMarkers {
             writer.empty_element("path", &arrowhead_attributes);
             writer.close_element();
         }
-        writer.close_element();
     }
 
     /// Reference the marker of `paint` as a `marker-end` value.
@@ -72,6 +70,11 @@ impl ArrowheadMarkers {
         debug_assert!(is_collected, "uncollected paint {paint:?}");
         let marker_id = Self::marker_id(marker_index);
         format!("url(#{marker_id})")
+    }
+
+    /// Tell whether no connection was collected.
+    pub(crate) fn is_empty(&self) -> bool {
+        self.paints.is_empty()
     }
 
     /// Spell the marker's square viewBox, `0 0 size size`.

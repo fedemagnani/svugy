@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::iter;
 
 use kurbo::{Affine, BezPath, Line, Point, Rect, RoundedRect, Shape as _, Size, Vec2};
+use svugy_model::disclose::DisclosedModel;
 use svugy_model::model::{EdgeId, Model};
 use svugy_model::path::ElementPath;
 
@@ -31,8 +32,9 @@ mod stub;
 pub(crate) struct Scene {
     /// Projected ground-grid lines under the root level, painted before everything else.
     pub(crate) ground_lines: Vec<Line>,
-    /// Root level, whose view is the document viewBox.
     pub(crate) root: Group,
+    /// Local rectangle the viewBox frames once each level is entered, keyed by level; the root's is the document viewBox.
+    views_by_level: BTreeMap<ElementPath, Rect>,
     /// Diagram title and subtitle, upright in document space, when the model sets either.
     pub(crate) heading: Option<Heading>,
     /// Legend, upright in document space, when the model has one with anything to draw.
@@ -40,51 +42,106 @@ pub(crate) struct Scene {
 }
 
 impl Scene {
-    /// Draw `root` on the ground `ground_lines` rule, with no heading and no legend.
-    pub(crate) fn new(ground_lines: Vec<Line>, root: Group) -> Self {
+    /// Screen margin a view keeps around what it frames.
+    const VIEW_MARGIN: f64 = 24.0;
+
+    /// Draw `root` on the ground `ground_lines` rule, each level framed by its view in `views_by_level`, with no heading and no legend.
+    pub(crate) fn new(
+        ground_lines: Vec<Line>,
+        root: Group,
+        views_by_level: BTreeMap<ElementPath, Rect>,
+    ) -> Self {
         Self {
             ground_lines,
             root,
+            views_by_level,
             heading: None,
             legend: None,
         }
     }
 
-    /// Project every level `plans` lays out into one scene: the ground grid under the root, each container's interior stacked on its solid, each edge arced in its home level or badged on its source, every container's stub markers over it, every view framed around what it draws, then the diagram's heading and legend above it all.
+    /// Project every level `plans` lays out for `model` into one scene, closing no container.
     pub(crate) fn project(model: &Model, plans: &LevelPlans, measure: &impl TextMeasure) -> Self {
+        let no_closed_containers = BTreeSet::new();
+        Self::project_closing(model, &no_closed_containers, plans, measure)
+    }
+
+    /// Project one disclosure layer, laid out by `plans`, into one scene, stacking a sheet under each container it closes.
+    pub(crate) fn project_disclosed(
+        disclosed: &DisclosedModel,
+        plans: &LevelPlans,
+        measure: &impl TextMeasure,
+    ) -> Self {
+        let disclosed_model = disclosed.model();
+        let closed_containers = disclosed.closed_containers();
+        Self::project_closing(disclosed_model, closed_containers, plans, measure)
+    }
+
+    /// Project every level `plans` lays out into one scene: the ground grid under the root, each container's interior stacked on its solid, a sheet under each of `closed_containers`, each edge arced in its home level or badged on its source, every container's stub markers over it, every level's view framed around what it draws, then the diagram's heading and legend above it all.
+    fn project_closing(
+        model: &Model,
+        closed_containers: &BTreeSet<ElementPath>,
+        plans: &LevelPlans,
+        measure: &impl TextMeasure,
+    ) -> Self {
         let root_path = ElementPath::root();
         let root_plan = plans
             .level(&root_path)
             .expect("layout plans the root level");
-        let projector = LevelProjector::new(model, plans, measure);
+        let projector = LevelProjector::new(model, closed_containers, plans, measure);
         let mut root = projector.project_level(&root_path, root_plan, Affine::IDENTITY);
         let mut stub_markers_by_container =
             root.plate_stub_markers_per_container(model, plans, measure);
         root.hand_stub_markers_to_interiors(&mut stub_markers_by_container);
-        root.frame_views(root_plan, plans);
-        let heading = Heading::set_above(root.view, model, measure);
-        let heading_bounds = heading.as_ref().map(Heading::bounds);
-        if let Some(heading_bounds) = heading_bounds {
-            root.widen_view_to_frame(heading_bounds);
-        }
-        let heading_ref = heading.as_ref();
-        let legend = LegendPanel::set_top_right_of(&root, heading_ref, model, plans, measure);
-        let legend_bounds = legend.as_ref().map(|legend| legend.bounds);
-        if let Some(legend_bounds) = legend_bounds {
-            root.widen_view_to_frame(legend_bounds);
-        }
+        let views_by_level = Self::frame_every_level(&root, plans);
         let root_placed = root_plan.placed();
         let root_boundary = root_placed.boundary();
         let ground_grid = GroundGrid::covering(root_boundary);
         let ground_lines = ground_grid.lines();
-        let mut scene = Self::new(ground_lines, root);
+        let mut scene = Self::new(ground_lines, root, views_by_level);
+        let content_view = scene.root_view();
+        let heading = Heading::set_above(content_view, model, measure);
         if let Some(heading) = heading {
+            let heading_bounds = heading.bounds();
+            scene.widen_root_view_to_frame(heading_bounds);
             scene = scene.with_heading(heading);
         }
+        let legend = LegendPanel::set_top_right_of(&scene, model, plans, measure);
         if let Some(legend) = legend {
+            scene.widen_root_view_to_frame(legend.bounds);
             scene = scene.with_legend(legend);
         }
         scene
+    }
+
+    /// Frame the view of `root` and of every level nested in it, each laid out by `plans`, keyed by level.
+    fn frame_every_level(root: &Group, plans: &LevelPlans) -> BTreeMap<ElementPath, Rect> {
+        let root_level = (ElementPath::root(), root);
+        let nested_levels = root.nested_interiors().map(|interior| {
+            let level = interior.container.clone();
+            (level, interior.group)
+        });
+        let levels = iter::once(root_level).chain(nested_levels);
+        levels
+            .map(|(level, group)| {
+                let plan = plans
+                    .level(&level)
+                    .expect("layout plans every projected level");
+                let view = group.framed_view(plan);
+                (level, view)
+            })
+            .collect()
+    }
+
+    /// Widen the root view to frame `bounds` plus the view margin.
+    fn widen_root_view_to_frame(&mut self, bounds: Rect) {
+        let framed_bounds = bounds.inflate(Self::VIEW_MARGIN, Self::VIEW_MARGIN);
+        let root_path = ElementPath::root();
+        let root_view = self
+            .views_by_level
+            .get_mut(&root_path)
+            .expect("every scene frames its root level");
+        *root_view = root_view.union(framed_bounds);
     }
 
     /// Head the scene with `heading`.
@@ -98,6 +155,17 @@ impl Scene {
         self.legend = Some(legend);
         self
     }
+
+    /// Return the root level's view, the document viewBox.
+    pub(crate) fn root_view(&self) -> Rect {
+        let root_path = ElementPath::root();
+        self.view_of(&root_path)
+    }
+
+    /// Return the local rectangle the viewBox frames once `level` is entered.
+    pub(crate) fn view_of(&self, level: &ElementPath) -> Rect {
+        self.views_by_level[level]
+    }
 }
 
 /// Groups one hierarchy level's drawables in its local screen frame.
@@ -105,8 +173,6 @@ impl Scene {
 pub(crate) struct Group {
     /// Maps this level's local screen space into its parent's; identity for the root.
     pub(crate) frame: Affine,
-    /// Local rectangle the viewBox frames once this level is entered.
-    pub(crate) view: Rect,
     /// Solids back to front, painted before every connection.
     pub(crate) solids: Vec<Solid>,
     /// Connections back to front, painted over the solids, their labels over every path.
@@ -116,22 +182,18 @@ pub(crate) struct Group {
 }
 
 impl Group {
-    /// Screen margin a view keeps around what it frames.
-    const VIEW_MARGIN: f64 = 24.0;
-
-    /// Group no drawable yet in `frame`, framed by `view`.
-    pub(crate) fn new(frame: Affine, view: Rect) -> Self {
+    /// Group no drawable yet in `frame`.
+    pub(crate) fn new(frame: Affine) -> Self {
         Self {
             frame,
-            view,
             solids: Vec::new(),
             connections: Vec::new(),
             stub_markers: BTreeMap::new(),
         }
     }
 
-    /// Frame the view of this level, laid out by `plan`, and of every level nested in it: a margin around what each draws, nested levels included, and its stub tags, or around its floor when it draws nothing; the ground grid may bleed past the view.
-    fn frame_views(&mut self, plan: &LevelPlan, plans: &LevelPlans) {
+    /// Frame this level's view, laid out by `plan`: a margin around what it draws, nested levels included, and its stub tags, or around its floor when it draws nothing; the ground grid may bleed past the view.
+    fn framed_view(&self, plan: &LevelPlan) -> Rect {
         let content_bounds = self.content_bounds();
         let drawn_bounds = content_bounds.unwrap_or_else(|| {
             let placed = plan.placed();
@@ -145,16 +207,7 @@ impl Group {
             .map(|stub_marker| stub_marker.tag.bounds());
         let framed_bounds =
             stub_tag_bounds.fold(drawn_bounds, |framed, tag_bounds| framed.union(tag_bounds));
-        self.view = framed_bounds.inflate(Self::VIEW_MARGIN, Self::VIEW_MARGIN);
-        for solid in &mut self.solids {
-            let Some(interior) = solid.interior.as_mut() else {
-                continue;
-            };
-            let interior_plan = plans
-                .level(&solid.element)
-                .expect("layout plans every stacked interior");
-            interior.frame_views(interior_plan, plans);
-        }
+        framed_bounds.inflate(Scene::VIEW_MARGIN, Scene::VIEW_MARGIN)
     }
 
     /// Return the bounds of this level's content: the union of every drawable of it and of its nested interiors, mapped through their frames, or `None` for an empty level.
@@ -189,12 +242,6 @@ impl Group {
         let solid_drawables = self.solids.iter().flat_map(Solid::drawables);
         let connection_drawables = self.connections.iter().flat_map(Connection::drawables);
         solid_drawables.chain(connection_drawables)
-    }
-
-    /// Widen the view to frame `bounds` plus the view margin.
-    fn widen_view_to_frame(&mut self, bounds: Rect) {
-        let framed_bounds = bounds.inflate(Self::VIEW_MARGIN, Self::VIEW_MARGIN);
-        self.view = self.view.union(framed_bounds);
     }
 }
 
@@ -278,18 +325,12 @@ pub(crate) struct NestedInterior<'g> {
     pub(crate) to_outer: Affine,
 }
 
-impl NestedInterior<'_> {
-    /// Return the interior's view in the starting level's space, the document's when the walk starts at the scene.
-    pub(crate) fn outer_view(&self) -> Rect {
-        let view = self.group.view;
-        self.to_outer.transform_rect_bbox(view)
-    }
-}
-
 /// Draws one element as a projected solid: its faces, then its interior level, then its labels, then the badges on its top.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Solid {
     pub(crate) element: ElementPath,
+    /// Outline of the plate stacked under a closed container, hinting at the children it hides; painted before the faces.
+    pub(crate) sheet: Option<BezPath>,
     /// Faces back to front.
     pub(crate) faces: Vec<Face>,
     /// Group of the container's own level, sitting on its top face.
@@ -300,15 +341,22 @@ pub(crate) struct Solid {
 }
 
 impl Solid {
-    /// Build the solid of `element` from its `faces`, with no interior, label or badge.
+    /// Build the solid of `element` from its `faces`, with no sheet, interior, label or badge.
     pub(crate) fn new(element: ElementPath, faces: Vec<Face>) -> Self {
         Self {
             element,
+            sheet: None,
             faces,
             interior: None,
             labels: Vec::new(),
             badges: Vec::new(),
         }
+    }
+
+    /// Stack a sheet with `outline` under the solid, marking it as a closed container.
+    pub(crate) fn with_sheet(mut self, outline: BezPath) -> Self {
+        self.sheet = Some(outline);
+        self
     }
 
     /// Stack `interior` on the solid's top.
@@ -329,12 +377,13 @@ impl Solid {
         self
     }
 
-    /// Yield every drawable the solid draws itself: its faces, its badges' faces, then its labels, its interior left out.
+    /// Yield every drawable the solid draws itself: its sheet, its faces, its badges' faces, then its labels, its interior left out.
     fn drawables(&self) -> impl Iterator<Item = Drawable<'_>> {
+        let sheet = self.sheet.iter().map(Drawable::Path);
         let badge_faces = self.badges.iter().flat_map(|badge| &badge.faces);
         let faces = self.faces.iter().chain(badge_faces).map(Drawable::Face);
         let labels = self.labels.iter().map(Drawable::Label);
-        faces.chain(labels)
+        sheet.chain(faces).chain(labels)
     }
 }
 
@@ -770,11 +819,12 @@ pub(crate) mod fixtures {
             let view = Rect::from_points(west_corner, east_corner)
                 .union_pt(north_corner)
                 .union_pt(south_corner);
-            let mut root = Group::new(Affine::IDENTITY, view);
+            let mut root = Group::new(Affine::IDENTITY);
             root.solids.push(a_solid);
             root.solids.push(b_solid);
             root.connections.push(connection);
-            Self::new(Vec::new(), root)
+            let views_by_level = BTreeMap::from([(ElementPath::root(), view)]);
+            Self::new(Vec::new(), root, views_by_level)
         }
     }
 }
@@ -787,7 +837,9 @@ mod tests {
 
     #[test]
     fn fixture_view_contains_every_drawable() {
-        let root = Scene::two_solids_and_one_connection().root;
+        let scene = Scene::two_solids_and_one_connection();
+        let root_view = scene.root_view();
+        let root = scene.root;
         let face_bounds = root
             .solids
             .iter()
@@ -798,8 +850,8 @@ mod tests {
             .iter()
             .map(|connection| connection.path.bounding_box());
         for bounds in face_bounds.chain(path_bounds) {
-            let enclosing = root.view.union(bounds);
-            assert_eq!(enclosing, root.view);
+            let enclosing = root_view.union(bounds);
+            assert_eq!(enclosing, root_view);
         }
     }
 

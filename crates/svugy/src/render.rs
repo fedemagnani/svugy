@@ -5,4 +5,4 @@ mod profile;
 mod theme;
 mod writer;
 
-pub(crate) use profile::{Interactive, InteractiveRenderer, Static, StaticRenderer};
+pub(crate) use profile::{Interactive, InteractiveRenderer, LayerScene, Static, StaticRenderer};

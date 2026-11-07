@@ -9,18 +9,18 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use thiserror::Error;
 
 use crate::legend::Legend;
-use crate::model::{ByteRange, Edge, EdgeId, Element, Model, ModelContent, UncheckedModel};
+use crate::model::{ByteRange, Edge, EdgeId, Element, Model, Traveler};
 use crate::path::ElementPath;
 use crate::unique_key_map::UniqueKeyMapVisitor;
-use crate::validate::ModelAdmission;
+use crate::validate::{ModelAdmission, UncheckedModel};
 
 impl Model {
     /// Parse a JSON model, then admit it unless a check finds an error, with the report of every problem found.
     pub fn load_json(json: &str) -> Result<ModelAdmission, MalformedJson> {
         let mut deserializer = serde_json::Deserializer::from_str(json);
-        let content = ModelDocument::deserialize(&mut deserializer).map_err(MalformedJson)?;
+        let model = ModelDocument::deserialize(&mut deserializer).map_err(MalformedJson)?;
         deserializer.end().map_err(MalformedJson)?;
-        let unchecked_model = UncheckedModel::new(content);
+        let unchecked_model = UncheckedModel::new(model);
         let admission = unchecked_model.admit();
         Ok(admission)
     }
@@ -29,7 +29,7 @@ impl Model {
     pub fn to_json(&self) -> String {
         let mut json = Vec::new();
         let mut serializer = serde_json::Serializer::pretty(&mut json);
-        ModelDocument::serialize(&self.content, &mut serializer)
+        ModelDocument::serialize(self, &mut serializer)
             .expect("a model serializes: every map key is a string");
         String::from_utf8(json).expect("serde_json writes UTF-8")
     }
@@ -41,9 +41,9 @@ impl Model {
 #[diagnostic(code(svugy::malformed_json))]
 pub struct MalformedJson(#[source] pub serde_json::Error);
 
-/// Shape a model's content as its JSON file: the diagram's title, subtitle and legend, elements keyed by path, edges listed with their endpoints and ordinal.
+/// Shape a model as its JSON file: the diagram's title, subtitle and legend, elements keyed by path, edges listed with their endpoints and ordinal.
 #[derive(Serialize, Deserialize)]
-#[serde(remote = "ModelContent", deny_unknown_fields)]
+#[serde(remote = "Model", deny_unknown_fields)]
 struct ModelDocument {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     title: Option<String>,
@@ -78,6 +78,8 @@ struct EdgeRecord {
     )]
     style: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    traveler: Option<Traveler>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     span: Option<ByteRange>,
 }
 
@@ -98,15 +100,17 @@ impl EdgeRecord {
         let from = id.from().clone();
         let to = id.to().clone();
         let ordinal = id.ordinal();
-        let label = edge.label().map(str::to_owned);
-        let style = edge.style().clone();
-        let span = edge.span();
+        let label = edge.label.clone();
+        let style = edge.style.clone();
+        let traveler = edge.traveler;
+        let span = edge.span;
         Self {
             from,
             to,
             ordinal,
             label,
             style,
+            traveler,
             span,
         }
     }
@@ -114,16 +118,12 @@ impl EdgeRecord {
     /// Split the record into the id and the edge it describes.
     fn into_parts(self) -> (EdgeId, Edge) {
         let id = EdgeId::new(self.from, self.to, self.ordinal);
-        let mut edge = Edge::new();
-        if let Some(label) = self.label {
-            edge = edge.with_label(label);
-        }
-        for (key, value) in self.style {
-            edge = edge.with_style(key, value);
-        }
-        if let Some(span) = self.span {
-            edge = edge.with_span(span);
-        }
+        let edge = Edge {
+            label: self.label,
+            style: self.style,
+            traveler: self.traveler,
+            span: self.span,
+        };
         (id, edge)
     }
 }

@@ -50,7 +50,7 @@ impl SiblingGraph {
                 let interior = interiors.level(path);
                 let size = interior.map_or_else(
                     || Self::footprint_size_fitting_labels(element, measure),
-                    |interior_plan| interior_plan.extent,
+                    |interior_placed| interior_placed.extent,
                 );
                 let path_key = path.clone();
                 (path_key, size)
@@ -70,7 +70,62 @@ impl SiblingGraph {
         let depth = label_room.height.max(MIN_FOOTPRINT.height);
         Size::new(width, depth)
     }
+}
 
+impl PlacedLevel {
+    /// Place the children of `parent` around the pinned ones by its hint, inside a margin with stub room when edges leave it, in a level sized to fit them and its hanging tag.
+    pub(super) fn place_children(
+        model: &Model,
+        parent: &ElementPath,
+        siblings: SiblingGraph,
+        is_left_by_edges: bool,
+        measure: &impl TextMeasure,
+    ) -> Self {
+        let inset = Self::inset_inside_boundary(is_left_by_edges);
+        let (pinned_footprints, free_siblings) = siblings.split_off_pinned(model);
+        let parent_element = model.element(parent);
+        let hint = parent_element.and_then(Element::child_placement);
+        let free_footprints = free_siblings.place_by_hint(hint);
+        let cleared_free_footprints =
+            free_footprints.shifted_clear_of_pinned(&pinned_footprints, inset);
+        let footprints = pinned_footprints.merged_with(cleared_free_footprints);
+        let inset_footprints = footprints.shifted_inside_inset(inset);
+        let extent = Self::extent_fitting_footprints_and_tag(
+            &inset_footprints,
+            inset,
+            parent_element,
+            measure,
+        );
+        let footprints_by_path = inset_footprints.into_by_path();
+        Self::new(extent, footprints_by_path)
+    }
+
+    /// Return the margin kept inside the boundary: the level margin, plus the stub margin when edges leave the level.
+    fn inset_inside_boundary(is_left_by_edges: bool) -> f64 {
+        if is_left_by_edges {
+            return LEVEL_MARGIN + STUB_MARGIN;
+        }
+        LEVEL_MARGIN
+    }
+
+    /// Size the level to enclose `footprints` within `inset`, at least as wide as the hanging tag of `parent_element`, if any.
+    fn extent_fitting_footprints_and_tag(
+        footprints: &Footprints,
+        inset: f64,
+        parent_element: Option<&Element>,
+        measure: &impl TextMeasure,
+    ) -> Size {
+        let enclosing_extent = footprints.extent_enclosing(inset);
+        let hanging_labels_width = parent_element.map_or(0.0, |element| {
+            let tag_block = LabelBlock::measure(element, LabelRole::ContainerTag, measure);
+            tag_block.hanging_width()
+        });
+        let width = enclosing_extent.width.max(hanging_labels_width);
+        Size::new(width, enclosing_extent.height)
+    }
+}
+
+impl SiblingGraph {
     /// Split off the children the author pinned, as footprints at their positions, keeping the free ones and the pairs they join.
     fn split_off_pinned(self, model: &Model) -> (Footprints, Self) {
         let mut pinned_footprints = BTreeMap::new();
@@ -130,59 +185,6 @@ impl SiblingGraph {
     /// Return the pairs of children an edge joins, directly or lifted.
     pub(super) fn joined_pairs(&self) -> &BTreeSet<(ElementPath, ElementPath)> {
         &self.joined_pairs
-    }
-}
-
-impl PlacedLevel {
-    /// Place the children of `parent` around the pinned ones by its hint, inside a margin with stub room when edges leave it, in a level sized to fit them and its hanging tag.
-    pub(super) fn place_children(
-        model: &Model,
-        parent: &ElementPath,
-        siblings: SiblingGraph,
-        is_left_by_edges: bool,
-        measure: &impl TextMeasure,
-    ) -> Self {
-        let inset = Self::inset_inside_boundary(is_left_by_edges);
-        let (pinned_footprints, free_siblings) = siblings.split_off_pinned(model);
-        let parent_element = model.element(parent);
-        let hint = parent_element.and_then(Element::child_placement);
-        let free_footprints = free_siblings.place_by_hint(hint);
-        let cleared_free_footprints =
-            free_footprints.shifted_clear_of_pinned(&pinned_footprints, inset);
-        let footprints = pinned_footprints.merged_with(cleared_free_footprints);
-        let inset_footprints = footprints.shifted_inside_inset(inset);
-        let extent = Self::extent_fitting_footprints_and_tag(
-            &inset_footprints,
-            inset,
-            parent_element,
-            measure,
-        );
-        let footprints_by_path = inset_footprints.into_by_path();
-        Self::new(extent, footprints_by_path)
-    }
-
-    /// Return the margin kept inside the boundary: the level margin, plus the stub margin when edges leave the level.
-    fn inset_inside_boundary(is_left_by_edges: bool) -> f64 {
-        if is_left_by_edges {
-            return LEVEL_MARGIN + STUB_MARGIN;
-        }
-        LEVEL_MARGIN
-    }
-
-    /// Size the level to enclose `footprints` within `inset`, at least as wide as the hanging tag of `parent_element`, if any.
-    fn extent_fitting_footprints_and_tag(
-        footprints: &Footprints,
-        inset: f64,
-        parent_element: Option<&Element>,
-        measure: &impl TextMeasure,
-    ) -> Size {
-        let enclosing_extent = footprints.extent_enclosing(inset);
-        let hanging_labels_width = parent_element.map_or(0.0, |element| {
-            let tag_block = LabelBlock::measure(element, LabelRole::ContainerTag, measure);
-            tag_block.hanging_width()
-        });
-        let width = enclosing_extent.width.max(hanging_labels_width);
-        Size::new(width, enclosing_extent.height)
     }
 }
 

@@ -7,7 +7,7 @@ use svugy_model::path::ElementPath;
 
 use super::badge::BadgeIcon;
 use super::obstruction::Obstructions;
-use super::{Connection, Face, Group, Heading, KeyRow, KeySample, Label, LegendPanel};
+use super::{Connection, Face, KeyRow, KeySample, Label, LegendPanel, Scene};
 use crate::layout::LevelPlans;
 use crate::metrics::{LabelRole, TextAnchor, TextMeasure};
 
@@ -15,10 +15,9 @@ impl LegendPanel {
     /// Length of a stroke sample, from the panel's left edge.
     const SAMPLE_LENGTH: f64 = 30.0;
 
-    /// Set `model`'s legend top-right of `root`'s view, beside `heading`, else just right of the content when drawables take that spot, or `None` when it has nothing to draw.
+    /// Set `model`'s legend top-right of `scene`'s root view, beside its heading, else just right of the content when drawables take that spot, or `None` when it has nothing to draw.
     pub(super) fn set_top_right_of(
-        root: &Group,
-        heading: Option<&Heading>,
+        scene: &Scene,
         model: &Model,
         plans: &LevelPlans,
         measure: &impl TextMeasure,
@@ -28,8 +27,9 @@ impl LegendPanel {
         let drawn_badges = DrawnBadge::all_described_in(legend, model, plans);
         let unplaced_panel = Self::set_from(legend, &drawn_dashes, &drawn_badges, measure)?;
         let unplaced_bounds = unplaced_panel.bounds;
-        let legend_offset = Self::offset_to_top_right_of(root, heading, unplaced_bounds);
-        unplaced_panel.translated(legend_offset)
+        let legend_offset = Self::offset_to_top_right_of(scene, unplaced_bounds);
+        let panel = unplaced_panel.translated(legend_offset);
+        Some(panel)
     }
 
     /// Set `legend`'s title, entries and the rows of `drawn_dashes` then `drawn_badges`, one under the other from the origin, or `None` when they draw nothing.
@@ -40,16 +40,12 @@ impl LegendPanel {
         measure: &impl TextMeasure,
     ) -> Option<Self> {
         let mut lines = LineStack::new();
-        let mut title = None;
-        if let Some(title_text) = legend.title() {
-            let title_line = lines.set_title(title_text, measure);
-            title = Some(title_line);
-        }
-        let mut entries = Vec::new();
-        for entry_text in legend.entries() {
-            let entry = lines.set_entry(entry_text, measure);
-            entries.push(entry);
-        }
+        let title_text = legend.title();
+        let title = title_text.map(|title_text| lines.set_title(title_text, measure));
+        let entry_texts = legend.entries().iter();
+        let entries = entry_texts
+            .map(|entry_text| lines.set_entry(entry_text, measure))
+            .collect();
         let mut key_rows = KeyRow::sampling(drawn_dashes, &mut lines, measure);
         let badge_key_rows = KeyRow::sampling(drawn_badges, &mut lines, measure);
         key_rows.extend(badge_key_rows);
@@ -72,21 +68,17 @@ impl LegendPanel {
         Some(panel)
     }
 
-    /// Return the offset moving a panel bounded by `unplaced_bounds` to `root`'s view's top-right corner inside its margin, or, when anything drawn there or `heading` overlaps it, one margin right of the view.
-    fn offset_to_top_right_of(
-        root: &Group,
-        heading: Option<&Heading>,
-        unplaced_bounds: Rect,
-    ) -> Vec2 {
-        let view = root.view;
-        let top = view.y0 + Group::VIEW_MARGIN;
-        let right_aligned_left = view.x1 - Group::VIEW_MARGIN - unplaced_bounds.width();
+    /// Return the offset moving a panel bounded by `unplaced_bounds` to `scene`'s root view's top-right corner inside its margin, or, when anything drawn there or its heading overlaps it, one margin right of the view.
+    fn offset_to_top_right_of(scene: &Scene, unplaced_bounds: Rect) -> Vec2 {
+        let view = scene.root_view();
+        let top = view.y0 + Scene::VIEW_MARGIN;
+        let right_aligned_left = view.x1 - Scene::VIEW_MARGIN - unplaced_bounds.width();
         let top_right_offset = Vec2::new(
             right_aligned_left - unplaced_bounds.x0,
             top - unplaced_bounds.y0,
         );
         let top_right_bounds = unplaced_bounds + top_right_offset;
-        let drawn_outlines = Obstructions::around_document(root, heading);
+        let drawn_outlines = Obstructions::around_document(scene);
         let overlap_count = drawn_outlines.count_overlapped_by(&top_right_bounds);
         let is_spot_taken = overlap_count > 0;
         if is_spot_taken {
@@ -96,8 +88,8 @@ impl LegendPanel {
         top_right_offset
     }
 
-    /// Return the panel translated by `offset`, bounded again around its translated lines and rows, or `None` when it draws nothing.
-    fn translated(self, offset: Vec2) -> Option<Self> {
+    /// Return the panel translated by `offset`, bounded again around its translated lines and rows.
+    fn translated(self, offset: Vec2) -> Self {
         let title = self.title.map(|title| title.translated(offset));
         let entries = self
             .entries
@@ -110,6 +102,7 @@ impl LegendPanel {
             .map(|key_row| key_row.translated(offset))
             .collect();
         Self::bounding(title, entries, key_rows)
+            .expect("a set panel draws at least one line or row")
     }
 }
 
@@ -528,25 +521,26 @@ mod tests {
         let scene = keyed_scene(builder);
 
         assert_eq!(scene.legend, None);
-        assert_eq!(scene.root.view, unlegended_scene.root.view);
+        assert_eq!(scene.root_view(), unlegended_scene.root_view());
     }
 
     #[test]
     fn the_legend_stands_upright_top_right_inside_the_view_grown_to_frame_it() {
-        let unlegended_view = keyed_scene(ModelBuilder::new()).root.view;
+        let unlegended_view = keyed_scene(ModelBuilder::new()).root_view();
         let legend = Legend::new().with_title("Key");
         let builder = ModelBuilder::new().with_legend(legend);
 
         let scene = keyed_scene(builder);
 
+        let root_view = scene.root_view();
         let legend = scene.legend.expect("the title is drawn");
         let title = legend.title.as_ref().expect("the title is set");
         let legend_bounds = legend.bounds;
         assert_eq!(title.plane, kurbo::Affine::IDENTITY);
-        assert!((legend_bounds.x1 - (unlegended_view.x1 - Group::VIEW_MARGIN)).abs() < 1e-9);
-        assert!((legend_bounds.y0 - (unlegended_view.y0 + Group::VIEW_MARGIN)).abs() < 1e-9);
-        let framed_legend = legend_bounds.inflate(Group::VIEW_MARGIN, Group::VIEW_MARGIN);
-        assert_eq!(scene.root.view, unlegended_view.union(framed_legend));
+        assert!((legend_bounds.x1 - (unlegended_view.x1 - Scene::VIEW_MARGIN)).abs() < 1e-9);
+        assert!((legend_bounds.y0 - (unlegended_view.y0 + Scene::VIEW_MARGIN)).abs() < 1e-9);
+        let framed_legend = legend_bounds.inflate(Scene::VIEW_MARGIN, Scene::VIEW_MARGIN);
+        assert_eq!(root_view, unlegended_view.union(framed_legend));
     }
 
     #[test]
@@ -554,7 +548,7 @@ mod tests {
         let long_subtitle =
             "a subtitle long enough to run under the whole top edge of this small diagram";
         let headed_builder = ModelBuilder::new().with_subtitle(long_subtitle);
-        let headed_view = keyed_scene(headed_builder).root.view;
+        let headed_view = keyed_scene(headed_builder).root_view();
         let legend = Legend::new().with_title("Key");
         let builder = ModelBuilder::new()
             .with_subtitle(long_subtitle)

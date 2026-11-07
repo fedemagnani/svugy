@@ -6,7 +6,7 @@ use std::iter;
 use kurbo::Rect;
 use svugy_model::path::ElementPath;
 
-use crate::geometry::Group;
+use crate::geometry::Scene;
 
 /// Maps every level to its document view: the root's is its own view, the document's, each interior's has every enclosing frame applied.
 pub(crate) struct LevelViews {
@@ -14,14 +14,15 @@ pub(crate) struct LevelViews {
 }
 
 impl LevelViews {
-    /// Collect the views of `root` and of every interior nested in it.
-    pub(crate) fn collect(root: &Group) -> Self {
+    /// Collect the views of `scene`'s root and of every interior nested in it.
+    pub(crate) fn collect(scene: &Scene) -> Self {
         let root_path = ElementPath::root();
-        let root_view = (root_path, root.view);
+        let root_view = (root_path, scene.root_view());
         let root_views = iter::once(root_view);
-        let nested_views = root.nested_interiors().map(|interior| {
+        let nested_views = scene.root.nested_interiors().map(|interior| {
             let container = interior.container.clone();
-            let outer_view = interior.outer_view();
+            let view = scene.view_of(interior.container);
+            let outer_view = interior.to_outer.transform_rect_bbox(view);
             (container, outer_view)
         });
         let views_by_level = root_views.chain(nested_views).collect();

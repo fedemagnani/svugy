@@ -5,7 +5,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use miette::{IntoDiagnostic, NamedSource, WrapErr};
-use svugy_import::d2::D2Parse;
+use svugy_import::d2::{D2ImportParts, D2Parse};
 use svugy_model::model::Model;
 use svugy_model::validate::ModelAdmission;
 
@@ -106,7 +106,13 @@ impl D2 {
         let source_text = source.inner();
         let parsed = D2Parse::parse(source_text);
         let import = parsed.lower();
-        let (model, errors, warnings, model_report) = import.into_parts();
+        let import_parts = import.into_admitted_parts();
+        let D2ImportParts {
+            model,
+            errors,
+            warnings,
+            report: model_report,
+        } = import_parts;
         let syntax_errors = errors
             .into_iter()
             .map(|error| Box::new(error) as BoxedDiagnostic);

@@ -1,6 +1,7 @@
 //! Import a d2 v0.9.0 file into the model through svugy's v1 d2 subset and its `vars: { svugy: { … } }` carrier, reporting every syntax error and ignored construct.
 
 mod ast;
+mod carrier;
 mod diagnostic;
 mod lex;
 mod lower;
@@ -16,7 +17,7 @@ pub use ast::{
     SvugyValue,
 };
 pub use diagnostic::{Construct, LabelledDiagnostic, SyntaxError, UnsupportedConstruct};
-pub use lower::D2Import;
+pub use lower::{D2Import, D2ImportParts};
 
 use diagnostic::Diagnostics;
 use lex::Token;
@@ -26,9 +27,9 @@ use subset::SubsetFilter;
 /// Collect what parsing a d2 file yields: its partial document, every syntax error and every ignored construct.
 #[derive(Debug, Clone, PartialEq)]
 pub struct D2Parse {
-    document: D2Document,
-    errors: Vec<SyntaxError>,
-    warnings: Vec<UnsupportedConstruct>,
+    pub document: D2Document,
+    pub errors: Vec<SyntaxError>,
+    pub warnings: Vec<UnsupportedConstruct>,
 }
 
 impl D2Parse {
@@ -45,20 +46,5 @@ impl D2Parse {
             errors,
             warnings,
         }
-    }
-
-    /// Return the partial document, every broken statement dropped.
-    pub fn document(&self) -> &D2Document {
-        &self.document
-    }
-
-    /// Return every syntax error, in source order.
-    pub fn errors(&self) -> &[SyntaxError] {
-        &self.errors
-    }
-
-    /// Return every warning: each ignored construct, in source order.
-    pub fn warnings(&self) -> &[UnsupportedConstruct] {
-        &self.warnings
     }
 }

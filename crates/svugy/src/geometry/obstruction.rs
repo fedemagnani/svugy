@@ -1,9 +1,11 @@
 //! Track what a plate, a badge or the legend must keep clear of in one view.
 
 use kurbo::{Affine, BezPath, PathEl, Point, Rect, Vec2};
+use svugy_model::path::ElementPath;
 
 use super::{
-    Drawable, Face, Group, Heading, Label, NestedInterior, NestedInteriors, PlatedLabel, Solid,
+    Drawable, Face, Group, Heading, Label, NestedInterior, NestedInteriors, PlatedLabel, Scene,
+    Solid,
 };
 
 /// Collects the obstructions a plate, a badge or the legend must not overlap in one view: the outlines of what that view draws and of what was placed before.
@@ -39,17 +41,10 @@ impl Obstructions {
         let outlines = levels
             .flat_map(|(group, group_to_document)| {
                 let to_interior = document_to_interior * group_to_document;
-                let solid_drawables = group.solids.iter().flat_map(|solid| {
-                    let is_container = solid.element == *container;
-                    let is_container_ancestor = solid.element.is_ancestor_of(container);
-                    let is_under_stubs = is_container || is_container_ancestor;
-                    let is_beside_container = !is_under_stubs;
-                    let drawables = solid.drawables();
-                    drawables.filter(move |drawable| {
-                        let is_text = drawable.is_text();
-                        is_text || is_beside_container
-                    })
-                });
+                let solid_drawables = group
+                    .solids
+                    .iter()
+                    .flat_map(|solid| solid.drawables_over_slab_of(container));
                 let connection_plates = group
                     .connections
                     .iter()
@@ -63,14 +58,14 @@ impl Obstructions {
         Self { outlines }
     }
 
-    /// Collect in document space everything the top-level view draws: every drawable of every level, and the heading's lines.
-    pub(super) fn around_document(root: &Group, heading: Option<&Heading>) -> Self {
-        let levels = root.this_and_nested_levels();
+    /// Collect in document space everything `scene`'s top-level view draws: every drawable of every level, and the heading's lines.
+    pub(super) fn around_document(scene: &Scene) -> Self {
+        let levels = scene.root.this_and_nested_levels();
         let level_outlines = levels.flat_map(|(group, group_to_document)| {
             let drawables = group.drawables();
             drawables.map(move |drawable| ScreenPolygon::of_drawable(drawable, group_to_document))
         });
-        let heading_lines = heading.into_iter().flat_map(Heading::lines);
+        let heading_lines = scene.heading.iter().flat_map(Heading::lines);
         let heading_outlines =
             heading_lines.map(|label| ScreenPolygon::of_label(label, Affine::IDENTITY));
         let outlines = level_outlines.chain(heading_outlines).collect();
@@ -107,6 +102,24 @@ impl Obstructions {
     pub(super) fn record(&mut self, obstacle: &impl Obstacle) {
         let screen_outlines = obstacle.screen_outlines();
         self.outlines.extend(screen_outlines);
+    }
+}
+
+impl Solid {
+    /// Yield what the solid draws over `container`'s slab: its text, and all it draws unless it is `container` or an ancestor of it, whose faces lie under the stubs.
+    fn drawables_over_slab_of(
+        &self,
+        container: &ElementPath,
+    ) -> impl Iterator<Item = Drawable<'_>> {
+        let is_container = self.element == *container;
+        let is_container_ancestor = self.element.is_ancestor_of(container);
+        let is_under_stubs = is_container || is_container_ancestor;
+        let is_beside_container = !is_under_stubs;
+        let drawables = self.drawables();
+        drawables.filter(move |drawable| {
+            let is_text = drawable.is_text();
+            is_text || is_beside_container
+        })
     }
 }
 
@@ -367,7 +380,7 @@ mod tests {
         let relay = Solid::new(element, Vec::new()).with_label(caption);
         let interior_offset = Vec2::new(300.0, 100.0);
         let interior_frame = Affine::translate(interior_offset);
-        let mut interior = Group::new(interior_frame, Rect::ZERO);
+        let mut interior = Group::new(interior_frame);
         interior.solids.push(relay);
         let desk_element = ElementPath::from_segments(["desk"]);
         let desk = Solid::new(desk_element, Vec::new()).with_interior(interior);

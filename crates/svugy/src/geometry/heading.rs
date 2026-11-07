@@ -5,7 +5,7 @@ use std::iter;
 use kurbo::{Point, Rect, Vec2};
 use svugy_model::model::Model;
 
-use super::{Group, Heading, Label};
+use super::{Heading, Label, Scene};
 use crate::metrics::{LabelRole, TextAnchor, TextMeasure};
 
 impl Heading {
@@ -16,7 +16,7 @@ impl Heading {
     pub(super) fn set_above(view: Rect, model: &Model, measure: &impl TextMeasure) -> Option<Self> {
         let unplaced_heading = Self::set_from(model, measure)?;
         let unplaced_bounds = unplaced_heading.bounds();
-        let heading_left = view.x0 + Group::VIEW_MARGIN;
+        let heading_left = view.x0 + Scene::VIEW_MARGIN;
         let heading_top = view.y0 - unplaced_bounds.height();
         let heading_offset = Vec2::new(heading_left, heading_top);
         let heading = unplaced_heading.translated(heading_offset);
@@ -154,21 +154,21 @@ mod tests {
         };
         let title_box = title.bounds();
         let heading_bounds = heading.bounds();
-        let content_view = untitled.root.view;
+        let content_view = untitled.root_view();
         assert_eq!(title.role, LabelRole::DiagramTitle);
         assert_eq!(subtitle.role, LabelRole::DiagramSubtitle);
         assert_eq!(title.anchor, TextAnchor::Start);
         assert_eq!(title.plane, kurbo::Affine::IDENTITY);
         assert_eq!(subtitle.plane, kurbo::Affine::IDENTITY);
-        assert_eq!(title_box.x0, content_view.x0 + Group::VIEW_MARGIN);
+        assert_eq!(title_box.x0, content_view.x0 + Scene::VIEW_MARGIN);
         let subtitle_drop = subtitle.baseline_origin.y - title.baseline_origin.y;
         assert_eq!(subtitle_drop, Heading::SUBTITLE_LINE_OFFSET);
         assert_eq!(subtitle.baseline_origin.x, title.baseline_origin.x);
         assert!((heading_bounds.y1 - content_view.y0).abs() < 1e-9);
-        let framed_heading = heading_bounds.inflate(Group::VIEW_MARGIN, Group::VIEW_MARGIN);
+        let framed_heading = heading_bounds.inflate(Scene::VIEW_MARGIN, Scene::VIEW_MARGIN);
         let expected_view = content_view.union(framed_heading);
-        assert_eq!(scene.root.view, expected_view);
-        assert!(scene.root.view.width() > content_view.width());
+        assert_eq!(scene.root_view(), expected_view);
+        assert!(scene.root_view().width() > content_view.width());
     }
 
     #[test]
@@ -183,7 +183,7 @@ mod tests {
             panic!("the subtitle alone is set: {heading:?}");
         };
         let subtitle_box = subtitle.bounds();
-        assert!((subtitle_box.y1 - untitled.root.view.y0).abs() < 1e-9);
-        assert_eq!(scene.root.view.y0, subtitle_box.y0 - Group::VIEW_MARGIN);
+        assert!((subtitle_box.y1 - untitled.root_view().y0).abs() < 1e-9);
+        assert_eq!(scene.root_view().y0, subtitle_box.y0 - Scene::VIEW_MARGIN);
     }
 }

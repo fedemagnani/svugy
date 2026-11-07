@@ -60,7 +60,7 @@ impl BadgeIcon {
     }
 
     /// Return the icon's faces over the plan footprint centred on `center`, its floor `floor` plan units up, back to front.
-    pub(super) fn faces_centered_on(&self, center: Point, floor: f64) -> Vec<Face> {
+    fn faces_centered_on(&self, center: Point, floor: f64) -> Vec<Face> {
         let footprint = Rect::from_center_size(center, self.footprint_size);
         let ground_faces = self.primitive.faces_over(footprint, self.icon_height);
         let plan_floor_origin = DVec3::new(0.0, 0.0, floor);

@@ -33,13 +33,6 @@ pub struct Legend {
     badges: BTreeMap<ElementPath, String>,
 }
 
-/// Key a legend dash row by its dash length's shortest spelling (`5`, not `5.0`), so every spelling of one length finds the same row.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct DashKey {
-    spelling: String,
-}
-
 impl Legend {
     /// Create a new legend with no title, entries or key-row descriptions.
     pub fn new() -> Self {
@@ -115,6 +108,13 @@ impl Legend {
     pub fn badges(&self) -> &BTreeMap<ElementPath, String> {
         &self.badges
     }
+}
+
+/// Key a legend dash row by its dash length's shortest spelling (`5`, not `5.0`), so every spelling of one length finds the same row.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct DashKey {
+    spelling: String,
 }
 
 impl DashKey {

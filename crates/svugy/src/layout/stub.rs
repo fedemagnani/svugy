@@ -12,7 +12,6 @@ use super::{LevelRoutes, LevelStubs, PlacedLevels, Port, Side};
 /// Stubs the edges that leave this level toward one external endpoint through one boundary slot.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Stub {
-    /// Port on the level boundary; the stubbed routes of this level end or start on it.
     pub(crate) slot: Port,
     pub(crate) edges: BTreeSet<EdgeId>,
 }
@@ -38,17 +37,21 @@ impl PlacedLevels {
         leaving_edges: &LeavingEdges,
         level_routes: &LevelRoutes,
     ) -> LevelStubs {
-        let stubs_by_container = leaving_edges
-            .containers_left_by_edges()
-            .map(|container| {
-                let container_leaving_edges = leaving_edges.leaving(container);
-                let crossings_by_external_endpoint =
-                    self.boundary_crossings_of(container, container_leaving_edges, level_routes);
-                let stubs = Stub::slotted_per_external_endpoint(crossings_by_external_endpoint);
-                let container_key = container.clone();
-                (container_key, stubs)
-            })
-            .collect();
+        let mut stubs_by_container = BTreeMap::new();
+        for container in leaving_edges.containers_left_by_edges() {
+            let container_leaving_edges = leaving_edges.leaving(container);
+            let crossings_by_external_endpoint =
+                self.boundary_crossings_of(container, container_leaving_edges, level_routes);
+            let stubs = crossings_by_external_endpoint
+                .into_iter()
+                .map(|(external_endpoint, crossings)| {
+                    let stub = crossings.into_stub();
+                    (external_endpoint, stub)
+                })
+                .collect();
+            let container_key = container.clone();
+            stubs_by_container.insert(container_key, stubs);
+        }
         LevelStubs::new(stubs_by_container)
     }
 
@@ -66,14 +69,16 @@ impl PlacedLevels {
             let edge = leaving_edge.edge();
             let home = edge.home_level();
             let container_footprint = self.footprint_in_level(container, &home);
-            let home_to_container = container_footprint.origin().to_vec2();
+            let container_origin = container_footprint.origin();
+            let home_to_container = container_origin.to_vec2();
             let home_line = self.home_line_of(leaving_edge, level_routes);
             let inner_point = home_line.p0 - home_to_container;
             let outer_point = home_line.p1 - home_to_container;
             let crossing = Port::leaving(boundary, inner_point, outer_point);
-            let external_endpoint = leaving_edge.external_endpoint().clone();
+            let external_endpoint = leaving_edge.external_endpoint();
+            let external_endpoint_key = external_endpoint.clone();
             let crossings = crossings_by_external_endpoint
-                .entry(external_endpoint)
+                .entry(external_endpoint_key)
                 .or_default();
             let crossed_edge = edge.clone();
             crossings.add(crossed_edge, crossing);
@@ -140,24 +145,7 @@ impl BoundaryCrossings {
         self.ports.push(port);
         self.edges.insert(edge);
     }
-}
 
-impl Stub {
-    /// Slot one stub per external endpoint where most of its edges' home routes leave the boundary.
-    fn slotted_per_external_endpoint(
-        crossings_by_external_endpoint: BTreeMap<ElementPath, BoundaryCrossings>,
-    ) -> BTreeMap<ElementPath, Self> {
-        crossings_by_external_endpoint
-            .into_iter()
-            .map(|(external_endpoint, crossings)| {
-                let stub = crossings.into_stub();
-                (external_endpoint, stub)
-            })
-            .collect()
-    }
-}
-
-impl BoundaryCrossings {
     /// Slot the stub on side* = argmax_s #{crossings on s} (ties to the least s), at slot = mean{crossing points on side*}.
     fn into_stub(self) -> Stub {
         let mut crossing_counts_by_side: BTreeMap<Side, usize> = BTreeMap::new();
@@ -230,7 +218,6 @@ mod tests {
     #[test]
     fn a_merged_stub_slots_on_the_busiest_side_at_its_crossings_mean() {
         let boundary = Rect::new(0.0, 0.0, 200.0, 100.0);
-        let external = ElementPath::from_segments(["far"]);
         let mut crossings = BoundaryCrossings::default();
         let east_ports = [
             Port::new(Side::East, Point::new(200.0, 20.0)),
@@ -242,11 +229,9 @@ mod tests {
             let edge = edge_from_inside_to("far", ordinal);
             crossings.add(edge, port);
         }
-        let crossings_by_external_endpoint = BTreeMap::from([(external.clone(), crossings)]);
 
-        let stubs = Stub::slotted_per_external_endpoint(crossings_by_external_endpoint);
+        let stub = crossings.into_stub();
 
-        let stub = &stubs[&external];
         assert_eq!(stub.slot, Port::new(Side::East, Point::new(200.0, 35.0)));
         assert_eq!(stub.edges.len(), 3);
         assert!(stub.slot.lies_on_side_of(boundary));

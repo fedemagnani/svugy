@@ -38,17 +38,6 @@ impl<L> Levels<L> {
     pub(crate) fn new(by_level: BTreeMap<ElementPath, L>) -> Self {
         Self { by_level }
     }
-
-    /// Return the value held for `level`.
-    pub(crate) fn level(&self, level: &ElementPath) -> Option<&L> {
-        self.by_level.get(level)
-    }
-
-    /// Return every level's value, keyed by level path.
-    #[cfg(test)]
-    pub(crate) fn levels(&self) -> &BTreeMap<ElementPath, L> {
-        &self.by_level
-    }
 }
 
 impl LevelPlans {
@@ -131,8 +120,22 @@ impl<L: LevelPlacement> Levels<L> {
             return footprint_in_parent;
         }
         let parent_footprint = self.footprint_in_level(&parent, level);
-        let parent_offset = parent_footprint.origin().to_vec2();
+        let parent_origin = parent_footprint.origin();
+        let parent_offset = parent_origin.to_vec2();
         footprint_in_parent + parent_offset
+    }
+}
+
+impl<L> Levels<L> {
+    /// Return the value held for `level`.
+    pub(crate) fn level(&self, level: &ElementPath) -> Option<&L> {
+        self.by_level.get(level)
+    }
+
+    /// Return every level's value, keyed by level path.
+    #[cfg(test)]
+    pub(crate) fn levels(&self) -> &BTreeMap<ElementPath, L> {
+        &self.by_level
     }
 }
 

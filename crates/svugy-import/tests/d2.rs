@@ -36,17 +36,17 @@ fn every_broken_line_is_reported_and_valid_lines_are_kept() {
     let parsed = D2Parse::parse(source);
 
     let error_texts: Vec<&str> = parsed
-        .errors()
+        .errors
         .iter()
         .map(|error| text_at(source, error.span))
         .collect();
     let top_level_paths: Vec<String> = parsed
-        .document()
+        .document
         .statements
         .iter()
         .map(statement_paths)
         .collect();
-    let Statement::Shape(container_d) = &parsed.document().statements[1] else {
+    let Statement::Shape(container_d) = &parsed.document.statements[1] else {
         panic!("`d` is kept as a shape");
     };
     let container_d_children: Vec<String> = container_d.body.iter().map(statement_paths).collect();
@@ -59,10 +59,10 @@ fn every_broken_line_is_reported_and_valid_lines_are_kept() {
 fn errors_and_warnings_are_distinguishable_diagnostics() {
     let parsed = D2Parse::parse("a ->\nb.icon: x.svg\n");
 
-    let error_severity = parsed.errors()[0].severity();
-    let warning_severity = parsed.warnings()[0].severity();
-    let error_code = parsed.errors()[0].code().map(|code| code.to_string());
-    let warning_code = parsed.warnings()[0].code().map(|code| code.to_string());
+    let error_severity = parsed.errors[0].severity();
+    let warning_severity = parsed.warnings[0].severity();
+    let error_code = parsed.errors[0].code().map(|code| code.to_string());
+    let warning_code = parsed.warnings[0].code().map(|code| code.to_string());
     assert_eq!(error_severity, Some(Severity::Error));
     assert_eq!(warning_severity, Some(Severity::Warning));
     assert_eq!(error_code.as_deref(), Some("svugy::d2::syntax"));
@@ -99,7 +99,7 @@ kept -> edge: ok
     let parsed = D2Parse::parse(source);
 
     let warnings: Vec<(Construct, &str)> = parsed
-        .warnings()
+        .warnings
         .iter()
         .map(|warning| {
             let text = text_at(source, warning.span);
@@ -107,12 +107,12 @@ kept -> edge: ok
         })
         .collect();
     let kept_paths: Vec<String> = parsed
-        .document()
+        .document
         .statements
         .iter()
         .map(statement_paths)
         .collect();
-    assert_eq!(parsed.errors(), Vec::<SyntaxError>::new());
+    assert_eq!(parsed.errors, Vec::<SyntaxError>::new());
     assert_eq!(
         warnings,
         [
@@ -152,7 +152,7 @@ fn a_map_beside_a_style_value_warns_and_the_value_is_kept() {
     let parsed = D2Parse::parse(source);
 
     let warnings: Vec<(Construct, &str)> = parsed
-        .warnings()
+        .warnings
         .iter()
         .map(|warning| {
             let text = text_at(source, warning.span);
@@ -160,7 +160,7 @@ fn a_map_beside_a_style_value_warns_and_the_value_is_kept() {
         })
         .collect();
     let kept_values: Vec<&str> = parsed
-        .document()
+        .document
         .statements
         .iter()
         .filter_map(|statement| match statement {
@@ -195,7 +195,7 @@ fn unknown_style_keys_warn_and_are_dropped_in_both_style_forms() {
     let parsed = D2Parse::parse(source);
 
     let warnings: Vec<(Construct, &str)> = parsed
-        .warnings()
+        .warnings
         .iter()
         .map(|warning| {
             let text = text_at(source, warning.span);
@@ -203,12 +203,12 @@ fn unknown_style_keys_warn_and_are_dropped_in_both_style_forms() {
         })
         .collect();
     let kept_paths: Vec<String> = parsed
-        .document()
+        .document
         .statements
         .iter()
         .map(statement_paths)
         .collect();
-    let Statement::Field(assignment) = &parsed.document().statements[0] else {
+    let Statement::Field(assignment) = &parsed.document.statements[0] else {
         panic!("`a.style` is a field");
     };
     let Field::Style(properties) = &assignment.field else {
@@ -238,7 +238,7 @@ fn spans_point_at_the_source_bytes_of_each_node() {
 
     let parsed = D2Parse::parse(source);
 
-    let Statement::Shape(outer) = &parsed.document().statements[0] else {
+    let Statement::Shape(outer) = &parsed.document.statements[0] else {
         panic!("`outer` is a shape");
     };
     let Statement::Edge(edge) = &outer.body[0] else {
@@ -275,12 +275,12 @@ fn comments_separators_and_line_endings_are_skipped() {
     let parsed = D2Parse::parse(source);
 
     let paths: Vec<String> = parsed
-        .document()
+        .document
         .statements
         .iter()
         .map(statement_paths)
         .collect();
-    assert_eq!(parsed.errors(), Vec::<SyntaxError>::new());
+    assert_eq!(parsed.errors, Vec::<SyntaxError>::new());
     assert_eq!(paths, ["a", "b -> c", "long -> d"]);
 }
 

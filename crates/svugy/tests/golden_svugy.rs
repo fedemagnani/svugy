@@ -16,7 +16,7 @@ const MARKUP_ONLY_LIVE_VIEWERS_RUN: [&str; 8] = [
     "var(",
     "<animate",
     "context-stroke",
-    "data-svugy-dot",
+    "data-svugy-traveler",
     "data-svugy-overlay",
 ];
 

@@ -41,6 +41,12 @@ impl SafeUrl {
         None
     }
 
+    /// Reference the synthetic `id` of a definition in the same document as a `#id` fragment.
+    pub(crate) fn fragment(id: &str) -> SafeUrl {
+        let value = format!("#{id}");
+        SafeUrl { value }
+    }
+
     /// Keep every character but ASCII whitespace and controls: the printable ASCII graphics and everything beyond ASCII.
     fn is_kept_in_url(character: &char) -> bool {
         let is_ascii_graphic = character.is_ascii_graphic();

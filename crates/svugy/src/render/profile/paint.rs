@@ -90,7 +90,7 @@ impl<'m> ModelPaints<'m> {
         let filled = self.filled_solid(path, element);
         let style = element.map(Element::style);
         let authored_stroke = style.and_then(|style| ColorKey::STROKE.read_from(style));
-        let stroked = authored_stroke.map_or(filled, |stroke| filled.with_stroke(stroke));
+        let stroked = authored_stroke.map_or(filled, |stroke| filled.outlined_in(stroke));
         let authored_dash = style.and_then(|style| NumberKey::STROKE_DASH.read_from(style));
         let Some(stroke_dash) = authored_dash else {
             return stroked;
@@ -250,7 +250,7 @@ impl SolidPaint {
     }
 
     /// Outline every face in `stroke`, keeping the outline's dashes.
-    fn with_stroke(mut self, stroke: Rgba) -> Self {
+    fn outlined_in(mut self, stroke: Rgba) -> Self {
         self.outline.paint = Paint::from_color(stroke);
         self.outline.width = STROKED_OUTLINE_WIDTH;
         self

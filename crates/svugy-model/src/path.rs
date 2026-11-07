@@ -93,6 +93,37 @@ impl ElementPath {
         Self::from_segments(prefix_segments)
     }
 
+    /// Return this path truncated to at most `depth` segments: its ancestor at that depth, or itself when it is no deeper.
+    pub fn truncated_to_depth(&self, depth: usize) -> Self {
+        let own_depth = self.depth();
+        let prefix_length = own_depth.min(depth);
+        self.ancestor_or_self_at_depth(prefix_length)
+    }
+
+    /// Write a segment bare when it parses back unchanged, otherwise quoted.
+    fn write_segment(formatter: &mut fmt::Formatter<'_>, segment: &str) -> fmt::Result {
+        let is_empty = segment.is_empty();
+        let has_reserved_character = segment.contains([SEPARATOR, QUOTE, ESCAPE]);
+        let needs_quotes = is_empty || has_reserved_character;
+        if needs_quotes {
+            return Self::write_quoted_segment(formatter, segment);
+        }
+        formatter.write_str(segment)
+    }
+
+    /// Write a segment between `"` with every `"` and `\` backslash-escaped.
+    fn write_quoted_segment(formatter: &mut fmt::Formatter<'_>, segment: &str) -> fmt::Result {
+        formatter.write_char(QUOTE)?;
+        for character in segment.chars() {
+            let is_escaped = ESCAPED_CHARACTERS.contains(&character);
+            if is_escaped {
+                formatter.write_char(ESCAPE)?;
+            }
+            formatter.write_char(character)?;
+        }
+        formatter.write_char(QUOTE)
+    }
+
     /// Tell whether this is the root path.
     pub fn is_root(&self) -> bool {
         self.segments.is_empty()
@@ -124,32 +155,6 @@ impl fmt::Display for ElementPath {
             Self::write_segment(formatter, segment)?;
         }
         Ok(())
-    }
-}
-
-impl ElementPath {
-    /// Write a segment bare when it parses back unchanged, otherwise quoted.
-    fn write_segment(formatter: &mut fmt::Formatter<'_>, segment: &str) -> fmt::Result {
-        let is_empty = segment.is_empty();
-        let has_reserved_character = segment.contains([SEPARATOR, QUOTE, ESCAPE]);
-        let needs_quotes = is_empty || has_reserved_character;
-        if needs_quotes {
-            return Self::write_quoted_segment(formatter, segment);
-        }
-        formatter.write_str(segment)
-    }
-
-    /// Write a segment between `"` with every `"` and `\` backslash-escaped.
-    fn write_quoted_segment(formatter: &mut fmt::Formatter<'_>, segment: &str) -> fmt::Result {
-        formatter.write_char(QUOTE)?;
-        for character in segment.chars() {
-            let is_escaped = ESCAPED_CHARACTERS.contains(&character);
-            if is_escaped {
-                formatter.write_char(ESCAPE)?;
-            }
-            formatter.write_char(character)?;
-        }
-        formatter.write_char(QUOTE)
     }
 }
 

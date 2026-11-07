@@ -33,6 +33,10 @@ playground:
         printf '";\n'
     } > "{{playground}}/svugy-wasm.js"
 
+# Render crates/svugy/runtime/fixture.json, kept as JSON because d2 rejects edge travelers, as the interactive SVG the runtime is tested against.
+fixture:
+    cargo run --quiet -p svugy-cli -- render crates/svugy/runtime/fixture.json -o crates/svugy/runtime/fixture.svg
+
 # Render examples/svugy.d2 as the static SVG the README shows.
 readme:
     cargo run --quiet -p svugy-cli -- render examples/svugy.d2 --profile static -o docs/svugy.svg

@@ -1,6 +1,6 @@
 # Runtime contract
 
-*Version 2, in progress: the renderer and the runtime still implement version 1. The attribute names are spelled once, in `crates/svugy/src/render/contract.rs` (`RuntimeContract`).*
+*Version 2. The attribute names are spelled once, in `crates/svugy/src/render/contract.rs` (`RuntimeContract`).*
 
 The renderer (Rust) and the runtime (`crates/svugy/runtime/svugy.js` and `crates/svugy/runtime/svugy.css`) only talk through the `data-svugy-*` attributes in the rendered document. Both profiles emit them, so even a static file stays machine-readable; without script they do nothing. The static profile leaves out the overlays and the travelers, because it has no entered view and no animation.
 
@@ -10,7 +10,7 @@ Element paths never become an id, a class or a CSS selector. They only travel as
 
 ## Document
 
-The root is `<svg data-svugy-contract="2">`. Its viewBox, width and height are layer 0's root view, where the runtime starts. Inside come the runtime's `<style>`, the `<defs>` every layer shares (arrowhead markers and traveler symbols), one canvas `<rect>` covering the root view of every layer, then the layers, and the runtime's `<script>` as the root's last child.
+The root is `<svg data-svugy-contract="2">`. Its viewBox, width and height are layer 0's root view, where the runtime starts. Inside come `<title>TITLE</title>` when the diagram has a title, the runtime's `<style>`, the `<defs>` every layer shares (arrowhead markers and traveler symbols), one canvas `<rect>` covering the root view of every layer, then the layers, and the runtime's `<script>` as the root's last child. The root's title is the browser's tooltip for the whole document and the label of the elevator's root floor; without one, that floor reads "root".
 
 ## Layers
 
@@ -20,7 +20,7 @@ With D the depth of the deepest container (0 for a diagram without containers), 
 
 The layers share one coordinate system but are laid out independently, so an element sits at different coordinates in different layers, and a path is unique within a layer, not across layers. The renderer writes `data-svugy-shown=""` on layer 0, and the CSS hides every layer without it, so a document whose script never runs, such as one inside `<img>`, shows layer 0.
 
-The static profile draws layer D alone and writes it unwrapped: its ground grid, heading, legend and root level sit directly in the root, after the canvas. A document without `data-svugy-layer` is a single, fully disclosed layer.
+The static profile draws layer D alone and writes it unwrapped: its ground grid, heading, legend and root level sit directly in the root, after the canvas, and the root's viewBox is layer D's root view. It writes no root title. Its groups carry the same attributes as the interactive profile's layer D, `data-svugy-from` and `data-svugy-to` included. A document without `data-svugy-layer` is a single, fully disclosed layer.
 
 ## Groups
 
@@ -28,7 +28,7 @@ Every solid is a `<g data-svugy-element="PATH">` holding its faces, then its int
 
 A connection is a `<g data-svugy-edge="EDGE" data-svugy-from="FROM" data-svugy-to="TO">`, where FROM and TO are the paths of the endpoints it is drawn between in its layer. It holds its stroke, `<path data-svugy-flow="">`, whose dash offset the runtime CSS animates. In the interactive profile it also holds its traveler, `<use data-svugy-traveler="NAME" href="#traveler-NAME">`, moved by SMIL `<animateMotion>` and hidden under reduced motion. NAME is one of `dot`, `envelope`, `parcel`, `document` and `key`, and the `<defs>` hold a `<symbol id="traveler-NAME">` for each NAME the document uses.
 
-A labelled connection gets a second group with the same `data-svugy-edge`, `data-svugy-from` and `data-svugy-to`, painted after every arc of its level so labels sit on top; both carry the same title and details, and the runtime never assumes edge groups are unique. A lifted connection's EDGE names its merged edge, which is no edge of the source model; its details list the source edges it stands for. A badge is an edge group inside its source's element group: a mini of the target, the edge's only group, with no flow path or traveler. Clicking it acts like clicking inside its source's level.
+A labelled connection gets a second group with the same `data-svugy-edge`, `data-svugy-from` and `data-svugy-to`, painted after every arc of its level so labels sit on top; both carry the same title and details, and the runtime never assumes edge groups are unique. A lifted connection's EDGE names its merged edge, which is no edge of the source model: its ordinal follows those of the written edges joining the same pair in its layer, so it never repeats one. Its details list the source edges it stands for. A merge of one edge keeps that edge's label, style and traveler; a merge of several has no label, the default style and the `dot` traveler. A badge is an edge group inside its source's element group, with `data-svugy-from` and `data-svugy-to` like any edge group: a mini of the target, the edge's only group, with no flow path or traveler. Clicking it acts like clicking inside its source's level.
 
 Each level group ends with a `<g data-svugy-overlay="">` holding what only the entered view shows; CSS hides it until that level is entered. Inside it, each stub marker is a `<g data-svugy-stub="PATH" data-svugy-goto="LEVEL">`. PATH is the external endpoint as its layer shows it. LEVEL is the deepest container holding it, or the endpoint itself if it is a container, even a closed one.
 
@@ -64,9 +64,9 @@ The CSS always toggles `visibility`, never `display:none`, so the runtime can me
 
 The runtime keeps two things: the shown layer K and the focused level F, whose view fills the screen. F is open in the shown layer, so depth(F) ≤ K. It starts at layer 0, focused on the root.
 
-- **A closed container:** a click shows layer K + 1 and keeps F. Every container of that depth opens at once, so an edge between the children of two of them appears whichever one you clicked.
+- **A closed container,** even one inside an open container below F: a click shows layer K + 1 and keeps F. Every container of that depth opens at once, so an edge between the children of two of them appears whichever one you clicked.
 - **Inside an open container below F:** a click focuses the outermost open container between F and what you clicked, the slab you clicked on. If the click lands outside F (visible at the edges once zoomed in), the same rule starts from the nearest open level that contains it.
-- **A leaf or badge of F:** a click shows its details. So does a click on an edge of F; a click on an edge homed below F acts like a click on its home container.
+- **A leaf or badge of F, or F's own slab:** a click shows its details. So does a click on an edge of F; a click on an edge homed below F acts like a click on its home container.
 - **`data-svugy-goto="LEVEL"`:** it overrides all of the above. F becomes LEVEL and K becomes max(K, depth(LEVEL)).
 - **Escape, or a click on empty canvas:** it undoes one step. It shows layer K − 1 when K > depth(F) and otherwise focuses F's parent; it does nothing at the root of layer 0.
 
@@ -82,7 +82,7 @@ Hovering, or focusing, an element dims every element and edge group of the shown
 
 Hovering an edge keeps only the edge, its endpoints and their ancestors lit. Stub markers and badges are never dimmed.
 
-While F isn't the root, the elevator sits at the top right at a constant on-screen size. It has two modes, and a toggle on it switches between them:
+While F isn't the root, the elevator sits at the top right at a constant on-screen size. It has two modes, and a toggle on it switches between them; it starts in chain mode on every load:
 
-- **Chain:** the levels from the root down to F, with F highlighted; clicking a level focuses it.
-- **Mini-map:** F's parent level, with a rectangle marking F; clicking it focuses the parent.
+- **Chain:** the levels from the root down to F, each labelled with its container's title and the root with the document's, F highlighted; clicking a level focuses it.
+- **Mini-map:** a copy of the shown layer cropped to the view of F's parent, with a rectangle marking F; clicking it focuses the parent.

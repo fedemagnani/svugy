@@ -1,9 +1,16 @@
-<svg data-svugy-contract="2" height="422" viewBox="-318.5 -11 827.5 422" width="827.5" xmlns="http://www.w3.org/2000/svg">
-<style>/*<![CDATA[*/[data-svugy-overlay] { visibility: hidden; }
-[data-svugy-entered] > [data-svugy-overlay] { visibility: visible; }
+<svg data-svugy-contract="2" height="404.569" viewBox="-81.158 -73.069 541.634 404.569" width="541.634" xmlns="http://www.w3.org/2000/svg">
+<style>/*<![CDATA[*/[data-svugy-contract]{--svugy-canvas:#0a0b10;--svugy-grid-line:#151722;--svugy-face-outline:#0a0b10;--svugy-text:#e6e8ee;--svugy-text-muted:#8b93a5;--svugy-external-outline:#5b6170;--svugy-neutral-top:#3a3f4b;--svugy-neutral-left:#2b2f39;--svugy-neutral-right:#22252d;--svugy-neutral-ink:#e6e8ee;--svugy-container-blue-top:#1b2436;--svugy-container-blue-left:#131a28;--svugy-container-blue-right:#0d131f;--svugy-container-blue-ink:#8aa0c8;font-family:Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif}
+@media (prefers-color-scheme: light){
+[data-svugy-contract]{--svugy-canvas:#f6f8ff;--svugy-grid-line:#e1e4f4;--svugy-face-outline:#f6f8ff;--svugy-text:#14161a;--svugy-text-muted:#535a6a;--svugy-external-outline:#858b9b;--svugy-neutral-top:#acb2c0;--svugy-neutral-left:#868b96;--svugy-neutral-right:#6d717b;--svugy-neutral-ink:#14161a;--svugy-container-blue-top:#c8d4ed;--svugy-container-blue-left:#9da6ba;--svugy-container-blue-right:#808898;--svugy-container-blue-ink:#3c4f72}
+}
+[data-svugy-layer]:not([data-svugy-shown]) { visibility: hidden; }
+[data-svugy-overlay] { visibility: hidden; }
+[data-svugy-shown] [data-svugy-entered] > [data-svugy-overlay] { visibility: visible; }
 
 [data-svugy-flow] { animation: svugy-flow 1.2s linear infinite; }
 @keyframes svugy-flow { to { stroke-dashoffset: -24; } }
+
+[data-svugy-dimmed] > :not([data-svugy-level], [data-svugy-edge]) { opacity: 0.2; }
 
 [data-svugy-contract]:focus,
 [data-svugy-contract] [tabindex]:focus { outline: none; }
@@ -13,334 +20,584 @@
 :is([data-svugy-element], [data-svugy-edge], [data-svugy-stub]):focus-visible:not(:has([data-svugy-entered])) > :is(path, rect) { stroke: var(--svugy-text); stroke-opacity: 1; stroke-width: 2; fill-opacity: 0.8; }
 
 [data-svugy-contract] .svugy-panel { pointer-events: none; }
-[data-svugy-contract] .svugy-panel-plate { fill: #12141c; fill-opacity: 0.96; stroke: #2c3242; stroke-width: 1; }
-[data-svugy-contract] .svugy-panel-title,
-[data-svugy-contract] .svugy-panel-body { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; text-anchor: start; letter-spacing: 0; }
+[data-svugy-contract] :is(.svugy-panel-plate, .svugy-elevator-plate) { fill: #12141c; fill-opacity: 0.96; stroke: #2c3242; stroke-width: 1; }
+[data-svugy-contract] :is(.svugy-panel-title, .svugy-panel-body, .svugy-elevator-label) { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; text-anchor: start; letter-spacing: 0; }
 [data-svugy-contract] .svugy-panel-title { font-size: 12.5px; font-weight: 650; fill: #eef0f6; }
 [data-svugy-contract] .svugy-panel-body { font-size: 11.5px; font-weight: 450; fill: #a6adbf; }
 
+[data-svugy-contract] .svugy-elevator { -webkit-user-select: none; user-select: none; }
+[data-svugy-contract] .svugy-elevator-label { font-size: 11.5px; font-weight: 450; fill: #a6adbf; }
+[data-svugy-contract] .svugy-elevator-row-plate { fill: transparent; }
+[data-svugy-contract] .svugy-elevator [role="button"] { cursor: pointer; }
+[data-svugy-contract] .svugy-elevator-row:is(:hover, :focus-visible)[role="button"] > .svugy-elevator-row-plate { fill: #1e2230; }
+[data-svugy-contract] .svugy-elevator-row:focus-visible > .svugy-elevator-row-plate,
+[data-svugy-contract] .svugy-elevator-map:focus-visible > .svugy-elevator-map-backdrop { stroke: #7aa2ff; stroke-width: 1.5; }
+[data-svugy-contract] .svugy-elevator-toggle > .svugy-elevator-label { fill: #7aa2ff; }
+[data-svugy-contract] .svugy-elevator-floor-current > .svugy-elevator-row-plate { fill: #26304a; }
+[data-svugy-contract] .svugy-elevator-floor-current > .svugy-elevator-label { font-weight: 650; fill: #eef0f6; }
+[data-svugy-contract] .svugy-elevator-map-backdrop { fill: var(--svugy-canvas, #0a0b10); stroke: #2c3242; stroke-width: 1; }
+[data-svugy-contract] .svugy-elevator-miniature { pointer-events: none; }
+[data-svugy-contract] .svugy-elevator-map-frame { fill: #7aa2ff; fill-opacity: 0.14; stroke: #7aa2ff; stroke-width: 1.5; vector-effect: non-scaling-stroke; pointer-events: none; }
+
 @media (prefers-color-scheme: light) {
-  [data-svugy-contract] .svugy-panel-plate { fill: #ffffff; stroke: #d5d9e3; }
+  [data-svugy-contract] :is(.svugy-panel-plate, .svugy-elevator-plate) { fill: #ffffff; stroke: #d5d9e3; }
   [data-svugy-contract] .svugy-panel-title { fill: #161922; }
-  [data-svugy-contract] .svugy-panel-body { fill: #545b6c; }
+  [data-svugy-contract] :is(.svugy-panel-body, .svugy-elevator-label) { fill: #545b6c; }
+  [data-svugy-contract] .svugy-elevator-row:is(:hover, :focus-visible)[role="button"] > .svugy-elevator-row-plate { fill: #eef0f6; }
+  [data-svugy-contract] .svugy-elevator-toggle > .svugy-elevator-label { fill: #3a64d8; }
+  [data-svugy-contract] .svugy-elevator-floor-current > .svugy-elevator-row-plate { fill: #dfe6fa; }
+  [data-svugy-contract] .svugy-elevator-floor-current > .svugy-elevator-label { fill: #161922; }
+  [data-svugy-contract] .svugy-elevator-map-backdrop { stroke: #d5d9e3; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   [data-svugy-flow] { animation: none; }
-  [data-svugy-dot] { visibility: hidden; }
+  [data-svugy-traveler] { visibility: hidden; }
 }
 /*]]>*/</style>
-<style>/*<![CDATA[*/
-text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; text-anchor: middle; fill: #e8ebf2; }
-.t { font-size: 11px; font-weight: 650; }
-.e { font-size: 11.5px; font-weight: 600; letter-spacing: 0.4px; fill: #8f98ad; }
-.f { font-size: 10.5px; font-weight: 500; }
-.r { font-size: 9px; font-weight: 600; text-anchor: start; letter-spacing: 0.3px; }
-/* TODO: temporary until step 1C. */
-[data-svugy-layer]:not([data-svugy-shown]) { visibility: hidden; }
-/*]]>*/</style>
+<title>fixture · three layers</title>
 <defs>
 <marker id="arrowhead-0" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
-<path d="M0,1 L9,5 L0,9 Z" fill="#7aa2ff"/>
+<path d="M0,1 L9,5 L0,9 Z" fill="var(--svugy-text-muted)"/>
 </marker>
-<marker id="arrowhead-1" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
-<path d="M0,1 L9,5 L0,9 Z" fill="#9fe3d6"/>
-</marker>
-<marker id="arrowhead-2" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
-<path d="M0,1 L9,5 L0,9 Z" fill="#c9cfdd"/>
-</marker>
-<marker id="arrowhead-3" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
-<path d="M0,1 L9,5 L0,9 Z" fill="#f2b84b"/>
-</marker>
-<symbol id="traveler-dot" viewBox="-5 -5 10 10"><circle r="3"/></symbol>
-<symbol id="traveler-envelope" viewBox="-5 -5 10 10"><rect height="6" rx="0.8" width="9" x="-4.5" y="-3"/><path d="M-4.5,-3 L0,0.6 L4.5,-3" fill="none" stroke="#0a0b10" stroke-width="0.9"/></symbol>
-<symbol id="traveler-parcel" viewBox="-5 -5 10 10"><rect height="8" rx="0.8" width="8" x="-4" y="-4"/><path d="M0,-4 V4 M-4,-1 H4" fill="none" stroke="#0a0b10" stroke-width="0.9"/></symbol>
-<symbol id="traveler-document" viewBox="-5 -5 10 10"><path d="M-3.5,-4.5 H1.5 L3.5,-2.5 V4.5 H-3.5 Z"/><path d="M-2,-1 H2 M-2,1 H2 M-2,3 H1" fill="none" stroke="#0a0b10" stroke-width="0.8"/></symbol>
-<symbol id="traveler-key" viewBox="-5 -5 10 10"><circle cx="-2" r="2.4"/><rect height="1.4" width="5" x="-0.5" y="-0.7"/><rect height="2.2" width="1.2" x="3" y="0"/><circle cx="-2" fill="#0a0b10" r="0.9"/></symbol>
+<symbol id="traveler-document" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" viewBox="-5 -5 10 10">
+<path d="M-2.75,-3.5 L1,-3.5 L2.75,-1.75 L2.75,3.5 L-2.75,3.5 Z" fill-opacity="0.35"/>
+<path d="M1,-3.5 L1,-1.75 L2.75,-1.75 M-1.25,0.25 L1.25,0.25 M-1.25,2 L1.25,2" fill="none"/>
+</symbol>
+<symbol id="traveler-dot" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" viewBox="-5 -5 10 10">
+<path d="M2.5,0 C2.5,1.381 1.381,2.5 0,2.5 C-1.381,2.5 -2.5,1.381 -2.5,0 C-2.5,-1.381 -1.381,-2.5 0,-2.5 C1.381,-2.5 2.5,-1.381 2.5,0 Z" fill-opacity="1"/>
+</symbol>
+<symbol id="traveler-envelope" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" viewBox="-5 -5 10 10">
+<path d="M-3.5,-2.5 L3.5,-2.5 L3.5,2.5 L-3.5,2.5 Z" fill-opacity="0.35"/>
+<path d="M-3.5,-2.5 L0,0.5 L3.5,-2.5" fill="none"/>
+</symbol>
+<symbol id="traveler-key" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" viewBox="-5 -5 10 10">
+<path d="M-0.25,0 C-0.25,0.966 -1.034,1.75 -2,1.75 C-2.966,1.75 -3.75,0.966 -3.75,0 C-3.75,-0.966 -2.966,-1.75 -2,-1.75 C-1.034,-1.75 -0.25,-0.966 -0.25,0 Z" fill-opacity="0.35"/>
+<path d="M-0.25,0 L3.75,0 M2.25,0 L2.25,1.5 M3.5,0 L3.5,1.5" fill="none"/>
+</symbol>
+<symbol id="traveler-parcel" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" viewBox="-5 -5 10 10">
+<path d="M0,-3.75 L3.25,-1.875 L3.25,1.875 L0,3.75 L-3.25,1.875 L-3.25,-1.875 Z" fill-opacity="0.35"/>
+<path d="M-3.25,-1.875 L0,0 L3.25,-1.875 M0,0 L0,3.75 M-1.625,-2.813 L1.625,-0.938 M1.625,-2.813 L-1.625,-0.938" fill="none"/>
+</symbol>
 </defs>
-<rect fill="#0a0b10" height="581" rx="14" width="1104.6" x="-370.4" y="-11"/>
+<rect fill="var(--svugy-canvas)" height="636.884" rx="14" width="889.456" x="-143.512" y="-73.069"/>
 <g data-svugy-layer="0" data-svugy-shown="">
-<g data-svugy-level="" data-svugy-view="-318.5 -11 827.5 422">
-<g data-svugy-element="C" data-svugy-goto="A.a1">
-<title>C · client</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;C&quot;,&quot;label&quot;:&quot;C · client&quot;,&quot;caption&quot;:&quot;link: A.a1&quot;}</desc>
-<path d="M-164.5,69 L-86.6,114 L-86.6,140 L-164.5,95 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-34.6,84 L-86.6,114 L-86.6,140 L-34.6,110 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-112.6,39 L-34.6,84 L-86.6,114 L-164.5,69 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="-99.6" y="80.5">C · client</text>
-</g>
+<line stroke="var(--svugy-grid-line)" x1="0" x2="-207.846" y1="-60" y2="60"/>
+<line stroke="var(--svugy-grid-line)" x1="51.962" x2="-155.885" y1="-30" y2="90"/>
+<line stroke="var(--svugy-grid-line)" x1="103.923" x2="-103.923" y1="0" y2="120"/>
+<line stroke="var(--svugy-grid-line)" x1="155.885" x2="-51.962" y1="30" y2="150"/>
+<line stroke="var(--svugy-grid-line)" x1="207.846" x2="0" y1="60" y2="180"/>
+<line stroke="var(--svugy-grid-line)" x1="259.808" x2="51.962" y1="90" y2="210"/>
+<line stroke="var(--svugy-grid-line)" x1="311.769" x2="103.923" y1="120" y2="240"/>
+<line stroke="var(--svugy-grid-line)" x1="363.731" x2="155.885" y1="150" y2="270"/>
+<line stroke="var(--svugy-grid-line)" x1="415.692" x2="207.846" y1="180" y2="300"/>
+<line stroke="var(--svugy-grid-line)" x1="467.654" x2="259.808" y1="210" y2="330"/>
+<line stroke="var(--svugy-grid-line)" x1="519.615" x2="311.769" y1="240" y2="360"/>
+<line stroke="var(--svugy-grid-line)" x1="571.577" x2="363.731" y1="270" y2="390"/>
+<line stroke="var(--svugy-grid-line)" x1="0" x2="571.577" y1="-60" y2="270"/>
+<line stroke="var(--svugy-grid-line)" x1="-51.962" x2="519.615" y1="-30" y2="300"/>
+<line stroke="var(--svugy-grid-line)" x1="-103.923" x2="467.654" y1="0" y2="330"/>
+<line stroke="var(--svugy-grid-line)" x1="-155.885" x2="415.692" y1="30" y2="360"/>
+<line stroke="var(--svugy-grid-line)" x1="-207.846" x2="363.731" y1="60" y2="390"/>
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="168.116" x="-57.158" y="-32.601">fixture · three layers</text>
+<g data-svugy-level="" data-svugy-view="-81.158 -73.069 541.634 404.569">
 <g data-svugy-closed="" data-svugy-element="A">
-<title>A · desk</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A&quot;,&quot;label&quot;:&quot;A · desk&quot;,&quot;caption&quot;:&quot;order desk&quot;,&quot;metadata&quot;:{&quot;team&quot;:&quot;trading&quot;}}</desc>
-<path d="M86.6,152 L216.5,227 L216.5,231 L86.6,156 Z" fill="#2d313b" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M303.1,177 L216.5,227 L216.5,231 L303.1,181 Z" fill="#23262e" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M173.2,102 L303.1,177 L216.5,227 L86.6,152 Z" fill="#3b404d" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M86.6,126 L216.5,201 L216.5,225 L86.6,150 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M303.1,151 L216.5,201 L216.5,225 L303.1,175 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M173.2,76 L303.1,151 L216.5,201 L86.6,126 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="194.9" y="142.5">A · desk</text>
-</g>
-<g data-svugy-element="E">
-<title>E</title><desc data-svugy-details="">{"kind":"element", not json</desc>
-<path d="M-268.5,137 L-190.5,182 L-190.5,200 L-268.5,155 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-138.6,152 L-190.5,182 L-190.5,200 L-138.6,170 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-216.5,107 L-138.6,152 L-190.5,182 L-268.5,137 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="-203.5" y="148.5">E</text>
+<title>A · desk</title>
+<desc data-svugy-details="">{"kind":"element","path":"A","label":"A · desk","caption":"order desk"}</desc>
+<path d="M192.258,199.5 L254.611,235.5 L254.611,231 L192.258,195 Z M311.769,202.5 L254.611,235.5 L254.611,231 L311.769,198 Z M249.415,162 L311.769,198 L254.611,231 L192.258,195 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M192.258,195 L254.611,231 L254.611,208.5 L192.258,172.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M311.769,198 L254.611,231 L254.611,208.5 L311.769,175.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M249.415,139.5 L311.769,175.5 L254.611,208.5 L192.258,172.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="47.045" transform="matrix(0.866 0.5 -0.866 0.5 252.013 174)" x="0" y="-2">A · desk</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="43.799" transform="matrix(0.866 0.5 -0.866 0.5 252.013 174)" x="0" y="11">order desk</text>
 </g>
 <g data-svugy-closed="" data-svugy-element="B">
-<title>B · ledger</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;B&quot;,&quot;label&quot;:&quot;B · ledger&quot;}</desc>
-<path d="M242.5,282 L372.4,357 L372.4,361 L242.5,286 Z" fill="#2d313b" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M459,307 L372.4,357 L372.4,361 L459,311 Z" fill="#23262e" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M329.1,232 L459,307 L372.4,357 L242.5,282 Z" fill="#3b404d" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M242.5,256 L372.4,331 L372.4,355 L242.5,280 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M459,281 L372.4,331 L372.4,355 L459,305 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M329.1,206 L459,281 L372.4,331 L242.5,256 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="350.7" y="272.5">B · ledger</text>
+<title>B · ledger</title>
+<desc data-svugy-details="">{"kind":"element","path":"B","label":"B · ledger"}</desc>
+<path d="M316.965,271.5 L379.319,307.5 L379.319,303 L316.965,267 Z M436.477,274.5 L379.319,307.5 L379.319,303 L436.477,270 Z M374.123,234 L436.477,270 L379.319,303 L316.965,267 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M316.965,267 L379.319,303 L379.319,280.5 L316.965,244.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M436.477,270 L379.319,303 L379.319,280.5 L436.477,247.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M374.123,211.5 L436.477,247.5 L379.319,280.5 L316.965,244.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="55.213" transform="matrix(0.866 0.5 -0.866 0.5 376.721 246)" x="0" y="-2">B · ledger</text>
 </g>
-<g data-svugy-edge="(C -&gt; A)[0]" data-svugy-from="C" data-svugy-to="A">
-<title>calls</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.a1.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;calls&quot;}],&quot;label&quot;:&quot;calls&quot;}</desc>
-<path d="M-60.6,99 Q34.6,40.4 129.9,101" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#c9cfdd" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="key" fill="#c9cfdd" height="10" href="#traveler-key" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M-60.6,99 Q34.6,40.4 129.9,101" repeatCount="indefinite"/></use>
-<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="13.6" y="62.2"/><text class="f" fill="#c9cfdd" x="34.6" y="74.2">calls</text>
+<g data-svugy-element="C" data-svugy-goto="A.a1">
+<title>C · client</title>
+<desc data-svugy-details="">{"kind":"element","path":"C","label":"C · client","caption":"link: A.a1"}</desc>
+<path d="M67.55,123 L129.904,159 L129.904,136.5 L67.55,100.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M187.061,126 L129.904,159 L129.904,136.5 L187.061,103.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M124.708,67.5 L187.061,103.5 L129.904,136.5 L67.55,100.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="51.146" transform="matrix(0.866 0.5 -0.866 0.5 127.306 102)" x="0" y="-2">C · client</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="35.951" transform="matrix(0.866 0.5 -0.866 0.5 127.306 102)" x="0" y="11">link: A.a1</text>
+</g>
+<g data-svugy-element="E">
+<title>E</title>
+<desc data-svugy-details="">{"kind":"element","path":"E","label":"E"}</desc>
+<path d="M-57.158,51 L5.196,87 L5.196,64.5 L-57.158,28.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,54 L5.196,87 L5.196,64.5 L62.354,31.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,-4.5 L62.354,31.5 L5.196,64.5 L-57.158,28.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="7.289" transform="matrix(0.866 0.5 -0.866 0.5 2.598 30)" x="0" y="-2">E</text>
 </g>
 <g data-svugy-edge="(A -&gt; B)[0]" data-svugy-from="A" data-svugy-to="B">
-<title>A · desk → B · ledger</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;A&quot;,&quot;to&quot;:&quot;B&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;},{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}]}</desc>
-<path d="M259.8,176 Q272.8,176.3 285.8,231" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#c9cfdd" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#c9cfdd" height="10" href="#traveler-dot" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M259.8,176 Q272.8,176.3 285.8,231" repeatCount="indefinite"/></use>
+<title>A · desk → B · ledger</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"A","to":"B","edges":[{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[0]","from":"A.a1","to":"B.\"b.1\"","label":"settle"},{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[1]","from":"A.a1","to":"B.\"b.1\""},{"kind":"edge","edge":"(A.a1.x -&gt; B.\"b.1\")[0]","from":"A.a1.x","to":"B.\"b.1\"","label":"audit"}]}</desc>
+<path d="M283.19,192 Q314.178,141.508 345.166,226.951" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M283.19,192 Q314.367,141.2 345.544,228" repeatCount="indefinite"/>
+</use>
 </g>
-<g data-svugy-overlay="">
+<g data-svugy-edge="(C -&gt; A)[0]" data-svugy-from="C" data-svugy-to="A">
+<title>calls</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"C","to":"A","label":"calls","edges":[{"kind":"edge","edge":"(C -&gt; A.a1.x)[0]","from":"C","to":"A.a1.x","label":"calls"}]}</desc>
+<path d="M158.483,120 Q189.47,69.508 220.458,154.951" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="key" fill="var(--svugy-text-muted)" height="10" href="#traveler-key" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M158.483,120 Q189.66,69.2 220.836,156" repeatCount="indefinite"/>
+</use>
 </g>
+<g data-svugy-edge="(E -&gt; C)[0]" data-svugy-from="E" data-svugy-to="C">
+<title>pings</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(E -&gt; C)[0]","from":"E","to":"C","label":"pings"}</desc>
+<path d="M33.775,48 Q64.763,-2.492 95.75,82.951" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M33.775,48 Q64.952,-2.8 96.129,84" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(C -&gt; A)[0]" data-svugy-from="C" data-svugy-to="A">
+<title>calls</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"C","to":"A","label":"calls","edges":[{"kind":"edge","edge":"(C -&gt; A.a1.x)[0]","from":"C","to":"A.a1.x","label":"calls"}]}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="42.969" x="168.175" y="95.748"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="22.969" x="189.66" y="107.42">calls</text>
+</g>
+<g data-svugy-edge="(E -&gt; C)[0]" data-svugy-from="E" data-svugy-to="C">
+<title>pings</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(E -&gt; C)[0]","from":"E","to":"C","label":"pings"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="47.614" x="41.145" y="23.748"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="27.614" x="64.952" y="35.42">pings</text>
+</g>
+<g data-svugy-overlay=""/>
 </g>
 </g>
 <g data-svugy-layer="1">
-<g data-svugy-level="" data-svugy-view="-344.4 -1 1035.3 531">
+<line stroke="var(--svugy-grid-line)" x1="0" x2="-259.808" y1="-60" y2="90"/>
+<line stroke="var(--svugy-grid-line)" x1="51.962" x2="-207.846" y1="-30" y2="120"/>
+<line stroke="var(--svugy-grid-line)" x1="103.923" x2="-155.885" y1="0" y2="150"/>
+<line stroke="var(--svugy-grid-line)" x1="155.885" x2="-103.923" y1="30" y2="180"/>
+<line stroke="var(--svugy-grid-line)" x1="207.846" x2="-51.962" y1="60" y2="210"/>
+<line stroke="var(--svugy-grid-line)" x1="259.808" x2="0" y1="90" y2="240"/>
+<line stroke="var(--svugy-grid-line)" x1="311.769" x2="51.962" y1="120" y2="270"/>
+<line stroke="var(--svugy-grid-line)" x1="363.731" x2="103.923" y1="150" y2="300"/>
+<line stroke="var(--svugy-grid-line)" x1="415.692" x2="155.885" y1="180" y2="330"/>
+<line stroke="var(--svugy-grid-line)" x1="467.654" x2="207.846" y1="210" y2="360"/>
+<line stroke="var(--svugy-grid-line)" x1="519.615" x2="259.808" y1="240" y2="390"/>
+<line stroke="var(--svugy-grid-line)" x1="571.577" x2="311.769" y1="270" y2="420"/>
+<line stroke="var(--svugy-grid-line)" x1="623.538" x2="363.731" y1="300" y2="450"/>
+<line stroke="var(--svugy-grid-line)" x1="675.5" x2="415.692" y1="330" y2="480"/>
+<line stroke="var(--svugy-grid-line)" x1="727.461" x2="467.654" y1="360" y2="510"/>
+<line stroke="var(--svugy-grid-line)" x1="779.423" x2="519.615" y1="390" y2="540"/>
+<line stroke="var(--svugy-grid-line)" x1="831.384" x2="571.577" y1="420" y2="570"/>
+<line stroke="var(--svugy-grid-line)" x1="883.346" x2="623.538" y1="450" y2="600"/>
+<line stroke="var(--svugy-grid-line)" x1="0" x2="883.346" y1="-60" y2="450"/>
+<line stroke="var(--svugy-grid-line)" x1="-51.962" x2="831.384" y1="-30" y2="480"/>
+<line stroke="var(--svugy-grid-line)" x1="-103.923" x2="779.423" y1="0" y2="510"/>
+<line stroke="var(--svugy-grid-line)" x1="-155.885" x2="727.461" y1="30" y2="540"/>
+<line stroke="var(--svugy-grid-line)" x1="-207.846" x2="675.5" y1="60" y2="570"/>
+<line stroke="var(--svugy-grid-line)" x1="-259.808" x2="623.538" y1="90" y2="600"/>
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="168.116" x="-88.335" y="-14.601">fixture · three layers</text>
+<g data-svugy-level="" data-svugy-view="-112.335 -55.069 833.768 568.733">
 <g data-svugy-element="C" data-svugy-goto="A.a1">
-<title>C · client</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;C&quot;,&quot;label&quot;:&quot;C · client&quot;,&quot;caption&quot;:&quot;link: A.a1&quot;}</desc>
-<path d="M-181.9,79 L-103.9,124 L-103.9,150 L-181.9,105 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-52,94 L-103.9,124 L-103.9,150 L-52,120 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-129.9,49 L-52,94 L-103.9,124 L-181.9,79 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="-116.9" y="90.5">C · client</text>
+<title>C · client</title>
+<desc data-svugy-details="">{"kind":"element","path":"C","label":"C · client","caption":"link: A.a1"}</desc>
+<path d="M36.373,141 L98.727,177 L98.727,154.5 L36.373,118.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M155.885,144 L98.727,177 L98.727,154.5 L155.885,121.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M93.531,85.5 L155.885,121.5 L98.727,154.5 L36.373,118.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="51.146" transform="matrix(0.866 0.5 -0.866 0.5 96.129 120)" x="0" y="-2">C · client</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="35.951" transform="matrix(0.866 0.5 -0.866 0.5 96.129 120)" x="0" y="11">link: A.a1</text>
 </g>
 <g data-svugy-element="A">
-<title>A · desk</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A&quot;,&quot;label&quot;:&quot;A · desk&quot;,&quot;caption&quot;:&quot;order desk&quot;,&quot;metadata&quot;:{&quot;team&quot;:&quot;trading&quot;}}</desc>
-<path d="M-17.3,200 L242.5,350 L242.5,360 L-17.3,210 Z" fill="#151b29" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M433,240 L242.5,350 L242.5,360 L433,250 Z" fill="#101620" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M173.2,90 L433,240 L242.5,350 L-17.3,200 Z" fill="#1b2436" stroke="#0a0b10" stroke-width="0.8"/>
-<g data-svugy-level="A" data-svugy-view="-47.3 60 510.3 330" transform="translate(173.2 90)">
+<title>A · desk</title>
+<desc data-svugy-details="">{"kind":"element","path":"A","label":"A · desk","caption":"order desk"}</desc>
+<path d="M129.904,231 L390.861,381.664 L390.861,371.164 L129.904,220.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M510.372,312.664 L390.861,381.664 L390.861,371.164 L510.372,302.164 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M249.415,151.5 L510.372,302.164 L390.861,371.164 L129.904,220.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="A" data-svugy-view="160.077 134.777 342.951 242.29" transform="matrix(1 0 0 1 249.415 151.5)">
 <g data-svugy-closed="" data-svugy-element="A.a1">
-<title>a1 · engine</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.a1&quot;,&quot;label&quot;:&quot;a1 · engine&quot;,&quot;caption&quot;:&quot;matching engine&quot;}</desc>
-<path d="M-77.9,77 L52,152 L52,156 L-77.9,81 Z" fill="#2d313b" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M129.9,107 L52,152 L52,156 L129.9,111 Z" fill="#23262e" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M0,32 L129.9,107 L52,152 L-77.9,77 Z" fill="#3b404d" opacity="0.7" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-77.9,51 L52,126 L52,150 L-77.9,75 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M129.9,81 L52,126 L52,150 L129.9,105 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M0,6 L129.9,81 L52,126 L-77.9,51 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="26" y="70">a1 · engine</text>
+<title>a1 · engine</title>
+<desc data-svugy-details="">{"kind":"element","path":"A.a1","label":"a1 · engine","caption":"matching engine"}</desc>
+<path d="M72.426,148.315 L141.445,188.164 L141.445,183.664 L72.426,143.815 Z M198.603,155.164 L141.445,188.164 L141.445,183.664 L198.603,150.664 Z M129.583,110.815 L198.603,150.664 L141.445,183.664 L72.426,143.815 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M72.426,143.815 L141.445,183.664 L141.445,161.164 L72.426,121.315 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M198.603,150.664 L141.445,183.664 L141.445,161.164 L198.603,128.164 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M129.583,88.315 L198.603,128.164 L141.445,161.164 L72.426,121.315 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="61.904" transform="matrix(0.866 0.5 -0.866 0.5 135.514 124.739)" x="0" y="-2">a1 · engine</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="67.697" transform="matrix(0.866 0.5 -0.866 0.5 135.514 124.739)" x="0" y="11">matching engine</text>
 </g>
 <g data-svugy-element="A.a2">
-<title>a2 · router</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.a2&quot;,&quot;label&quot;:&quot;a2 · router&quot;,&quot;caption&quot;:&quot;routes incoming orders&quot;,&quot;metadata&quot;:{&quot;language&quot;:&quot;Rust&quot;,&quot;replicas&quot;:3,&quot;endpoints&quot;:[&quot;grpc&quot;,&quot;http&quot;]}}</desc>
-<path d="M-129.9,95 L-43.3,145 L-43.3,175 L-129.9,125 Z" fill="#2d54a4" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M4.3,117.5 L-43.3,145 L-43.3,175 L4.3,147.5 Z" fill="#234382" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-82.3,67.5 L4.3,117.5 L-43.3,145 L-129.9,95 Z" fill="#3b6fd8" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="-62.8" y="110.3">a2 · router</text>
+<title>a2 · router</title>
+<desc data-svugy-details="">{"kind":"element","path":"A.a2","label":"a2 · router","caption":"routes incoming"}</desc>
+<path d="M-57.158,69 L10.072,107.815 L10.072,85.315 L-57.158,46.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M67.23,74.815 L10.072,107.815 L10.072,85.315 L67.23,52.315 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,13.5 L67.23,52.315 L10.072,85.315 L-57.158,46.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="60.363" transform="matrix(0.866 0.5 -0.866 0.5 5.036 49.408)" x="0" y="-2">a2 · router</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="65.63" transform="matrix(0.866 0.5 -0.866 0.5 5.036 49.408)" x="0" y="11">routes incoming</text>
 </g>
 <g data-svugy-edge="(A.a2 -&gt; A.a1)[0]" data-svugy-from="A.a2" data-svugy-to="A.a1">
-<title>feeds</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a2 -&gt; A.a1)[0]&quot;,&quot;from&quot;:&quot;A.a2&quot;,&quot;to&quot;:&quot;A.a1&quot;,&quot;label&quot;:&quot;feeds&quot;}</desc>
-<path d="M-39,92.5 Q-26,71.9 -13,88.5" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="#7aa2ff" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="parcel" fill="#7aa2ff" height="10" href="#traveler-parcel" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M-39,92.5 Q-26,71.9 -13,88.5" repeatCount="indefinite"/></use>
-<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="-47" y="73.2"/><text class="f" fill="#7aa2ff" x="-26" y="85.2">feeds</text>
+<title>feeds</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(A.a2 -&gt; A.a1)[0]","from":"A.a2","to":"A.a1","label":"feeds"}</desc>
+<path d="M38.651,68.815 Q69.638,18.324 100.626,103.766" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="parcel" fill="var(--svugy-text-muted)" height="10" href="#traveler-parcel" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M38.651,68.815 Q69.828,18.015 101.005,104.815" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(A.a2 -&gt; A.a1)[0]" data-svugy-from="A.a2" data-svugy-to="A.a1">
+<title>feeds</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(A.a2 -&gt; A.a1)[0]","from":"A.a2","to":"A.a1","label":"feeds"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="48.465" x="45.595" y="44.563"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="28.465" x="69.828" y="56.235">feeds</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="B" data-svugy-stub="B.&quot;b.1&quot;">
-<title>to b.1 · store</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;},{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}]}]}</desc>
-<path d="M180.1,177 L189.1,184 L180.1,191 L171.1,184 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="193.1" y="187">→ B.&quot;b.1&quot; (2)</text>
+<title>to b.1 · store</title>
+<desc data-svugy-details="">{"kind":"stub","target":"B.\"b.1\"","edges":[{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[0]","from":"A.a1","to":"B.\"b.1\"","label":"settle"},{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[1]","from":"A.a1","to":"B.\"b.1\""},{"kind":"lifted","from":"A.a1","to":"B.\"b.1\"","label":"audit","edges":[{"kind":"edge","edge":"(A.a1.x -&gt; B.\"b.1\")[0]","from":"A.a1.x","to":"B.\"b.1\"","label":"audit"}]}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 193.102 180.487)" width="68.614" x="-34.307" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="48.614" transform="matrix(0.866 -0.5 0.866 0.5 193.102 180.487)" x="0" y="3.82">b.1 · store</text>
 </g>
 <g data-svugy-goto="" data-svugy-stub="C">
-<title>to C · client</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;C&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1&quot;,&quot;label&quot;:&quot;calls&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.a1.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;calls&quot;}]}]}</desc>
-<path d="M-84.9,54 L-75.9,61 L-84.9,68 L-93.9,61 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="-71.9" y="64">← C</text>
+<title>to C · client</title>
+<desc data-svugy-details="">{"kind":"stub","target":"C","edges":[{"kind":"lifted","from":"C","to":"A.a1","label":"calls","edges":[{"kind":"edge","edge":"(C -&gt; A.a1.x)[0]","from":"C","to":"A.a1.x","label":"calls"}]}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -30.872 27.176)" width="63.892" x="-31.946" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="43.892" transform="matrix(0.866 -0.5 0.866 0.5 -30.872 27.176)" x="0" y="3.82">C · client</text>
 </g>
 </g>
 </g>
-<text class="e" x="34.6" y="255">A · desk</text>
-</g>
-<g data-svugy-element="E">
-<title>E</title><desc data-svugy-details="">{"kind":"element", not json</desc>
-<path d="M-294.4,152 L-216.5,197 L-216.5,215 L-294.4,170 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-164.5,167 L-216.5,197 L-216.5,215 L-164.5,185 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-242.5,122 L-164.5,167 L-216.5,197 L-294.4,152 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="-229.5" y="163.5">E</text>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="37.058" transform="matrix(0.866 0.5 0 1 129.904 220.5)" x="9" y="21.5">A · desk</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="43.799" transform="matrix(0.866 0.5 0 1 129.904 220.5)" x="9" y="34.5">order desk</text>
 </g>
 <g data-svugy-element="B">
-<title>B · ledger</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;B&quot;,&quot;label&quot;:&quot;B · ledger&quot;}</desc>
-<path d="M329.1,370 L502.3,470 L502.3,480 L329.1,380 Z" fill="#151b29" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M640.9,390 L502.3,470 L502.3,480 L640.9,400 Z" fill="#101620" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M467.7,290 L640.9,390 L502.3,470 L329.1,370 Z" fill="#1b2436" stroke="#0a0b10" stroke-width="0.8"/>
-<g data-svugy-level="B" data-svugy-view="299.1 260 371.8 250" transform="translate(467.7 290)">
+<title>B · ledger</title>
+<desc data-svugy-details="">{"kind":"element","path":"B","label":"B · ledger"}</desc>
+<path d="M453.215,417.664 L577.922,489.664 L577.922,479.164 L453.215,407.164 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M697.434,420.664 L577.922,489.664 L577.922,479.164 L697.434,410.164 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M572.726,338.164 L697.434,410.164 L577.922,479.164 L453.215,407.164 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="B" data-svugy-view="484.544 316.108 174.536 151.056" transform="matrix(1 0 0 1 572.726 338.164)">
 <g data-svugy-element="B.&quot;b.1&quot;">
-<title>b.1 · store</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;b.1 · store&quot;,&quot;caption&quot;:&quot;a quoted segment with a dot&quot;,&quot;metadata&quot;:{&quot;engine&quot;:&quot;postgres&quot;}}</desc>
-<path d="M-52,46 L43.3,101 L43.3,135 L-52,80 Z" fill="#aa4960" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M95.3,71 L43.3,101 L43.3,135 L95.3,105 Z" fill="#863a4c" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M0,16 L95.3,71 L43.3,101 L-52,46 Z" fill="#e0607e" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="21.7" y="62.5">b.1 · store</text>
+<title>b.1 · store</title>
+<desc data-svugy-details="">{"kind":"element","path":"B.\"b.1\"","label":"b.1 · store","caption":"settled trades"}</desc>
+<path d="M-57.158,69 L5.196,105 L5.196,82.5 L-57.158,46.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,72 L5.196,105 L5.196,82.5 L62.354,49.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,13.5 L62.354,49.5 L5.196,82.5 L-57.158,46.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="56.947" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="-2">b.1 · store</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="55.844" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="11">settled trades</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="A.a1" data-svugy-stub="A.a1">
-<title>to a1 · engine</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;A.a1&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;},{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}]}]}</desc>
-<path d="M-15.6,14 L-6.6,21 L-15.6,28 L-24.6,21 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="-2.6" y="24">← A.a1 (2)</text>
+<title>to a1 · engine</title>
+<desc data-svugy-details="">{"kind":"stub","target":"A.a1","edges":[{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[0]","from":"A.a1","to":"B.\"b.1\"","label":"settle"},{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[1]","from":"A.a1","to":"B.\"b.1\""},{"kind":"lifted","from":"A.a1","to":"B.\"b.1\"","label":"audit","edges":[{"kind":"edge","edge":"(A.a1.x -&gt; B.\"b.1\")[0]","from":"A.a1.x","to":"B.\"b.1\"","label":"audit"}]}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -25.676 24.176)" width="73.223" x="-36.611" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="53.223" transform="matrix(0.866 -0.5 0.866 0.5 -25.676 24.176)" x="0" y="3.82">a1 · engine</text>
 </g>
 </g>
 </g>
-<text class="e" x="363.7" y="415">B · ledger</text>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="43.855" transform="matrix(0.866 0.5 0 1 453.215 407.164)" x="9" y="21.5">B · ledger</text>
+</g>
+<g data-svugy-element="E">
+<title>E</title>
+<desc data-svugy-details="">{"kind":"element","path":"E","label":"E"}</desc>
+<path d="M-88.335,69 L-25.981,105 L-25.981,82.5 L-88.335,46.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M31.177,72 L-25.981,105 L-25.981,82.5 L31.177,49.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-31.177,13.5 L31.177,49.5 L-25.981,82.5 L-88.335,46.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="7.289" transform="matrix(0.866 0.5 -0.866 0.5 -28.579 48)" x="0" y="-2">E</text>
 </g>
 <g data-svugy-edge="(A.a1 -&gt; B.&quot;b.1&quot;)[0]" data-svugy-from="A.a1" data-svugy-to="B.&quot;b.1&quot;">
-<title>settle</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;}</desc>
-<path d="M277.1,186 Q363.7,184.9 450.3,316" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-3)" opacity="0.9" stroke="#f2b84b" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="envelope" fill="#f2b84b" height="10" href="#traveler-envelope" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M277.1,186 Q363.7,184.9 450.3,316" repeatCount="indefinite"/></use>
-<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="48" x="339.7" y="209.9"/><text class="f" fill="#f2b84b" x="363.7" y="221.9">settle</text>
+<title>settle</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[0]","from":"A.a1","to":"B.\"b.1\"","label":"settle"}</desc>
+<path d="M433.729,287.914 Q495.846,226.548 557.963,358.901" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="envelope" fill="var(--svugy-text-muted)" height="10" href="#traveler-envelope" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M433.729,287.914 Q496.083,226.314 558.437,359.914" repeatCount="indefinite"/>
+</use>
 </g>
 <g data-svugy-edge="(A.a1 -&gt; B.&quot;b.1&quot;)[1]" data-svugy-from="A.a1" data-svugy-to="B.&quot;b.1&quot;">
-<title>audit</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}],&quot;label&quot;:&quot;audit&quot;}</desc>
-<path d="M251.1,201 Q342.1,196.3 433,326" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#9fe3d6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="document" fill="#9fe3d6" height="10" href="#traveler-document" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M251.1,201 Q342.1,196.3 433,326" repeatCount="indefinite"/></use>
-<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="321.1" y="221.9"/><text class="f" fill="#9fe3d6" x="342.1" y="233.9">audit</text>
+<title>(A.a1 -&gt; B."b.1")[1]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[1]","from":"A.a1","to":"B.\"b.1\""}</desc>
+<path d="M419.44,296.164 Q481.557,234.798 543.674,367.151" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M419.44,296.164 Q481.793,234.564 544.147,368.164" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(A.a1 -&gt; B.&quot;b.1&quot;)[2]" data-svugy-from="A.a1" data-svugy-to="B.&quot;b.1&quot;">
+<title>audit</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"A.a1","to":"B.\"b.1\"","label":"audit","edges":[{"kind":"edge","edge":"(A.a1.x -&gt; B.\"b.1\")[0]","from":"A.a1.x","to":"B.\"b.1\"","label":"audit"}]}</desc>
+<path d="M405.15,304.414 Q467.267,243.048 529.384,375.401" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="document" fill="var(--svugy-text-muted)" height="10" href="#traveler-document" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M405.15,304.414 Q467.504,242.814 529.858,376.414" repeatCount="indefinite"/>
+</use>
 </g>
 <g data-svugy-edge="(C -&gt; A.a1)[0]" data-svugy-from="C" data-svugy-to="A.a1">
-<title>calls</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;lifted&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.a1.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;calls&quot;}],&quot;label&quot;:&quot;calls&quot;}</desc>
-<path d="M-77.9,109 Q28.1,48.7 134.2,118.5" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#c9cfdd" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="key" fill="#c9cfdd" height="10" href="#traveler-key" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M-77.9,109 Q28.1,48.7 134.2,118.5" repeatCount="indefinite"/></use>
-<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="7.1" y="73.2"/><text class="f" fill="#c9cfdd" x="28.1" y="85.2">calls</text>
+<title>calls</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"C","to":"A.a1","label":"calls","edges":[{"kind":"edge","edge":"(C -&gt; A.a1.x)[0]","from":"C","to":"A.a1.x","label":"calls"}]}</desc>
+<path d="M127.306,138 Q238.603,43.826 349.9,255.325" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="key" fill="var(--svugy-text-muted)" height="10" href="#traveler-key" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M127.306,138 Q238.863,43.605 350.42,256.315" repeatCount="indefinite"/>
+</use>
 </g>
-<g data-svugy-overlay="">
+<g data-svugy-edge="(E -&gt; C)[0]" data-svugy-from="E" data-svugy-to="C">
+<title>pings</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(E -&gt; C)[0]","from":"E","to":"C","label":"pings"}</desc>
+<path d="M2.598,66 Q33.586,15.508 64.573,100.951" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M2.598,66 Q33.775,15.2 64.952,102" repeatCount="indefinite"/>
+</use>
 </g>
+<g data-svugy-edge="(A.a1 -&gt; B.&quot;b.1&quot;)[0]" data-svugy-from="A.a1" data-svugy-to="B.&quot;b.1&quot;">
+<title>settle</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[0]","from":"A.a1","to":"B.\"b.1\"","label":"settle"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="47.783" x="472.191" y="267.261"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="27.783" x="496.083" y="278.933">settle</text>
+</g>
+<g data-svugy-edge="(A.a1 -&gt; B.&quot;b.1&quot;)[2]" data-svugy-from="A.a1" data-svugy-to="B.&quot;b.1&quot;">
+<title>audit</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"A.a1","to":"B.\"b.1\"","label":"audit","edges":[{"kind":"edge","edge":"(A.a1.x -&gt; B.\"b.1\")[0]","from":"A.a1.x","to":"B.\"b.1\"","label":"audit"}]}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="44.989" x="450.206" y="287.1"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="24.989" x="472.7" y="298.772">audit</text>
+</g>
+<g data-svugy-edge="(C -&gt; A.a1)[0]" data-svugy-from="C" data-svugy-to="A.a1">
+<title>calls</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"C","to":"A.a1","label":"calls","edges":[{"kind":"edge","edge":"(C -&gt; A.a1.x)[0]","from":"C","to":"A.a1.x","label":"calls"}]}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="42.969" x="217.378" y="112.529"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="22.969" x="238.863" y="124.201">calls</text>
+</g>
+<g data-svugy-edge="(E -&gt; C)[0]" data-svugy-from="E" data-svugy-to="C">
+<title>pings</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(E -&gt; C)[0]","from":"E","to":"C","label":"pings"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="47.614" x="9.968" y="41.748"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="27.614" x="33.775" y="53.42">pings</text>
+</g>
+<g data-svugy-overlay=""/>
 </g>
 </g>
 <g data-svugy-layer="2">
-<g data-svugy-level="" data-svugy-view="-370.4 9 1104.6 561">
+<line stroke="var(--svugy-grid-line)" x1="0" x2="-363.731" y1="-60" y2="150"/>
+<line stroke="var(--svugy-grid-line)" x1="51.962" x2="-311.769" y1="-30" y2="180"/>
+<line stroke="var(--svugy-grid-line)" x1="103.923" x2="-259.808" y1="0" y2="210"/>
+<line stroke="var(--svugy-grid-line)" x1="155.885" x2="-207.846" y1="30" y2="240"/>
+<line stroke="var(--svugy-grid-line)" x1="207.846" x2="-155.885" y1="60" y2="270"/>
+<line stroke="var(--svugy-grid-line)" x1="259.808" x2="-103.923" y1="90" y2="300"/>
+<line stroke="var(--svugy-grid-line)" x1="311.769" x2="-51.962" y1="120" y2="330"/>
+<line stroke="var(--svugy-grid-line)" x1="363.731" x2="0" y1="150" y2="360"/>
+<line stroke="var(--svugy-grid-line)" x1="415.692" x2="51.962" y1="180" y2="390"/>
+<line stroke="var(--svugy-grid-line)" x1="467.654" x2="103.923" y1="210" y2="420"/>
+<line stroke="var(--svugy-grid-line)" x1="519.615" x2="155.885" y1="240" y2="450"/>
+<line stroke="var(--svugy-grid-line)" x1="571.577" x2="207.846" y1="270" y2="480"/>
+<line stroke="var(--svugy-grid-line)" x1="623.538" x2="259.808" y1="300" y2="510"/>
+<line stroke="var(--svugy-grid-line)" x1="675.5" x2="311.769" y1="330" y2="540"/>
+<line stroke="var(--svugy-grid-line)" x1="727.461" x2="363.731" y1="360" y2="570"/>
+<line stroke="var(--svugy-grid-line)" x1="779.423" x2="415.692" y1="390" y2="600"/>
+<line stroke="var(--svugy-grid-line)" x1="831.384" x2="467.654" y1="420" y2="630"/>
+<line stroke="var(--svugy-grid-line)" x1="883.346" x2="519.615" y1="450" y2="660"/>
+<line stroke="var(--svugy-grid-line)" x1="935.307" x2="571.577" y1="480" y2="690"/>
+<line stroke="var(--svugy-grid-line)" x1="0" x2="935.307" y1="-60" y2="480"/>
+<line stroke="var(--svugy-grid-line)" x1="-51.962" x2="883.346" y1="-30" y2="510"/>
+<line stroke="var(--svugy-grid-line)" x1="-103.923" x2="831.384" y1="0" y2="540"/>
+<line stroke="var(--svugy-grid-line)" x1="-155.885" x2="779.423" y1="30" y2="570"/>
+<line stroke="var(--svugy-grid-line)" x1="-207.846" x2="727.461" y1="60" y2="600"/>
+<line stroke="var(--svugy-grid-line)" x1="-259.808" x2="675.5" y1="90" y2="630"/>
+<line stroke="var(--svugy-grid-line)" x1="-311.769" x2="623.538" y1="120" y2="660"/>
+<line stroke="var(--svugy-grid-line)" x1="-363.731" x2="571.577" y1="150" y2="690"/>
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="168.116" x="-119.512" y="3.399">fixture · three layers</text>
+<g data-svugy-level="" data-svugy-view="-143.512 -37.069 889.456 600.884">
 <g data-svugy-element="C" data-svugy-goto="A.a1">
-<title>C · client</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;C&quot;,&quot;label&quot;:&quot;C · client&quot;,&quot;caption&quot;:&quot;link: A.a1&quot;}</desc>
-<path d="M-199.2,89 L-121.2,134 L-121.2,160 L-199.2,115 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-69.3,104 L-121.2,134 L-121.2,160 L-69.3,130 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-147.2,59 L-69.3,104 L-121.2,134 L-199.2,89 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="-134.2" y="100.5">C · client</text>
+<title>C · client</title>
+<desc data-svugy-details="">{"kind":"element","path":"C","label":"C · client","caption":"link: A.a1"}</desc>
+<path d="M5.196,159 L67.55,195 L67.55,172.5 L5.196,136.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M124.708,162 L67.55,195 L67.55,172.5 L124.708,139.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,103.5 L124.708,139.5 L67.55,172.5 L5.196,136.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="51.146" transform="matrix(0.866 0.5 -0.866 0.5 64.952 138)" x="0" y="-2">C · client</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="35.951" transform="matrix(0.866 0.5 -0.866 0.5 64.952 138)" x="0" y="11">link: A.a1</text>
 </g>
 <g data-svugy-element="A">
-<title>A · desk</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A&quot;,&quot;label&quot;:&quot;A · desk&quot;,&quot;caption&quot;:&quot;order desk&quot;,&quot;metadata&quot;:{&quot;team&quot;:&quot;trading&quot;}}</desc>
-<path d="M-60.6,225 L251.1,405 L251.1,415 L-60.6,235 Z" fill="#151b29" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M485,270 L251.1,405 L251.1,415 L485,280 Z" fill="#101620" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M173.2,90 L485,270 L251.1,405 L-60.6,225 Z" fill="#1b2436" stroke="#0a0b10" stroke-width="0.8"/>
-<g data-svugy-level="A" data-svugy-view="-90.6 60 605.6 385" transform="translate(173.2 90)">
+<title>A · desk</title>
+<desc data-svugy-details="">{"kind":"element","path":"A","label":"A · desk","caption":"order desk"}</desc>
+<path d="M67.55,267 L384.195,449.815 L384.195,439.315 L67.55,256.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M566.06,344.815 L384.195,449.815 L384.195,439.315 L566.06,334.315 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M249.415,151.5 L566.06,334.315 L384.195,439.315 L67.55,256.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="A" data-svugy-view="61.35 159 466.356 268.631" transform="matrix(1 0 0 1 249.415 151.5)">
+<g data-svugy-element="A.a2">
+<title>a2 · router</title>
+<desc data-svugy-details="">{"kind":"element","path":"A.a2","label":"a2 · router","caption":"routes incoming"}</desc>
+<path d="M-88.335,87 L-21.105,125.815 L-21.105,103.315 L-88.335,64.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M36.053,92.815 L-21.105,125.815 L-21.105,103.315 L36.053,70.315 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-31.177,31.5 L36.053,70.315 L-21.105,103.315 L-88.335,64.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="60.363" transform="matrix(0.866 0.5 -0.866 0.5 -26.141 67.408)" x="0" y="-2">a2 · router</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="65.63" transform="matrix(0.866 0.5 -0.866 0.5 -26.141 67.408)" x="0" y="11">routes incoming</text>
+</g>
 <g data-svugy-element="A.a1">
-<title>a1 · engine</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.a1&quot;,&quot;label&quot;:&quot;a1 · engine&quot;,&quot;caption&quot;:&quot;matching engine&quot;}</desc>
-<path d="M-129.9,95 L69.3,210 L69.3,220 L-129.9,105 Z" fill="#1a2131" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M199.2,135 L69.3,210 L69.3,220 L199.2,145 Z" fill="#141a26" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M0,20 L199.2,135 L69.3,210 L-129.9,95 Z" fill="#222c40" stroke="#0a0b10" stroke-width="0.8"/>
-<g data-svugy-level="A.a1" data-svugy-view="13.3 80 389.1 260" transform="translate(0 20)">
+<title>a1 · engine</title>
+<desc data-svugy-details="">{"kind":"element","path":"A.a1","label":"a1 · engine","caption":"matching engine"}</desc>
+<path d="M10.072,179.815 L134.78,251.815 L134.78,241.315 L10.072,169.315 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M254.291,182.815 L134.78,251.815 L134.78,241.315 L254.291,172.315 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M129.583,100.315 L254.291,172.315 L134.78,241.315 L10.072,169.315 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="A.a1" data-svugy-view="289.661 235.092 203.844 165.276" transform="matrix(1 0 0 1 129.583 100.315)">
 <g data-svugy-element="A.a1.x">
-<title>x · book</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;x · book&quot;,&quot;metadata&quot;:{&quot;storage&quot;:&quot;in-memory&quot;}}</desc>
-<path d="M-34.6,59 L52,109 L52,135 L-34.6,85 Z" fill="#248b7a" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M103.9,79 L52,109 L52,135 L103.9,105 Z" fill="#1c6e60" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M17.3,29 L103.9,79 L52,109 L-34.6,59 Z" fill="#2fb7a0" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="34.6" y="73">x · book</text>
+<title>x · book</title>
+<desc data-svugy-details="">{"kind":"element","path":"A.a1.x","label":"x · book"}</desc>
+<path d="M-57.158,69 L5.196,105 L5.196,82.5 L-57.158,46.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,72 L5.196,105 L5.196,82.5 L62.354,49.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,13.5 L62.354,49.5 L5.196,82.5 L-57.158,46.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="45.896" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="-2">x · book</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="B" data-svugy-stub="B.&quot;b.1&quot;">
-<title>to b.1 · store</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}]}</desc>
-<path d="M128.2,137 L137.2,144 L128.2,151 L119.2,144 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="141.2" y="147">→ B.&quot;b.1&quot;</text>
+<title>to b.1 · store</title>
+<desc data-svugy-details="">{"kind":"stub","target":"B.\"b.1\"","edges":[{"kind":"edge","edge":"(A.a1.x -&gt; B.\"b.1\")[0]","from":"A.a1.x","to":"B.\"b.1\"","label":"audit"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 53.995 103.474)" width="68.614" x="-34.307" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="48.614" transform="matrix(0.866 -0.5 0.866 0.5 53.995 103.474)" x="0" y="3.82">b.1 · store</text>
 </g>
 <g data-svugy-goto="" data-svugy-stub="C">
-<title>to C · client</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;C&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.a1.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;calls&quot;}]}</desc>
-<path d="M-58.9,39 L-49.9,46 L-58.9,53 L-67.9,46 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="-45.9" y="49">← C</text>
+<title>to C · client</title>
+<desc data-svugy-details="">{"kind":"stub","target":"C","edges":[{"kind":"edge","edge":"(C -&gt; A.a1.x)[0]","from":"C","to":"A.a1.x","label":"calls"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -30.872 27.176)" width="63.892" x="-31.946" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="43.892" transform="matrix(0.866 -0.5 0.866 0.5 -30.872 27.176)" x="0" y="3.82">C · client</text>
 </g>
 </g>
 </g>
-<text class="e" x="-90.1" y="143">a1 · engine</text>
-</g>
-<g data-svugy-element="A.a2">
-<title>a2 · router</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;A.a2&quot;,&quot;label&quot;:&quot;a2 · router&quot;,&quot;caption&quot;:&quot;routes incoming orders&quot;,&quot;metadata&quot;:{&quot;language&quot;:&quot;Rust&quot;,&quot;replicas&quot;:3,&quot;endpoints&quot;:[&quot;grpc&quot;,&quot;http&quot;]}}</desc>
-<path d="M-34.6,200 L52,250 L52,280 L-34.6,230 Z" fill="#2d54a4" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M90.9,227.5 L52,250 L52,280 L90.9,257.5 Z" fill="#234382" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M4.3,177.5 L90.9,227.5 L52,250 L-34.6,200 Z" fill="#3b6fd8" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="28.1" y="217.8">a2 · router</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="49.02" transform="matrix(0.866 0.5 0 1 10.072 169.315)" x="9" y="21.5">a1 · engine</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="67.697" transform="matrix(0.866 0.5 0 1 10.072 169.315)" x="9" y="34.5">matching engine</text>
 </g>
 <g data-svugy-edge="(A.a2 -&gt; A.a1)[0]" data-svugy-from="A.a2" data-svugy-to="A.a1">
-<title>feeds</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a2 -&gt; A.a1)[0]&quot;,&quot;from&quot;:&quot;A.a2&quot;,&quot;to&quot;:&quot;A.a1&quot;,&quot;label&quot;:&quot;feeds&quot;}</desc>
-<path d="M47.6,202.5 Q8.7,142.3 -30.3,152.5" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="#7aa2ff" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="parcel" fill="#7aa2ff" height="10" href="#traveler-parcel" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M47.6,202.5 Q8.7,142.3 -30.3,152.5" repeatCount="indefinite"/></use>
-<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="-12.3" y="151.9"/><text class="f" fill="#7aa2ff" x="8.7" y="163.9">feeds</text>
+<title>feeds</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(A.a2 -&gt; A.a1)[0]","from":"A.a2","to":"A.a1","label":"feeds"}</desc>
+<path d="M7.474,86.815 Q38.491,30.306 69.508,133.746" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="parcel" fill="var(--svugy-text-muted)" height="10" href="#traveler-parcel" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M7.474,86.815 Q38.651,30.015 69.828,134.815" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(A.a2 -&gt; A.a1)[0]" data-svugy-from="A.a2" data-svugy-to="A.a1">
+<title>feeds</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(A.a2 -&gt; A.a1)[0]","from":"A.a2","to":"A.a1","label":"feeds"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="48.465" x="14.418" y="62.563"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="28.465" x="38.651" y="74.235">feeds</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="B" data-svugy-stub="B.&quot;b.1&quot;">
-<title>to b.1 · store</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;},{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}]}</desc>
-<path d="M214.8,217 L223.8,224 L214.8,231 L205.8,224 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="227.8" y="227">→ B.&quot;b.1&quot; (2)</text>
+<title>to b.1 · store</title>
+<desc data-svugy-details="">{"kind":"stub","target":"B.\"b.1\"","edges":[{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[0]","from":"A.a1","to":"B.\"b.1\"","label":"settle"},{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[1]","from":"A.a1","to":"B.\"b.1\""},{"kind":"edge","edge":"(A.a1.x -&gt; B.\"b.1\")[0]","from":"A.a1.x","to":"B.\"b.1\"","label":"audit"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 216.899 231.051)" width="68.614" x="-34.307" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="48.614" transform="matrix(0.866 -0.5 0.866 0.5 216.899 231.051)" x="0" y="3.82">b.1 · store</text>
 </g>
 <g data-svugy-goto="" data-svugy-stub="C">
-<title>to C · client</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;C&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.a1.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;calls&quot;}]}</desc>
-<path d="M-102.2,64 L-93.2,71 L-102.2,78 L-111.2,71 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="-89.2" y="74">← C</text>
+<title>to C · client</title>
+<desc data-svugy-details="">{"kind":"stub","target":"C","edges":[{"kind":"edge","edge":"(C -&gt; A.a1.x)[0]","from":"C","to":"A.a1.x","label":"calls"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -129.599 84.176)" width="63.892" x="-31.946" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="43.892" transform="matrix(0.866 -0.5 0.866 0.5 -129.599 84.176)" x="0" y="3.82">C · client</text>
 </g>
 </g>
 </g>
-<text class="e" x="1.7" y="286">A · desk</text>
-</g>
-<g data-svugy-element="E">
-<title>E</title><desc data-svugy-details="">{"kind":"element", not json</desc>
-<path d="M-320.4,167 L-242.5,212 L-242.5,230 L-320.4,185 Z" fill="#383d49" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-190.5,182 L-242.5,212 L-242.5,230 L-190.5,200 Z" fill="#2c303a" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-268.5,137 L-190.5,182 L-242.5,212 L-320.4,167 Z" fill="#4a5060" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="-255.5" y="178.5">E</text>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="37.058" transform="matrix(0.866 0.5 0 1 67.55 256.5)" x="9" y="21.5">A · desk</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="43.799" transform="matrix(0.866 0.5 0 1 67.55 256.5)" x="9" y="34.5">order desk</text>
 </g>
 <g data-svugy-element="B">
-<title>B · ledger</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;B&quot;,&quot;label&quot;:&quot;B · ledger&quot;}</desc>
-<path d="M363.7,410 L536.9,510 L536.9,520 L363.7,420 Z" fill="#151b29" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M684.2,425 L536.9,510 L536.9,520 L684.2,435 Z" fill="#101620" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M511,325 L684.2,425 L536.9,510 L363.7,410 Z" fill="#1b2436" stroke="#0a0b10" stroke-width="0.8"/>
-<g data-svugy-level="B" data-svugy-view="333.7 295 380.4 255" transform="translate(511 325)">
+<title>B · ledger</title>
+<desc data-svugy-details="">{"kind":"element","path":"B","label":"B · ledger"}</desc>
+<path d="M477.726,467.815 L602.433,539.815 L602.433,529.315 L477.726,457.315 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M721.945,470.815 L602.433,539.815 L602.433,529.315 L721.945,460.315 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M597.237,388.315 L721.945,460.315 L602.433,529.315 L477.726,457.315 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="B" data-svugy-view="508.685 366.166 174.906 151.149" transform="matrix(1 0 0 1 597.237 388.315)">
 <g data-svugy-element="B.&quot;b.1&quot;">
-<title>b.1 · store</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;element&quot;,&quot;path&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;b.1 · store&quot;,&quot;caption&quot;:&quot;a quoted segment with a dot&quot;,&quot;metadata&quot;:{&quot;engine&quot;:&quot;postgres&quot;}}</desc>
-<path d="M-56.3,48.5 L39,103.5 L39,137.5 L-56.3,82.5 Z" fill="#aa4960" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M90.9,73.5 L39,103.5 L39,137.5 L90.9,107.5 Z" fill="#863a4c" stroke="#0a0b10" stroke-width="0.8"/>
-<path d="M-4.3,18.5 L90.9,73.5 L39,103.5 L-56.3,48.5 Z" fill="#e0607e" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="t" x="17.3" y="65">b.1 · store</text>
+<title>b.1 · store</title>
+<desc data-svugy-details="">{"kind":"element","path":"B.\"b.1\"","label":"b.1 · store","caption":"settled trades"}</desc>
+<path d="M-57.158,69 L5.196,105 L5.196,82.5 L-57.158,46.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,72 L5.196,105 L5.196,82.5 L62.354,49.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,13.5 L62.354,49.5 L5.196,82.5 L-57.158,46.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="56.947" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="-2">b.1 · store</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="55.844" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="11">settled trades</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="A.a1" data-svugy-stub="A.a1">
-<title>to a1 · engine</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;A.a1&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;}]}</desc>
-<path d="M-15.6,14 L-6.6,21 L-15.6,28 L-24.6,21 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="-2.6" y="24">← A.a1</text>
+<title>to a1 · engine</title>
+<desc data-svugy-details="">{"kind":"stub","target":"A.a1","edges":[{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[0]","from":"A.a1","to":"B.\"b.1\"","label":"settle"},{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[1]","from":"A.a1","to":"B.\"b.1\""}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -25.513 24.082)" width="73.223" x="-36.611" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="53.223" transform="matrix(0.866 -0.5 0.866 0.5 -25.513 24.082)" x="0" y="3.82">a1 · engine</text>
 </g>
 <g data-svugy-goto="A.a1" data-svugy-stub="A.a1.x">
-<title>to x · book</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;stub&quot;,&quot;target&quot;:&quot;A.a1.x&quot;,&quot;edges&quot;:[{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}]}</desc>
-<path d="M-110.9,69 L-101.9,76 L-110.9,83 L-119.9,76 Z" fill="#f2b84b" stroke="#0a0b10" stroke-width="0.8"/>
-<text class="r" fill="#f2b84b" x="-97.9" y="79">← A.a1.x</text>
+<title>to x · book</title>
+<desc data-svugy-details="">{"kind":"stub","target":"A.a1.x","edges":[{"kind":"edge","edge":"(A.a1.x -&gt; B.\"b.1\")[0]","from":"A.a1.x","to":"B.\"b.1\"","label":"audit"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -31.911 27.776)" width="59.677" x="-29.839" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="39.677" transform="matrix(0.866 -0.5 0.866 0.5 -31.911 27.776)" x="0" y="3.82">x · book</text>
 </g>
 </g>
 </g>
-<text class="e" x="398.4" y="455">B · ledger</text>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="43.855" transform="matrix(0.866 0.5 0 1 477.726 457.315)" x="9" y="21.5">B · ledger</text>
+</g>
+<g data-svugy-element="E">
+<title>E</title>
+<desc data-svugy-details="">{"kind":"element","path":"E","label":"E"}</desc>
+<path d="M-119.512,87 L-57.158,123 L-57.158,100.5 L-119.512,64.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,90 L-57.158,123 L-57.158,100.5 L0,67.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-62.354,31.5 L0,67.5 L-57.158,100.5 L-119.512,64.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="7.289" transform="matrix(0.866 0.5 -0.866 0.5 -59.756 66)" x="0" y="-2">E</text>
 </g>
 <g data-svugy-edge="(A.a1 -&gt; B.&quot;b.1&quot;)[0]" data-svugy-from="A.a1" data-svugy-to="B.&quot;b.1&quot;">
-<title>settle</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1 -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;settle&quot;}</desc>
-<path d="M307.4,262.5 Q398.4,245.2 489.3,353.5" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-3)" opacity="0.9" stroke="#f2b84b" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="envelope" fill="#f2b84b" height="10" href="#traveler-envelope" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M307.4,262.5 Q398.4,245.2 489.3,353.5" repeatCount="indefinite"/></use>
-<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="48" x="374.4" y="268.6"/><text class="f" fill="#f2b84b" x="398.4" y="280.6">settle</text>
+<title>settle</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[0]","from":"A.a1","to":"B.\"b.1\"","label":"settle"}</desc>
+<path d="M463.869,346.815 Q523.191,269.066 582.513,409.036" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="envelope" fill="var(--svugy-text-muted)" height="10" href="#traveler-envelope" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M463.869,346.815 Q523.409,268.781 582.948,410.065" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(A.a1 -&gt; B.&quot;b.1&quot;)[1]" data-svugy-from="A.a1" data-svugy-to="B.&quot;b.1&quot;">
+<title>(A.a1 -&gt; B."b.1")[1]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[1]","from":"A.a1","to":"B.\"b.1\""}</desc>
+<path d="M424.032,369.815 Q496.08,284.05 568.128,417.331" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M424.032,369.815 Q496.345,283.735 568.658,418.315" repeatCount="indefinite"/>
+</use>
 </g>
 <g data-svugy-edge="(A.a1.x -&gt; B.&quot;b.1&quot;)[0]" data-svugy-from="A.a1.x" data-svugy-to="B.&quot;b.1&quot;">
-<title>audit</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(A.a1.x -&gt; B.\&quot;b.1\&quot;)[0]&quot;,&quot;from&quot;:&quot;A.a1.x&quot;,&quot;to&quot;:&quot;B.\&quot;b.1\&quot;&quot;,&quot;label&quot;:&quot;audit&quot;}</desc>
-<path d="M251.1,204 Q361.6,203.6 472,363.5" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#9fe3d6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="document" fill="#9fe3d6" height="10" href="#traveler-document" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M251.1,204 Q361.6,203.6 472,363.5" repeatCount="indefinite"/></use>
-<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="340.6" y="235.7"/><text class="f" fill="#9fe3d6" x="361.6" y="247.7">audit</text>
+<title>audit</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(A.a1.x -&gt; B.\"b.1\")[0]","from":"A.a1.x","to":"B.\"b.1\"","label":"audit"}</desc>
+<path d="M412.774,317.815 Q483.364,249.589 553.953,425.527" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="document" fill="var(--svugy-text-muted)" height="10" href="#traveler-document" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M412.774,317.815 Q483.571,249.388 554.369,426.565" repeatCount="indefinite"/>
+</use>
 </g>
 <g data-svugy-edge="(C -&gt; A.a1.x)[0]" data-svugy-from="C" data-svugy-to="A.a1.x">
-<title>calls</title><desc data-svugy-details="">{&quot;kind&quot;:&quot;edge&quot;,&quot;edge&quot;:&quot;(C -&gt; A.a1.x)[0]&quot;,&quot;from&quot;:&quot;C&quot;,&quot;to&quot;:&quot;A.a1.x&quot;,&quot;label&quot;:&quot;calls&quot;}</desc>
-<path d="M-95.3,119 Q34.6,59 164.5,154" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#c9cfdd" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="key" fill="#c9cfdd" height="10" href="#traveler-key" width="10" x="-5" y="-5"><animateMotion dur="2.4s" path="M-95.3,119 Q34.6,59 164.5,154" repeatCount="indefinite"/></use>
-<rect fill="#0a0b10" fill-opacity="0.85" height="16" rx="4" width="42" x="13.6" y="89.7"/><text class="f" fill="#c9cfdd" x="34.6" y="101.7">calls</text>
+<title>calls</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(C -&gt; A.a1.x)[0]","from":"C","to":"A.a1.x","label":"calls"}</desc>
+<path d="M96.129,156 Q223.013,40.693 349.898,280.826" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="key" fill="var(--svugy-text-muted)" height="10" href="#traveler-key" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M96.129,156 Q223.274,40.455 350.42,281.815" repeatCount="indefinite"/>
+</use>
 </g>
-<g data-svugy-overlay="">
+<g data-svugy-edge="(E -&gt; C)[0]" data-svugy-from="E" data-svugy-to="C">
+<title>pings</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(E -&gt; C)[0]","from":"E","to":"C","label":"pings"}</desc>
+<path d="M-28.579,84 Q2.409,33.508 33.396,118.951" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M-28.579,84 Q2.598,33.2 33.775,120" repeatCount="indefinite"/>
+</use>
 </g>
+<g data-svugy-edge="(A.a1 -&gt; B.&quot;b.1&quot;)[0]" data-svugy-from="A.a1" data-svugy-to="B.&quot;b.1&quot;">
+<title>settle</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(A.a1 -&gt; B.\"b.1\")[0]","from":"A.a1","to":"B.\"b.1\"","label":"settle"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="47.783" x="499.517" y="315.758"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="27.783" x="523.409" y="327.43">settle</text>
+</g>
+<g data-svugy-edge="(A.a1.x -&gt; B.&quot;b.1&quot;)[0]" data-svugy-from="A.a1.x" data-svugy-to="B.&quot;b.1&quot;">
+<title>audit</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(A.a1.x -&gt; B.\"b.1\")[0]","from":"A.a1.x","to":"B.\"b.1\"","label":"audit"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="44.989" x="451.291" y="296.594"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="24.989" x="473.786" y="308.266">audit</text>
+</g>
+<g data-svugy-edge="(C -&gt; A.a1.x)[0]" data-svugy-from="C" data-svugy-to="A.a1.x">
+<title>calls</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(C -&gt; A.a1.x)[0]","from":"C","to":"A.a1.x","label":"calls"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="42.969" x="201.79" y="121.829"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="22.969" x="223.274" y="133.501">calls</text>
+</g>
+<g data-svugy-edge="(E -&gt; C)[0]" data-svugy-from="E" data-svugy-to="C">
+<title>pings</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(E -&gt; C)[0]","from":"E","to":"C","label":"pings"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="47.614" x="-21.209" y="59.748"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="27.614" x="2.598" y="71.42">pings</text>
+</g>
+<g data-svugy-overlay=""/>
 </g>
 </g>
 <script>//<![CDATA[
@@ -350,23 +607,41 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
   const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
   const CONTRACT = 'data-svugy-contract';
+  const LAYER = 'data-svugy-layer';
+  const SHOWN = 'data-svugy-shown';
   const LEVEL = 'data-svugy-level';
   const VIEW = 'data-svugy-view';
   const ELEMENT = 'data-svugy-element';
+  const CLOSED = 'data-svugy-closed';
   const EDGE = 'data-svugy-edge';
+  const FROM = 'data-svugy-from';
+  const TO = 'data-svugy-to';
   const STUB = 'data-svugy-stub';
   const GOTO = 'data-svugy-goto';
+  const OVERLAY = 'data-svugy-overlay';
+  const TRAVELER = 'data-svugy-traveler';
   const DETAILS = 'data-svugy-details';
   const ENTERED = 'data-svugy-entered';
+  const DIMMED = 'data-svugy-dimmed';
+  const CONTRACT_ATTRIBUTE_PREFIX = 'data-svugy-';
 
+  const LAYER_SELECTOR = `[${LAYER}]`;
   const LEVEL_SELECTOR = `[${LEVEL}]`;
   const ELEMENT_SELECTOR = `[${ELEMENT}]`;
+  const EDGE_SELECTOR = `[${EDGE}]`;
+  const SHOWN_SELECTOR = `[${SHOWN}]`;
   const ENTERED_SELECTOR = `[${ENTERED}]`;
+  const DIMMED_SELECTOR = `[${DIMMED}]`;
   const INTERACTIVE_SELECTOR = `[${ELEMENT}],[${EDGE}],[${STUB}]`;
+  const ELEMENT_OR_LEVEL_SELECTOR = `[${ELEMENT}],[${LEVEL}]`;
+  const NON_PAINTING_SELECTOR = `[${OVERLAY}],[${TRAVELER}],title,desc`;
+  const MINIATURE_STRIPPED_ATTRIBUTES = new Set(['id', 'tabindex', 'role', 'aria-label', 'style']);
 
   const ROOT_LEVEL_PATH = '';
   const TWEEN_DURATION_MS = 450;
   const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+  const FADE_IN_KEYFRAMES = [{ opacity: 0 }, { opacity: 1 }];
+  const FADE_OUT_KEYFRAMES = [{ opacity: 1 }, { opacity: 0 }];
 
   const PANEL_PADDING_PX = 8;
   const PANEL_LINE_HEIGHT_PX = 16;
@@ -374,8 +649,20 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
   const PANEL_POINTER_OFFSET_PX = 14;
   const PANEL_VIEW_MARGIN_PX = 6;
   const PANEL_MAX_LINE_CHARACTERS = 72;
+
+  const ELEVATOR_PADDING_PX = 6;
+  const ELEVATOR_VIEW_MARGIN_PX = 10;
+  const ELEVATOR_ROW_HEIGHT_PX = 20;
+  const ELEVATOR_ROW_BASELINE_PX = 14;
+  const ELEVATOR_FLOOR_INDENT_PX = 10;
+  const ELEVATOR_LABEL_INSET_PX = 8;
+  const ELEVATOR_MAP_MAX_WIDTH_PX = 176;
+  const ELEVATOR_MAP_MAX_HEIGHT_PX = 120;
+  const ROOT_FLOOR_FALLBACK_LABEL = 'root';
+
   const ARROW = '\u2192';
   const ELLIPSIS = '\u2026';
+  const TOGGLE_GLYPH = '\u21c4';
 
   /** Binds the runtime to its enclosing diagram once the document is parsed. */
   function start() {
@@ -403,41 +690,93 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
     return isDocumentRootDiagram ? documentRoot : null;
   }
 
-  /** Wires navigation and detail panels onto one diagram. */
+  /** Wires navigation, detail panels, dimming and the elevator onto one diagram. */
   function bindRuntime(svg) {
-    const rootLevel = Contract.levelAt(svg, ROOT_LEVEL_PATH);
-    const rootView = View.parse(svg.getAttribute('viewBox'));
-    const isDiagramMalformed = rootLevel === null || rootView === null;
-    if (isDiagramMalformed) {
+    const layers = Layers.of(svg);
+    const initialLayer = Layers.initiallyShown(layers);
+    const rootLevel = Contract.levelAt(initialLayer, ROOT_LEVEL_PATH);
+    if (rootLevel === null) {
       return;
     }
     const animator = new ViewBoxAnimator(svg);
-    const navigator = new LevelNavigator(svg, rootLevel, rootView, animator);
+    const fader = new LayerFader();
+    const navigator = new LayerNavigator(svg, layers, initialLayer, rootLevel, animator, fader);
     const panel = new DetailPanel(svg);
-    Interactions.bind(svg, navigator, panel);
+    const dimmer = new UnrelatedGroupDimmer(svg);
+    const elevator = new Elevator(svg, (level) => navigator.focus(level));
+    navigator.addNavigationListener((focusedLevel) => {
+      panel.hide();
+      dimmer.clear();
+      elevator.showFor(focusedLevel);
+    });
+    Interactions.bind(svg, navigator, panel, dimmer);
   }
+
+  /** Lists the layers a document draws, in increasing depth; a document without layer groups is its own single layer. */
+  const Layers = {
+    of(svg) {
+      const layerGroups = Array.from(svg.querySelectorAll(LAYER_SELECTOR));
+      const hasLayerGroups = layerGroups.length > 0;
+      return hasLayerGroups ? layerGroups : [svg];
+    },
+
+    initiallyShown(layers) {
+      const renderedShownLayer = layers.find((layer) => layer.hasAttribute(SHOWN));
+      return renderedShownLayer ?? layers[0];
+    },
+  };
 
   /** Answers questions about the rendered document by comparing attribute values, never by building selectors from paths. */
   const Contract = {
-    levelAt(svg, path) {
-      const levels = Array.from(svg.querySelectorAll(LEVEL_SELECTOR));
+    levelAt(scope, path) {
+      const levels = Array.from(scope.querySelectorAll(LEVEL_SELECTOR));
       const matchingLevel = levels.find((level) => level.getAttribute(LEVEL) === path);
       return matchingLevel ?? null;
     },
 
-    levelDisplaying(svg, path) {
-      const level = Contract.levelAt(svg, path);
+    elementAt(scope, path) {
+      const elements = Array.from(scope.querySelectorAll(ELEMENT_SELECTOR));
+      const matchingElement = elements.find((element) => element.getAttribute(ELEMENT) === path);
+      return matchingElement ?? null;
+    },
+
+    levelDisplaying(scope, path) {
+      const level = Contract.levelAt(scope, path);
       if (level !== null) {
         return level;
       }
-      const elements = Array.from(svg.querySelectorAll(ELEMENT_SELECTOR));
-      const matchingElement = elements.find((element) => element.getAttribute(ELEMENT) === path);
-      return matchingElement === undefined ? null : Contract.enclosingLevelOf(matchingElement);
+      const element = Contract.elementAt(scope, path);
+      return element === null ? null : Contract.enclosingLevelOf(element);
+    },
+
+    counterpartIn(scope, node) {
+      const levelPath = node.getAttribute(LEVEL);
+      if (levelPath !== null) {
+        return Contract.levelAt(scope, levelPath);
+      }
+      const elementPath = node.getAttribute(ELEMENT);
+      if (elementPath !== null) {
+        return Contract.elementAt(scope, elementPath);
+      }
+      return null;
     },
 
     enclosingLevelOf(node) {
       const parent = node.parentElement;
       return parent === null ? null : parent.closest(LEVEL_SELECTOR);
+    },
+
+    depthOf(level) {
+      const levelsFromRoot = Contract.levelsFromRootTo(level);
+      return levelsFromRoot.length - 1;
+    },
+
+    levelsFromRootTo(level) {
+      const levels = [];
+      for (let ancestor = level; ancestor !== null; ancestor = Contract.enclosingLevelOf(ancestor)) {
+        levels.unshift(ancestor);
+      }
+      return levels;
     },
 
     interiorLevelOf(group) {
@@ -469,11 +808,33 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
       return parent === null ? null : parent.closest(ELEMENT_SELECTOR);
     },
 
+    ancestorElementsOf(node) {
+      const ancestors = [];
+      for (let element = Contract.enclosingElementOf(node); element !== null; element = Contract.enclosingElementOf(element)) {
+        ancestors.push(element);
+      }
+      return ancestors;
+    },
+
+    endpointsOf(edge) {
+      const from = edge.getAttribute(FROM);
+      const to = edge.getAttribute(TO);
+      return [from, to];
+    },
+
+    isBadge(edge) {
+      const parent = edge.parentElement;
+      const enclosingGroup = parent === null ? null : parent.closest(ELEMENT_OR_LEVEL_SELECTOR);
+      return enclosingGroup !== null && enclosingGroup.hasAttribute(ELEMENT);
+    },
+
     isEnterable(group) {
       const hasGoto = group.hasAttribute(GOTO);
       const isStub = group.hasAttribute(STUB);
+      const isClosedContainer = group.hasAttribute(CLOSED);
       const interiorLevel = Contract.interiorLevelOf(group);
-      return hasGoto || isStub || interiorLevel !== null;
+      const isOpenContainer = interiorLevel !== null;
+      return hasGoto || isStub || isClosedContainer || isOpenContainer;
     },
 
     titleOf(group) {
@@ -514,6 +875,10 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
       return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
     },
 
+    format(view) {
+      return `${view.x} ${view.y} ${view.width} ${view.height}`;
+    },
+
     interpolate(start, target, fraction) {
       return {
         x: start.x + (target.x - start.x) * fraction,
@@ -537,14 +902,14 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
       this.frameRequest = 0;
     }
 
-    tweenTo(targetView) {
+    tweenTo(targetView, startView = this.currentView()) {
       cancelAnimationFrame(this.frameRequest);
       const isMotionReduced = window.matchMedia(REDUCED_MOTION_QUERY).matches;
       if (isMotionReduced) {
         this.show(targetView);
         return;
       }
-      const startView = View.fromRect(this.svg.viewBox.baseVal);
+      this.show(startView);
       let startTime = null;
       const step = (now) => {
         startTime ??= now;
@@ -560,75 +925,256 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
       this.frameRequest = requestAnimationFrame(step);
     }
 
+    currentView() {
+      const viewBox = this.svg.viewBox.baseVal;
+      return View.fromRect(viewBox);
+    }
+
     show(view) {
-      this.svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.width} ${view.height}`);
+      const viewBoxText = View.format(view);
+      this.svg.setAttribute('viewBox', viewBoxText);
     }
   }
 
-  /** Keeps exactly one level entered and moves the view to it. */
-  class LevelNavigator {
-    constructor(svg, rootLevel, rootView, animator) {
-      this.svg = svg;
-      this.rootLevel = rootLevel;
-      this.rootView = rootView;
-      this.animator = animator;
-      const staleEnteredLevels = svg.querySelectorAll(ENTERED_SELECTOR);
-      staleEnteredLevels.forEach((level) => level.removeAttribute(ENTERED));
-      rootLevel.setAttribute(ENTERED, '');
-      this.enteredLevel = rootLevel;
+  /** Crossfades the shown layer into another, or swaps them at once under reduced motion. */
+  class LayerFader {
+    constructor() {
+      this.runningFade = null;
     }
 
-    levelReachedBy(group) {
+    crossfade(fadingLayer, appearingLayer) {
+      this.finishRunningFade();
+      appearingLayer.setAttribute(SHOWN, '');
+      const isMotionReduced = window.matchMedia(REDUCED_MOTION_QUERY).matches;
+      if (isMotionReduced) {
+        fadingLayer.removeAttribute(SHOWN);
+        return;
+      }
+      fadingLayer.style.pointerEvents = 'none';
+      const timing = { duration: TWEEN_DURATION_MS, easing: 'ease-in-out' };
+      const fadeOut = fadingLayer.animate(FADE_OUT_KEYFRAMES, timing);
+      const fadeIn = appearingLayer.animate(FADE_IN_KEYFRAMES, timing);
+      fadeOut.onfinish = () => this.finishRunningFade();
+      this.runningFade = { fadingLayer, fadeOut, fadeIn };
+    }
+
+    finishRunningFade() {
+      const fade = this.runningFade;
+      if (fade === null) {
+        return;
+      }
+      this.runningFade = null;
+      fade.fadeOut.cancel();
+      fade.fadeIn.cancel();
+      fade.fadingLayer.removeAttribute(SHOWN);
+      fade.fadingLayer.style.removeProperty('pointer-events');
+    }
+  }
+
+  /** Keeps one layer shown and one of its levels focused, and moves the view to them. */
+  class LayerNavigator {
+    constructor(svg, layers, initialLayer, rootLevel, animator, fader) {
+      this.svg = svg;
+      this.layers = layers;
+      this.animator = animator;
+      this.fader = fader;
+      const staleMarks = svg.querySelectorAll(`${SHOWN_SELECTOR},${ENTERED_SELECTOR}`);
+      staleMarks.forEach((node) => {
+        node.removeAttribute(SHOWN);
+        node.removeAttribute(ENTERED);
+      });
+      initialLayer.setAttribute(SHOWN, '');
+      rootLevel.setAttribute(ENTERED, '');
+      this.shownLayer = initialLayer;
+      this.focusedLevel = rootLevel;
+      this.navigationListeners = [];
+    }
+
+    /** Calls `listener(focusedLevel)` after every change of the shown layer or the focused level. */
+    addNavigationListener(listener) {
+      this.navigationListeners.push(listener);
+    }
+
+    /** Follows a click on `group` and tells whether the view moved; when it did not, the group's details are due. */
+    followClickOn(group) {
       const gotoPath = group.getAttribute(GOTO);
       const hasGoto = gotoPath !== null;
       if (hasGoto) {
-        const gotoLevel = Contract.levelDisplaying(this.svg, gotoPath);
-        return gotoLevel ?? this.enteredLevel;
+        return this.goTo(gotoPath, group);
       }
-      const baseLevel = this.enteredOrEnclosingLevelContaining(group);
+      const isClosedContainer = group.hasAttribute(CLOSED);
+      if (isClosedContainer) {
+        return this.revealOneMoreDepth(group);
+      }
+      const reachedLevel = this.levelReachedThrough(group);
+      return this.focus(reachedLevel);
+    }
+
+    goTo(path, group) {
+      const openingLayer = this.firstLayerFromShownOpening(path);
+      if (openingLayer === null) {
+        const displayingLevel = Contract.levelDisplaying(this.shownLayer, path);
+        if (displayingLevel === null) {
+          return false;
+        }
+        return this.focus(displayingLevel);
+      }
+      const isShownLayer = openingLayer === this.shownLayer;
+      if (isShownLayer) {
+        const openLevel = Contract.levelAt(openingLayer, path);
+        return this.focus(openLevel);
+      }
+      return this.showLayer(openingLayer, path, group);
+    }
+
+    firstLayerFromShownOpening(path) {
+      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
+      const layersFromShown = this.layers.slice(shownLayerIndex);
+      const openingLayer = layersFromShown.find((layer) => Contract.levelAt(layer, path) !== null);
+      return openingLayer ?? null;
+    }
+
+    revealOneMoreDepth(closedContainer) {
+      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
+      const deeperLayer = this.layers[shownLayerIndex + 1];
+      if (deeperLayer === undefined) {
+        return false;
+      }
+      const focusedPath = this.focusedLevel.getAttribute(LEVEL);
+      return this.showLayer(deeperLayer, focusedPath, closedContainer);
+    }
+
+    levelReachedThrough(group) {
+      const baseLevel = this.focusedOrEnclosingLevelContaining(group);
       const outermostInterior = Contract.outermostInteriorBetween(baseLevel, group);
       return outermostInterior ?? baseLevel;
     }
 
-    enteredOrEnclosingLevelContaining(group) {
-      for (let level = this.enteredLevel; level !== null; level = Contract.enclosingLevelOf(level)) {
+    focusedOrEnclosingLevelContaining(group) {
+      for (let level = this.focusedLevel; level !== null; level = Contract.enclosingLevelOf(level)) {
         const isGroupInside = level.contains(group);
         if (isGroupInside) {
           return level;
         }
       }
-      return this.rootLevel;
+      return Contract.levelAt(this.shownLayer, ROOT_LEVEL_PATH);
     }
 
-    exitOneLevel() {
-      const parentLevel = Contract.enclosingLevelOf(this.enteredLevel);
+    /** Undoes one step: closes the deepest open containers while the shown layer is deeper than the focused level, else focuses its parent. */
+    exitOneStep() {
+      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
+      const focusedDepth = Contract.depthOf(this.focusedLevel);
+      const isLayerDeeperThanFocus = shownLayerIndex > focusedDepth;
+      if (isLayerDeeperThanFocus) {
+        const shallowerLayer = this.layers[shownLayerIndex - 1];
+        const focusedPath = this.focusedLevel.getAttribute(LEVEL);
+        this.showLayer(shallowerLayer, focusedPath, this.focusedLevel);
+        return;
+      }
+      const parentLevel = Contract.enclosingLevelOf(this.focusedLevel);
       if (parentLevel === null) {
         return;
       }
-      this.enter(parentLevel);
+      this.focus(parentLevel);
     }
 
-    enter(level) {
-      const isEnteredLevel = level === this.enteredLevel;
-      if (isEnteredLevel) {
-        return;
+    focus(level) {
+      const isFocusedLevel = level === this.focusedLevel;
+      if (isFocusedLevel) {
+        return false;
       }
-      this.enteredLevel.removeAttribute(ENTERED);
-      level.setAttribute(ENTERED, '');
-      this.enteredLevel = level;
+      this.moveEnteredMarkTo(level);
+      this.announceNavigation();
       const targetView = this.viewOf(level);
-      if (targetView === null) {
+      if (targetView !== null) {
+        this.animator.tweenTo(targetView);
+      }
+      return true;
+    }
+
+    /** Shows `layer` focused on its level at `focusedPath`, keeping `anchor`'s counterpart where `anchor` was on screen as the view starts moving. */
+    showLayer(layer, focusedPath, anchor) {
+      const targetLevel = Contract.levelAt(layer, focusedPath);
+      if (targetLevel === null) {
+        return false;
+      }
+      const startView = this.anchoredStartView(layer, anchor);
+      const previousLayer = this.shownLayer;
+      this.moveEnteredMarkTo(targetLevel);
+      this.shownLayer = layer;
+      this.fader.crossfade(previousLayer, layer);
+      this.announceNavigation();
+      this.carryKeyboardFocus(previousLayer, layer);
+      const targetView = this.viewOf(targetLevel);
+      if (targetView !== null) {
+        this.animator.tweenTo(targetView, startView);
+      }
+      return true;
+    }
+
+    anchoredStartView(layer, anchor) {
+      const currentView = this.animator.currentView();
+      const anchorCounterpart = Contract.counterpartIn(layer, anchor);
+      const hasAnchorCounterpart = anchorCounterpart !== null;
+      const focusedCounterpart = Contract.counterpartIn(layer, this.focusedLevel);
+      const oldAnchor = hasAnchorCounterpart ? anchor : this.focusedLevel;
+      const newAnchor = hasAnchorCounterpart ? anchorCounterpart : focusedCounterpart;
+      if (newAnchor === null) {
+        return currentView;
+      }
+      const oldCenter = this.userCenterOf(oldAnchor);
+      const newCenter = this.userCenterOf(newAnchor);
+      const isCenterUnmeasurable = oldCenter === null || newCenter === null;
+      if (isCenterUnmeasurable) {
+        return currentView;
+      }
+      // start = view + (new center − old center), at the view's size, so the new center lands on the old one's screen point
+      return {
+        x: currentView.x + newCenter.x - oldCenter.x,
+        y: currentView.y + newCenter.y - oldCenter.y,
+        width: currentView.width,
+        height: currentView.height,
+      };
+    }
+
+    userCenterOf(node) {
+      const screenMatrix = this.svg.getScreenCTM();
+      if (screenMatrix === null) {
+        return null;
+      }
+      const screenToUserMatrix = screenMatrix.inverse();
+      const bounds = node.getBoundingClientRect();
+      const clientCenterX = bounds.left + bounds.width / 2;
+      const clientCenterY = bounds.top + bounds.height / 2;
+      const clientCenter = new DOMPoint(clientCenterX, clientCenterY);
+      return clientCenter.matrixTransform(screenToUserMatrix);
+    }
+
+    moveEnteredMarkTo(level) {
+      this.focusedLevel.removeAttribute(ENTERED);
+      level.setAttribute(ENTERED, '');
+      this.focusedLevel = level;
+    }
+
+    carryKeyboardFocus(previousLayer, layer) {
+      const focusedNode = document.activeElement;
+      const isFocusInPreviousLayer = previousLayer.contains(focusedNode);
+      const isFocusOutsidePreviousLayer = !isFocusInPreviousLayer;
+      if (isFocusOutsidePreviousLayer) {
         return;
       }
-      this.animator.tweenTo(targetView);
+      const focusedCounterpart = Contract.counterpartIn(layer, focusedNode);
+      const focusTarget = focusedCounterpart ?? this.svg;
+      focusTarget.focus({ preventScroll: true });
+    }
+
+    announceNavigation() {
+      this.navigationListeners.forEach((listener) => listener(this.focusedLevel));
     }
 
     viewOf(level) {
-      const isRootLevel = level === this.rootLevel;
-      if (isRootLevel) {
-        return this.rootView;
-      }
-      return View.parse(level.getAttribute(VIEW));
+      const viewText = level.getAttribute(VIEW);
+      return View.parse(viewText);
     }
   }
 
@@ -640,6 +1186,8 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
       this.shownGroup = null;
       this.width = 0;
       this.height = 0;
+      const viewBoxObserver = new MutationObserver(() => this.followShownGroup());
+      viewBoxObserver.observe(svg, { attributes: true, attributeFilter: ['viewBox'] });
     }
 
     show(group, clientPoint) {
@@ -665,6 +1213,15 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
       this.shownGroup = null;
     }
 
+    followShownGroup() {
+      const isHidden = this.shownGroup === null;
+      if (isHidden) {
+        return;
+      }
+      const groupCenter = clientCenterOf(this.shownGroup);
+      this.placeNear(groupCenter);
+    }
+
     render(lines) {
       const plate = createSvgElement('rect', { class: 'svugy-panel-plate', rx: 6 });
       const texts = lines.map((line, index) => {
@@ -687,9 +1244,9 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
       if (screenMatrix === null) {
         return;
       }
-      const userToScreenMatrix = screenMatrix.inverse();
+      const screenToUserMatrix = screenMatrix.inverse();
       const clientDomPoint = new DOMPoint(clientPoint.x, clientPoint.y);
-      const pointer = clientDomPoint.matrixTransform(userToScreenMatrix);
+      const pointer = clientDomPoint.matrixTransform(screenToUserMatrix);
       const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
       const offset = PANEL_POINTER_OFFSET_PX * userUnitsPerPixel;
       const margin = PANEL_VIEW_MARGIN_PX * userUnitsPerPixel;
@@ -740,22 +1297,48 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
 
     ofEdge(details) {
       const titleLine = DetailLines.line('title', details.label ?? details.edge);
-      const hasEndpoints = details.from !== undefined && details.to !== undefined;
-      const endpointsLine = hasEndpoints ? DetailLines.line('body', `${details.from} ${ARROW} ${details.to}`) : null;
+      const endpointsText = DetailLines.endpointsTextOf(details);
+      const endpointsLine = DetailLines.line('body', endpointsText);
       return [titleLine, endpointsLine];
+    },
+
+    ofLifted(details) {
+      const endpointsText = DetailLines.endpointsTextOf(details);
+      const titleLine = DetailLines.line('title', details.label ?? endpointsText);
+      const sourceEdges = DetailLines.plainObjectsIn(details.edges);
+      const sourceEdgeLines = sourceEdges.map(DetailLines.sourceEdgeLine);
+      return [titleLine, ...sourceEdgeLines];
     },
 
     ofStub(details) {
       const titleLine = DetailLines.line('title', `${ARROW} ${details.target}`);
-      const edges = Array.isArray(details.edges) ? details.edges : [];
-      const plainEdges = edges.filter(DetailLines.isPlainObject);
-      const edgeLines = plainEdges.flatMap(DetailLines.ofEdge);
-      return [titleLine, ...edgeLines];
+      const connections = DetailLines.plainObjectsIn(details.edges);
+      const connectionLines = connections.flatMap((connection) => DetailLines.of(connection));
+      return [titleLine, ...connectionLines];
+    },
+
+    sourceEdgeLine(edge) {
+      const endpointsText = DetailLines.endpointsTextOf(edge) ?? edge.edge;
+      const hasLabel = edge.label !== undefined;
+      const hasEndpointsText = endpointsText !== undefined;
+      const isLabelBesideEndpoints = hasLabel && hasEndpointsText;
+      const text = isLabelBesideEndpoints ? `${edge.label}: ${endpointsText}` : edge.label ?? endpointsText;
+      return DetailLines.line('body', text);
+    },
+
+    endpointsTextOf(details) {
+      const hasEndpoints = details.from !== undefined && details.to !== undefined;
+      return hasEndpoints ? `${details.from} ${ARROW} ${details.to}` : undefined;
     },
 
     line(role, value) {
       const isAbsent = value === undefined || value === null;
       return isAbsent ? null : { role, text: String(value) };
+    },
+
+    plainObjectsIn(value) {
+      const isArray = Array.isArray(value);
+      return isArray ? value.filter(DetailLines.isPlainObject) : [];
     },
 
     isPlainObject(value) {
@@ -771,18 +1354,334 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
   const DETAIL_LINES_BY_KIND = new Map([
     ['element', DetailLines.ofElement],
     ['edge', DetailLines.ofEdge],
+    ['lifted', DetailLines.ofLifted],
     ['stub', DetailLines.ofStub],
   ]);
 
-  /** Translates pointer, focus and key events into navigation and detail panels. */
+  /** Dims the element and edge groups of the shown layer unrelated to one hovered or focused group; stubs and badges are never dimmed. */
+  class UnrelatedGroupDimmer {
+    constructor(svg) {
+      const staleMarks = svg.querySelectorAll(DIMMED_SELECTOR);
+      staleMarks.forEach((node) => node.removeAttribute(DIMMED));
+      this.anchorGroup = null;
+      this.dimmedGroups = [];
+    }
+
+    dimUnrelatedTo(group, shownLayer) {
+      const isAnchorGroup = group === this.anchorGroup;
+      if (isAnchorGroup) {
+        return;
+      }
+      this.clear();
+      const isGroupOutsideShownLayer = !shownLayer.contains(group);
+      if (isGroupOutsideShownLayer) {
+        return;
+      }
+      const isStub = group.hasAttribute(STUB);
+      if (isStub) {
+        return;
+      }
+      const relatives = Relatives.of(group, shownLayer);
+      const layerElements = Array.from(shownLayer.querySelectorAll(ELEMENT_SELECTOR));
+      const layerEdges = Array.from(shownLayer.querySelectorAll(EDGE_SELECTOR));
+      const dimmableEdges = layerEdges.filter((edge) => !Contract.isBadge(edge));
+      const dimmableGroups = [...layerElements, ...dimmableEdges];
+      this.dimmedGroups = dimmableGroups.filter((candidate) => !relatives.has(candidate));
+      this.dimmedGroups.forEach((dimmedGroup) => dimmedGroup.setAttribute(DIMMED, ''));
+      this.anchorGroup = group;
+    }
+
+    clear() {
+      this.dimmedGroups.forEach((dimmedGroup) => dimmedGroup.removeAttribute(DIMMED));
+      this.dimmedGroups = [];
+      this.anchorGroup = null;
+    }
+  }
+
+  /** Collects the groups of a layer related to one element or edge group: its edges, their endpoints, and the ancestors of all of these. */
+  const Relatives = {
+    of(group, layer) {
+      const isEdge = group.hasAttribute(EDGE);
+      const core = isEdge ? Relatives.coreOfEdge(group) : Relatives.coreOfElement(group);
+      const layerEdges = Array.from(layer.querySelectorAll(EDGE_SELECTOR));
+      const coreEdges = layerEdges.filter(core.isCoreEdge);
+      const endpointPaths = new Set(coreEdges.flatMap((edge) => Contract.endpointsOf(edge)));
+      const layerElements = Array.from(layer.querySelectorAll(ELEMENT_SELECTOR));
+      const endpointElements = layerElements.filter((element) => endpointPaths.has(element.getAttribute(ELEMENT)));
+      const litElements = [...core.elements, ...endpointElements];
+      const litAncestors = litElements.flatMap((element) => Contract.ancestorElementsOf(element));
+      return new Set([...litElements, ...litAncestors, ...coreEdges]);
+    },
+
+    /** The element, its descendants, and every edge with an endpoint among them. */
+    coreOfElement(element) {
+      const descendants = Array.from(element.querySelectorAll(ELEMENT_SELECTOR));
+      const subtree = [element, ...descendants];
+      const subtreePaths = new Set(subtree.map((member) => member.getAttribute(ELEMENT)));
+      const isCoreEdge = (edge) => {
+        const [from, to] = Contract.endpointsOf(edge);
+        const isFromInSubtree = subtreePaths.has(from);
+        const isToInSubtree = subtreePaths.has(to);
+        return isFromInSubtree || isToInSubtree;
+      };
+      return { elements: subtree, isCoreEdge };
+    },
+
+    /** Every group drawing the same edge, since a labelled edge has a second group for its label. */
+    coreOfEdge(edge) {
+      const edgeName = edge.getAttribute(EDGE);
+      const isCoreEdge = (candidate) => candidate.getAttribute(EDGE) === edgeName;
+      return { elements: [], isCoreEdge };
+    },
+  };
+
+  /** Shows where the focused level sits, as a chain of floors or a mini-map, pinned top-right at a constant on-screen size; hidden at the root. */
+  class Elevator {
+    constructor(svg, focusLevel) {
+      this.svg = svg;
+      const diagramTitle = Contract.titleOf(svg);
+      const rootLabel = diagramTitle ?? ROOT_FLOOR_FALLBACK_LABEL;
+      this.modes = [new FloorChain(rootLabel, focusLevel), new MiniMap(focusLevel)];
+      this.modeIndex = 0;
+      this.elevator = createSvgElement('g', { class: 'svugy-elevator', role: 'group', 'aria-label': 'elevator' });
+      this.elevator.addEventListener('click', (event) => event.stopPropagation());
+      this.focusedLevel = null;
+      this.width = 0;
+      const viewBoxObserver = new MutationObserver(() => this.place());
+      viewBoxObserver.observe(svg, { attributes: true, attributeFilter: ['viewBox'] });
+      const resizeObserver = new ResizeObserver(() => this.place());
+      resizeObserver.observe(svg);
+    }
+
+    showFor(focusedLevel) {
+      this.focusedLevel = focusedLevel;
+      const parentLevel = Contract.enclosingLevelOf(focusedLevel);
+      const isFocusedLevelRoot = parentLevel === null;
+      if (isFocusedLevelRoot) {
+        this.hide();
+        return;
+      }
+      this.render();
+    }
+
+    hide() {
+      const wasFocusInside = this.elevator.contains(document.activeElement);
+      this.elevator.remove();
+      if (wasFocusInside) {
+        this.svg.focus({ preventScroll: true });
+      }
+    }
+
+    render() {
+      const wasFocusInside = this.elevator.contains(document.activeElement);
+      const mode = this.modes[this.modeIndex];
+      const nextModeIndex = (this.modeIndex + 1) % this.modes.length;
+      const nextMode = this.modes[nextModeIndex];
+      const plate = createSvgElement('rect', { class: 'svugy-elevator-plate', rx: 6 });
+      const toggle = ElevatorRow.create('svugy-elevator-toggle', `${TOGGLE_GLYPH} ${nextMode.name}`, 0);
+      toggle.setAttribute('transform', `translate(${ELEVATOR_PADDING_PX} ${ELEVATOR_PADDING_PX})`);
+      bindButton(toggle, `show the ${nextMode.name}`, () => this.switchToMode(nextModeIndex));
+      const contentTop = 2 * ELEVATOR_PADDING_PX + ELEVATOR_ROW_HEIGHT_PX;
+      const content = createSvgElement('g', { transform: `translate(${ELEVATOR_PADDING_PX} ${contentTop})` });
+      this.elevator.replaceChildren(plate, toggle, content);
+      this.svg.appendChild(this.elevator);
+      const toggleWidth = ElevatorRow.naturalWidthOf(toggle);
+      ElevatorRow.setWidth(toggle, toggleWidth);
+      const contentSize = mode.drawInto(content, this.focusedLevel);
+      const innerWidth = Math.max(toggleWidth, contentSize.width);
+      this.width = innerWidth + 2 * ELEVATOR_PADDING_PX;
+      const height = contentTop + contentSize.height + ELEVATOR_PADDING_PX;
+      plate.setAttribute('width', String(this.width));
+      plate.setAttribute('height', String(height));
+      this.place();
+      if (wasFocusInside) {
+        toggle.focus({ preventScroll: true });
+      }
+    }
+
+    switchToMode(modeIndex) {
+      this.modeIndex = modeIndex;
+      this.render();
+    }
+
+    place() {
+      const isDetached = !this.elevator.isConnected;
+      if (isDetached) {
+        return;
+      }
+      const screenMatrix = this.svg.getScreenCTM();
+      if (screenMatrix === null) {
+        return;
+      }
+      const screenToUserMatrix = screenMatrix.inverse();
+      const svgBounds = this.svg.getBoundingClientRect();
+      const clientCorner = new DOMPoint(svgBounds.right, svgBounds.top);
+      const userCorner = clientCorner.matrixTransform(screenToUserMatrix);
+      const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
+      // x = corner.x − (m + w)·u, y = corner.y + m·u, with u user units per pixel, so the elevator sits m pixels inside the top-right corner
+      const x = userCorner.x - (ELEVATOR_VIEW_MARGIN_PX + this.width) * userUnitsPerPixel;
+      const y = userCorner.y + ELEVATOR_VIEW_MARGIN_PX * userUnitsPerPixel;
+      this.elevator.setAttribute('transform', `translate(${x} ${y}) scale(${userUnitsPerPixel})`);
+    }
+  }
+
+  /** Draws the chain of floors from the root level down to the focused one; clicking a floor focuses its level. */
+  class FloorChain {
+    constructor(rootLabel, focusLevel) {
+      this.name = 'floors';
+      this.rootLabel = rootLabel;
+      this.focusLevel = focusLevel;
+    }
+
+    drawInto(container, focusedLevel) {
+      const levels = Contract.levelsFromRootTo(focusedLevel);
+      const floors = levels.map((level, depth) => {
+        const label = this.floorLabelOf(level);
+        const indent = depth * ELEVATOR_FLOOR_INDENT_PX;
+        const floor = ElevatorRow.create('svugy-elevator-floor', label, indent);
+        const floorTop = depth * ELEVATOR_ROW_HEIGHT_PX;
+        floor.setAttribute('transform', `translate(0 ${floorTop})`);
+        const isFocusedFloor = level === focusedLevel;
+        if (isFocusedFloor) {
+          floor.classList.add('svugy-elevator-floor-current');
+          return floor;
+        }
+        bindButton(floor, `focus ${label}`, () => this.focusLevel(level));
+        return floor;
+      });
+      container.replaceChildren(...floors);
+      const floorWidths = floors.map((floor) => ElevatorRow.naturalWidthOf(floor));
+      const width = Math.max(...floorWidths);
+      floors.forEach((floor) => ElevatorRow.setWidth(floor, width));
+      const height = floors.length * ELEVATOR_ROW_HEIGHT_PX;
+      return { width, height };
+    }
+
+    floorLabelOf(level) {
+      const owner = Contract.enclosingElementOf(level);
+      if (owner === null) {
+        return this.rootLabel;
+      }
+      const ownerTitle = Contract.titleOf(owner);
+      return ownerTitle ?? level.getAttribute(LEVEL);
+    }
+  }
+
+  /** Draws the mini-map: the shown layer cropped to the focused level's parent, framing the focused level; clicking it focuses the parent. */
+  class MiniMap {
+    constructor(focusLevel) {
+      this.name = 'map';
+      this.focusLevel = focusLevel;
+      this.miniatureSource = null;
+      this.miniature = null;
+    }
+
+    drawInto(container, focusedLevel) {
+      const levelsFromRoot = Contract.levelsFromRootTo(focusedLevel);
+      const rootLevel = levelsFromRoot[0];
+      const parentLevel = Contract.enclosingLevelOf(focusedLevel);
+      const parentViewText = parentLevel.getAttribute(VIEW);
+      const parentView = View.parse(parentViewText);
+      const focusedViewText = focusedLevel.getAttribute(VIEW);
+      const focusedView = View.parse(focusedViewText);
+      const isViewMissing = parentView === null || focusedView === null;
+      if (isViewMissing) {
+        container.replaceChildren();
+        return { width: 0, height: 0 };
+      }
+      // s = min(W / w, H / h): the largest scale that fits the parent's view in the map's maximum box
+      const mapScale = Math.min(ELEVATOR_MAP_MAX_WIDTH_PX / parentView.width, ELEVATOR_MAP_MAX_HEIGHT_PX / parentView.height);
+      const width = parentView.width * mapScale;
+      const height = parentView.height * mapScale;
+      const map = createSvgElement('g', { class: 'svugy-elevator-map' });
+      const backdrop = createSvgElement('rect', { class: 'svugy-elevator-map-backdrop', width, height, rx: 3 });
+      const viewport = createSvgElement('svg', { width, height, viewBox: parentViewText });
+      const miniature = this.miniatureOf(rootLevel);
+      const frame = createSvgElement('rect', {
+        class: 'svugy-elevator-map-frame',
+        x: focusedView.x,
+        y: focusedView.y,
+        width: focusedView.width,
+        height: focusedView.height,
+      });
+      viewport.append(miniature, frame);
+      map.append(backdrop, viewport);
+      bindButton(map, 'focus the parent level', () => this.focusLevel(parentLevel));
+      container.replaceChildren(map);
+      return { width, height };
+    }
+
+    miniatureOf(rootLevel) {
+      const isCachedSource = rootLevel === this.miniatureSource;
+      if (isCachedSource) {
+        return this.miniature;
+      }
+      this.miniature = Miniature.inertCloneOf(rootLevel);
+      this.miniatureSource = rootLevel;
+      return this.miniature;
+    }
+  }
+
+  /** Clones a level into a copy that only paints: no ids, contract attributes, tab stops, links, overlays, travelers or tooltips. */
+  const Miniature = {
+    inertCloneOf(level) {
+      const miniature = level.cloneNode(true);
+      const nonPaintingNodes = miniature.querySelectorAll(NON_PAINTING_SELECTOR);
+      nonPaintingNodes.forEach((node) => node.remove());
+      const descendants = Array.from(miniature.querySelectorAll('*'));
+      const nodes = [miniature, ...descendants];
+      nodes.forEach(Miniature.stripInteractiveAttributes);
+      miniature.setAttribute('class', 'svugy-elevator-miniature');
+      return miniature;
+    },
+
+    stripInteractiveAttributes(node) {
+      const isLink = node.localName === 'a';
+      const attributeNames = node.getAttributeNames();
+      const strippedNames = attributeNames.filter((name) => {
+        const isContractAttribute = name.startsWith(CONTRACT_ATTRIBUTE_PREFIX);
+        const isInteractiveAttribute = MINIATURE_STRIPPED_ATTRIBUTES.has(name);
+        const isLinkTarget = isLink && name.endsWith('href');
+        return isContractAttribute || isInteractiveAttribute || isLinkTarget;
+      });
+      strippedNames.forEach((name) => node.removeAttribute(name));
+    },
+  };
+
+  /** Lays out one elevator row: a plate under a text label indented by `indent` pixels. */
+  const ElevatorRow = {
+    create(className, label, indent) {
+      const row = createSvgElement('g', { class: `svugy-elevator-row ${className}` });
+      const plate = createSvgElement('rect', { class: 'svugy-elevator-row-plate', rx: 4, height: ELEVATOR_ROW_HEIGHT_PX });
+      const textStart = indent + ELEVATOR_LABEL_INSET_PX;
+      const text = createSvgElement('text', { class: 'svugy-elevator-label', x: textStart, y: ELEVATOR_ROW_BASELINE_PX });
+      text.textContent = DetailLines.truncate(label);
+      row.append(plate, text);
+      return row;
+    },
+
+    naturalWidthOf(row) {
+      const text = row.lastElementChild;
+      const textStart = Number(text.getAttribute('x'));
+      const textLength = text.getComputedTextLength();
+      return textStart + textLength + ELEVATOR_LABEL_INSET_PX;
+    },
+
+    setWidth(row, width) {
+      const plate = row.firstElementChild;
+      plate.setAttribute('width', String(width));
+    },
+  };
+
+  /** Translates pointer, focus and key events into navigation, detail panels and dimming. */
   const Interactions = {
-    bind(svg, navigator, panel) {
+    bind(svg, navigator, panel, dimmer) {
       Interactions.makeGroupsFocusable(svg);
       svg.addEventListener('click', (event) => {
         const group = Interactions.groupAt(event.target);
         const clientPoint = { x: event.clientX, y: event.clientY };
         if (group === null) {
-          Interactions.exitOneLevel(navigator, panel);
+          Interactions.exitOneStep(navigator, panel);
           return;
         }
         Interactions.activate(group, clientPoint, navigator, panel);
@@ -790,7 +1689,7 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
       svg.addEventListener('keydown', (event) => {
         const isEscape = event.key === 'Escape';
         if (isEscape) {
-          Interactions.exitOneLevel(navigator, panel);
+          Interactions.exitOneStep(navigator, panel);
           return;
         }
         const isActivationKey = event.key === 'Enter' || event.key === ' ';
@@ -798,7 +1697,7 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
         const isGroupActivated = isActivationKey && isFocusedGroup;
         if (isGroupActivated) {
           event.preventDefault();
-          const groupCenter = Interactions.centerOf(event.target);
+          const groupCenter = clientCenterOf(event.target);
           Interactions.activate(event.target, groupCenter, navigator, panel);
         }
       });
@@ -806,21 +1705,30 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
         const group = Interactions.groupAt(event.target);
         if (group === null) {
           panel.hide();
+          dimmer.clear();
           return;
         }
         const clientPoint = { x: event.clientX, y: event.clientY };
         panel.show(group, clientPoint);
+        dimmer.dimUnrelatedTo(group, navigator.shownLayer);
       });
-      svg.addEventListener('pointerleave', () => panel.hide());
+      svg.addEventListener('pointerleave', () => {
+        panel.hide();
+        dimmer.clear();
+      });
       svg.addEventListener('focusin', (event) => {
         const group = Interactions.groupAt(event.target);
         if (group === null) {
           return;
         }
-        const groupCenter = Interactions.centerOf(group);
+        const groupCenter = clientCenterOf(group);
         panel.show(group, groupCenter);
+        dimmer.dimUnrelatedTo(group, navigator.shownLayer);
       });
-      svg.addEventListener('focusout', () => panel.hide());
+      svg.addEventListener('focusout', () => {
+        panel.hide();
+        dimmer.clear();
+      });
     },
 
     makeGroupsFocusable(svg) {
@@ -840,19 +1748,17 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
     },
 
     activate(group, clientPoint, navigator, panel) {
-      const reachedLevel = navigator.levelReachedBy(group);
-      const isEnteredLevel = reachedLevel === navigator.enteredLevel;
-      if (isEnteredLevel) {
-        panel.show(group, clientPoint);
+      const hasViewMoved = navigator.followClickOn(group);
+      if (hasViewMoved) {
+        panel.hide();
         return;
       }
-      panel.hide();
-      navigator.enter(reachedLevel);
+      panel.show(group, clientPoint);
     },
 
-    exitOneLevel(navigator, panel) {
+    exitOneStep(navigator, panel) {
       panel.hide();
-      navigator.exitOneLevel();
+      navigator.exitOneStep();
     },
 
     groupAt(target) {
@@ -860,11 +1766,27 @@ text { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-ser
       return isElementTarget ? target.closest(INTERACTIVE_SELECTOR) : null;
     },
 
-    centerOf(group) {
-      const bounds = group.getBoundingClientRect();
-      return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
-    },
   };
+
+  /** Makes a runtime-built node act as a button: focusable, labelled, and activated by a click, Enter or Space. */
+  function bindButton(node, label, action) {
+    node.setAttribute('role', 'button');
+    node.setAttribute('tabindex', '0');
+    node.setAttribute('aria-label', label);
+    node.addEventListener('click', () => action());
+    node.addEventListener('keydown', (event) => {
+      const isActivationKey = event.key === 'Enter' || event.key === ' ';
+      if (isActivationKey) {
+        event.preventDefault();
+        action();
+      }
+    });
+  }
+
+  function clientCenterOf(node) {
+    const bounds = node.getBoundingClientRect();
+    return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+  }
 
   function createSvgElement(name, attributes) {
     const element = document.createElementNS(SVG_NAMESPACE, name);

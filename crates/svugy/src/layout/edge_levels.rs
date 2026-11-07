@@ -7,7 +7,7 @@ use svugy_model::path::ElementPath;
 
 use super::EdgeEnd;
 
-/// Indexes the arcs homed in each level, at their endpoints' lowest common ancestor; a badge is homed nowhere, taking no placement and no route.
+/// Indexes the arcs homed in each level, at their endpoints' lowest common ancestor.
 pub(super) struct HomedEdges<'a> {
     homed_edges_by_level: BTreeMap<ElementPath, Vec<&'a EdgeId>>,
 }
@@ -25,14 +25,10 @@ pub(super) struct LeavingEdge<'a> {
 }
 
 impl<'a> HomedEdges<'a> {
-    /// Home every layoutable arc of `model` in its lowest common ancestor level.
+    /// Home every arc of `model` in its lowest common ancestor level.
     pub(super) fn of(model: &'a Model) -> Self {
         let mut homed_edges_by_level: BTreeMap<ElementPath, Vec<&'a EdgeId>> = BTreeMap::new();
-        for (edge, _attributes) in model.layoutable_edges() {
-            let is_badge = model.is_badge_edge(edge);
-            if is_badge {
-                continue;
-            }
+        for (edge, _attributes) in model.arc_edges() {
             let home = edge.home_level();
             let homed_edges = homed_edges_by_level.entry(home).or_default();
             homed_edges.push(edge);
@@ -51,8 +47,10 @@ impl<'a> HomedEdges<'a> {
         self.homed_in(level)
             .iter()
             .map(|edge| {
-                let from_child = edge.from().ancestor_or_self_at_depth(child_depth);
-                let to_child = edge.to().ancestor_or_self_at_depth(child_depth);
+                let from = edge.from();
+                let to = edge.to();
+                let from_child = from.ancestor_or_self_at_depth(child_depth);
+                let to_child = to.ancestor_or_self_at_depth(child_depth);
                 (from_child, to_child)
             })
             .collect()

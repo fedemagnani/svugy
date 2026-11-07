@@ -21,6 +21,9 @@ pub(super) struct ResolvedPrimitive {
 }
 
 impl ResolvedPrimitive {
+    /// Thickness of the sheet stacked under a closed container, a fifth of a block's height.
+    const SHEET_THICKNESS: f64 = Block::DEFAULT_HEIGHT / 5.0;
+
     /// Resolve the element at `path` of `model` as a container or a leaf, or `None` when `model` has no element there.
     pub(super) fn of_path(model: &Model, path: &ElementPath) -> Option<Self> {
         let element = model.element(path)?;
@@ -34,10 +37,10 @@ impl ResolvedPrimitive {
     }
 
     /// Resolve a container to a slab whatever its authored shape and height, since its interior is stacked on a rectangular top, its labels hanging from its front face.
-    pub(super) fn of_container() -> Self {
+    fn of_container() -> Self {
         Self {
             height: Slab::DEFAULT_HEIGHT,
-            faces_over: Slab::faces_over,
+            faces_over: <Slab as Primitive>::Body::faces_over,
             label_site: LabelSite::hanging_from_front_left_face,
         }
     }
@@ -59,7 +62,7 @@ impl ResolvedPrimitive {
         let height = authored_height.unwrap_or(P::DEFAULT_HEIGHT);
         Self {
             height,
-            faces_over: P::faces_over,
+            faces_over: P::Body::faces_over,
             label_site: P::leaf_label_site,
         }
     }
@@ -80,6 +83,19 @@ impl ResolvedPrimitive {
         labels.into_iter().fold(faced_solid, Solid::with_label)
     }
 
+    /// Outline the sheet stacked under this primitive over `footprint`: the faces of its body `SHEET_THICKNESS` thick, lowered until its top meets the ground, joined in one path.
+    pub(super) fn sheet_under(&self, footprint: Rect) -> BezPath {
+        let plate_faces = (self.faces_over)(footprint, Self::SHEET_THICKNESS);
+        let plan_plate_floor = DVec3::new(0.0, 0.0, -Self::SHEET_THICKNESS);
+        let plate_floor = IsometricProjection::project(plan_plate_floor);
+        let plate_floor_offset = plate_floor.to_vec2();
+        let lower_to_plate_floor = Affine::translate(plate_floor_offset);
+        let lowered_outlines = plate_faces
+            .into_iter()
+            .flat_map(|plate_face| lower_to_plate_floor * plate_face.outline);
+        lowered_outlines.collect()
+    }
+
     /// Return the visible faces of this primitive's body extruded `height` tall over `footprint`, back to front.
     pub(super) fn faces_over(&self, footprint: Rect, height: f64) -> Vec<Face> {
         (self.faces_over)(footprint, height)
@@ -87,7 +103,7 @@ impl ResolvedPrimitive {
 }
 
 /// Declares one primitive an element can be drawn as, for `ResolvedPrimitive` to resolve.
-pub(super) trait Primitive {
+trait Primitive {
     /// Height of the top face above the ground, in plan units, when the element sets none.
     const DEFAULT_HEIGHT: f64;
 
@@ -98,15 +114,10 @@ pub(super) trait Primitive {
     fn leaf_label_site(footprint: Rect, height: f64) -> LabelSite {
         LabelSite::centered_on_top_face(footprint, height)
     }
-
-    /// Return the visible faces of the body extruded `height` tall over `footprint`, back to front.
-    fn faces_over(footprint: Rect, height: f64) -> Vec<Face> {
-        Self::Body::faces_over(footprint, height)
-    }
 }
 
 /// Draws a component as a block: a box standing over its footprint.
-pub(super) struct Block;
+struct Block;
 
 impl Primitive for Block {
     const DEFAULT_HEIGHT: f64 = 22.5;
@@ -115,7 +126,7 @@ impl Primitive for Block {
 }
 
 /// Draws a container as a slab: a low box.
-pub(super) struct Slab;
+struct Slab;
 
 impl Primitive for Slab {
     const DEFAULT_HEIGHT: f64 = 10.5;
@@ -124,7 +135,7 @@ impl Primitive for Slab {
 }
 
 /// Draws a store as an upright cylinder.
-pub(super) struct Cylinder;
+struct Cylinder;
 
 impl Primitive for Cylinder {
     const DEFAULT_HEIGHT: f64 = 25.5;
@@ -137,7 +148,7 @@ impl Primitive for Cylinder {
 }
 
 /// Draws a round platform as a disc: a cylinder as low as a slab.
-pub(super) struct Disc;
+struct Disc;
 
 impl Primitive for Disc {
     const DEFAULT_HEIGHT: f64 = Slab::DEFAULT_HEIGHT;
@@ -146,13 +157,13 @@ impl Primitive for Disc {
 }
 
 /// Outlines the faces the viewer sees of the body a footprint is extruded into.
-pub(super) trait Extrusion {
+trait Extrusion {
     /// Return the visible faces of the body extruded `height` tall over `footprint`, back to front.
     fn faces_over(footprint: Rect, height: f64) -> Vec<Face>;
 }
 
 /// Outlines the three visible faces of a cuboid extruded over a footprint.
-pub(super) struct Cuboid;
+struct Cuboid;
 
 impl Extrusion for Cuboid {
     /// Return the max-y face (screen left), the max-x face (screen right), then the top.
@@ -198,7 +209,7 @@ impl Face {
 }
 
 /// Outlines the visible side and top of the elliptic cylinder extruded over the ellipse inscribed in a footprint.
-pub(super) struct EllipticCylinder;
+struct EllipticCylinder;
 
 impl Extrusion for EllipticCylinder {
     /// Return the curved side, bounded by the screen silhouette and both front half-ellipses, then the top.
@@ -321,7 +332,7 @@ impl InscribedEllipse {
 }
 
 /// Sets an element's labels at one site on a plane of its solid: its title, then its caption one line below.
-pub(super) struct LabelSite {
+struct LabelSite {
     plane: Affine,
     anchor: TextAnchor,
     title_role: LabelRole,
@@ -461,7 +472,7 @@ mod tests {
     #[test]
     fn block_draws_left_right_then_top_over_its_footprint() {
         let footprint = Rect::new(20.0, 30.0, 80.0, 70.0);
-        let faces = Block::faces_over(footprint, Block::DEFAULT_HEIGHT);
+        let faces = <Block as Primitive>::Body::faces_over(footprint, Block::DEFAULT_HEIGHT);
         let shades: Vec<FaceShade> = faces.iter().map(|face| face.shade).collect();
         assert_eq!(shades, [FaceShade::Left, FaceShade::Right, FaceShade::Top]);
         let top_points = outline_points(&faces[2]);
@@ -479,8 +490,8 @@ mod tests {
     #[test]
     fn slab_is_a_lower_box_than_block() {
         let footprint = Rect::new(0.0, 0.0, 200.0, 100.0);
-        let slab_faces = Slab::faces_over(footprint, Slab::DEFAULT_HEIGHT);
-        let block_faces = Block::faces_over(footprint, Block::DEFAULT_HEIGHT);
+        let slab_faces = <Slab as Primitive>::Body::faces_over(footprint, Slab::DEFAULT_HEIGHT);
+        let block_faces = <Block as Primitive>::Body::faces_over(footprint, Block::DEFAULT_HEIGHT);
         let slab_top = slab_faces[2].outline.bounding_box();
         let block_top = block_faces[2].outline.bounding_box();
         assert_eq!(slab_faces.len(), 3);
@@ -494,7 +505,7 @@ mod tests {
     fn cylinder_top_is_the_projected_circle_with_the_example_proportions() {
         let radius = 31.5;
         let footprint = square_footprint(radius);
-        let faces = Cylinder::faces_over(footprint, Cylinder::DEFAULT_HEIGHT);
+        let faces = <Cylinder as Primitive>::Body::faces_over(footprint, Cylinder::DEFAULT_HEIGHT);
         let shades: Vec<FaceShade> = faces.iter().map(|face| face.shade).collect();
         assert_eq!(shades, [FaceShade::Left, FaceShade::Top]);
         let top_bounds = faces[1].outline.bounding_box();
@@ -514,7 +525,7 @@ mod tests {
     fn cylinder_side_spans_the_silhouette_from_ground_to_top() {
         let radius = 20.0;
         let footprint = square_footprint(radius);
-        let faces = Cylinder::faces_over(footprint, Cylinder::DEFAULT_HEIGHT);
+        let faces = <Cylinder as Primitive>::Body::faces_over(footprint, Cylinder::DEFAULT_HEIGHT);
         let side_bounds = faces[0].outline.bounding_box();
         let top_bounds = faces[1].outline.bounding_box();
         assert!((side_bounds.x0 - top_bounds.x0).abs() < 1e-9);
@@ -531,7 +542,7 @@ mod tests {
     #[test]
     fn elongated_footprint_keeps_its_silhouette_points_on_the_ellipse_extremes() {
         let footprint = Rect::new(0.0, 0.0, 120.0, 40.0);
-        let faces = Disc::faces_over(footprint, Disc::DEFAULT_HEIGHT);
+        let faces = <Disc as Primitive>::Body::faces_over(footprint, Disc::DEFAULT_HEIGHT);
         let top_bounds = faces[1].outline.bounding_box();
         let top_points = outline_points(&faces[1]);
         let rightmost = top_points[0];

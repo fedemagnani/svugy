@@ -59,12 +59,6 @@ pub(crate) struct Diagnostics {
     warnings: Vec<UnsupportedConstruct>,
 }
 
-/// Locate a labelled diagnostic by where its first label starts in the source.
-pub trait LabelledDiagnostic {
-    /// Return where the diagnostic's first label starts, or `None` when it has no label.
-    fn first_label_offset(&self) -> Option<usize>;
-}
-
 impl Diagnostics {
     /// Create diagnostics carrying on the `errors` and `warnings` an earlier stage recorded.
     pub(crate) fn from_parts(
@@ -76,14 +70,16 @@ impl Diagnostics {
 
     /// Record a warning that `construct` at `span` is ignored.
     pub(crate) fn record_warning(&mut self, construct: Construct, span: Span) {
-        let warning = UnsupportedConstruct::new(construct, span);
+        let span = SourceSpan::from(span);
+        let warning = UnsupportedConstruct { construct, span };
         self.warnings.push(warning);
     }
 
     /// Record a syntax error of `message` at `span`.
     pub(crate) fn record_error(&mut self, message: impl Into<String>, span: Span) {
         let message = message.into();
-        let error = SyntaxError::new(message, span);
+        let span = SourceSpan::from(span);
+        let error = SyntaxError { message, span };
         self.errors.push(error);
     }
 
@@ -96,30 +92,6 @@ impl Diagnostics {
     /// Split the diagnostics into their errors and their warnings.
     pub(crate) fn into_parts(self) -> (Vec<SyntaxError>, Vec<UnsupportedConstruct>) {
         (self.errors, self.warnings)
-    }
-}
-
-impl<D: Diagnostic + ?Sized> LabelledDiagnostic for D {
-    fn first_label_offset(&self) -> Option<usize> {
-        let mut labels = self.labels().into_iter().flatten();
-        let first_label = labels.next();
-        first_label.map(|label| label.offset())
-    }
-}
-
-impl SyntaxError {
-    /// Create a new syntax error of `message` at `span`.
-    pub(crate) fn new(message: String, span: impl Into<SourceSpan>) -> Self {
-        let span = span.into();
-        Self { message, span }
-    }
-}
-
-impl UnsupportedConstruct {
-    /// Create a new warning that `construct` at `span` is unsupported.
-    pub(crate) fn new(construct: Construct, span: impl Into<SourceSpan>) -> Self {
-        let span = span.into();
-        Self { construct, span }
     }
 }
 
@@ -150,5 +122,19 @@ impl fmt::Display for Construct {
             Self::FieldOnRoot(keyword) => write!(formatter, "the field `{keyword}` on the root"),
             Self::UnknownStyleKey(key) => write!(formatter, "the style key `{key}`"),
         }
+    }
+}
+
+/// Locate a labelled diagnostic by where its first label starts in the source.
+pub trait LabelledDiagnostic {
+    /// Return where the diagnostic's first label starts, or `None` when it has no label.
+    fn first_label_offset(&self) -> Option<usize>;
+}
+
+impl<D: Diagnostic + ?Sized> LabelledDiagnostic for D {
+    fn first_label_offset(&self) -> Option<usize> {
+        let mut labels = self.labels().into_iter().flatten();
+        let first_label = labels.next();
+        first_label.map(|label| label.offset())
     }
 }

@@ -7,9 +7,7 @@ use miette::{Diagnostic, JSONReportHandler, Severity, SourceSpan};
 
 use crate::legend::DashKey;
 use crate::link::Link;
-use crate::model::{
-    Element, MAX_MAGNITUDE, Model, ModelContent, PlacementHint, Shape, UncheckedModel,
-};
+use crate::model::{Element, MAX_MAGNITUDE, Model, PlacementHint, Shape};
 use crate::path::ElementPath;
 use crate::problem::{
     AncestorDescendantEdge, ArcIntoBadgeTarget, ChildPlacementWithoutChildren,
@@ -20,14 +18,22 @@ use crate::problem::{
 };
 use crate::style::AnyStyleKey;
 
-/// Admit a model unless its report holds an error, handing out that full report either way, warnings included.
-#[derive(Debug)]
-pub struct ModelAdmission {
-    pub model: Option<Model>,
-    pub report: ModelReport,
+/// Assemble a model whose references are not yet checked, recording duplicate declarations; only `admit` hands it out.
+#[derive(Debug, Default)]
+pub(crate) struct UncheckedModel {
+    pub(crate) model: Model,
+    pub(crate) duplicate_declarations: Vec<(ElementPath, Element)>,
 }
 
 impl UncheckedModel {
+    /// Hold `model` unchecked, with no duplicate declaration recorded.
+    pub(crate) fn new(model: Model) -> Self {
+        Self {
+            model,
+            duplicate_declarations: Vec::new(),
+        }
+    }
+
     /// Admit the model only when no check holds an error.
     pub(crate) fn admit(self) -> ModelAdmission {
         let report = self.validate();
@@ -38,9 +44,7 @@ impl UncheckedModel {
                 report,
             };
         }
-        let content = self.content;
-        let model = Model { content };
-        let admitted_model = Some(model);
+        let admitted_model = Some(self.model);
         ModelAdmission {
             model: admitted_model,
             report,
@@ -49,19 +53,19 @@ impl UncheckedModel {
 
     /// Run every semantic check and report each problem found, errors and warnings alike.
     fn validate(&self) -> ModelReport {
-        let content = &self.content;
+        let model = &self.model;
         let duplicate_elements = self.find_duplicate_elements();
-        let missing_ancestors = content.find_missing_ancestors();
-        let dangling_endpoints = content.find_dangling_edge_endpoints();
-        let ancestor_descendant_edges = content.find_ancestor_descendant_edges();
-        let style_problems = content.find_style_problems();
-        let unbounded_positions = content.find_unbounded_positions();
-        let placement_problems = content.find_impossible_placement_hints();
-        let height_problems = content.find_impossible_heights();
-        let ignored_container_bodies = content.find_ignored_container_bodies();
-        let arcs_into_badge_targets = content.find_arcs_from_containers_into_badge_targets();
-        let unresolved_links = content.find_unresolved_links();
-        let legend_problems = content.find_legend_problems();
+        let missing_ancestors = model.find_missing_ancestors();
+        let dangling_endpoints = model.find_dangling_edge_endpoints();
+        let ancestor_descendant_edges = model.find_ancestor_descendant_edges();
+        let style_problems = model.find_style_problems();
+        let unbounded_positions = model.find_unbounded_positions();
+        let placement_problems = model.find_impossible_placement_hints();
+        let height_problems = model.find_impossible_heights();
+        let ignored_container_bodies = model.find_ignored_container_bodies();
+        let arcs_into_badge_targets = model.find_arcs_from_containers_into_badge_targets();
+        let unresolved_links = model.find_unresolved_links();
+        let legend_problems = model.find_legend_problems();
         let problems = duplicate_elements
             .into_iter()
             .chain(missing_ancestors)
@@ -95,7 +99,14 @@ impl UncheckedModel {
     }
 }
 
-impl ModelContent {
+/// Admit a model unless its report holds an error, handing out that full report either way, warnings included.
+#[derive(Debug)]
+pub struct ModelAdmission {
+    pub model: Option<Model>,
+    pub report: ModelReport,
+}
+
+impl Model {
     /// Report each missing ancestor once, against the first element (in path order) that needs it.
     fn find_missing_ancestors(&self) -> Vec<Problem> {
         let elements = self.elements();

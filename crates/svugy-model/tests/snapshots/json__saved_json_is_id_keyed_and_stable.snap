@@ -79,7 +79,8 @@ expression: saved
       "from": "pipeline.layout",
       "to": "browser",
       "ordinal": 1,
-      "label": "shapes"
+      "label": "shapes",
+      "traveler": "parcel"
     },
     {
       "from": "pipeline.render",

@@ -36,7 +36,7 @@ pub extern "C" fn output_pointer() -> *const u8 {
 
 /// Hold the playground's d2 source a page writes in and the JSON verdict it reads back, so no pointer ever crosses the boundary inward.
 #[derive(Default)]
-pub struct Playground {
+struct Playground {
     input: Vec<u8>,
     output: String,
 }
@@ -102,8 +102,7 @@ impl LocatedDiagnostic {
         let help = diagnostic.help().map(|help| help.to_string());
         let label_offset = diagnostic.first_label_offset();
         let line_and_column = label_offset.map(|offset| Self::line_and_column(source, offset));
-        let line = line_and_column.map(|(line, _column)| line);
-        let column = line_and_column.map(|(_line, column)| column);
+        let (line, column) = line_and_column.unzip();
         Self {
             is_error,
             message,
@@ -120,7 +119,8 @@ impl LocatedDiagnostic {
         let before = source.get(..clamped_offset).unwrap_or(source);
         let line = 1 + before.matches('\n').count();
         let line_start = before.rfind('\n').map_or(0, |newline| newline + 1);
-        let column = 1 + before[line_start..].chars().count();
+        let line_before_offset = &before[line_start..];
+        let column = 1 + line_before_offset.chars().count();
         (line, column)
     }
 }

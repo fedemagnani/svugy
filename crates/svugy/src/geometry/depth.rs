@@ -51,7 +51,7 @@ impl<'a> DepthOrder<'a> {
     }
 
     /// Tell whether some sight line, a ground line x − y = k, meets `behind` before `front`: their x − y spans overlap and `behind` lies wholly at lower x or lower y.
-    pub(super) fn must_paint_before(behind: Rect, front: Rect) -> bool {
+    fn must_paint_before(behind: Rect, front: Rect) -> bool {
         let behind_starts_before_front_ends = behind.x0 - behind.y1 < front.x1 - front.y0;
         let front_starts_before_behind_ends = front.x0 - front.y1 < behind.x1 - behind.y0;
         let is_screen_x_overlap =

@@ -106,6 +106,13 @@ impl SvgWriter {
         self.close_element();
     }
 
+    /// Write element `name` with `attributes`, holding only `text`, escaped.
+    pub(crate) fn text_element(&mut self, name: &'static str, attributes: &Attributes, text: &str) {
+        self.open_element(name, attributes);
+        self.text(text);
+        self.close_element();
+    }
+
     /// Write `text`, escaped, as content of the open element.
     pub(crate) fn text(&mut self, text: &str) {
         self.inline_parent_children();
