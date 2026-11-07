@@ -1,6 +1,8 @@
 [workspace]
 # publish only when a release PR merges, never on other pushes to main
 release_always = false
+# dist creates the one GitHub release per version, from the svugy-cli tag, once its installers are built
+git_release_enable = false
 
 # the published crates ship together on the workspace version
 [[package]]
@@ -11,21 +13,17 @@ version_group = "svugy"
 name = "svugy-cli"
 version_group = "svugy"
 
-# published for `svugy` and `svugy-cli` to depend on, but only reached through them
 [[package]]
 name = "svugy-model"
 version_group = "svugy"
-git_release_enable = false
 
 [[package]]
 name = "svugy-parse"
 version_group = "svugy"
-git_release_enable = false
 
 [[package]]
 name = "svugy-dagre"
 version_group = "svugy"
-git_release_enable = false
 
 # built into the docs playground, never released
 [[package]]
