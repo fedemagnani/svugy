@@ -9,10 +9,11 @@ use super::ast::{
     Assignment, ComponentItem, Document, EdgeItem, Entry, LegendItem, LegendKeyRow, LegendSection,
     Reference, Span, StyleDefinition, Value,
 };
-use super::diagnostic::{Diagnostics, ProseList};
+use super::diagnostic::Diagnostics;
 use super::frontmatter::{Frontmatter, StyleSource};
 use super::lex::Token;
 use super::skeleton::{ComponentNode, LegendSkeleton, Skeleton, SourceText};
+use crate::prose::ProseList;
 
 /// Type the parser extra every line parser shares: chumsky's rich errors over line tokens.
 type ParserExtra<'tokens, 'src> = extra::Err<Rich<'tokens, Token<'src>, Span>>;
@@ -308,7 +309,7 @@ impl Value {
         let bare_token = any().filter(|token: &Token<'src>| {
             let is_delimiter = matches!(
                 token,
-                Token::Comma | Token::LeftParen | Token::RightParen | Token::Quoted(_)
+                Token::Comma | Token::LeftParen | Token::RightParen | Token::Quoted(..)
             );
             !is_delimiter
         });
@@ -330,7 +331,7 @@ impl Value {
                 line.slice(piece_span).to_owned()
             });
         let piece_after_comma_start = any()
-            .filter(|token: &Token<'src>| !matches!(token, Token::Name(_)))
+            .filter(|token: &Token<'src>| !matches!(token, Token::Name(_name)))
             .rewind();
         let piece_after_comma = just(Token::Comma)
             .ignore_then(piece_after_comma_start)

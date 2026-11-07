@@ -1,5 +1,7 @@
 //! Expand a properties list into typed properties: its styles first, left to right, then its `key=value` entries over them.
 
+use strum::IntoEnumIterator;
+
 use super::ast::{Assignment, Entry, Span, StyleDefinition};
 use super::diagnostic::Diagnostics;
 use super::property::{Property, PropertyKey};
@@ -76,8 +78,8 @@ impl StyleBook {
             };
             let Assignment { key, value } = assignment;
             let Some(property_key) = PropertyKey::parse(&key.inner) else {
-                let key_spellings = PropertyKey::SPELLINGS.map(|(spelling, _key)| spelling);
-                diagnostics.record_unknown("unknown key", &key.inner, key_spellings, key.span);
+                let known_keys = PropertyKey::iter();
+                diagnostics.record_unknown("unknown key", &key.inner, known_keys, key.span);
                 continue;
             };
             let is_repeated_key = assigned_keys.contains(&property_key);

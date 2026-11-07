@@ -3,6 +3,7 @@
 use std::fmt;
 use std::ops::Range;
 
+use strum::{EnumString, IntoStaticStr};
 use svugy_model::model::ByteRange;
 
 /// Hold the top-level statements of a d2 file that fall inside the v1 subset.
@@ -126,8 +127,9 @@ pub struct Span {
     pub end: usize,
 }
 
-/// Name a d2 reserved keyword outside `style` (d2ast/keywords.go at v0.9.0).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Name a d2 reserved keyword outside `style` (d2ast/keywords.go at v0.9.0), recognised case-insensitively as d2 does.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumString, IntoStaticStr)]
+#[strum(serialize_all = "kebab-case", ascii_case_insensitive)]
 pub(crate) enum Keyword {
     Shape,
     Label,
@@ -174,54 +176,6 @@ impl Field {
 impl SvugyProperty {
     /// Name the d2 variable whose entries carry what d2 cannot say, e.g. `vars: { svugy: { caption: … } }`.
     pub const VARIABLE: &str = "svugy";
-}
-
-impl Keyword {
-    /// Spell every keyword as d2 does, the one table both directions read.
-    const SPELLINGS: [(&'static str, Keyword); 26] = [
-        ("shape", Self::Shape),
-        ("label", Self::Label),
-        ("direction", Self::Direction),
-        ("link", Self::Link),
-        ("style", Self::Style),
-        ("vars", Self::Vars),
-        ("class", Self::Class),
-        ("classes", Self::Classes),
-        ("layers", Self::Layers),
-        ("scenarios", Self::Scenarios),
-        ("steps", Self::Steps),
-        ("icon", Self::Icon),
-        ("constraint", Self::Constraint),
-        ("tooltip", Self::Tooltip),
-        ("near", Self::Near),
-        ("width", Self::Width),
-        ("height", Self::Height),
-        ("top", Self::Top),
-        ("left", Self::Left),
-        ("grid-rows", Self::GridRows),
-        ("grid-columns", Self::GridColumns),
-        ("grid-gap", Self::GridGap),
-        ("vertical-gap", Self::VerticalGap),
-        ("horizontal-gap", Self::HorizontalGap),
-        ("source-arrowhead", Self::SourceArrowhead),
-        ("target-arrowhead", Self::TargetArrowhead),
-    ];
-
-    /// Recognise `name` as a keyword case-insensitively, as d2 does.
-    pub(crate) fn recognise(name: &str) -> Option<Self> {
-        let lowercase_name = name.to_ascii_lowercase();
-        let mut spellings = Self::SPELLINGS.iter();
-        let spelling = spellings.find(|(spelled_name, _keyword)| *spelled_name == lowercase_name);
-        spelling.map(|(_spelled_name, keyword)| *keyword)
-    }
-
-    /// Spell the keyword's name as d2 does.
-    pub(crate) fn name(self) -> &'static str {
-        let mut spellings = Self::SPELLINGS.iter();
-        let spelling = spellings.find(|(_spelled_name, keyword)| *keyword == self);
-        let (spelled_name, _keyword) = spelling.expect("every keyword has a spelling");
-        spelled_name
-    }
 }
 
 impl EdgeOperator {

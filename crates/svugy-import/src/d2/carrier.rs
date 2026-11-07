@@ -1,30 +1,16 @@
 //! Read the `svugy` carrier of the root, an element or an edge into the typed attributes it sets, rejecting unknown attributes, lists and malformed values one by one.
 
 use std::iter;
+use std::str::FromStr;
 
+use strum::VariantNames;
 use svugy_model::legend::DashKey;
 use svugy_model::model::{Position, Shape, Traveler};
 use svugy_model::path::ElementPath;
 
 use super::ast::{Scalar, Span, SvugyProperty, SvugyValue};
 use super::diagnostic::Diagnostics;
-
-/// Map each primitive the carrier's `svugy.shape` names, spelled as in the model's JSON, onto its shape.
-const SVUGY_PRIMITIVES: [(&str, Shape); 4] = [
-    ("box", Shape::Box),
-    ("slab", Shape::Slab),
-    ("cylinder", Shape::Cylinder),
-    ("disc", Shape::Disc),
-];
-
-/// Map each traveler an edge carrier's `svugy.traveler` names, spelled as in the model's JSON, onto its traveler.
-const SVUGY_TRAVELERS: [(&str, Traveler); 5] = [
-    ("dot", Traveler::Dot),
-    ("envelope", Traveler::Envelope),
-    ("parcel", Traveler::Parcel),
-    ("document", Traveler::Document),
-    ("key", Traveler::Key),
-];
+use crate::prose::ProseList;
 
 /// Address the root carrier's one list attribute, the legend's lines.
 const LEGEND_ENTRIES_PATH: [&str; 2] = ["legend", "entries"];
@@ -218,21 +204,19 @@ impl<'sink> CarrierReader<'sink> {
         attributes
     }
 
-    /// Read the primitive the carrier names through `SVUGY_PRIMITIVES`; it outranks d2's `shape`, which d2 itself still reads.
+    /// Read the primitive the carrier names, spelled as in the model's JSON in any case; it outranks d2's `shape`, which d2 itself still reads.
     fn read_primitive(&mut self, primitive: Scalar) -> Option<Shape> {
         let lowercase_primitive = primitive.text.to_ascii_lowercase();
-        let mut known_primitives = SVUGY_PRIMITIVES.iter();
-        let known_primitive = known_primitives
-            .find(|(primitive_name, _shape)| *primitive_name == lowercase_primitive);
-        let Some((_primitive_name, shape)) = known_primitive else {
+        let Ok(shape) = Shape::from_str(&lowercase_primitive) else {
+            let expected = ProseList::join_quoted(Shape::VARIANTS, "or");
             let message = format!(
-                "`{}` is not a svugy primitive: expected `box`, `slab`, `cylinder` or `disc`",
+                "`{}` is not a svugy primitive: expected {expected}",
                 primitive.text
             );
             self.diagnostics.record_error(message, primitive.span);
             return None;
         };
-        Some(*shape)
+        Some(shape)
     }
 
     /// Read a badge mark, `true` or `false`; any other value is rejected.
@@ -313,21 +297,19 @@ impl<'sink> CarrierReader<'sink> {
         latest_traveler
     }
 
-    /// Read the traveler the carrier names through `SVUGY_TRAVELERS`; an unknown name is rejected.
+    /// Read the traveler the carrier names, spelled as in the model's JSON in any case; an unknown name is rejected.
     fn read_traveler(&mut self, traveler: Scalar) -> Option<Traveler> {
         let lowercase_traveler = traveler.text.to_ascii_lowercase();
-        let mut known_travelers = SVUGY_TRAVELERS.iter();
-        let known_traveler =
-            known_travelers.find(|(traveler_name, _traveler)| *traveler_name == lowercase_traveler);
-        let Some((_traveler_name, known)) = known_traveler else {
+        let Ok(known_traveler) = Traveler::from_str(&lowercase_traveler) else {
+            let expected = ProseList::join_quoted(Traveler::VARIANTS, "or");
             let message = format!(
-                "`{}` is not a svugy traveler: expected `dot`, `envelope`, `parcel`, `document` or `key`",
+                "`{}` is not a svugy traveler: expected {expected}",
                 traveler.text
             );
             self.diagnostics.record_error(message, traveler.span);
             return None;
         };
-        Some(*known)
+        Some(known_traveler)
     }
 
     /// Reject an edge carrier attribute other than `svugy.traveler`, the only one an edge holds.

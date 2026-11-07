@@ -24,9 +24,6 @@ pub(crate) struct Diagnostics {
     errors: Vec<LanguageError>,
 }
 
-/// Join names or phrases in prose as `` `a`, `b` and `c` ``, closed by a conjunction.
-pub(crate) struct ProseList;
-
 impl Diagnostics {
     /// Create diagnostics carrying on the `errors` an earlier layer recorded.
     pub(crate) fn from_errors(errors: Vec<LanguageError>) -> Self {
@@ -63,26 +60,5 @@ impl Diagnostics {
         let mut errors = self.errors;
         errors.sort_by_key(|error| error.span.offset());
         errors
-    }
-}
-
-impl ProseList {
-    /// Join `names`, each in backticks, with commas and `conjunction` before the last.
-    pub(crate) fn join_quoted<T: fmt::Display>(names: &[T], conjunction: &str) -> String {
-        let quoted_names: Vec<String> = names.iter().map(|name| format!("`{name}`")).collect();
-        Self::join(&quoted_names, conjunction)
-    }
-
-    /// Join `phrases` with commas and `conjunction` before the last.
-    pub(crate) fn join(phrases: &[String], conjunction: &str) -> String {
-        let Some((last_phrase, leading_phrases)) = phrases.split_last() else {
-            return String::new();
-        };
-        let is_single = leading_phrases.is_empty();
-        if is_single {
-            return last_phrase.clone();
-        }
-        let leading_list = leading_phrases.join(", ");
-        format!("{leading_list} {conjunction} {last_phrase}")
     }
 }

@@ -1,5 +1,7 @@
 //! Filter the d2 syntax tree down to the v1 subset, recording each construct it drops as a warning and each key d2 rejects as an error.
 
+use std::str::FromStr;
+
 use svugy_model::style::AnyStyleKey;
 
 use super::ast::{
@@ -212,13 +214,13 @@ impl<'sink> SubsetFilter<'sink> {
                 return None;
             }
             Keyword::Layers | Keyword::Scenarios | Keyword::Steps => {
-                let board_keyword = keyword.name();
+                let board_keyword = keyword.into();
                 let construct = Construct::Board(board_keyword);
                 self.diagnostics.record_warning(construct, span);
                 return None;
             }
             reserved_keyword => {
-                let reserved_name = reserved_keyword.name();
+                let reserved_name = reserved_keyword.into();
                 let construct = Construct::ReservedField(reserved_name);
                 self.diagnostics.record_warning(construct, span);
                 return None;
@@ -252,7 +254,7 @@ impl<'sink> SubsetFilter<'sink> {
 
     /// Warn on the sub-keyed form `keyword.sub.key: …`, spelled with its sub-keys.
     fn warn_sub_keyed_form(&mut self, keyword: Keyword, rest: &[KeySegment], span: Span) {
-        let keyword_name = keyword.name();
+        let keyword_name: &str = keyword.into();
         let rest_names = rest.iter().map(|segment| segment.name.as_str());
         let names: Vec<&str> = std::iter::once(keyword_name).chain(rest_names).collect();
         let dotted_name = names.join(".");
@@ -300,8 +302,9 @@ impl<'sink> SubsetFilter<'sink> {
 
     /// Warn on a form of the field `keyword` that the subset does not take.
     fn warn_field_form(&mut self, keyword: Keyword, span: Span) {
-        let keyword_name = keyword.name().to_owned();
-        let field_form = Construct::FieldForm(keyword_name);
+        let keyword_name: &str = keyword.into();
+        let owned_keyword_name = keyword_name.to_owned();
+        let field_form = Construct::FieldForm(owned_keyword_name);
         self.diagnostics.record_warning(field_form, span);
     }
 
@@ -592,7 +595,8 @@ impl KeyRole {
             .iter()
             .enumerate()
             .find_map(|(index, segment)| {
-                let keyword = Keyword::recognise(&segment.name)?;
+                let parsed_keyword = Keyword::from_str(&segment.name);
+                let keyword = parsed_keyword.ok()?;
                 Some((index, keyword))
             });
         let Some((keyword_index, keyword)) = keyword_position else {

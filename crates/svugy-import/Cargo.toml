@@ -13,6 +13,7 @@ chumsky.workspace = true
 miette.workspace = true
 thiserror.workspace = true
 serde.workspace = true
+strum.workspace = true
 comrak = { version = "0.59", default-features = false }
 serde-saphyr = { version = "2.1", default-features = false, features = ["deserialize"] }
 

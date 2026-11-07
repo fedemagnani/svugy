@@ -6,6 +6,7 @@ use std::ops::Bound;
 
 use miette::SourceSpan;
 use serde::{Deserialize, Serialize};
+use strum::{EnumString, IntoStaticStr, VariantNames};
 
 use crate::legend::Legend;
 use crate::path::ElementPath;
@@ -337,6 +338,8 @@ impl Element {
 /// Shape an element as the v1 primitive it is drawn as.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(EnumString, IntoStaticStr, VariantNames)]
+#[strum(serialize_all = "lowercase")]
 pub enum Shape {
     Box,
     Slab,
@@ -347,6 +350,8 @@ pub enum Shape {
 /// Name the symbol an animated edge carries along its path.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(EnumString, IntoStaticStr, VariantNames)]
+#[strum(serialize_all = "lowercase")]
 pub enum Traveler {
     Dot,
     Envelope,
@@ -358,6 +363,8 @@ pub enum Traveler {
 /// Hint the strategy a container places its children with.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase", deny_unknown_fields)]
+#[derive(EnumString, IntoStaticStr, VariantNames)]
+#[strum(serialize_all = "lowercase")]
 pub enum PlacementHint {
     Layered,
     Grid { columns: u32 },

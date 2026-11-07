@@ -168,7 +168,9 @@ impl<'src> Skeleton<'src> {
 impl<'src, 'diagnostics> BlockReader<'src, 'diagnostics> {
     /// Create a reader of blocks parsed from `source`, indexing where each of its lines starts.
     fn new(source: &'src str, diagnostics: &'diagnostics mut Diagnostics) -> Self {
-        let newline_ends = source.match_indices('\n').map(|(newline, _)| newline + 1);
+        let newline_ends = source
+            .match_indices('\n')
+            .map(|(newline, _newline_text)| newline + 1);
         let line_starts = std::iter::once(0).chain(newline_ends).collect();
         Self {
             source,
@@ -218,7 +220,7 @@ impl<'src, 'diagnostics> BlockReader<'src, 'diagnostics> {
             for nested_block in nested_blocks {
                 let nested_ast = nested_block.data.borrow();
                 let nested_span = self.span(nested_ast.sourcepos);
-                let is_nested_list = matches!(nested_ast.value, NodeValue::List(_));
+                let is_nested_list = matches!(nested_ast.value, NodeValue::List(_list));
                 let message = if is_nested_list {
                     "only `## Components` items nest"
                 } else {

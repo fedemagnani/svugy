@@ -9,6 +9,7 @@ use svugy_model::legend::Legend;
 use svugy_model::model::{ByteRange, Edge, Element, Model, PlacementHint};
 use svugy_model::path::ElementPath;
 use svugy_model::style::{ColorKey, NumberKey};
+use svugy_model::text::LineStyle;
 use svugy_model::validate::{ModelAdmission, ModelReport};
 
 use super::SvugyParse;
@@ -16,7 +17,7 @@ use super::ast::{
     ComponentItem, Document, EdgeItem, LegendItem, LegendKeyRow, LegendSection, Reference, Span,
 };
 use super::diagnostic::{Diagnostics, LanguageError};
-use super::property::{LineStyle, Property, PropertyValue};
+use super::property::{Property, PropertyValue};
 use super::resolve::SuffixIndex;
 use super::style::StyleBook;
 use crate::d2::LabelledDiagnostic;

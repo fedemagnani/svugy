@@ -32,6 +32,7 @@ kurbo = "0.11"
 glam = { version = "0.30", features = ["libm"] }
 libm = "0.2"
 clap = { version = "4", features = ["derive"] }
+strum = { version = "0.27", features = ["derive"] }
 
 resvg = { version = "0.45", default-features = false }
 usvg = { version = "0.45", default-features = false }

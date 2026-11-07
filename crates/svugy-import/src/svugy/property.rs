@@ -1,26 +1,26 @@
 //! Read a `key=value` entry into a typed property, the one place a property key decides how its value is read.
 
 use std::fmt;
+use std::str::FromStr;
 
 use chumsky::span::Spanned;
+use strum::{EnumIter, EnumString, IntoStaticStr, VariantNames};
 use svugy_model::color::Rgba;
 use svugy_model::model::{PlacementHint, Position, Shape, Traveler};
 use svugy_model::style::{NumberValue, StyleValue};
+use svugy_model::text::LineStyle;
 
 use super::ast::{Reference, Span, Value};
-use super::diagnostic::ProseList;
+use crate::prose::ProseList;
 
 /// Spell the prefix of a `meta.NAME` key.
 const META_PREFIX: &str = "meta.";
 /// Separate the two numbers of a `position` written `X;Y`.
 const POSITION_SEMICOLON: char = ';';
-/// Spell the dash length of `line=dashed`.
-const DASHED_STROKE_DASH: f64 = 5.0;
-/// Spell the dash length of `line=dotted`.
-const DOTTED_STROKE_DASH: f64 = 2.0;
 
-/// Name a property key: one of the spec's tables, `target` of a legend key row, or a `meta.NAME` entry.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Name a property key: one of the spec's tables in their order, `target` of a legend key row, or a `meta.NAME` entry.
+#[derive(Debug, Clone, PartialEq, Eq, EnumString, EnumIter, IntoStaticStr)]
+#[strum(serialize_all = "lowercase")]
 pub(crate) enum PropertyKey {
     Caption,
     Color,
@@ -34,6 +34,7 @@ pub(crate) enum PropertyKey {
     Link,
     Traveler,
     Target,
+    #[strum(disabled)]
     Meta(String),
 }
 
@@ -63,40 +64,7 @@ pub(crate) enum PropertyValue {
     Meta { name: String, value: String },
 }
 
-/// Name how a line is drawn: an outline or edge dash, or an edge drawn as a badge.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum LineStyle {
-    Solid,
-    Dashed,
-    Dotted,
-    Badge,
-}
-
-/// Spell the kind and the keywords of a keyword-valued property, so one reader reads them all.
-trait Keyword: Copy + 'static {
-    /// Name the kind of value, as an error says what a value is not.
-    const KIND: &'static str;
-    /// Pair each keyword with what it reads as, in the spec's order.
-    const KEYWORDS: &'static [(&'static str, Self)];
-}
-
 impl PropertyKey {
-    /// Pair every key but `meta.NAME` with its spelling, in the spec's table order.
-    pub(crate) const SPELLINGS: [(&'static str, Self); 12] = [
-        ("caption", Self::Caption),
-        ("color", Self::Color),
-        ("stroke", Self::Stroke),
-        ("line", Self::Line),
-        ("shape", Self::Shape),
-        ("height", Self::Height),
-        ("position", Self::Position),
-        ("layout", Self::Layout),
-        ("columns", Self::Columns),
-        ("link", Self::Link),
-        ("traveler", Self::Traveler),
-        ("target", Self::Target),
-    ];
-
     /// Find the key spelled `spelling`, a `meta.NAME` key included.
     pub(crate) fn parse(spelling: &str) -> Option<Self> {
         let meta_name = spelling.strip_prefix(META_PREFIX);
@@ -105,9 +73,8 @@ impl PropertyKey {
             let name = name.to_owned();
             return Some(Self::Meta(name));
         }
-        let mut spellings = Self::SPELLINGS.iter();
-        let known_spelling = spellings.find(|(known, _key)| *known == spelling);
-        known_spelling.map(|(_spelling, key)| key.clone())
+        let known_key = Self::from_str(spelling);
+        known_key.ok()
     }
 
     /// Read `value` as this key decides, or return the error naming what the key accepts.
@@ -117,11 +84,11 @@ impl PropertyKey {
             Self::Caption => value.read_text().map(PropertyValue::Caption),
             Self::Color => value.read_colour().map(PropertyValue::Color),
             Self::Stroke => value.read_colour().map(PropertyValue::Stroke),
-            Self::Line => value.read_keyword().map(PropertyValue::Line),
-            Self::Shape => value.read_keyword().map(PropertyValue::Shape),
+            Self::Line => value.read_keyword(self).map(PropertyValue::Line),
+            Self::Shape => value.read_keyword(self).map(PropertyValue::Shape),
             Self::Height => value.read_positive_number(self).map(PropertyValue::Height),
             Self::Position => value.read_position(self).map(PropertyValue::Position),
-            Self::Layout => value.read_keyword().map(PropertyValue::Layout),
+            Self::Layout => value.read_keyword(self).map(PropertyValue::Layout),
             Self::Columns => value
                 .read_positive_integer(self)
                 .map(PropertyValue::Columns),
@@ -132,7 +99,7 @@ impl PropertyKey {
                 };
                 PropertyValue::Link(spanned_link)
             }),
-            Self::Traveler => value.read_keyword().map(PropertyValue::Traveler),
+            Self::Traveler => value.read_keyword(self).map(PropertyValue::Traveler),
             Self::Target => value.read_text().map(|target| {
                 let reference = Reference::from_dotted(&target, value_span);
                 PropertyValue::Target(reference)
@@ -141,17 +108,6 @@ impl PropertyKey {
                 let name = name.clone();
                 PropertyValue::Meta { name, value: text }
             }),
-        }
-    }
-}
-
-impl LineStyle {
-    /// Return the dash length this line style draws, `None` for a solid line or a badge.
-    pub(crate) fn stroke_dash(self) -> Option<f64> {
-        match self {
-            Self::Dashed => Some(DASHED_STROKE_DASH),
-            Self::Dotted => Some(DOTTED_STROKE_DASH),
-            Self::Solid | Self::Badge => None,
         }
     }
 }
@@ -171,16 +127,13 @@ impl Value {
         Ok(piece.clone())
     }
 
-    /// Read the value as one of `K`'s keywords.
-    fn read_keyword<K: Keyword>(&self) -> Result<K, String> {
+    /// Read the value as one of the keywords `K` names, spelled exactly.
+    fn read_keyword<K: FromStr + VariantNames>(&self, key: &PropertyKey) -> Result<K, String> {
         let text = self.read_text()?;
-        let mut keywords = K::KEYWORDS.iter();
-        let keyword = keywords.find(|(spelling, _keyword)| *spelling == text);
-        keyword.map(|(_spelling, keyword)| *keyword).ok_or_else(|| {
-            let kind = K::KIND;
-            let spellings: Vec<&str> = K::KEYWORDS.iter().map(|(spelling, _)| *spelling).collect();
-            let expected = ProseList::join_quoted(&spellings, "or");
-            format!("`{text}` is not a {kind}: expected {expected}")
+        let keyword = K::from_str(&text);
+        keyword.map_err(|_unknown_keyword| {
+            let expected = ProseList::join_quoted(K::VARIANTS, "or");
+            format!("`{text}` is not a {key}: expected {expected}")
         })
     }
 
@@ -244,55 +197,12 @@ impl Value {
     }
 }
 
-impl Keyword for LineStyle {
-    const KIND: &'static str = "line";
-    const KEYWORDS: &'static [(&'static str, Self)] = &[
-        ("solid", Self::Solid),
-        ("dashed", Self::Dashed),
-        ("dotted", Self::Dotted),
-        ("badge", Self::Badge),
-    ];
-}
-
-impl Keyword for Shape {
-    const KIND: &'static str = "shape";
-    const KEYWORDS: &'static [(&'static str, Self)] = &[
-        ("box", Self::Box),
-        ("slab", Self::Slab),
-        ("cylinder", Self::Cylinder),
-        ("disc", Self::Disc),
-    ];
-}
-
-impl Keyword for PlacementHint {
-    const KIND: &'static str = "layout";
-    const KEYWORDS: &'static [(&'static str, Self)] = &[
-        ("layered", Self::Layered),
-        ("grid", Self::Grid { columns: 0 }),
-        ("row", Self::Row),
-        ("column", Self::Column),
-    ];
-}
-
-impl Keyword for Traveler {
-    const KIND: &'static str = "traveler";
-    const KEYWORDS: &'static [(&'static str, Self)] = &[
-        ("dot", Self::Dot),
-        ("envelope", Self::Envelope),
-        ("parcel", Self::Parcel),
-        ("document", Self::Document),
-        ("key", Self::Key),
-    ];
-}
-
 impl fmt::Display for PropertyKey {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Self::Meta(name) = self {
             return write!(formatter, "{META_PREFIX}{name}");
         }
-        let mut spellings = Self::SPELLINGS.iter();
-        let spelling = spellings.find(|(_spelling, key)| key == self);
-        let spelling = spelling.map_or("", |(spelling, _key)| spelling);
+        let spelling: &str = self.into();
         formatter.write_str(spelling)
     }
 }

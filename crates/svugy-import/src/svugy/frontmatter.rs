@@ -2,14 +2,17 @@
 
 use std::collections::HashMap;
 use std::fmt;
+use std::str::FromStr;
 
 use chumsky::span::Spanned;
 use serde::de::{Deserialize, Deserializer, IgnoredAny, MapAccess, Visitor};
 use serde_saphyr::{DefaultMessageFormatter, Location, MessageFormatter, Spanned as YamlSpanned};
+use strum::{EnumString, VariantNames};
 
 use super::ast::Span;
 use super::diagnostic::Diagnostics;
 use super::skeleton::SourceText;
+use crate::prose::ProseList;
 
 /// Hold what the frontmatter sets: the title, the subtitle, and each style's verbatim properties list.
 #[derive(Debug, Default)]
@@ -27,8 +30,9 @@ pub(crate) struct StyleSource {
     pub(crate) properties_offset: usize,
 }
 
-/// Name a key the frontmatter may set.
-#[derive(Debug, Clone, Copy)]
+/// Name a key the frontmatter may set, in the spec's table order.
+#[derive(Debug, Clone, Copy, EnumString, VariantNames)]
+#[strum(serialize_all = "lowercase")]
 enum FrontmatterKey {
     Title,
     Subtitle,
@@ -42,22 +46,6 @@ struct FrontmatterFields {
     subtitle: Option<String>,
     styles: HashMap<YamlSpanned<String>, YamlSpanned<String>>,
     unknown_keys: Vec<YamlSpanned<String>>,
-}
-
-impl FrontmatterKey {
-    /// Pair every key with its spelling, in the spec's table order.
-    const SPELLINGS: [(&str, Self); 3] = [
-        ("title", Self::Title),
-        ("subtitle", Self::Subtitle),
-        ("styles", Self::Styles),
-    ];
-
-    /// Find the key spelled exactly `spelling`.
-    fn parse(spelling: &str) -> Option<Self> {
-        let mut spellings = Self::SPELLINGS.iter();
-        let known_spelling = spellings.find(|(known, _key)| *known == spelling);
-        known_spelling.map(|(_spelling, key)| *key)
-    }
 }
 
 impl Frontmatter {
@@ -89,7 +77,7 @@ impl Frontmatter {
         } = fields;
         for unknown_key in unknown_keys {
             let key_span = Self::source_span(body, unknown_key.referenced);
-            let known_spellings = FrontmatterKey::SPELLINGS.map(|(spelling, _key)| spelling);
+            let known_spellings = FrontmatterKey::VARIANTS;
             let prefix = "unknown frontmatter key";
             diagnostics.record_unknown(prefix, &unknown_key.value, known_spellings, key_span);
         }
@@ -160,18 +148,19 @@ impl<'de> Visitor<'de> for FrontmatterFieldsVisitor {
     type Value = FrontmatterFields;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("a mapping of `title`, `subtitle` and `styles`")
+        let key_list = ProseList::join_quoted(FrontmatterKey::VARIANTS, "and");
+        write!(formatter, "a mapping of {key_list}")
     }
 
     fn visit_map<A: MapAccess<'de>>(self, mut entries: A) -> Result<Self::Value, A::Error> {
         let mut fields = FrontmatterFields::default();
         while let Some(key) = entries.next_key::<YamlSpanned<String>>()? {
-            let frontmatter_key = FrontmatterKey::parse(&key.value);
+            let frontmatter_key = FrontmatterKey::from_str(&key.value);
             match frontmatter_key {
-                Some(FrontmatterKey::Title) => fields.title = Some(entries.next_value()?),
-                Some(FrontmatterKey::Subtitle) => fields.subtitle = Some(entries.next_value()?),
-                Some(FrontmatterKey::Styles) => fields.styles = entries.next_value()?,
-                None => {
+                Ok(FrontmatterKey::Title) => fields.title = Some(entries.next_value()?),
+                Ok(FrontmatterKey::Subtitle) => fields.subtitle = Some(entries.next_value()?),
+                Ok(FrontmatterKey::Styles) => fields.styles = entries.next_value()?,
+                Err(_unknown_key) => {
                     let _ignored_value: IgnoredAny = entries.next_value()?;
                     fields.unknown_keys.push(key);
                 }

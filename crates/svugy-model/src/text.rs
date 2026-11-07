@@ -3,10 +3,11 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
+use strum::{EnumString, IntoStaticStr, VariantNames};
 use thiserror::Error;
 
 use crate::link::Link;
-use crate::model::{Edge, EdgeId, Element, Model, PlacementHint, Shape, Traveler};
+use crate::model::{Edge, EdgeId, Element, Model, PlacementHint};
 use crate::path::ElementPath;
 use crate::style::{ColorKey, NumberKey, NumberValue, StyleValue};
 
@@ -234,7 +235,7 @@ impl<'a> SvugyPrinter<'a> {
             properties.push(property);
         }
         if let Some(shape) = element.shape() {
-            let shape_keyword = Self::shape_keyword(shape);
+            let shape_keyword: &str = shape.into();
             let property = format!("shape={shape_keyword}");
             properties.push(property);
         }
@@ -249,7 +250,7 @@ impl<'a> SvugyPrinter<'a> {
             properties.push(property);
         }
         if let Some(child_placement) = element.child_placement() {
-            let layout_keyword = Self::layout_keyword(child_placement);
+            let layout_keyword: &str = child_placement.into();
             let property = format!("layout={layout_keyword}");
             properties.push(property);
         }
@@ -335,7 +336,7 @@ impl<'a> SvugyPrinter<'a> {
             properties.push(property);
         }
         if let Some(traveler) = edge.traveler() {
-            let traveler_keyword = Self::traveler_keyword(traveler);
+            let traveler_keyword: &str = traveler.into();
             let property = format!("traveler={traveler_keyword}");
             properties.push(property);
         }
@@ -457,20 +458,16 @@ impl<'a> SvugyPrinter<'a> {
         matching_paths.count()
     }
 
-    /// Spell a stroke-dash as the `line` keyword drawing it, `dashed` for 5 and `dotted` for 2, reporting any other length.
+    /// Spell a stroke-dash as the `line` keyword drawing it, reporting a length no keyword draws.
     fn spell_line(stroke_dash: &str, reasons: &mut Vec<UnprintableReason>) -> &'static str {
         let dash_length = NumberValue::parse(stroke_dash);
-        let is_dashed = dash_length == Some(DASHED_LENGTH);
-        if is_dashed {
-            return "dashed";
-        }
-        let is_dotted = dash_length == Some(DOTTED_LENGTH);
-        if is_dotted {
-            return "dotted";
-        }
-        let unsayable_dash = UnprintableReason::UnsayableStrokeDash(stroke_dash.to_owned());
-        reasons.push(unsayable_dash);
-        "solid"
+        let line_style = dash_length.and_then(LineStyle::drawing_dash);
+        let Some(line_style) = line_style else {
+            let unsayable_dash = UnprintableReason::UnsayableStrokeDash(stroke_dash.to_owned());
+            reasons.push(unsayable_dash);
+            return LineStyle::Solid.into();
+        };
+        line_style.into()
     }
 
     /// Spell `text` as a bare token when it holds no whitespace, comma, parenthesis or quote, otherwise quoted.
@@ -589,35 +586,38 @@ impl<'a> SvugyPrinter<'a> {
         quoted.push('"');
         quoted
     }
+}
 
-    /// Spell a shape as its `shape` keyword.
-    fn shape_keyword(shape: Shape) -> &'static str {
-        match shape {
-            Shape::Box => "box",
-            Shape::Slab => "slab",
-            Shape::Cylinder => "cylinder",
-            Shape::Disc => "disc",
+/// Name how a `line` keyword draws: an outline or edge dash, or an edge drawn as a badge.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumString, IntoStaticStr, VariantNames)]
+#[strum(serialize_all = "lowercase")]
+pub enum LineStyle {
+    Solid,
+    Dashed,
+    Dotted,
+    Badge,
+}
+
+impl LineStyle {
+    /// Find the dashed line style drawing `dash_length`, `None` for a length no keyword draws.
+    pub fn drawing_dash(dash_length: f64) -> Option<Self> {
+        let is_dashed = dash_length == DASHED_LENGTH;
+        if is_dashed {
+            return Some(Self::Dashed);
         }
+        let is_dotted = dash_length == DOTTED_LENGTH;
+        if is_dotted {
+            return Some(Self::Dotted);
+        }
+        None
     }
 
-    /// Spell a placement hint as its `layout` keyword; a grid's column count is its own `columns` property.
-    fn layout_keyword(child_placement: PlacementHint) -> &'static str {
-        match child_placement {
-            PlacementHint::Layered => "layered",
-            PlacementHint::Grid { columns: _columns } => "grid",
-            PlacementHint::Row => "row",
-            PlacementHint::Column => "column",
-        }
-    }
-
-    /// Spell a traveler as its `traveler` keyword.
-    fn traveler_keyword(traveler: Traveler) -> &'static str {
-        match traveler {
-            Traveler::Dot => "dot",
-            Traveler::Envelope => "envelope",
-            Traveler::Parcel => "parcel",
-            Traveler::Document => "document",
-            Traveler::Key => "key",
+    /// Return the dash length this line style draws, `None` for a solid line or a badge.
+    pub fn stroke_dash(self) -> Option<f64> {
+        match self {
+            Self::Dashed => Some(DASHED_LENGTH),
+            Self::Dotted => Some(DOTTED_LENGTH),
+            Self::Solid | Self::Badge => None,
         }
     }
 }

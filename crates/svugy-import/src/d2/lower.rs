@@ -217,7 +217,8 @@ impl Lowering {
 
     /// Apply one field of an edge's map, warning on it unless it is a label, a style or the svugy carrier, all the model's edges hold.
     fn apply_edge_field_or_warn(&mut self, edge: Edge, field: Field) -> Edge {
-        let keyword_name = field.keyword().name();
+        let field_keyword = field.keyword();
+        let keyword_name: &str = field_keyword.into();
         match field {
             Field::Label(label) => edge.with_label(label.text),
             Field::Style(properties) => properties.into_iter().fold(edge, |edge, property| {
@@ -305,7 +306,8 @@ impl Lowering {
     /// Title the diagram by the root's `label`, as d2 titles a board's PDF page, subtitle it by the root's carrier, keep its default direction, and warn on every other field.
     fn lower_root_field(&mut self, field: Field, span: Span) {
         let root_key = ElementPath::root();
-        let keyword_name = field.keyword().name();
+        let field_keyword = field.keyword();
+        let keyword_name: &str = field_keyword.into();
         match field {
             Field::Label(label) => self.title = Some(label.text),
             Field::Svugy(properties) => {

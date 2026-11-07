@@ -3,7 +3,8 @@
 use svugy_model::path::ElementPath;
 
 use super::ast::{ComponentItem, Reference};
-use super::diagnostic::{Diagnostics, ProseList};
+use super::diagnostic::Diagnostics;
+use crate::prose::ProseList;
 
 /// Index every component path in declaration order, so a reference resolves by unique dotted suffix.
 #[derive(Debug)]

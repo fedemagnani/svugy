@@ -29,8 +29,8 @@ const TRAVEL_DURATION: &str = "2.4s";
 
 /// Draws one built-in traveler as a glyph centred on the origin, about eight units across.
 trait TravelerSymbol {
-    /// Name the traveler as `data-svugy-traveler` and its symbol's id spell it.
-    const NAME: &'static str;
+    /// Name the traveler this symbol draws, whose spelling `data-svugy-traveler` and the symbol's id use.
+    const TRAVELER: Traveler;
     /// Fill the body at this opacity: tinted under the marks of an outlined glyph.
     const BODY_OPACITY: f64 = TINTED_BODY_OPACITY;
 
@@ -138,8 +138,9 @@ impl ResolvedTraveler {
 
     /// Resolve the symbol `S` draws.
     fn symbol<S: TravelerSymbol>() -> Self {
+        let name: &'static str = S::TRAVELER.into();
         Self {
-            name: S::NAME,
+            name,
             body_opacity: S::BODY_OPACITY,
             body: S::body,
             marks: S::marks,
@@ -212,7 +213,7 @@ impl ResolvedTraveler {
 }
 
 impl TravelerSymbol for Dot {
-    const NAME: &'static str = "dot";
+    const TRAVELER: Traveler = Traveler::Dot;
     const BODY_OPACITY: f64 = 1.0;
 
     fn body() -> BezPath {
@@ -227,7 +228,7 @@ impl TravelerSymbol for Dot {
 }
 
 impl TravelerSymbol for Envelope {
-    const NAME: &'static str = "envelope";
+    const TRAVELER: Traveler = Traveler::Envelope;
 
     fn body() -> BezPath {
         let mut sheet = BezPath::new();
@@ -249,7 +250,7 @@ impl TravelerSymbol for Envelope {
 }
 
 impl TravelerSymbol for Parcel {
-    const NAME: &'static str = "parcel";
+    const TRAVELER: Traveler = Traveler::Parcel;
 
     fn body() -> BezPath {
         let mut cube = BezPath::new();
@@ -279,7 +280,7 @@ impl TravelerSymbol for Parcel {
 }
 
 impl TravelerSymbol for Document {
-    const NAME: &'static str = "document";
+    const TRAVELER: Traveler = Traveler::Document;
 
     fn body() -> BezPath {
         let mut page = BezPath::new();
@@ -306,7 +307,7 @@ impl TravelerSymbol for Document {
 }
 
 impl TravelerSymbol for Key {
-    const NAME: &'static str = "key";
+    const TRAVELER: Traveler = Traveler::Key;
 
     fn body() -> BezPath {
         let ring_center = Point::new(-2.0, 0.0);
