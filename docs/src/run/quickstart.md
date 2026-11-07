@@ -1,10 +1,12 @@
 # Quickstart
 
 ```sh
-cargo install --git https://github.com/fedemagnani/svugy svugy-cli
+curl -fsSL https://svugy.dev/install.sh | sh
 svugy example -o webapp.md
 svugy render webapp.md -o webapp.svg --open
 ```
+
+The installer puts `svugy` in `~/.cargo/bin` and adds it to `PATH`. On Windows run `irm https://svugy.dev/install.ps1 | iex`; with a Rust toolchain, `cargo install svugy-cli`.
 
 `example` writes a sample diagram of a web app; `--open` opens the written SVG in your default browser.
 
