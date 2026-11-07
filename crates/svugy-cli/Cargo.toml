@@ -20,3 +20,6 @@ miette = { workspace = true, features = ["fancy"] }
 [dev-dependencies]
 thiserror.workspace = true
 serde_json.workspace = true
+
+[lints]
+workspace = true

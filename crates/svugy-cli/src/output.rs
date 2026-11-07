@@ -33,8 +33,9 @@ impl OutputTarget {
     /// Write `contents` to stdout, a closed pipe being an I/O failure rather than a panic.
     pub fn write_stdout(contents: &str) -> Result<(), Failure> {
         let mut stdout = io::stdout().lock();
+        let content_bytes = contents.as_bytes();
         stdout
-            .write_all(contents.as_bytes())
+            .write_all(content_bytes)
             .into_diagnostic()
             .wrap_err_with(|| "cannot write to stdout")
             .map_err(Failure::Io)

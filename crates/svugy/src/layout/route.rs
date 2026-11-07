@@ -1,22 +1,24 @@
-//! Anchor a level's routes: a port on each footprint end, on the side facing the far end.
+//! Anchor every level's routes: a port on each footprint end, on the side facing the far end.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use kurbo::{Line, ParamCurve, Point, Rect, Vec2};
+use kurbo::{Line, ParamCurve, Point, Rect};
 use svugy_model::model::EdgeId;
 use svugy_model::path::ElementPath;
 
-use super::{Port, Route, Side};
+use super::edge_levels::HomedEdges;
+use super::{EdgeEnd, LevelRoutes, PlacedLevels, Port, Side};
 
-/// Names the end of an edge a port belongs to.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(super) enum EdgeEnd {
-    Source,
-    Target,
+/// Routes one edge from its source port to its target port, as an arc geometry lifts over the scene.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Route {
+    pub(crate) source: Port,
+    pub(crate) target: Port,
 }
 
 /// Gathers the ends of one level's routes, faced toward footprint sides, to join them into routes.
-pub(super) struct RouteEnds<'a> {
+#[derive(Default)]
+struct RouteEnds<'a> {
     facing_ends_by_footprint_side: BTreeMap<(&'a ElementPath, Side), FacingEnds<'a>>,
 }
 
@@ -26,38 +28,49 @@ struct FacingEnds<'a> {
     far_points: Vec<((&'a EdgeId, EdgeEnd), Point)>,
 }
 
-impl EdgeEnd {
-    pub(super) fn endpoint_of(self, edge: &EdgeId) -> &ElementPath {
-        match self {
-            Self::Source => edge.from(),
-            Self::Target => edge.to(),
-        }
+impl Route {
+    /// Route an edge from its `source` port to its `target` port.
+    pub(crate) fn new(source: Port, target: Port) -> Self {
+        Self { source, target }
+    }
+}
+
+impl PlacedLevels {
+    /// Anchor the routes of the edges homed in every level between their true endpoints, once every footprint is fixed.
+    pub(super) fn anchor_homed_routes(&self, homed_edges: &HomedEdges) -> LevelRoutes {
+        let routes_by_level = self
+            .by_level
+            .keys()
+            .map(|level| {
+                let routes = self.homed_routes_of(level, homed_edges);
+                let level_key = level.clone();
+                (level_key, routes)
+            })
+            .collect();
+        LevelRoutes::new(routes_by_level)
     }
 
-    pub(super) fn opposite(self) -> Self {
-        match self {
-            Self::Source => Self::Target,
-            Self::Target => Self::Source,
+    /// Route the edges homed in `level` between their true endpoints, each end facing the other.
+    fn homed_routes_of(
+        &self,
+        level: &ElementPath,
+        homed_edges: &HomedEdges,
+    ) -> BTreeMap<EdgeId, Route> {
+        let mut route_ends = RouteEnds::default();
+        for edge in homed_edges.homed_in(level) {
+            let source = edge.from();
+            let target = edge.to();
+            let source_footprint = self.footprint_in_level(source, level);
+            let target_footprint = self.footprint_in_level(target, level);
+            route_ends.face_each_other(edge, source_footprint, target_footprint);
         }
-    }
-
-    pub(super) fn port_of(self, route: &Route) -> Port {
-        match self {
-            Self::Source => route.source,
-            Self::Target => route.target,
-        }
+        route_ends.into_routes()
     }
 }
 
 impl<'a> RouteEnds<'a> {
-    pub(super) fn new() -> Self {
-        Self {
-            facing_ends_by_footprint_side: BTreeMap::new(),
-        }
-    }
-
     /// Face both ends of `edge` toward each other, each on the side of its own footprint.
-    pub(super) fn face_each_other(
+    fn face_each_other(
         &mut self,
         edge: &'a EdgeId,
         source_footprint: Rect,
@@ -83,15 +96,18 @@ impl<'a> RouteEnds<'a> {
         let facing_ends = self
             .facing_ends_by_footprint_side
             .entry((endpoint, side))
-            .or_insert_with(|| FacingEnds {
-                footprint,
-                far_points: Vec::new(),
+            .or_insert_with(|| {
+                let no_far_points = Vec::new();
+                FacingEnds {
+                    footprint,
+                    far_points: no_far_points,
+                }
             });
         facing_ends.far_points.push(((edge, end), far_point));
     }
 
     /// Spread the faced ends sharing a footprint side, then join both ends of every edge into a route.
-    pub(super) fn into_routes(self) -> BTreeMap<EdgeId, Route> {
+    fn into_routes(self) -> BTreeMap<EdgeId, Route> {
         let mut ports = BTreeMap::new();
         for ((_endpoint, side), facing_ends) in self.facing_ends_by_footprint_side {
             let spread_ports =
@@ -105,7 +121,8 @@ impl<'a> RouteEnds<'a> {
                 let source = ports[&(edge_id, EdgeEnd::Source)];
                 let target = ports[&(edge_id, EdgeEnd::Target)];
                 let route = Route::new(source, target);
-                (edge_id.clone(), route)
+                let edge_key = edge_id.clone();
+                (edge_key, route)
             })
             .collect()
     }
@@ -113,7 +130,7 @@ impl<'a> RouteEnds<'a> {
 
 impl Side {
     /// Pick the side of a box centered at `near` that faces `far`: east or west when the x offset dominates, ties to east.
-    pub(super) fn facing(near: Point, far: Point) -> Self {
+    fn facing(near: Point, far: Point) -> Self {
         let offset = far - near;
         let is_horizontal = offset.x.abs() >= offset.y.abs();
         if is_horizontal {
@@ -129,7 +146,7 @@ impl Side {
     }
 
     /// Spread n ports along this side of `rect` at fractions (k + 1)/(n + 1), ordered by t = (c − p0)·(p1 − p0) of the far points c they face.
-    pub(super) fn spread_ports_along<K: Ord>(
+    fn spread_ports_along<K: Ord>(
         self,
         rect: Rect,
         mut far_points: Vec<(K, Point)>,
@@ -160,26 +177,6 @@ impl Side {
             })
             .collect()
     }
-
-    /// Return this side of `rect` as a line running toward increasing x or y.
-    pub(crate) fn line_along(self, rect: Rect) -> Line {
-        match self {
-            Self::North => Line::new((rect.x0, rect.y0), (rect.x1, rect.y0)),
-            Self::East => Line::new((rect.x1, rect.y0), (rect.x1, rect.y1)),
-            Self::South => Line::new((rect.x0, rect.y1), (rect.x1, rect.y1)),
-            Self::West => Line::new((rect.x0, rect.y0), (rect.x0, rect.y1)),
-        }
-    }
-
-    /// Return the unit vector pointing from this side into its rectangle.
-    pub(crate) fn inward_normal(self) -> Vec2 {
-        match self {
-            Self::North => Vec2::new(0.0, 1.0),
-            Self::East => Vec2::new(-1.0, 0.0),
-            Self::South => Vec2::new(0.0, -1.0),
-            Self::West => Vec2::new(1.0, 0.0),
-        }
-    }
 }
 
 #[cfg(test)]
@@ -189,7 +186,10 @@ mod tests {
     fn footprints_of(named_footprints: &[(&str, Rect)]) -> BTreeMap<ElementPath, Rect> {
         named_footprints
             .iter()
-            .map(|&(name, footprint)| (ElementPath::from_segments([name]), footprint))
+            .map(|&(name, footprint)| {
+                let path = ElementPath::from_segments([name]);
+                (path, footprint)
+            })
             .collect()
     }
 
@@ -203,7 +203,7 @@ mod tests {
         footprints: &BTreeMap<ElementPath, Rect>,
         edge_ids: &[EdgeId],
     ) -> BTreeMap<EdgeId, Route> {
-        let mut route_ends = RouteEnds::new();
+        let mut route_ends = RouteEnds::default();
         for edge_id in edge_ids {
             let source_footprint = footprints[edge_id.from()];
             let target_footprint = footprints[edge_id.to()];

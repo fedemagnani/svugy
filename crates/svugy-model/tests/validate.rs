@@ -1,10 +1,13 @@
 use miette::Diagnostic;
 use svugy_model::builder::ModelBuilder;
 use svugy_model::legend::Legend;
-use svugy_model::model::{ByteRange, Edge, Element, Model, PlacementHint, Position, Shape};
+use svugy_model::model::{
+    ByteRange, Edge, Element, MAX_MAGNITUDE, Model, PlacementHint, Position, Shape,
+};
 use svugy_model::path::ElementPath;
-use svugy_model::style::StyleKey;
-use svugy_model::validate::{MAX_MAGNITUDE, ModelReport, Problem, StyleOwner, Suggestion};
+use svugy_model::problem::{ErrorSeverity, Problem, StyleOwner, Suggestion};
+use svugy_model::style::AnyStyleKey;
+use svugy_model::validate::ModelReport;
 
 fn parse(text: &str) -> ElementPath {
     text.parse().expect("well-formed path")
@@ -105,7 +108,7 @@ fn a_style_value_of_the_wrong_kind_fails_the_build() {
     let [Problem::MismatchedStyleValue(problem)] = report.problems() else {
         panic!("expected one mismatched style value, got {report:?}");
     };
-    let stroke_dash = StyleKey::find("stroke-dash").expect("v1 key");
+    let stroke_dash = AnyStyleKey::find("stroke-dash").expect("v1 key");
     assert_eq!(problem.owner, StyleOwner::Edge(edge));
     assert_eq!(problem.key, stroke_dash);
     assert_eq!(problem.value, "dashed");
@@ -404,7 +407,7 @@ fn edges_from_leaves_into_a_leaf_marked_badge_are_badges_and_every_other_edge_an
     let mut builder = ModelBuilder::new();
     let desk = builder.add_top_level("desk", Element::new("desk"));
     let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
-    let store_element = Element::new("SQLite").with_badge();
+    let store_element = Element::new("SQLite").with_badge_target();
     let store = builder.add_child(&desk, "sqlite", store_element);
     let app = builder.add_top_level("app", Element::new("app"));
     let writes = builder.add_edge(&quoter, &store, Edge::new());
@@ -430,7 +433,11 @@ fn edges_from_leaves_into_a_leaf_marked_badge_are_badges_and_every_other_edge_an
     let [first_problem, second_problem] = problems else {
         panic!("a down edge and an arc into a badge target: {problems:?}");
     };
-    assert!(matches!(first_problem, Problem::AncestorDescendantEdge(_)));
+    let is_ancestor_descendant_edge = matches!(
+        first_problem,
+        Problem::AncestorDescendantEdge(_ancestor_descendant_edge)
+    );
+    assert!(is_ancestor_descendant_edge);
     let Problem::ArcIntoBadgeTarget(arc_into_badge_target) = second_problem else {
         panic!("an edge from a container into a badge target warns: {second_problem:?}");
     };
@@ -442,7 +449,7 @@ fn edges_from_leaves_into_a_leaf_marked_badge_are_badges_and_every_other_edge_an
 fn a_container_marked_badge_warns_that_it_is_entered_and_its_edges_stay_arcs() {
     let mut builder = ModelBuilder::new();
     let desk_element = Element::new("desk")
-        .with_badge()
+        .with_badge_target()
         .with_span(ByteRange::new(0, 4));
     let desk = builder.add_top_level("desk", desk_element);
     let _quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
@@ -476,8 +483,8 @@ fn a_legend_describing_what_the_diagram_never_draws_warns_with_the_closest_badge
     builder = builder.with_legend(legend);
     let app = builder.add_top_level("app", Element::new("app"));
     let api = builder.add_top_level("api", Element::new("api"));
-    let sqlite = builder.add_top_level("sqlite", Element::new("SQLite").with_badge());
-    let _ledger = builder.add_top_level("ledger", Element::new("ledger").with_badge());
+    let sqlite = builder.add_top_level("sqlite", Element::new("SQLite").with_badge_target());
+    let _ledger = builder.add_top_level("ledger", Element::new("ledger").with_badge_target());
     let _calls = builder.add_edge(&app, &api, Edge::new());
     let _writes = builder.add_edge(&app, &sqlite, Edge::new());
 
@@ -489,7 +496,7 @@ fn a_legend_describing_what_the_diagram_never_draws_warns_with_the_closest_badge
         .filter_map(|problem| match problem {
             Problem::UndrawnLegendKey(undrawn_key) => {
                 let suggestion = undrawn_key.suggestion.as_ref();
-                let suggested = suggestion.map(|suggestion| suggestion.0.clone());
+                let suggested = suggestion.map(|suggestion| suggestion.0.to_string());
                 Some((undrawn_key.key.to_string(), suggested))
             }
             _other => None,
@@ -521,14 +528,14 @@ fn every_problem_kind_reaches_the_machine_readable_report_with_its_severity() {
         .with_child_placement(PlacementHint::Grid { columns: 0 })
         .with_shape(Shape::Disc)
         .with_height(30.0)
-        .with_badge()
+        .with_badge_target()
         .with_span(ByteRange::new(0, 4));
     let desk = builder.add_top_level("desk", desk_element);
     let wide_grid = PlacementHint::Grid { columns: 40_000 };
     let wide_element = Element::new("wide").with_child_placement(wide_grid);
     let wide = builder.add_top_level("wide", wide_element);
     let _cell = builder.add_child(&wide, "cell", Element::new("cell"));
-    let ledger = builder.add_top_level("ledger", Element::new("ledger").with_badge());
+    let ledger = builder.add_top_level("ledger", Element::new("ledger").with_badge_target());
     let _wide_writes = builder.add_edge(
         &wide,
         &ledger,

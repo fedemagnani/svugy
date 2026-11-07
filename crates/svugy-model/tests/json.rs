@@ -2,9 +2,12 @@ use miette::Diagnostic;
 use svugy_model::builder::ModelBuilder;
 use svugy_model::json::MalformedJson;
 use svugy_model::legend::Legend;
-use svugy_model::model::{ByteRange, Edge, Element, Model, PlacementHint, Position, Shape};
+use svugy_model::model::{
+    ByteRange, Edge, Element, Model, PlacementHint, Position, Shape, Traveler,
+};
 use svugy_model::path::ElementPath;
-use svugy_model::validate::{ModelReport, Problem, Suggestion};
+use svugy_model::problem::{Problem, Suggestion};
+use svugy_model::validate::ModelReport;
 
 fn parse(text: &str) -> ElementPath {
     text.parse().expect("well-formed path")
@@ -54,7 +57,13 @@ fn svugy_model() -> Model {
     );
     let _model = builder.add_edge(&cli, &layout, Edge::new().with_label("① model"));
     let _boxes = builder.add_edge(&layout, &browser, Edge::new().with_label("boxes"));
-    let _shapes = builder.add_edge(&layout, &browser, Edge::new().with_label("shapes"));
+    let _shapes = builder.add_edge(
+        &layout,
+        &browser,
+        Edge::new()
+            .with_label("shapes")
+            .with_traveler(Traveler::Parcel),
+    );
     let _markup = builder.add_edge(
         &render,
         &browser,
@@ -123,7 +132,7 @@ fn a_legend_and_a_badge_mark_round_trip_through_json_keyed_by_dash_and_by_path()
     builder = builder.with_legend(legend);
     let pipeline = builder.add_top_level("pipeline", Element::new("pipeline"));
     let layout = builder.add_child(&pipeline, "layout", Element::new("layout"));
-    let store_element = Element::new("Inter").with_badge();
+    let store_element = Element::new("Inter").with_badge_target();
     let store = builder.add_child(&pipeline, "inter.v4", store_element);
     let _writes = builder.add_edge(&layout, &store, Edge::new());
     let bus = Edge::new().with_style("stroke-dash", "1.5");
@@ -162,11 +171,11 @@ fn a_legend_dash_key_must_be_a_dash_length_in_its_shortest_spelling() {
 
     let report = load_rejected_report(unspelled_dash);
 
-    let malformed_dashes: Vec<&str> = report
+    let malformed_dashes: Vec<String> = report
         .problems()
         .iter()
         .filter_map(|problem| match problem {
-            Problem::MalformedLegendDash(malformed) => Some(malformed.dash.as_str()),
+            Problem::MalformedLegendDash(malformed) => Some(malformed.dash.to_string()),
             _other => None,
         })
         .collect();

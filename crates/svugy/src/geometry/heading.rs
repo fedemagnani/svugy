@@ -1,61 +1,43 @@
 //! Head the top-level view with the diagram's title over its subtitle.
 
+use std::iter;
+
 use kurbo::{Point, Rect, Vec2};
 use svugy_model::model::Model;
 
-use super::{Group, Heading, Label, Scene};
+use super::{Heading, Label, Scene};
 use crate::metrics::{LabelRole, TextAnchor, TextMeasure};
-
-impl Scene {
-    /// Head the root view with `model`'s title and subtitle, set just above the framed content from its left margin, the view grown to frame them too.
-    pub(super) fn head_with_title_and_subtitle(
-        &mut self,
-        model: &Model,
-        measure: &impl TextMeasure,
-    ) {
-        let unplaced_heading = Heading::set_from(model, Point::ORIGIN, measure);
-        let Some(unplaced_bounds) = unplaced_heading.bounds() else {
-            return;
-        };
-        let root_view = self.root.view;
-        let heading_left = root_view.x0 + Group::VIEW_MARGIN;
-        let heading_top = root_view.y0 - unplaced_bounds.height();
-        let heading_offset = Vec2::new(heading_left, heading_top);
-        let heading_top_left = heading_offset.to_point();
-        let heading_bounds = unplaced_bounds + heading_offset;
-        let framed_heading = heading_bounds.inflate(Group::VIEW_MARGIN, Group::VIEW_MARGIN);
-        self.root.view = root_view.union(framed_heading);
-        self.heading = Heading::set_from(model, heading_top_left, measure);
-    }
-}
 
 impl Heading {
     /// Drop from the title's baseline to the subtitle's.
     const SUBTITLE_LINE_OFFSET: f64 = 18.0;
 
-    /// Set `model`'s title with its line box's top-left at `top_left` and its subtitle one line below, or the subtitle alone at `top_left`.
-    fn set_from(model: &Model, top_left: Point, measure: &impl TextMeasure) -> Self {
-        let title = model.title().map(|title_text| {
-            let title_size = LabelRole::DiagramTitle.measure_text(title_text, measure);
-            let title_baseline_drop = Vec2::new(0.0, title_size.baseline_from_top);
-            let title_baseline_origin = top_left + title_baseline_drop;
-            Label::new(
-                title_text,
-                LabelRole::DiagramTitle,
-                TextAnchor::Start,
-                title_baseline_origin,
-                title_size,
-            )
-        });
-        let subtitle = model.subtitle().map(|subtitle_text| {
+    /// Set `model`'s title and subtitle just above `view`, from its left margin, or `None` when it has neither.
+    pub(super) fn set_above(view: Rect, model: &Model, measure: &impl TextMeasure) -> Option<Self> {
+        let unplaced_heading = Self::set_from(model, measure)?;
+        let unplaced_bounds = unplaced_heading.bounds();
+        let heading_left = view.x0 + Scene::VIEW_MARGIN;
+        let heading_top = view.y0 - unplaced_bounds.height();
+        let heading_offset = Vec2::new(heading_left, heading_top);
+        let heading = unplaced_heading.translated(heading_offset);
+        Some(heading)
+    }
+
+    /// Set `model`'s title with its line box's top-left at the origin and its subtitle one line below, or the subtitle alone at the origin, or `None` when it has neither.
+    fn set_from(model: &Model, measure: &impl TextMeasure) -> Option<Self> {
+        let subtitle_text = model.subtitle();
+        let Some(title_text) = model.title() else {
+            let subtitle_text = subtitle_text?;
+            let subtitle =
+                Self::line_topped_at_origin(subtitle_text, LabelRole::DiagramSubtitle, measure);
+            let subtitled = Self::Subtitled(subtitle);
+            return Some(subtitled);
+        };
+        let title = Self::line_topped_at_origin(title_text, LabelRole::DiagramTitle, measure);
+        let subtitle = subtitle_text.map(|subtitle_text| {
             let subtitle_size = LabelRole::DiagramSubtitle.measure_text(subtitle_text, measure);
-            let subtitle_baseline_drop = Vec2::new(0.0, subtitle_size.baseline_from_top);
-            let untitled_baseline_origin = top_left + subtitle_baseline_drop;
             let subtitle_line_offset = Vec2::new(0.0, Self::SUBTITLE_LINE_OFFSET);
-            let subtitle_baseline_origin = match &title {
-                Some(title) => title.baseline_origin + subtitle_line_offset,
-                None => untitled_baseline_origin,
-            };
+            let subtitle_baseline_origin = title.baseline_origin + subtitle_line_offset;
             Label::new(
                 subtitle_text,
                 LabelRole::DiagramSubtitle,
@@ -64,14 +46,55 @@ impl Heading {
                 subtitle_size,
             )
         });
-        Self { title, subtitle }
+        let titled = Self::Titled { title, subtitle };
+        Some(titled)
     }
 
-    /// Return the union of both lines' boxes, or `None` for a diagram with neither title nor subtitle.
-    pub(crate) fn bounds(&self) -> Option<Rect> {
-        let lines = self.title.iter().chain(&self.subtitle);
-        let line_bounds = lines.map(Label::bounds);
-        line_bounds.reduce(|bounds, next_bounds| bounds.union(next_bounds))
+    /// Set `text` in `role`'s font, start-anchored, with its line box's top-left at the origin.
+    fn line_topped_at_origin(text: &str, role: LabelRole, measure: &impl TextMeasure) -> Label {
+        let size = role.measure_text(text, measure);
+        let baseline_origin = Point::new(0.0, size.baseline_from_top);
+        Label::new(text, role, TextAnchor::Start, baseline_origin, size)
+    }
+
+    /// Return the heading translated by `offset`.
+    fn translated(self, offset: Vec2) -> Self {
+        match self {
+            Self::Titled { title, subtitle } => {
+                let title = title.translated(offset);
+                let subtitle = subtitle.map(|subtitle| subtitle.translated(offset));
+                Self::Titled { title, subtitle }
+            }
+            Self::Subtitled(subtitle) => {
+                let subtitle = subtitle.translated(offset);
+                Self::Subtitled(subtitle)
+            }
+        }
+    }
+
+    /// Return the union of the heading's line boxes.
+    pub(crate) fn bounds(&self) -> Rect {
+        let (first_line, second_line) = self.first_and_second_line();
+        let first_line_bounds = first_line.bounds();
+        let second_line_bounds = second_line.map(Label::bounds);
+        second_line_bounds.map_or(first_line_bounds, |second_line_bounds| {
+            first_line_bounds.union(second_line_bounds)
+        })
+    }
+
+    /// Yield the title, then the subtitle, whichever is set.
+    pub(super) fn lines(&self) -> impl Iterator<Item = &Label> {
+        let (first_line, second_line) = self.first_and_second_line();
+        let first_line_only = iter::once(first_line);
+        first_line_only.chain(second_line)
+    }
+
+    /// Return the heading's first line and the line below it, if any.
+    fn first_and_second_line(&self) -> (&Label, Option<&Label>) {
+        match self {
+            Self::Titled { title, subtitle } => (title, subtitle.as_ref()),
+            Self::Subtitled(subtitle) => (subtitle, None),
+        }
     }
 }
 
@@ -109,8 +132,7 @@ mod tests {
     fn an_untitled_diagram_has_no_heading_to_frame() {
         let scene = untitled_scene();
 
-        assert_eq!(scene.heading, Heading::default());
-        assert_eq!(scene.heading.bounds(), None);
+        assert_eq!(scene.heading, None);
     }
 
     #[test]
@@ -122,29 +144,31 @@ mod tests {
 
         let scene = headed_two_boxes_scene(builder);
 
-        let title = scene.heading.title.as_ref().expect("the title is set");
-        let subtitle = scene
-            .heading
-            .subtitle
-            .as_ref()
-            .expect("the subtitle is set");
+        let heading = scene.heading.as_ref().expect("the heading is set");
+        let Heading::Titled {
+            title,
+            subtitle: Some(subtitle),
+        } = heading
+        else {
+            panic!("the title and subtitle are set: {heading:?}");
+        };
         let title_box = title.bounds();
-        let heading_bounds = scene.heading.bounds().expect("the heading has lines");
-        let content_view = untitled.root.view;
+        let heading_bounds = heading.bounds();
+        let content_view = untitled.root_view();
         assert_eq!(title.role, LabelRole::DiagramTitle);
         assert_eq!(subtitle.role, LabelRole::DiagramSubtitle);
         assert_eq!(title.anchor, TextAnchor::Start);
         assert_eq!(title.plane, kurbo::Affine::IDENTITY);
         assert_eq!(subtitle.plane, kurbo::Affine::IDENTITY);
-        assert_eq!(title_box.x0, content_view.x0 + Group::VIEW_MARGIN);
+        assert_eq!(title_box.x0, content_view.x0 + Scene::VIEW_MARGIN);
         let subtitle_drop = subtitle.baseline_origin.y - title.baseline_origin.y;
         assert_eq!(subtitle_drop, Heading::SUBTITLE_LINE_OFFSET);
         assert_eq!(subtitle.baseline_origin.x, title.baseline_origin.x);
         assert!((heading_bounds.y1 - content_view.y0).abs() < 1e-9);
-        let framed_heading = heading_bounds.inflate(Group::VIEW_MARGIN, Group::VIEW_MARGIN);
+        let framed_heading = heading_bounds.inflate(Scene::VIEW_MARGIN, Scene::VIEW_MARGIN);
         let expected_view = content_view.union(framed_heading);
-        assert_eq!(scene.root.view, expected_view);
-        assert!(scene.root.view.width() > content_view.width());
+        assert_eq!(scene.root_view(), expected_view);
+        assert!(scene.root_view().width() > content_view.width());
     }
 
     #[test]
@@ -154,14 +178,12 @@ mod tests {
 
         let scene = headed_two_boxes_scene(builder);
 
-        let subtitle = scene
-            .heading
-            .subtitle
-            .as_ref()
-            .expect("the subtitle is set");
+        let heading = scene.heading.as_ref().expect("the heading is set");
+        let Heading::Subtitled(subtitle) = heading else {
+            panic!("the subtitle alone is set: {heading:?}");
+        };
         let subtitle_box = subtitle.bounds();
-        assert!(scene.heading.title.is_none());
-        assert!((subtitle_box.y1 - untitled.root.view.y0).abs() < 1e-9);
-        assert_eq!(scene.root.view.y0, subtitle_box.y0 - Group::VIEW_MARGIN);
+        assert!((subtitle_box.y1 - untitled.root_view().y0).abs() < 1e-9);
+        assert_eq!(scene.root_view().y0, subtitle_box.y0 - Scene::VIEW_MARGIN);
     }
 }

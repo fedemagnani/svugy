@@ -1,30 +1,31 @@
 //! Place one level's children as footprints: pinned ones where the author put them, free ones automatically around them.
 
+mod footprints;
 mod layered;
 mod packed;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use kurbo::{Point, Rect, Size, Vec2};
+use kurbo::{Point, Rect, Size};
 use svugy_model::model::{Element, Model, PlacementHint};
 use svugy_model::path::ElementPath;
 
-use super::{LevelPlan, LevelPlans};
+use super::{PlacedLevel, PlacedLevels};
 use crate::metrics::{LabelBlock, LabelRole, TextMeasure};
+use footprints::Footprints;
 use layered::Layered;
 use packed::Packed;
 
 /// Clear margin between a level's boundary and its outermost footprints, the example's inset inside the desk.
 const LEVEL_MARGIN: f64 = 18.0;
 /// Extra margin a level left by edges reserves on every side for its stub markers, as deep as the level margin.
-pub(super) const STUB_MARGIN: f64 = 18.0;
-/// Clearance free footprints keep from pinned ones, the level margin again.
-const PINNED_CLEARANCE: f64 = 18.0;
+pub(super) const STUB_MARGIN: f64 = LEVEL_MARGIN;
 /// Smallest footprint, the example's smallest block (`Privy`).
 const MIN_FOOTPRINT: Size = Size::new(72.0, 66.0);
 
 /// Places one level's footprints, from their sizes and the pairs edges join, in a frame of its own choosing.
 pub(super) trait LevelLayout {
+    /// Place the footprints of `siblings` in this layout's frame.
     fn place_footprints(&self, siblings: &SiblingGraph) -> BTreeMap<ElementPath, Rect>;
 }
 
@@ -35,12 +36,12 @@ pub(super) struct SiblingGraph {
 }
 
 impl SiblingGraph {
-    /// Size every child of `parent`, a container by its own level's extent and a leaf by its labels, with the pairs edges join.
-    pub(super) fn measure_children(
+    /// Build the sibling graph of `parent`'s children, a container sized by its own level's extent and a leaf by its labels, joined by `joined_pairs`.
+    pub(super) fn of_measured_children(
         model: &Model,
         parent: &ElementPath,
         joined_pairs: BTreeSet<(ElementPath, ElementPath)>,
-        interiors: &LevelPlans,
+        interiors: &PlacedLevels,
         measure: &impl TextMeasure,
     ) -> Self {
         let sizes = model
@@ -49,9 +50,10 @@ impl SiblingGraph {
                 let interior = interiors.level(path);
                 let size = interior.map_or_else(
                     || Self::footprint_size_fitting_labels(element, measure),
-                    |interior_plan| interior_plan.extent,
+                    |interior_placed| interior_placed.extent,
                 );
-                (path.clone(), size)
+                let path_key = path.clone();
+                (path_key, size)
             })
             .collect();
         Self {
@@ -68,9 +70,64 @@ impl SiblingGraph {
         let depth = label_room.height.max(MIN_FOOTPRINT.height);
         Size::new(width, depth)
     }
+}
 
+impl PlacedLevel {
+    /// Place the children of `parent` around the pinned ones by its hint, inside a margin with stub room when edges leave it, in a level sized to fit them and its hanging tag.
+    pub(super) fn place_children(
+        model: &Model,
+        parent: &ElementPath,
+        siblings: SiblingGraph,
+        is_left_by_edges: bool,
+        measure: &impl TextMeasure,
+    ) -> Self {
+        let inset = Self::inset_inside_boundary(is_left_by_edges);
+        let (pinned_footprints, free_siblings) = siblings.split_off_pinned(model);
+        let parent_element = model.element(parent);
+        let hint = parent_element.and_then(Element::child_placement);
+        let free_footprints = free_siblings.place_by_hint(hint);
+        let cleared_free_footprints =
+            free_footprints.shifted_clear_of_pinned(&pinned_footprints, inset);
+        let footprints = pinned_footprints.merged_with(cleared_free_footprints);
+        let inset_footprints = footprints.shifted_inside_inset(inset);
+        let extent = Self::extent_fitting_footprints_and_tag(
+            &inset_footprints,
+            inset,
+            parent_element,
+            measure,
+        );
+        let footprints_by_path = inset_footprints.into_by_path();
+        Self::new(extent, footprints_by_path)
+    }
+
+    /// Return the margin kept inside the boundary: the level margin, plus the stub margin when edges leave the level.
+    fn inset_inside_boundary(is_left_by_edges: bool) -> f64 {
+        if is_left_by_edges {
+            return LEVEL_MARGIN + STUB_MARGIN;
+        }
+        LEVEL_MARGIN
+    }
+
+    /// Size the level to enclose `footprints` within `inset`, at least as wide as the hanging tag of `parent_element`, if any.
+    fn extent_fitting_footprints_and_tag(
+        footprints: &Footprints,
+        inset: f64,
+        parent_element: Option<&Element>,
+        measure: &impl TextMeasure,
+    ) -> Size {
+        let enclosing_extent = footprints.extent_enclosing(inset);
+        let hanging_labels_width = parent_element.map_or(0.0, |element| {
+            let tag_block = LabelBlock::measure(element, LabelRole::ContainerTag, measure);
+            tag_block.hanging_width()
+        });
+        let width = enclosing_extent.width.max(hanging_labels_width);
+        Size::new(width, enclosing_extent.height)
+    }
+}
+
+impl SiblingGraph {
     /// Split off the children the author pinned, as footprints at their positions, keeping the free ones and the pairs they join.
-    fn split_off_pinned(self, model: &Model) -> (BTreeMap<ElementPath, Rect>, Self) {
+    fn split_off_pinned(self, model: &Model) -> (Footprints, Self) {
         let mut pinned_footprints = BTreeMap::new();
         let mut free_sizes = BTreeMap::new();
         for (path, size) in self.sizes {
@@ -97,149 +154,37 @@ impl SiblingGraph {
             sizes: free_sizes,
             joined_pairs: free_joined_pairs,
         };
-        (pinned_footprints, free_siblings)
+        let pinned = Footprints::new(pinned_footprints);
+        (pinned, free_siblings)
     }
 
     /// Place the footprints with the strategy `hint` names; no hint, as at the root, means layered.
-    fn place_by_hint(&self, hint: Option<PlacementHint>) -> BTreeMap<ElementPath, Rect> {
+    fn place_by_hint(&self, hint: Option<PlacementHint>) -> Footprints {
         let child_count = self.sizes.len();
-        match hint {
-            None | Some(PlacementHint::Layered) => Layered.place_footprints(self),
+        let packed = match hint {
+            None | Some(PlacementHint::Layered) => {
+                let layered_by_path = Layered.place_footprints(self);
+                return Footprints::new(layered_by_path);
+            }
             Some(PlacementHint::Grid { columns }) => {
                 let requested_columns = usize::try_from(columns).unwrap_or(usize::MAX);
-                Packed::in_columns(requested_columns, child_count).place_footprints(self)
+                Packed::in_columns(requested_columns, child_count)
             }
-            Some(PlacementHint::Row) => {
-                Packed::in_columns(child_count, child_count).place_footprints(self)
-            }
-            Some(PlacementHint::Column) => {
-                Packed::in_columns(1, child_count).place_footprints(self)
-            }
-        }
+            Some(PlacementHint::Row) => Packed::in_columns(child_count, child_count),
+            Some(PlacementHint::Column) => Packed::in_columns(1, child_count),
+        };
+        let packed_by_path = packed.place_footprints(self);
+        Footprints::new(packed_by_path)
     }
 
+    /// Return the footprint sizes of the children, keyed by path.
     pub(super) fn sizes(&self) -> &BTreeMap<ElementPath, Size> {
         &self.sizes
     }
 
+    /// Return the pairs of children an edge joins, directly or lifted.
     pub(super) fn joined_pairs(&self) -> &BTreeSet<(ElementPath, ElementPath)> {
         &self.joined_pairs
-    }
-}
-
-impl LevelPlan {
-    /// Place the children of `parent` around the pinned ones by its hint, inside a margin with stub room when edges leave it.
-    pub(super) fn place_children(
-        model: &Model,
-        parent: &ElementPath,
-        siblings: SiblingGraph,
-        is_left_by_edges: bool,
-        measure: &impl TextMeasure,
-    ) -> Self {
-        let inset = Self::inset_inside_boundary(is_left_by_edges);
-        let (pinned_footprints, free_siblings) = siblings.split_off_pinned(model);
-        let parent_element = model.element(parent);
-        let hint = parent_element.and_then(Element::child_placement);
-        let free_footprints = free_siblings.place_by_hint(hint);
-        let cleared_free_footprints =
-            Self::shift_clear_of_pinned(free_footprints, &pinned_footprints, inset);
-        let mut footprints = pinned_footprints;
-        footprints.extend(cleared_free_footprints);
-        let inset_footprints = Self::shift_inside_inset(footprints, inset);
-        let enclosing_extent = Self::extent_enclosing(&inset_footprints, inset);
-        let hanging_labels_width = parent_element.map_or(0.0, |element| {
-            let tag_block = LabelBlock::measure(element, LabelRole::ContainerTag, measure);
-            tag_block.hanging_width()
-        });
-        let width = enclosing_extent.width.max(hanging_labels_width);
-        let extent = Size::new(width, enclosing_extent.height);
-        let mut plan = Self::new(extent);
-        plan.footprints = inset_footprints;
-        plan
-    }
-
-    /// Return the margin kept inside the boundary: the level margin, plus the stub margin when edges leave the level.
-    fn inset_inside_boundary(is_left_by_edges: bool) -> f64 {
-        if is_left_by_edges {
-            return LEVEL_MARGIN + STUB_MARGIN;
-        }
-        LEVEL_MARGIN
-    }
-
-    /// Translate the free footprints to the inset corner, or east of every pinned one if that corner crowds a pinned footprint.
-    fn shift_clear_of_pinned(
-        free_footprints: BTreeMap<ElementPath, Rect>,
-        pinned_footprints: &BTreeMap<ElementPath, Rect>,
-        inset: f64,
-    ) -> BTreeMap<ElementPath, Rect> {
-        let Some(free_union) = Self::union_of(&free_footprints) else {
-            return free_footprints;
-        };
-        let inset_corner = Point::new(inset, inset);
-        let shift_to_inset_corner = inset_corner - free_union.origin();
-        let free_at_inset_corner = Self::translated(free_footprints, shift_to_inset_corner);
-        let Some(pinned_union) = Self::union_of(pinned_footprints) else {
-            return free_at_inset_corner;
-        };
-        let pinned_clearances: Vec<Rect> = pinned_footprints
-            .values()
-            .map(|footprint| footprint.inflate(PINNED_CLEARANCE, PINNED_CLEARANCE))
-            .collect();
-        let is_crowding_pinned = free_at_inset_corner.values().any(|footprint| {
-            pinned_clearances
-                .iter()
-                .any(|clearance| clearance.overlaps(*footprint))
-        });
-        if is_crowding_pinned {
-            let shift_east_of_pinned = Vec2::new(pinned_union.x1 + PINNED_CLEARANCE - inset, 0.0);
-            return Self::translated(free_at_inset_corner, shift_east_of_pinned);
-        }
-        free_at_inset_corner
-    }
-
-    /// Translate every footprint by what brings their union's top-left corner to the inset, keeping pins already inside it exact.
-    fn shift_inside_inset(
-        footprints: BTreeMap<ElementPath, Rect>,
-        inset: f64,
-    ) -> BTreeMap<ElementPath, Rect> {
-        let Some(union) = Self::union_of(&footprints) else {
-            return footprints;
-        };
-        let shift_x = (inset - union.x0).max(0.0);
-        let shift_y = (inset - union.y0).max(0.0);
-        let shift = Vec2::new(shift_x, shift_y);
-        Self::translated(footprints, shift)
-    }
-
-    /// Size the level from its origin to the farthest footprint corner plus the inset.
-    fn extent_enclosing(footprints: &BTreeMap<ElementPath, Rect>, inset: f64) -> Size {
-        let inset_offset = Vec2::new(inset, inset);
-        let far_corner = footprints
-            .values()
-            .fold(Point::ORIGIN, |far_corner, footprint| {
-                let x = far_corner.x.max(footprint.x1);
-                let y = far_corner.y.max(footprint.y1);
-                Point::new(x, y)
-            });
-        let far_corner_with_inset = far_corner + inset_offset;
-        far_corner_with_inset.to_vec2().to_size()
-    }
-
-    fn union_of(footprints: &BTreeMap<ElementPath, Rect>) -> Option<Rect> {
-        footprints
-            .values()
-            .copied()
-            .reduce(|union, footprint| union.union(footprint))
-    }
-
-    fn translated(
-        footprints: BTreeMap<ElementPath, Rect>,
-        shift: Vec2,
-    ) -> BTreeMap<ElementPath, Rect> {
-        footprints
-            .into_iter()
-            .map(|(path, footprint)| (path, footprint + shift))
-            .collect()
     }
 }
 
@@ -251,24 +196,24 @@ mod tests {
     use super::*;
     use crate::metrics::BundledFont;
 
-    fn place_level(model: &Model, level: &ElementPath, is_left_by_edges: bool) -> LevelPlan {
+    fn place_level(model: &Model, level: &ElementPath, is_left_by_edges: bool) -> PlacedLevel {
         let measure = BundledFont::new();
         let joined_pairs = model
             .layoutable_edges()
             .map(|(edge_id, _edge)| (edge_id.from().clone(), edge_id.to().clone()))
             .collect();
-        let no_interiors = LevelPlans::new(BTreeMap::new());
+        let no_interiors = PlacedLevels::new(BTreeMap::new());
         let siblings =
-            SiblingGraph::measure_children(model, level, joined_pairs, &no_interiors, &measure);
-        LevelPlan::place_children(model, level, siblings, is_left_by_edges, &measure)
+            SiblingGraph::of_measured_children(model, level, joined_pairs, &no_interiors, &measure);
+        PlacedLevel::place_children(model, level, siblings, is_left_by_edges, &measure)
     }
 
-    fn place_top_level(model: &Model) -> LevelPlan {
+    fn place_top_level(model: &Model) -> PlacedLevel {
         let root = ElementPath::root();
         place_level(model, &root, false)
     }
 
-    fn assert_no_two_footprints_overlap(plan: &LevelPlan) {
+    fn assert_no_two_footprints_overlap(plan: &PlacedLevel) {
         let footprints: Vec<(&ElementPath, &Rect)> = plan.footprints.iter().collect();
         for (index, (path, footprint)) in footprints.iter().enumerate() {
             for (other_path, other_footprint) in &footprints[index + 1..] {
@@ -278,7 +223,10 @@ mod tests {
         }
     }
 
-    fn assert_every_footprint_keeps_the_margin_inside_the_boundary(plan: &LevelPlan, margin: f64) {
+    fn assert_every_footprint_keeps_the_margin_inside_the_boundary(
+        plan: &PlacedLevel,
+        margin: f64,
+    ) {
         let inner_boundary = plan.boundary().inset(-margin);
         for (path, footprint) in &plan.footprints {
             let is_inside_margin = inner_boundary.contains_rect(*footprint);

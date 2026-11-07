@@ -11,7 +11,7 @@ pub struct D2Document {
     pub statements: Vec<Statement>,
 }
 
-/// Declare a shape, an edge chain, or a field on a shape.
+/// Hold one statement: a shape, an edge chain, or a field on a shape.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Statement {
     Shape(ShapeDeclaration),
@@ -38,7 +38,7 @@ pub struct EdgeDeclaration {
     pub span: Span,
 }
 
-/// Connect the previous endpoint of a chain to `target` through `operator`.
+/// Link the previous endpoint of an edge chain to `target` through `operator`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EdgeLink {
     pub operator: EdgeOperator,
@@ -46,7 +46,7 @@ pub struct EdgeLink {
     pub target: KeyPath,
 }
 
-/// Direction of an edge operator: `->`, `<-`, `<->` or `--` (any number of dashes).
+/// Name the direction of an edge operator: `->`, `<-`, `<->` or `--` (any number of dashes).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EdgeOperator {
     Forward,
@@ -63,7 +63,7 @@ pub struct FieldAssignment {
     pub span: Span,
 }
 
-/// The reserved fields of the v1 subset; `style.x: v` and `style: { x: v }` both yield `Style`, `vars: { svugy: { … } }` yields `Svugy`.
+/// Hold the value of one reserved field of the v1 subset; `style.x: v` and `style: { x: v }` both yield `Style`, `vars: { svugy: { … } }` yields `Svugy`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Field {
     Shape(Scalar),
@@ -82,10 +82,10 @@ pub struct StyleProperty {
     pub span: Span,
 }
 
-/// Carry one attribute d2 cannot say through the d2 variable `svugy`, named by its dotted path spelled as a model path, e.g. `svugy.position.x: 150`.
+/// Carry one attribute d2 cannot say through the d2 variable `svugy`, addressed by the key segments below it, e.g. `["position", "x"]` for `svugy.position.x: 150`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SvugyProperty {
-    pub name: String,
+    pub attribute_path: Vec<String>,
     pub value: SvugyValue,
     pub span: Span,
 }
@@ -97,7 +97,7 @@ pub enum SvugyValue {
     List { items: Vec<Scalar>, span: Span },
 }
 
-/// Address a shape by its dot-separated segments, e.g. `a.b."c.d"`, after climbing one scope per leading `_`.
+/// Address a shape by the dotted path of its key, e.g. `a.b."c.d"`, after climbing one scope per leading `_`.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct KeyPath {
     pub parent_references: usize,
@@ -112,21 +112,120 @@ pub struct KeySegment {
     pub span: Span,
 }
 
-/// Carry a value's decoded text; the model types it against the field it lands in.
+/// Carry a scalar value's decoded text; the model types it against the field it lands in.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Scalar {
     pub text: String,
     pub span: Span,
 }
 
-/// Byte range in the d2 source, convertible to both a model span and a miette span.
+/// Locate a byte range in the d2 source, convertible to both a model span and a miette span.
 #[derive(Clone, Copy, PartialEq, Eq, Default, Hash)]
 pub struct Span {
     pub start: usize,
     pub end: usize,
 }
 
+/// Name a d2 reserved keyword outside `style` (d2ast/keywords.go at v0.9.0).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Keyword {
+    Shape,
+    Label,
+    Direction,
+    Link,
+    Style,
+    Vars,
+    Class,
+    Classes,
+    Layers,
+    Scenarios,
+    Steps,
+    Icon,
+    Constraint,
+    Tooltip,
+    Near,
+    Width,
+    Height,
+    Top,
+    Left,
+    GridRows,
+    GridColumns,
+    GridGap,
+    VerticalGap,
+    HorizontalGap,
+    SourceArrowhead,
+    TargetArrowhead,
+}
+
+impl Field {
+    /// Name the keyword this field was written under.
+    pub(crate) fn keyword(&self) -> Keyword {
+        match self {
+            Self::Shape(_shape) => Keyword::Shape,
+            Self::Label(_label) => Keyword::Label,
+            Self::Direction(_direction) => Keyword::Direction,
+            Self::Link(_link) => Keyword::Link,
+            Self::Style(_properties) => Keyword::Style,
+            Self::Svugy(_properties) => Keyword::Vars,
+        }
+    }
+}
+
+impl SvugyProperty {
+    /// Name the d2 variable whose entries carry what d2 cannot say, e.g. `vars: { svugy: { caption: … } }`.
+    pub const VARIABLE: &str = "svugy";
+}
+
+impl Keyword {
+    /// Spell every keyword as d2 does, the one table both directions read.
+    const SPELLINGS: [(&'static str, Keyword); 26] = [
+        ("shape", Self::Shape),
+        ("label", Self::Label),
+        ("direction", Self::Direction),
+        ("link", Self::Link),
+        ("style", Self::Style),
+        ("vars", Self::Vars),
+        ("class", Self::Class),
+        ("classes", Self::Classes),
+        ("layers", Self::Layers),
+        ("scenarios", Self::Scenarios),
+        ("steps", Self::Steps),
+        ("icon", Self::Icon),
+        ("constraint", Self::Constraint),
+        ("tooltip", Self::Tooltip),
+        ("near", Self::Near),
+        ("width", Self::Width),
+        ("height", Self::Height),
+        ("top", Self::Top),
+        ("left", Self::Left),
+        ("grid-rows", Self::GridRows),
+        ("grid-columns", Self::GridColumns),
+        ("grid-gap", Self::GridGap),
+        ("vertical-gap", Self::VerticalGap),
+        ("horizontal-gap", Self::HorizontalGap),
+        ("source-arrowhead", Self::SourceArrowhead),
+        ("target-arrowhead", Self::TargetArrowhead),
+    ];
+
+    /// Recognise `name` as a keyword case-insensitively, as d2 does.
+    pub(crate) fn recognise(name: &str) -> Option<Self> {
+        let lowercase_name = name.to_ascii_lowercase();
+        let mut spellings = Self::SPELLINGS.iter();
+        let spelling = spellings.find(|(spelled_name, _keyword)| *spelled_name == lowercase_name);
+        spelling.map(|(_spelled_name, keyword)| *keyword)
+    }
+
+    /// Spell the keyword's name as d2 does.
+    pub(crate) fn name(self) -> &'static str {
+        let mut spellings = Self::SPELLINGS.iter();
+        let spelling = spellings.find(|(_spelled_name, keyword)| *keyword == self);
+        let (spelled_name, _keyword) = spelling.expect("every keyword has a spelling");
+        spelled_name
+    }
+}
+
 impl EdgeOperator {
+    /// Read the operator an arrow spells from its arrowheads, whatever its dash count.
     pub(crate) fn from_arrow(arrow: &str) -> Self {
         let has_source_arrowhead = arrow.starts_with('<');
         let has_target_arrowhead = arrow.ends_with('>');
@@ -138,7 +237,7 @@ impl EdgeOperator {
         }
     }
 
-    /// Spell the operator in its shortest d2 form.
+    /// Spell the operator's shortest d2 arrow.
     pub fn arrow(self) -> &'static str {
         match self {
             Self::Forward => "->",
@@ -150,10 +249,12 @@ impl EdgeOperator {
 }
 
 impl Span {
+    /// Create a new span from byte `start` up to byte `end`.
     pub fn new(start: usize, end: usize) -> Self {
         Self { start, end }
     }
 
+    /// Return the byte range the span covers.
     pub fn range(self) -> Range<usize> {
         self.start..self.end
     }
@@ -203,6 +304,7 @@ impl chumsky::span::Span for Span {
 }
 
 impl Statement {
+    /// Return the span of the whole statement.
     pub fn span(&self) -> Span {
         match self {
             Self::Shape(shape) => shape.span,

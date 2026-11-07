@@ -1,6 +1,7 @@
 //! Import a d2 v0.9.0 file into the model through svugy's v1 d2 subset and its `vars: { svugy: { … } }` carrier, reporting every syntax error and ignored construct.
 
 mod ast;
+mod carrier;
 mod diagnostic;
 mod lex;
 mod lower;
@@ -15,10 +16,11 @@ pub use ast::{
     KeySegment, Scalar, ShapeDeclaration, Span, Statement, StyleProperty, SvugyProperty,
     SvugyValue,
 };
-pub use diagnostic::{Construct, SyntaxError, UnsupportedConstruct};
-pub use lower::D2Import;
+pub use diagnostic::{Construct, LabelledDiagnostic, SyntaxError, UnsupportedConstruct};
+pub use lower::{D2Import, D2ImportParts};
 
-use lex::Tokens;
+use diagnostic::Diagnostics;
+use lex::Token;
 use parse::SyntaxStatement;
 use subset::SubsetFilter;
 
@@ -30,20 +32,16 @@ pub struct D2Parse {
     pub warnings: Vec<UnsupportedConstruct>,
 }
 
-impl D2Document {
+impl D2Parse {
     /// Lex, parse and filter `source` to the v1 subset; broken statements are dropped and reported, never fatal.
-    pub fn parse(source: &str) -> D2Parse {
-        let Tokens {
-            tokens,
-            errors: lex_errors,
-        } = Tokens::lex(source);
-        let (syntax_statements, parse_errors) = SyntaxStatement::parse_all(&tokens, source);
-        let (document, warnings, subset_errors) = SubsetFilter::filter_document(syntax_statements);
-        let mut errors = lex_errors;
-        errors.extend(parse_errors);
-        errors.extend(subset_errors);
-        errors.sort_by_key(|error| error.span.offset());
-        D2Parse {
+    pub fn parse(source: &str) -> Self {
+        let mut diagnostics = Diagnostics::default();
+        let tokens = Token::lex_all(source, &mut diagnostics);
+        let syntax_statements = SyntaxStatement::parse_all(&tokens, source, &mut diagnostics);
+        let document = SubsetFilter::filter_document(syntax_statements, &mut diagnostics);
+        diagnostics.sort_by_source_offset();
+        let (errors, warnings) = diagnostics.into_parts();
+        Self {
             document,
             errors,
             warnings,

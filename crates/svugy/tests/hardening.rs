@@ -2,8 +2,7 @@
 
 use svugy::StaticSvg;
 use svugy_model::builder::ModelBuilder;
-use svugy_model::model::{Element, Position, Shape};
-use svugy_model::validate::MAX_MAGNITUDE;
+use svugy_model::model::{Element, MAX_MAGNITUDE, Position, Shape};
 
 const MAX_BOUNDED_DOCUMENT_BYTES: usize = 200_000;
 

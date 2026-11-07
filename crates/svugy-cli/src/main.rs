@@ -14,7 +14,9 @@ use svugy_model::model::Model;
 use crate::failure::Failure;
 use crate::input::{LoadedInput, ModelInput};
 use crate::output::OutputTarget;
+use crate::report::InputReport;
 
+/// Explain the input formats, where diagnostics go and the exit codes, after the top-level help.
 const EXIT_CODES_HELP: &str = "\
 INPUT is a JSON model (.json) or a d2 file (.d2), told apart by its extension.
 Diagnostics go to stderr, except for validate --format json, which prints them
@@ -26,6 +28,7 @@ Exit codes, identical for every subcommand:
   2  usage error: unknown flag, missing argument, INPUT neither .json nor .d2
   3  I/O failure: the input cannot be read or the output cannot be written";
 
+/// Explain the validate report's formats and its JSON report's fields, after validate's help.
 const VALIDATE_REPORT_HELP: &str = "\
 Formats:
   human  miette's graphical report on stderr, with source snippets for d2 input
@@ -56,6 +59,7 @@ struct Cli {
     command: Command,
 }
 
+/// Name the subcommand to run.
 #[derive(Subcommand)]
 enum Command {
     /// Render a model as an SVG, interactive unless --profile static is given.
@@ -101,7 +105,7 @@ struct ImportCommand {
     output: OutputTarget,
 }
 
-/// Names the SVG profile `render` writes.
+/// Name the SVG profile `render` writes.
 #[derive(Clone, Copy, ValueEnum)]
 enum RenderProfile {
     /// Explorable in a browser: themed, animated, with the embedded runtime.
@@ -110,12 +114,14 @@ enum RenderProfile {
     Static,
 }
 
+/// Name how `validate` prints an input's report.
 #[derive(Clone, Copy, ValueEnum)]
 enum ReportFormat {
     Human,
     Json,
 }
 
+/// Serve as the binary's main entry: run the parsed command line and exit with its failure's code, or success.
 fn main() -> ExitCode {
     let cli = Cli::parse();
     let outcome = cli.command.run();
@@ -127,6 +133,7 @@ fn main() -> ExitCode {
 }
 
 impl Command {
+    /// Run the subcommand.
     fn run(self) -> Result<(), Failure> {
         match self {
             Self::Render(render_command) => render_command.run(),
@@ -137,6 +144,7 @@ impl Command {
 }
 
 impl RenderCommand {
+    /// Run `render`: load the input, render it in the profile and write the SVG.
     fn run(self) -> Result<(), Failure> {
         let model = self.input.load_model_printing_diagnostics()?;
         let svg = self.profile.render(&model);
@@ -145,6 +153,7 @@ impl RenderCommand {
 }
 
 impl RenderProfile {
+    /// Render `model` as the SVG of this profile.
     fn render(self, model: &Model) -> String {
         match self {
             Self::Interactive => InteractiveSvg::render(model),
@@ -154,18 +163,13 @@ impl RenderProfile {
 }
 
 impl ValidateCommand {
+    /// Run `validate`: print the input's report in the format, failing when it holds an error.
     fn run(self) -> Result<(), Failure> {
         let LoadedInput {
             model: _admitted_model,
             report,
         } = self.input.load()?;
-        match self.format {
-            ReportFormat::Human => report.eprint_diagnostics(),
-            ReportFormat::Json => {
-                let json_report = report.to_json();
-                OutputTarget::write_stdout(&json_report)?;
-            }
-        }
+        self.format.print(&report)?;
         let has_errors = report.has_errors();
         if has_errors {
             return Err(Failure::InvalidInput);
@@ -174,7 +178,24 @@ impl ValidateCommand {
     }
 }
 
+impl ReportFormat {
+    /// Print `report` in this format: miette's graphical report on stderr, or its JSON report on stdout.
+    fn print(self, report: &InputReport) -> Result<(), Failure> {
+        match self {
+            Self::Human => {
+                report.eprint_diagnostics();
+                Ok(())
+            }
+            Self::Json => {
+                let json_report = report.to_json();
+                OutputTarget::write_stdout(&json_report)
+            }
+        }
+    }
+}
+
 impl ImportCommand {
+    /// Run `import`: load the input and write its model as JSON.
     fn run(self) -> Result<(), Failure> {
         let model = self.input.load_model_printing_diagnostics()?;
         let model_json = model.to_json();

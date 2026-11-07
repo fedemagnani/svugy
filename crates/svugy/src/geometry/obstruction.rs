@@ -1,13 +1,14 @@
 //! Track what a plate, a badge or the legend must keep clear of in one view.
 
-use std::iter;
-
 use kurbo::{Affine, BezPath, PathEl, Point, Rect, Vec2};
 use svugy_model::path::ElementPath;
 
-use super::{Face, Group, Heading, Label, NestedInterior, NestedInteriors, PlatedLabel, Solid};
+use super::{
+    Drawable, Face, Group, Heading, Label, NestedInterior, NestedInteriors, PlatedLabel, Scene,
+    Solid,
+};
 
-/// Holds the screen outlines a plate, a badge or the legend must not overlap in one view: what that view draws and what was placed before.
+/// Collects the obstructions a plate, a badge or the legend must not overlap in one view: the outlines of what that view draws and of what was placed before.
 pub(super) struct Obstructions {
     outlines: Vec<ScreenPolygon>,
 }
@@ -16,222 +17,175 @@ impl Obstructions {
     /// Screen gap a plate keeps from every obstruction.
     const CLEARANCE: f64 = 2.0;
 
-    /// Collect the labels of `solids`, with every label and plate the solids' nested interiors draw, mapped through their frames.
-    pub(super) fn around_level(solids: &[Solid]) -> Self {
-        let own_label_outlines = Self::solid_label_outlines(solids, Affine::IDENTITY);
-        let nested_outlines = NestedInteriors::below(solids).flat_map(|interior| {
-            let group = interior.group;
-            let label_outlines = Self::solid_label_outlines(&group.solids, interior.to_outer);
-            let plate_outlines = Self::plate_outlines(group, interior.to_outer);
-            label_outlines.chain(plate_outlines)
+    /// Collect the text `solids` draw: their labels, with every label and plate their nested interiors draw, mapped through their frames.
+    pub(super) fn around_text_of(solids: &[Solid]) -> Self {
+        let own_drawables = solids.iter().flat_map(Solid::drawables);
+        let own_text_outlines = own_drawables
+            .filter(Drawable::is_text)
+            .map(|drawable| ScreenPolygon::of_drawable(drawable, Affine::IDENTITY));
+        let nested_text_outlines = NestedInteriors::below(solids).flat_map(|interior| {
+            let nested_drawables = interior.group.drawables();
+            nested_drawables
+                .filter(Drawable::is_text)
+                .map(move |drawable| ScreenPolygon::of_drawable(drawable, interior.to_outer))
         });
-        let outlines = own_label_outlines.chain(nested_outlines).collect();
+        let outlines = own_text_outlines.chain(nested_text_outlines).collect();
         Self { outlines }
     }
 
-    /// Collect, in `container`'s frame, what its entered view draws over its slab: every solid label, every connection plate, every face but those of the slabs under its stubs.
-    pub(super) fn around_stubs_of(root: &Group, container: &NestedInterior) -> Self {
-        let document_to_container = container.to_outer.inverse();
-        let root_level = (root, Affine::IDENTITY);
-        let nested_levels = NestedInteriors::below(&root.solids)
-            .map(|interior| (interior.group, interior.to_outer));
-        let outlines = iter::once(root_level)
-            .chain(nested_levels)
+    /// Collect, in `interior`'s frame, what its entered view draws over its slab: every drawable but connection paths and the faces of the slabs under its stubs, those of its container and of its container's ancestors.
+    pub(super) fn around_stubs_of(root: &Group, interior: &NestedInterior) -> Self {
+        let document_to_interior = interior.to_outer.inverse();
+        let container = interior.container;
+        let levels = root.this_and_nested_levels();
+        let outlines = levels
             .flat_map(|(group, group_to_document)| {
-                let to_container = document_to_container * group_to_document;
-                let face_outlines =
-                    Self::face_outlines_beside(&group.solids, container.container, to_container);
-                let label_outlines = Self::solid_label_outlines(&group.solids, to_container);
-                let plate_outlines = Self::plate_outlines(group, to_container);
-                face_outlines.chain(label_outlines).chain(plate_outlines)
+                let to_interior = document_to_interior * group_to_document;
+                let solid_drawables = group
+                    .solids
+                    .iter()
+                    .flat_map(|solid| solid.drawables_over_slab_of(container));
+                let connection_plates = group
+                    .connections
+                    .iter()
+                    .filter_map(|connection| connection.label.as_ref())
+                    .map(Drawable::Plate);
+                let drawn_over_slab = solid_drawables.chain(connection_plates);
+                drawn_over_slab
+                    .map(move |drawable| ScreenPolygon::of_drawable(drawable, to_interior))
             })
             .collect();
         Self { outlines }
     }
 
-    /// Collect in document space everything the top-level view draws: every face, badge, solid label, arc and plate of every level, and the heading's lines.
-    pub(super) fn around_document(root: &Group, heading: &Heading) -> Self {
-        let root_level = (root, Affine::IDENTITY);
-        let nested_levels = NestedInteriors::below(&root.solids)
-            .map(|interior| (interior.group, interior.to_outer));
-        let level_outlines =
-            iter::once(root_level)
-                .chain(nested_levels)
-                .flat_map(|(group, group_to_document)| {
-                    let solids = group.solids.iter();
-                    let face_outlines = Self::solid_face_outlines(solids, group_to_document);
-                    let label_outlines =
-                        Self::solid_label_outlines(&group.solids, group_to_document);
-                    let arc_outlines = Self::arc_outlines(group, group_to_document);
-                    let plate_outlines = Self::plate_outlines(group, group_to_document);
-                    face_outlines
-                        .chain(label_outlines)
-                        .chain(arc_outlines)
-                        .chain(plate_outlines)
-                });
-        let heading_lines = heading.title.iter().chain(&heading.subtitle);
+    /// Collect in document space everything `scene`'s top-level view draws: every drawable of every level, and the heading's lines.
+    pub(super) fn around_document(scene: &Scene) -> Self {
+        let levels = scene.root.this_and_nested_levels();
+        let level_outlines = levels.flat_map(|(group, group_to_document)| {
+            let drawables = group.drawables();
+            drawables.map(move |drawable| ScreenPolygon::of_drawable(drawable, group_to_document))
+        });
+        let heading_lines = scene.heading.iter().flat_map(Heading::lines);
         let heading_outlines =
             heading_lines.map(|label| ScreenPolygon::of_label(label, Affine::IDENTITY));
         let outlines = level_outlines.chain(heading_outlines).collect();
         Self { outlines }
     }
 
-    /// Yield the outline of every face and badge face of `solids` but those of `container` and its ancestors, mapped into the view by `to_view`.
-    fn face_outlines_beside<'s>(
-        solids: &'s [Solid],
-        container: &'s ElementPath,
-        to_view: Affine,
-    ) -> impl Iterator<Item = ScreenPolygon> + 's {
-        let solids_beside = solids.iter().filter(move |solid| {
-            let is_container = solid.element == *container;
-            let is_ancestor = solid.element.is_ancestor_of(container);
-            !is_container && !is_ancestor
-        });
-        Self::solid_face_outlines(solids_beside, to_view)
-    }
-
-    /// Yield the outline of every face of `solids` and of the badges on them, mapped into the view by `to_view`.
-    fn solid_face_outlines<'s>(
-        solids: impl Iterator<Item = &'s Solid> + 's,
-        to_view: Affine,
-    ) -> impl Iterator<Item = ScreenPolygon> + 's {
-        let faces = solids.flat_map(|solid| {
-            let badge_faces = solid.badges.iter().flat_map(|badge| &badge.faces);
-            solid.faces.iter().chain(badge_faces)
-        });
-        faces.map(move |face| ScreenPolygon::of_face(face, to_view))
-    }
-
-    /// Yield the outline of every connection arc `group` draws, the hull of its control points, mapped into the view by `to_view`.
-    fn arc_outlines(group: &Group, to_view: Affine) -> impl Iterator<Item = ScreenPolygon> {
-        let arcs = group.connections.iter().map(|connection| &connection.path);
-        arcs.map(move |arc| ScreenPolygon::of_path(arc, to_view))
-    }
-
-    /// Yield the outline of every label of `solids`, mapped into the view by `to_view`.
-    fn solid_label_outlines(
-        solids: &[Solid],
-        to_view: Affine,
-    ) -> impl Iterator<Item = ScreenPolygon> {
-        let labels = solids.iter().flat_map(|solid| &solid.labels);
-        labels.map(move |label| ScreenPolygon::of_label(label, to_view))
-    }
-
-    /// Yield the outline of every connection plate `group` draws, mapped into the view by `to_view`.
-    fn plate_outlines(group: &Group, to_view: Affine) -> impl Iterator<Item = ScreenPolygon> {
-        let plated_labels = group
-            .connections
-            .iter()
-            .filter_map(|connection| connection.label.as_ref());
-        plated_labels.map(move |plated_label| ScreenPolygon::of_plate(plated_label, to_view, 0.0))
-    }
-
-    /// Pick the first of `candidates` whose plate overlaps the fewest obstructions, or `None` when there is no candidate.
-    pub(super) fn least_obstructed(
-        &self,
-        candidates: impl IntoIterator<Item = PlatedLabel>,
-    ) -> Option<PlatedLabel> {
+    /// Place the first of `candidates` that overlaps the fewest obstructions, else `fallback` when there is no candidate, recording it so later placements keep clear of it.
+    pub(super) fn place_least_obstructed<O: Obstacle>(
+        &mut self,
+        candidates: impl IntoIterator<Item = O>,
+        fallback: impl FnOnce() -> O,
+    ) -> O {
         let candidates = candidates.into_iter();
-        candidates.min_by_key(|candidate| self.count_overlapped_by(candidate))
+        let least_obstructed =
+            candidates.min_by_key(|candidate| self.count_overlapped_by(candidate));
+        let placed = least_obstructed.unwrap_or_else(fallback);
+        self.record(&placed);
+        placed
     }
 
-    /// Count the obstructions `plated_label`'s plate, grown by the clearance on its plane, overlaps.
-    pub(super) fn count_overlapped_by(&self, plated_label: &PlatedLabel) -> usize {
-        let cleared_outline =
-            ScreenPolygon::of_plate(plated_label, Affine::IDENTITY, Self::CLEARANCE);
-        self.outlines
-            .iter()
-            .filter(|outline| outline.overlaps(&cleared_outline))
-            .count()
-    }
-
-    /// Add `plated_label` to the obstructions, so later plates keep clear of it.
-    pub(super) fn record(&mut self, plated_label: &PlatedLabel) {
-        let plate_outline = ScreenPolygon::of_plate(plated_label, Affine::IDENTITY, 0.0);
-        self.outlines.push(plate_outline);
-    }
-
-    /// Tell whether `rect`, upright on the screen, overlaps any obstruction.
-    pub(super) fn is_overlapped_by_rect(&self, rect: Rect) -> bool {
-        let rect_outline = ScreenPolygon::mapped_rect(Affine::IDENTITY, rect);
-        let mut outlines = self.outlines.iter();
-        outlines.any(|outline| outline.overlaps(&rect_outline))
-    }
-
-    /// Pick the first of `candidates`, each a mini's faces, that overlaps the fewest obstructions, or `None` when there is no candidate.
-    pub(super) fn least_obstructed_faces(
-        &self,
-        candidates: impl IntoIterator<Item = Vec<Face>>,
-    ) -> Option<Vec<Face>> {
-        let candidates = candidates.into_iter();
-        candidates.min_by_key(|faces| self.count_overlapped_by_faces(faces))
-    }
-
-    /// Count the obstructions any of `faces` overlaps.
-    pub(super) fn count_overlapped_by_faces(&self, faces: &[Face]) -> usize {
-        let face_outlines: Vec<ScreenPolygon> = faces
-            .iter()
-            .map(|face| ScreenPolygon::of_face(face, Affine::IDENTITY))
-            .collect();
+    /// Count the obstructions any of `obstacle`'s cleared outlines overlaps.
+    pub(super) fn count_overlapped_by(&self, obstacle: &impl Obstacle) -> usize {
+        let cleared_outlines = obstacle.cleared_outlines();
         self.outlines
             .iter()
             .filter(|outline| {
-                let mut overlapping_faces = face_outlines.iter();
-                overlapping_faces.any(|face_outline| face_outline.overlaps(outline))
+                let mut cleared_outline_iter = cleared_outlines.iter();
+                cleared_outline_iter.any(|cleared_outline| cleared_outline.overlaps(outline))
             })
             .count()
     }
 
-    /// Add `faces` to the obstructions, so later minis keep clear of them.
-    pub(super) fn record_faces(&mut self, faces: &[Face]) {
-        let face_outlines = faces
-            .iter()
-            .map(|face| ScreenPolygon::of_face(face, Affine::IDENTITY));
-        self.outlines.extend(face_outlines);
+    /// Add `obstacle` to the obstructions, so later placements keep clear of it.
+    pub(super) fn record(&mut self, obstacle: &impl Obstacle) {
+        let screen_outlines = obstacle.screen_outlines();
+        self.outlines.extend(screen_outlines);
+    }
+}
+
+impl Solid {
+    /// Yield what the solid draws over `container`'s slab: its text, and all it draws unless it is `container` or an ancestor of it, whose faces lie under the stubs.
+    fn drawables_over_slab_of(
+        &self,
+        container: &ElementPath,
+    ) -> impl Iterator<Item = Drawable<'_>> {
+        let is_container = self.element == *container;
+        let is_container_ancestor = self.element.is_ancestor_of(container);
+        let is_under_stubs = is_container || is_container_ancestor;
+        let is_beside_container = !is_under_stubs;
+        let drawables = self.drawables();
+        drawables.filter(move |drawable| {
+            let is_text = drawable.is_text();
+            is_text || is_beside_container
+        })
+    }
+}
+
+/// Outlines one obstacle checked against the obstructions: a plate, a badge's faces or an upright screen rect.
+pub(super) trait Obstacle {
+    /// Return the outlines the obstacle covers on the screen.
+    fn screen_outlines(&self) -> Vec<ScreenPolygon>;
+
+    /// Return the outlines the obstacle keeps clear of the obstructions, its screen outlines unless it keeps a clearance.
+    fn cleared_outlines(&self) -> Vec<ScreenPolygon> {
+        self.screen_outlines()
+    }
+}
+
+impl Obstacle for PlatedLabel {
+    fn screen_outlines(&self) -> Vec<ScreenPolygon> {
+        let no_clearance = 0.0;
+        let plate_outline =
+            ScreenPolygon::of_plate_cleared_by(self, no_clearance, Affine::IDENTITY);
+        vec![plate_outline]
+    }
+
+    /// Return the plate grown by the clearance on its plane.
+    fn cleared_outlines(&self) -> Vec<ScreenPolygon> {
+        let cleared_outline =
+            ScreenPolygon::of_plate_cleared_by(self, Obstructions::CLEARANCE, Affine::IDENTITY);
+        vec![cleared_outline]
+    }
+}
+
+impl Obstacle for Vec<Face> {
+    fn screen_outlines(&self) -> Vec<ScreenPolygon> {
+        self.iter()
+            .map(|face| ScreenPolygon::of_path(&face.outline, Affine::IDENTITY))
+            .collect()
+    }
+}
+
+impl Obstacle for Rect {
+    fn screen_outlines(&self) -> Vec<ScreenPolygon> {
+        let rect_outline = ScreenPolygon::mapped_rect(*self, Affine::IDENTITY);
+        vec![rect_outline]
     }
 }
 
 /// Outlines a convex polygon in screen space, such as a label's line box set on its plane or a solid's face.
 #[derive(Clone, Debug, PartialEq)]
-struct ScreenPolygon {
+pub(super) struct ScreenPolygon {
     corners: Vec<Point>,
 }
 
 impl ScreenPolygon {
-    /// Map the corners of `rect` into screen space by `to_view`.
-    fn mapped_rect(to_view: Affine, rect: Rect) -> Self {
-        let Rect { x0, y0, x1, y1 } = rect;
-        let rect_corners = [
-            Point::new(x0, y0),
-            Point::new(x1, y0),
-            Point::new(x1, y1),
-            Point::new(x0, y1),
-        ];
-        let corners = rect_corners.map(|corner| to_view * corner).to_vec();
-        Self { corners }
+    /// Outline `drawable` as later placements keep clear of it, mapped into the view by `to_view`.
+    fn of_drawable(drawable: Drawable, to_view: Affine) -> Self {
+        match drawable {
+            Drawable::Face(face) => Self::of_path(&face.outline, to_view),
+            Drawable::Label(label) => Self::of_label(label, to_view),
+            Drawable::Path(path) => Self::of_path(path, to_view),
+            Drawable::Plate(plated_label) => {
+                let no_clearance = 0.0;
+                Self::of_plate_cleared_by(plated_label, no_clearance, to_view)
+            }
+        }
     }
 
-    /// Outline `label`'s line box on its plane, mapped into the view by `to_view`.
-    fn of_label(label: &Label, to_view: Affine) -> Self {
-        let line_box = label.line_box();
-        let label_to_view = to_view * label.plane;
-        Self::mapped_rect(label_to_view, line_box)
-    }
-
-    /// Outline `plated_label`'s plate grown by `clearance` on its label's plane, mapped into the view by `to_view`.
-    fn of_plate(plated_label: &PlatedLabel, to_view: Affine, clearance: f64) -> Self {
-        let plate_rect = plated_label.plate.rect();
-        let cleared_rect = plate_rect.inflate(clearance, clearance);
-        let plate_to_view = to_view * plated_label.label.plane;
-        Self::mapped_rect(plate_to_view, cleared_rect)
-    }
-
-    /// Outline `face` by the points of its path, control points included, so every projection of a curved face lies inside the outline's.
-    fn of_face(face: &Face, to_view: Affine) -> Self {
-        Self::of_path(&face.outline, to_view)
-    }
-
-    /// Outline `path` by its points, control points included, mapped into the view by `to_view`.
+    /// Outline `path` by its points, control points included so every projection of a curved face lies inside the outline's, mapped into the view by `to_view`.
     fn of_path(path: &BezPath, to_view: Affine) -> Self {
         let path_points = path.elements().iter().flat_map(|element| match *element {
             PathEl::MoveTo(point) | PathEl::LineTo(point) => vec![point],
@@ -242,6 +196,34 @@ impl ScreenPolygon {
             PathEl::ClosePath => Vec::new(),
         });
         let corners = path_points.map(|point| to_view * point).collect();
+        Self { corners }
+    }
+
+    /// Outline `label`'s line box on its plane, mapped into the view by `to_view`.
+    fn of_label(label: &Label, to_view: Affine) -> Self {
+        let line_box = label.line_box();
+        let label_to_view = to_view * label.plane;
+        Self::mapped_rect(line_box, label_to_view)
+    }
+
+    /// Outline `plated_label`'s plate grown by `clearance` on its label's plane, mapped into the view by `to_view`.
+    fn of_plate_cleared_by(plated_label: &PlatedLabel, clearance: f64, to_view: Affine) -> Self {
+        let plate_rect = plated_label.plate.rect();
+        let cleared_rect = plate_rect.inflate(clearance, clearance);
+        let plate_to_view = to_view * plated_label.label.plane;
+        Self::mapped_rect(cleared_rect, plate_to_view)
+    }
+
+    /// Map the corners of `rect` into screen space by `to_view`.
+    fn mapped_rect(rect: Rect, to_view: Affine) -> Self {
+        let Rect { x0, y0, x1, y1 } = rect;
+        let rect_corners = [
+            Point::new(x0, y0),
+            Point::new(x1, y0),
+            Point::new(x1, y1),
+            Point::new(x0, y1),
+        ];
+        let corners = rect_corners.map(|corner| to_view * corner).to_vec();
         Self { corners }
     }
 
@@ -279,7 +261,11 @@ impl ScreenPolygon {
             .map(|corner| corner.to_vec2().dot(axis))
             .fold(
                 (f64::INFINITY, f64::NEG_INFINITY),
-                |(min, max), projection| (min.min(projection), max.max(projection)),
+                |(least, greatest), projection| {
+                    let least = least.min(projection);
+                    let greatest = greatest.max(projection);
+                    (least, greatest)
+                },
             )
     }
 }
@@ -288,6 +274,7 @@ impl ScreenPolygon {
 mod tests {
     use glam::DVec3;
     use kurbo::{RoundedRect, Size};
+    use svugy_model::path::ElementPath;
 
     use super::*;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
@@ -295,21 +282,26 @@ mod tests {
     use crate::metrics::{LabelRole, TextAnchor};
 
     fn plate_at(center: Point) -> PlatedLabel {
-        PlatedLabel::centered_on("calls", center, &FixedAdvanceMeasure)
+        PlatedLabel::centered_on(
+            "calls",
+            LabelRole::ConnectionLabel,
+            center,
+            &FixedAdvanceMeasure,
+        )
     }
 
     #[test]
     fn a_rect_inside_a_slanted_quads_bounding_box_overlaps_it_only_on_the_quad() {
         let slanted_plane = IsometricProjection::plane(DVec3::ZERO, DVec3::X, DVec3::Y);
         let line_box = Rect::new(0.0, 0.0, 200.0, 10.0);
-        let slanted = ScreenPolygon::mapped_rect(slanted_plane, line_box);
+        let slanted = ScreenPolygon::mapped_rect(line_box, slanted_plane);
         let small_size = Size::new(4.0, 4.0);
         let off_the_quad_center = Point::new(150.0, 20.0);
         let off_the_quad_box = Rect::from_center_size(off_the_quad_center, small_size);
-        let off_the_quad = ScreenPolygon::mapped_rect(Affine::IDENTITY, off_the_quad_box);
+        let off_the_quad = ScreenPolygon::mapped_rect(off_the_quad_box, Affine::IDENTITY);
         let on_the_axis_center = Point::new(86.6, 50.0);
         let on_the_axis_box = Rect::from_center_size(on_the_axis_center, small_size);
-        let on_the_axis = ScreenPolygon::mapped_rect(Affine::IDENTITY, on_the_axis_box);
+        let on_the_axis = ScreenPolygon::mapped_rect(on_the_axis_box, Affine::IDENTITY);
         let slanted_bounds = slanted_plane.transform_rect_bbox(line_box);
         assert!(slanted_bounds.contains(off_the_quad_center));
         assert!(!slanted.overlaps(&off_the_quad));
@@ -319,7 +311,7 @@ mod tests {
 
     #[test]
     fn recorded_plates_obstruct_later_plates_that_overlap_them() {
-        let mut obstructions = Obstructions::around_level(&[]);
+        let mut obstructions = Obstructions::around_text_of(&[]);
         let first = plate_at(Point::ORIGIN);
         let first_obstruction_count = obstructions.count_overlapped_by(&first);
         obstructions.record(&first);
@@ -344,9 +336,9 @@ mod tests {
 
     #[test]
     fn a_plate_laid_on_a_plane_obstructs_along_its_plane_not_its_bounding_box() {
-        let mut obstructions = Obstructions::around_level(&[]);
+        let mut obstructions = Obstructions::around_text_of(&[]);
         let ground = IsometricProjection::horizontal_plane_at(0.0);
-        let flat = plate_at(Point::ORIGIN).on_plane(ground);
+        let flat = plate_at(Point::ORIGIN).with_plane(ground);
         obstructions.record(&flat);
         let flat_bounds = flat.bounds();
         let bounds_corner_off_the_plate = Point::new(flat_bounds.x0 + 1.0, flat_bounds.y0 + 1.0);
@@ -360,7 +352,7 @@ mod tests {
 
     #[test]
     fn the_least_obstructed_candidate_is_the_first_of_those_overlapping_fewest() {
-        let mut obstructions = Obstructions::around_level(&[]);
+        let mut obstructions = Obstructions::around_text_of(&[]);
         let blocker = plate_at(Point::ORIGIN);
         obstructions.record(&blocker);
         let blocked = plate_at(Point::new(5.0, 0.0));
@@ -368,9 +360,10 @@ mod tests {
         let second_clear = plate_at(Point::new(0.0, 80.0));
         let candidates = [blocked, first_clear.clone(), second_clear];
 
-        let least_obstructed = obstructions.least_obstructed(candidates);
+        let least_obstructed =
+            obstructions.place_least_obstructed(candidates, || panic!("candidates are given"));
 
-        assert_eq!(least_obstructed, Some(first_clear));
+        assert_eq!(least_obstructed, first_clear);
     }
 
     #[test]
@@ -387,11 +380,11 @@ mod tests {
         let relay = Solid::new(element, Vec::new()).with_label(caption);
         let interior_offset = Vec2::new(300.0, 100.0);
         let interior_frame = Affine::translate(interior_offset);
-        let mut interior = Group::new(interior_frame, Rect::ZERO);
+        let mut interior = Group::new(interior_frame);
         interior.solids.push(relay);
         let desk_element = ElementPath::from_segments(["desk"]);
         let desk = Solid::new(desk_element, Vec::new()).with_interior(interior);
-        let obstructions = Obstructions::around_level(&[desk]);
+        let obstructions = Obstructions::around_text_of(&[desk]);
         let mapped_caption_center = Point::new(300.0, 97.0);
         let unmapped_caption_center = Point::new(0.0, -3.0);
         let over_the_mapped_caption = plate_at(mapped_caption_center);

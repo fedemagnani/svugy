@@ -1,8 +1,9 @@
 ---
 source: crates/svugy/src/render/profile.rs
+assertion_line: 945
 expression: markup
 ---
-<svg data-svugy-contract="1" height="160" viewBox="-20 -20 200 160" width="200" xmlns="http://www.w3.org/2000/svg">
+<svg data-svugy-contract="2" height="160" viewBox="-20 -20 200 160" width="200" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <marker id="arrowhead-0" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
 <path d="M0,1 L9,5 L0,9 Z" fill="#0000ff"/>
@@ -46,21 +47,21 @@ expression: markup
 <desc data-svugy-details="">{"kind":"element","path":"n0.n1.n2","label":"n2"}</desc>
 <path d="M40,0 L160,0 L160,120 L40,120 Z" fill="#3a3f4b" stroke="#0a0b10" stroke-width="0.8"/>
 </g>
-<g data-svugy-edge="(n0.n1.p2 -&gt; n0.n1.n2)[0]">
+<g data-svugy-edge="(n0.n1.p2 -&gt; n0.n1.n2)[0]" data-svugy-from="n0.n1.p2" data-svugy-to="n0.n1.n2">
 <title>(n0.n1.p2 -&gt; n0.n1.n2)[0]</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(n0.n1.p2 -&gt; n0.n1.n2)[0]","from":"n0.n1.p2","to":"n0.n1.n2"}</desc>
 <path d="M10,10 L100,60" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#4000ff" stroke-dasharray="5 7" stroke-width="1.6"/>
 </g>
 </g>
 </g>
-<g data-svugy-edge="(n0.p1 -&gt; n0.n1)[0]">
+<g data-svugy-edge="(n0.p1 -&gt; n0.n1)[0]" data-svugy-from="n0.p1" data-svugy-to="n0.n1">
 <title>(n0.p1 -&gt; n0.n1)[0]</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(n0.p1 -&gt; n0.n1)[0]","from":"n0.p1","to":"n0.n1"}</desc>
 <path d="M10,10 L100,60" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#2000ff" stroke-dasharray="5 7" stroke-width="1.6"/>
 </g>
 </g>
 </g>
-<g data-svugy-edge="(p0 -&gt; n0)[0]">
+<g data-svugy-edge="(p0 -&gt; n0)[0]" data-svugy-from="p0" data-svugy-to="n0">
 <title>(p0 -&gt; n0)[0]</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(p0 -&gt; n0)[0]","from":"p0","to":"n0"}</desc>
 <path d="M10,10 L100,60" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="#0000ff" stroke-dasharray="5 7" stroke-width="1.6"/>

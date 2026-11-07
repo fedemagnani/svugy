@@ -4,7 +4,7 @@ use std::array;
 
 use glam::DVec3;
 use kurbo::{Affine, BezPath, CubicBez, Point, Rect, Vec2};
-use svugy_model::model::{Element, Shape};
+use svugy_model::model::{Element, Model, Shape};
 use svugy_model::path::ElementPath;
 
 use super::projection::IsometricProjection;
@@ -21,11 +21,32 @@ pub(super) struct ResolvedPrimitive {
 }
 
 impl ResolvedPrimitive {
-    /// Resolve a container to a slab whatever its authored shape and height, since its interior is stacked on a rectangular top, and a leaf to its authored primitive or a block.
-    pub(super) fn of_element(element: &Element, is_container: bool) -> Self {
+    /// Thickness of the sheet stacked under a closed container, a fifth of a block's height.
+    const SHEET_THICKNESS: f64 = Block::DEFAULT_HEIGHT / 5.0;
+
+    /// Resolve the element at `path` of `model` as a container or a leaf, or `None` when `model` has no element there.
+    pub(super) fn of_path(model: &Model, path: &ElementPath) -> Option<Self> {
+        let element = model.element(path)?;
+        let is_container = model.is_container(path);
         if is_container {
-            return Self::container_slab();
+            let container = Self::of_container();
+            return Some(container);
         }
+        let leaf = Self::of_leaf(element);
+        Some(leaf)
+    }
+
+    /// Resolve a container to a slab whatever its authored shape and height, since its interior is stacked on a rectangular top, its labels hanging from its front face.
+    fn of_container() -> Self {
+        Self {
+            height: Slab::DEFAULT_HEIGHT,
+            faces_over: <Slab as Primitive>::Body::faces_over,
+            label_site: LabelSite::hanging_from_front_left_face,
+        }
+    }
+
+    /// Resolve a leaf to its authored primitive, else a block.
+    pub(super) fn of_leaf(element: &Element) -> Self {
         let shape = element.shape().unwrap_or(Shape::Box);
         match shape {
             Shape::Box => Self::leaf::<Block>(element),
@@ -35,22 +56,13 @@ impl ResolvedPrimitive {
         }
     }
 
-    /// Resolve a slab hanging its labels from its front face, since its interior covers its top.
-    fn container_slab() -> Self {
-        Self {
-            height: Slab::DEFAULT_HEIGHT,
-            faces_over: Slab::faces_over,
-            label_site: LabelSite::hanging_from_front_left_face,
-        }
-    }
-
     /// Resolve `P` standing as tall as `element` sets, else at its default height, its labels on its own leaf site.
     fn leaf<P: Primitive>(element: &Element) -> Self {
         let authored_height = element.height();
         let height = authored_height.unwrap_or(P::DEFAULT_HEIGHT);
         Self {
             height,
-            faces_over: P::faces_over,
+            faces_over: P::Body::faces_over,
             label_site: P::leaf_label_site,
         }
     }
@@ -63,11 +75,25 @@ impl ResolvedPrimitive {
         footprint: Rect,
         measure: &impl TextMeasure,
     ) -> Solid {
-        let faces = self.faces_over(footprint, self.height);
+        let faces = (self.faces_over)(footprint, self.height);
         let label_site = (self.label_site)(footprint, self.height);
         let labels = label_site.labels(element, measure);
-        let faced_solid = Solid::new(path.clone(), faces);
+        let solid_element = path.clone();
+        let faced_solid = Solid::new(solid_element, faces);
         labels.into_iter().fold(faced_solid, Solid::with_label)
+    }
+
+    /// Outline the sheet stacked under this primitive over `footprint`: the faces of its body `SHEET_THICKNESS` thick, lowered until its top meets the ground, joined in one path.
+    pub(super) fn sheet_under(&self, footprint: Rect) -> BezPath {
+        let plate_faces = (self.faces_over)(footprint, Self::SHEET_THICKNESS);
+        let plan_plate_floor = DVec3::new(0.0, 0.0, -Self::SHEET_THICKNESS);
+        let plate_floor = IsometricProjection::project(plan_plate_floor);
+        let plate_floor_offset = plate_floor.to_vec2();
+        let lower_to_plate_floor = Affine::translate(plate_floor_offset);
+        let lowered_outlines = plate_faces
+            .into_iter()
+            .flat_map(|plate_face| lower_to_plate_floor * plate_face.outline);
+        lowered_outlines.collect()
     }
 
     /// Return the visible faces of this primitive's body extruded `height` tall over `footprint`, back to front.
@@ -76,8 +102,8 @@ impl ResolvedPrimitive {
     }
 }
 
-/// Shapes an element's body over its footprint: the extrusion the viewer sees, how tall it stands unless authored otherwise, and the site its labels sit on.
-pub(super) trait Primitive {
+/// Declares one primitive an element can be drawn as, for `ResolvedPrimitive` to resolve.
+trait Primitive {
     /// Height of the top face above the ground, in plan units, when the element sets none.
     const DEFAULT_HEIGHT: f64;
 
@@ -88,16 +114,10 @@ pub(super) trait Primitive {
     fn leaf_label_site(footprint: Rect, height: f64) -> LabelSite {
         LabelSite::centered_on_top_face(footprint, height)
     }
-
-    /// Return the visible faces of the body extruded `height` tall over `footprint`, back to front.
-    fn faces_over(footprint: Rect, height: f64) -> Vec<Face> {
-        let body = Self::Body::extrude(footprint, height);
-        body.faces()
-    }
 }
 
-/// Draws a component as a box.
-pub(super) struct Block;
+/// Draws a component as a block: a box standing over its footprint.
+struct Block;
 
 impl Primitive for Block {
     const DEFAULT_HEIGHT: f64 = 22.5;
@@ -105,8 +125,8 @@ impl Primitive for Block {
     type Body = Cuboid;
 }
 
-/// Draws a container as a low box.
-pub(super) struct Slab;
+/// Draws a container as a slab: a low box.
+struct Slab;
 
 impl Primitive for Slab {
     const DEFAULT_HEIGHT: f64 = 10.5;
@@ -115,7 +135,7 @@ impl Primitive for Slab {
 }
 
 /// Draws a store as an upright cylinder.
-pub(super) struct Cylinder;
+struct Cylinder;
 
 impl Primitive for Cylinder {
     const DEFAULT_HEIGHT: f64 = 25.5;
@@ -127,8 +147,8 @@ impl Primitive for Cylinder {
     }
 }
 
-/// Draws a round platform as a cylinder as low as a slab.
-pub(super) struct Disc;
+/// Draws a round platform as a disc: a cylinder as low as a slab.
+struct Disc;
 
 impl Primitive for Disc {
     const DEFAULT_HEIGHT: f64 = Slab::DEFAULT_HEIGHT;
@@ -136,29 +156,19 @@ impl Primitive for Disc {
     type Body = EllipticCylinder;
 }
 
-/// Extrudes a footprint into a body standing `height` tall and outlines the faces the viewer sees.
-pub(super) trait Extrusion {
-    fn extrude(footprint: Rect, height: f64) -> Self;
-
-    /// Return the visible faces, back to front.
-    fn faces(&self) -> Vec<Face>;
+/// Outlines the faces the viewer sees of the body a footprint is extruded into.
+trait Extrusion {
+    /// Return the visible faces of the body extruded `height` tall over `footprint`, back to front.
+    fn faces_over(footprint: Rect, height: f64) -> Vec<Face>;
 }
 
-/// Extrudes a footprint into a box and outlines the three faces the viewer sees.
-pub(super) struct Cuboid {
-    footprint: Rect,
-    height: f64,
-}
+/// Outlines the three visible faces of a cuboid extruded over a footprint.
+struct Cuboid;
 
 impl Extrusion for Cuboid {
-    fn extrude(footprint: Rect, height: f64) -> Self {
-        Self { footprint, height }
-    }
-
     /// Return the max-y face (screen left), the max-x face (screen right), then the top.
-    fn faces(&self) -> Vec<Face> {
-        let Rect { x0, y0, x1, y1 } = self.footprint;
-        let height = self.height;
+    fn faces_over(footprint: Rect, height: f64) -> Vec<Face> {
+        let Rect { x0, y0, x1, y1 } = footprint;
         let left_corners = [
             DVec3::new(x0, y1, 0.0),
             DVec3::new(x1, y1, 0.0),
@@ -198,23 +208,27 @@ impl Face {
     }
 }
 
-/// Extrudes the ellipse inscribed in a footprint and outlines its visible side and its top.
-pub(super) struct EllipticCylinder {
-    base: InscribedEllipse,
-    height: f64,
-}
+/// Outlines the visible side and top of the elliptic cylinder extruded over the ellipse inscribed in a footprint.
+struct EllipticCylinder;
 
 impl Extrusion for EllipticCylinder {
-    fn extrude(footprint: Rect, height: f64) -> Self {
-        let base = InscribedEllipse::inscribed_in(footprint);
-        Self { base, height }
-    }
-
     /// Return the curved side, bounded by the screen silhouette and both front half-ellipses, then the top.
-    fn faces(&self) -> Vec<Face> {
+    fn faces_over(footprint: Rect, height: f64) -> Vec<Face> {
+        let base = InscribedEllipse::inscribed_in(footprint);
+        let quarter_arcs = base.quarter_arcs_from_screen_rightmost();
+        let side = Self::side_outline(quarter_arcs, height);
+        let top = Self::top_outline(quarter_arcs, height);
+        let side_face = Face::new(side, FaceShade::Left);
+        let top_face = Face::new(top, FaceShade::Top);
+        vec![side_face, top_face]
+    }
+}
+
+impl EllipticCylinder {
+    /// Outline the curved side standing `height` tall: down the leftmost silhouette, back along both front ground quarters, up the rightmost silhouette, then along both front top quarters.
+    fn side_outline(quarter_arcs: [CubicBez; 4], height: f64) -> BezPath {
         let ground = IsometricProjection::horizontal_plane_at(0.0);
-        let roof = IsometricProjection::horizontal_plane_at(self.height);
-        let quarter_arcs = self.base.quarter_arcs_from_screen_rightmost();
+        let roof = IsometricProjection::horizontal_plane_at(height);
         let [
             rightmost_to_front,
             front_to_leftmost,
@@ -250,6 +264,12 @@ impl Extrusion for EllipticCylinder {
             top_front_to_leftmost.p3,
         );
         side.close_path();
+        side
+    }
+
+    /// Outline the top `height` up: all four quarters raised to the roof.
+    fn top_outline(quarter_arcs: [CubicBez; 4], height: f64) -> BezPath {
+        let roof = IsometricProjection::horizontal_plane_at(height);
         let top_arcs = quarter_arcs.map(|arc| roof * arc);
         let mut top = BezPath::new();
         top.move_to(top_arcs[0].p0);
@@ -257,9 +277,7 @@ impl Extrusion for EllipticCylinder {
             top.curve_to(arc.p1, arc.p2, arc.p3);
         }
         top.close_path();
-        let side_face = Face::new(side, FaceShade::Left);
-        let top_face = Face::new(top, FaceShade::Top);
-        vec![side_face, top_face]
+        top
     }
 }
 
@@ -273,9 +291,12 @@ impl InscribedEllipse {
     /// κ = 4/3·tan(π/8) = 4(√2 − 1)/3, the handle length per unit radius of the cubic closest to a quarter circle.
     const QUARTER_ARC_HANDLE: f64 = 0.552_284_749_830_793_4;
 
+    /// Inscribe the ellipse in `footprint`: centred on it, its semi-axes half its sides.
     fn inscribed_in(footprint: Rect) -> Self {
         let center = footprint.center();
-        let semi_axes = Vec2::new(footprint.width() / 2.0, footprint.height() / 2.0);
+        let semi_width = footprint.width() / 2.0;
+        let semi_depth = footprint.height() / 2.0;
+        let semi_axes = Vec2::new(semi_width, semi_depth);
         Self { center, semi_axes }
     }
 
@@ -296,7 +317,7 @@ impl InscribedEllipse {
         })
     }
 
-    /// From t to t + π/2: P₀ = E(t), P₁ = P₀ + κ·E′(t), P₂ = P₃ + κ·(a·cos t, b·sin t), P₃ = E(t + π/2), with E′(t) = (−a·sin t, b·cos t).
+    /// Return the cubic of the quarter from t to t + π/2: P₀ = E(t), P₁ = P₀ + κ·E′(t), P₂ = P₃ + κ·(a·cos t, b·sin t), P₃ = E(t + π/2), with E′(t) = (−a·sin t, b·cos t).
     fn quarter_arc_from(&self, cos_sin: Vec2) -> CubicBez {
         let Vec2 { x: a, y: b } = self.semi_axes;
         let Vec2 { x: cos_t, y: sin_t } = cos_sin;
@@ -310,8 +331,8 @@ impl InscribedEllipse {
     }
 }
 
-/// Places an element's title on a plane of its solid, with its caption one line below.
-pub(super) struct LabelSite {
+/// Sets an element's labels at one site on a plane of its solid: its title, then its caption one line below.
+struct LabelSite {
     plane: Affine,
     anchor: TextAnchor,
     title_role: LabelRole,
@@ -319,6 +340,15 @@ pub(super) struct LabelSite {
 }
 
 impl LabelSite {
+    /// Drop from the title's baseline to the caption's.
+    const CAPTION_LINE_OFFSET: f64 = 13.0;
+    /// Title baseline on a top face, from the face's centre.
+    const TOP_FACE_TITLE_BASELINE: Point = Point::new(0.0, -2.0);
+    /// Title baseline stood upright, from the top face's projected centre.
+    const UPRIGHT_TITLE_BASELINE: Point = Point::new(0.0, 4.0);
+    /// Tag baseline on a front face, from its west top corner: the tag inset along it, below the top edge.
+    const HANGING_TAG_BASELINE: Point = Point::new(LabelBlock::TAG_INSET, 21.5);
+
     /// Centre the title on the top face, reading along plan x, as the example titles its blocks.
     fn centered_on_top_face(footprint: Rect, height: f64) -> Self {
         let top_center = footprint.center();
@@ -328,7 +358,7 @@ impl LabelSite {
             plane,
             anchor: TextAnchor::Middle,
             title_role: LabelRole::Title,
-            title_baseline_origin: LabelBlock::TOP_FACE_TITLE_BASELINE,
+            title_baseline_origin: Self::TOP_FACE_TITLE_BASELINE,
         }
     }
 
@@ -337,12 +367,13 @@ impl LabelSite {
         let top_center = footprint.center();
         let origin = DVec3::new(top_center.x, top_center.y, height);
         let projected_origin = IsometricProjection::project(origin);
-        let plane = Affine::translate(projected_origin.to_vec2());
+        let origin_offset = projected_origin.to_vec2();
+        let plane = Affine::translate(origin_offset);
         Self {
             plane,
             anchor: TextAnchor::Middle,
             title_role: LabelRole::Title,
-            title_baseline_origin: LabelBlock::UPRIGHT_TITLE_BASELINE,
+            title_baseline_origin: Self::UPRIGHT_TITLE_BASELINE,
         }
     }
 
@@ -354,7 +385,7 @@ impl LabelSite {
             plane,
             anchor: TextAnchor::Start,
             title_role: LabelRole::ContainerTag,
-            title_baseline_origin: LabelBlock::HANGING_TAG_BASELINE,
+            title_baseline_origin: Self::HANGING_TAG_BASELINE,
         }
     }
 
@@ -374,7 +405,7 @@ impl LabelSite {
         let Some((caption_text, caption_size)) = measured_caption else {
             return vec![title];
         };
-        let caption_line_offset = Vec2::new(0.0, LabelBlock::CAPTION_LINE_OFFSET);
+        let caption_line_offset = Vec2::new(0.0, Self::CAPTION_LINE_OFFSET);
         let caption_baseline_origin = self.title_baseline_origin + caption_line_offset;
         let caption = Label::new(
             caption_text,
@@ -404,13 +435,22 @@ mod tests {
     }
 
     impl DrawnSolid {
-        fn resolved(
+        fn of_leaf(path: &ElementPath, element: &Element, footprint: Rect) -> Self {
+            let primitive = ResolvedPrimitive::of_leaf(element);
+            Self::drawn_by(primitive, path, element, footprint)
+        }
+
+        fn of_container(path: &ElementPath, element: &Element, footprint: Rect) -> Self {
+            let primitive = ResolvedPrimitive::of_container();
+            Self::drawn_by(primitive, path, element, footprint)
+        }
+
+        fn drawn_by(
+            primitive: ResolvedPrimitive,
             path: &ElementPath,
             element: &Element,
             footprint: Rect,
-            is_container: bool,
         ) -> Self {
-            let primitive = ResolvedPrimitive::of_element(element, is_container);
             let solid = primitive.draw(path, element, footprint, &FixedAdvanceMeasure);
             let height = primitive.height;
             Self { solid, height }
@@ -432,7 +472,7 @@ mod tests {
     #[test]
     fn block_draws_left_right_then_top_over_its_footprint() {
         let footprint = Rect::new(20.0, 30.0, 80.0, 70.0);
-        let faces = Block::faces_over(footprint, Block::DEFAULT_HEIGHT);
+        let faces = <Block as Primitive>::Body::faces_over(footprint, Block::DEFAULT_HEIGHT);
         let shades: Vec<FaceShade> = faces.iter().map(|face| face.shade).collect();
         assert_eq!(shades, [FaceShade::Left, FaceShade::Right, FaceShade::Top]);
         let top_points = outline_points(&faces[2]);
@@ -450,8 +490,8 @@ mod tests {
     #[test]
     fn slab_is_a_lower_box_than_block() {
         let footprint = Rect::new(0.0, 0.0, 200.0, 100.0);
-        let slab_faces = Slab::faces_over(footprint, Slab::DEFAULT_HEIGHT);
-        let block_faces = Block::faces_over(footprint, Block::DEFAULT_HEIGHT);
+        let slab_faces = <Slab as Primitive>::Body::faces_over(footprint, Slab::DEFAULT_HEIGHT);
+        let block_faces = <Block as Primitive>::Body::faces_over(footprint, Block::DEFAULT_HEIGHT);
         let slab_top = slab_faces[2].outline.bounding_box();
         let block_top = block_faces[2].outline.bounding_box();
         assert_eq!(slab_faces.len(), 3);
@@ -465,7 +505,7 @@ mod tests {
     fn cylinder_top_is_the_projected_circle_with_the_example_proportions() {
         let radius = 31.5;
         let footprint = square_footprint(radius);
-        let faces = Cylinder::faces_over(footprint, Cylinder::DEFAULT_HEIGHT);
+        let faces = <Cylinder as Primitive>::Body::faces_over(footprint, Cylinder::DEFAULT_HEIGHT);
         let shades: Vec<FaceShade> = faces.iter().map(|face| face.shade).collect();
         assert_eq!(shades, [FaceShade::Left, FaceShade::Top]);
         let top_bounds = faces[1].outline.bounding_box();
@@ -485,7 +525,7 @@ mod tests {
     fn cylinder_side_spans_the_silhouette_from_ground_to_top() {
         let radius = 20.0;
         let footprint = square_footprint(radius);
-        let faces = Cylinder::faces_over(footprint, Cylinder::DEFAULT_HEIGHT);
+        let faces = <Cylinder as Primitive>::Body::faces_over(footprint, Cylinder::DEFAULT_HEIGHT);
         let side_bounds = faces[0].outline.bounding_box();
         let top_bounds = faces[1].outline.bounding_box();
         assert!((side_bounds.x0 - top_bounds.x0).abs() < 1e-9);
@@ -502,7 +542,7 @@ mod tests {
     #[test]
     fn elongated_footprint_keeps_its_silhouette_points_on_the_ellipse_extremes() {
         let footprint = Rect::new(0.0, 0.0, 120.0, 40.0);
-        let faces = Disc::faces_over(footprint, Disc::DEFAULT_HEIGHT);
+        let faces = <Disc as Primitive>::Body::faces_over(footprint, Disc::DEFAULT_HEIGHT);
         let top_bounds = faces[1].outline.bounding_box();
         let top_points = outline_points(&faces[1]);
         let rightmost = top_points[0];
@@ -516,7 +556,7 @@ mod tests {
         let path = ElementPath::from_segments(["quoter"]);
         let element = Element::new("quoter").with_caption("prices · signs");
         let footprint = Rect::new(0.0, 0.0, 108.0, 66.0);
-        let projected = DrawnSolid::resolved(&path, &element, footprint, false);
+        let projected = DrawnSolid::of_leaf(&path, &element, footprint);
         let labels = &projected.solid.labels;
         assert_eq!(projected.height, Block::DEFAULT_HEIGHT);
         assert_eq!(labels.len(), 2);
@@ -544,7 +584,7 @@ mod tests {
             let element = Element::new("svugy-cli")
                 .with_shape(shape)
                 .with_height(authored_height);
-            let projected = DrawnSolid::resolved(&path, &element, footprint, false);
+            let projected = DrawnSolid::of_leaf(&path, &element, footprint);
             let top_face = projected.solid.faces.last().expect("every body has a top");
             let top_bounds = top_face.outline.bounding_box();
             let face_bounds = projected
@@ -572,8 +612,8 @@ mod tests {
         let footprint = Rect::new(0.0, 0.0, 300.0, 200.0);
         let unraised = Element::new("desk");
         let raised = Element::new("desk").with_height(84.0);
-        let unraised_projected = DrawnSolid::resolved(&path, &unraised, footprint, true);
-        let raised_projected = DrawnSolid::resolved(&path, &raised, footprint, true);
+        let unraised_projected = DrawnSolid::of_container(&path, &unraised, footprint);
+        let raised_projected = DrawnSolid::of_container(&path, &raised, footprint);
         assert_eq!(raised_projected.height, Slab::DEFAULT_HEIGHT);
         assert_eq!(raised_projected.solid, unraised_projected.solid);
     }
@@ -583,7 +623,7 @@ mod tests {
         let path = ElementPath::from_segments(["desk"]);
         let element = Element::new("desk");
         let footprint = Rect::new(0.0, 0.0, 300.0, 200.0);
-        let projected = DrawnSolid::resolved(&path, &element, footprint, true);
+        let projected = DrawnSolid::of_container(&path, &element, footprint);
         let tag = &projected.solid.labels[0];
         assert_eq!(projected.height, Slab::DEFAULT_HEIGHT);
         assert_eq!(tag.role, LabelRole::ContainerTag);
@@ -597,7 +637,7 @@ mod tests {
         let path = ElementPath::from_segments(["sqlite"]);
         let element = Element::new("SQLite").with_shape(Shape::Cylinder);
         let footprint = square_footprint(31.5);
-        let projected = DrawnSolid::resolved(&path, &element, footprint, false);
+        let projected = DrawnSolid::of_leaf(&path, &element, footprint);
         assert_eq!(projected.height, Cylinder::DEFAULT_HEIGHT);
         assert_eq!(projected.solid.faces.len(), 2);
         assert_eq!(
@@ -613,7 +653,7 @@ mod tests {
             .with_caption("PendingOpened")
             .with_shape(Shape::Slab);
         let footprint = Rect::new(0.0, 0.0, 300.0, 66.0);
-        let projected = DrawnSolid::resolved(&path, &element, footprint, false);
+        let projected = DrawnSolid::of_leaf(&path, &element, footprint);
         let title = &projected.solid.labels[0];
         let plan_top_center = DVec3::new(150.0, 33.0, Slab::DEFAULT_HEIGHT);
         let top_center = IsometricProjection::project(plan_top_center);
@@ -629,10 +669,10 @@ mod tests {
         let path = ElementPath::from_segments(["pond"]);
         let footprint = Rect::new(0.0, 0.0, 300.0, 200.0);
         let unshaped = Element::new("pond");
-        let unshaped_projected = DrawnSolid::resolved(&path, &unshaped, footprint, true);
+        let unshaped_projected = DrawnSolid::of_container(&path, &unshaped, footprint);
         for shape in [Shape::Box, Shape::Cylinder, Shape::Disc] {
             let element = Element::new("pond").with_shape(shape);
-            let projected = DrawnSolid::resolved(&path, &element, footprint, true);
+            let projected = DrawnSolid::of_container(&path, &element, footprint);
             let tag = &projected.solid.labels[0];
             let [a, b, c, d, _e, _f] = tag.plane.as_coeffs();
             assert_eq!(projected.height, Slab::DEFAULT_HEIGHT, "{shape:?}");

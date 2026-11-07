@@ -1,6 +1,8 @@
 //! Sanitise the links svugy_model's `Link::resolve` leaves as URLs into safe URLs.
 
+/// List the schemes a link may use, lowercase.
 const ALLOWED_SCHEMES: [&str; 3] = ["http", "https", "mailto"];
+/// List the delimiters whose first occurrence tells whether a `:` ends a scheme.
 const SCHEME_SEARCH_DELIMITERS: [char; 4] = [':', '/', '?', '#'];
 
 /// Holds a `Link::Url` that passed the URL policy: an http, https or mailto URL, or a relative path.
@@ -9,46 +11,47 @@ pub(crate) struct SafeUrl {
     value: String,
 }
 
-/// Names the URL policy rule a link value broke.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum UrlRejection {
-    Empty,
-    Backslash,
-    RootRelativePath,
-    DisallowedScheme,
-}
-
 impl SafeUrl {
-    /// Strip ASCII whitespace and controls from a `Link::Url` value, then accept an allowed scheme or a relative path.
-    pub(crate) fn parse(raw: &str) -> Result<SafeUrl, UrlRejection> {
+    /// Parse a `Link::Url` value into a safe URL: ASCII whitespace and controls stripped, an allowed scheme or a relative path accepted.
+    pub(crate) fn parse(raw: &str) -> Option<SafeUrl> {
         let value: String = raw.chars().filter(Self::is_kept_in_url).collect();
-        if value.is_empty() {
-            return Err(UrlRejection::Empty);
+        let is_blank = value.is_empty();
+        if is_blank {
+            return None;
         }
         let has_backslash = value.contains('\\');
         if has_backslash {
-            return Err(UrlRejection::Backslash);
+            return None;
         }
         let is_root_relative = value.starts_with('/');
         if is_root_relative {
-            return Err(UrlRejection::RootRelativePath);
+            return None;
         }
         let Some(scheme) = Self::scheme_of(&value) else {
-            return Ok(SafeUrl { value });
+            let relative_url = SafeUrl { value };
+            return Some(relative_url);
         };
         let lowercase_scheme = scheme.to_ascii_lowercase();
-        let is_disallowed_scheme = !ALLOWED_SCHEMES.contains(&lowercase_scheme.as_str());
-        if is_disallowed_scheme {
-            return Err(UrlRejection::DisallowedScheme);
+        let lowercase_scheme_name = lowercase_scheme.as_str();
+        let is_allowed_scheme = ALLOWED_SCHEMES.contains(&lowercase_scheme_name);
+        if is_allowed_scheme {
+            let schemed_url = SafeUrl { value };
+            return Some(schemed_url);
         }
-        Ok(SafeUrl { value })
+        None
     }
 
+    /// Reference the synthetic `id` of a definition in the same document as a `#id` fragment.
+    pub(crate) fn fragment(id: &str) -> SafeUrl {
+        let value = format!("#{id}");
+        SafeUrl { value }
+    }
+
+    /// Keep every character but ASCII whitespace and controls: the printable ASCII graphics and everything beyond ASCII.
     fn is_kept_in_url(character: &char) -> bool {
-        let is_ascii_whitespace = character.is_ascii_whitespace();
-        let is_ascii_control = character.is_ascii_control();
-        let is_ascii_noise = is_ascii_whitespace || is_ascii_control;
-        !is_ascii_noise
+        let is_ascii_graphic = character.is_ascii_graphic();
+        let is_beyond_ascii = *character > '\u{7F}';
+        is_ascii_graphic || is_beyond_ascii
     }
 
     /// Return what precedes a `:` that comes before any `/`, `?` or `#`.
@@ -58,6 +61,7 @@ impl SafeUrl {
         is_scheme_delimiter.then(|| &value[..delimiter_index])
     }
 
+    /// Borrow the safe URL as a str.
     pub(crate) fn as_str(&self) -> &str {
         &self.value
     }
@@ -69,24 +73,24 @@ mod tests {
 
     #[test]
     fn hostile_links_are_rejected() {
-        let cases = [
-            ("javascript:alert(1)", UrlRejection::DisallowedScheme),
-            (" JaVaScRiPt:alert(1)", UrlRejection::DisallowedScheme),
-            ("java\nscript:alert(1)", UrlRejection::DisallowedScheme),
-            ("java\u{0}script:alert(1)", UrlRejection::DisallowedScheme),
-            ("\tjava script:alert(1)", UrlRejection::DisallowedScheme),
-            ("data:text/html,<script>", UrlRejection::DisallowedScheme),
-            ("vbscript:x", UrlRejection::DisallowedScheme),
-            ("a:b/c", UrlRejection::DisallowedScheme),
-            ("\\\\evil", UrlRejection::Backslash),
-            ("http:\\\\evil", UrlRejection::Backslash),
-            ("/abs", UrlRejection::RootRelativePath),
-            ("//evil.com", UrlRejection::RootRelativePath),
-            (" \n\t", UrlRejection::Empty),
-            ("", UrlRejection::Empty),
+        let hostile_links = [
+            "javascript:alert(1)",
+            " JaVaScRiPt:alert(1)",
+            "java\nscript:alert(1)",
+            "java\u{0}script:alert(1)",
+            "\tjava script:alert(1)",
+            "data:text/html,<script>",
+            "vbscript:x",
+            "a:b/c",
+            "\\\\evil",
+            "http:\\\\evil",
+            "/abs",
+            "//evil.com",
+            " \n\t",
+            "",
         ];
-        for (raw, expected_rejection) in cases {
-            assert_eq!(SafeUrl::parse(raw), Err(expected_rejection), "{raw:?}");
+        for raw in hostile_links {
+            assert_eq!(SafeUrl::parse(raw), None, "{raw:?}");
         }
     }
 

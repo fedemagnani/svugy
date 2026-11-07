@@ -1,20 +1,16 @@
 //! Filter the d2 syntax tree down to the v1 subset, recording each construct it drops as a warning and each key d2 rejects as an error.
 
-use svugy_model::path::ElementPath;
-use svugy_model::style::StyleKey;
+use svugy_model::style::AnyStyleKey;
 
 use super::ast::{
-    D2Document, EdgeDeclaration, EdgeLink, Field, FieldAssignment, KeyPath, KeySegment, Scalar,
-    ShapeDeclaration, Span, Statement, StyleProperty, SvugyProperty, SvugyValue,
+    D2Document, EdgeDeclaration, EdgeLink, Field, FieldAssignment, KeyPath, KeySegment, Keyword,
+    Scalar, ShapeDeclaration, Span, Statement, StyleProperty, SvugyProperty, SvugyValue,
 };
-use super::diagnostic::{Construct, SyntaxError, UnsupportedConstruct};
+use super::diagnostic::{Construct, Diagnostics};
 use super::parse::{
     SyntaxArray, SyntaxAssignment, SyntaxDeclaration, SyntaxHead, SyntaxKey, SyntaxLink,
     SyntaxStatement, SyntaxValue,
 };
-
-/// The d2 variable whose entries carry what d2 cannot say, e.g. `vars: { svugy: { caption: … } }`.
-const SVUGY_VARIABLE: &str = "svugy";
 
 /// Reject an entry of the `svugy` variable that is not a plain `key: value`.
 const SVUGY_ENTRY_ERROR: &str = "the `svugy` variable holds only `key: value` entries";
@@ -22,13 +18,12 @@ const SVUGY_ENTRY_ERROR: &str = "the `svugy` variable holds only `key: value` en
 /// Reject an item of a `svugy` list that is not a plain value.
 const SVUGY_LIST_ITEM_ERROR: &str = "a list in the `svugy` variable holds only plain values";
 
-/// Filter syntax statements to the v1 subset, accumulating a warning for every construct dropped and an error for every key d2 itself rejects.
-pub(crate) struct SubsetFilter {
-    warnings: Vec<UnsupportedConstruct>,
-    errors: Vec<SyntaxError>,
+/// Filter syntax statements to the v1 subset, recording a warning for every construct dropped and an error for every key d2 itself rejects.
+pub(crate) struct SubsetFilter<'sink> {
+    diagnostics: &'sink mut Diagnostics,
 }
 
-/// What a key declares: a shape path, or a field from its first reserved keyword on (`a.b.style.fill`).
+/// Tell what a key declares: a shape path, or a field from its first reserved keyword on (`a.b.style.fill`).
 enum KeyRole {
     Shape(KeyPath),
     Field(FieldKey),
@@ -41,51 +36,18 @@ struct FieldKey {
     rest: Vec<KeySegment>,
 }
 
-/// Name a d2 reserved keyword outside `style` (d2ast/keywords.go at v0.9.0).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Keyword {
-    Shape,
-    Label,
-    Direction,
-    Link,
-    Style,
-    Vars,
-    Class,
-    Classes,
-    Layers,
-    Scenarios,
-    Steps,
-    Icon,
-    Constraint,
-    Tooltip,
-    Near,
-    Width,
-    Height,
-    Top,
-    Left,
-    GridRows,
-    GridColumns,
-    GridGap,
-    VerticalGap,
-    HorizontalGap,
-    SourceArrowhead,
-    TargetArrowhead,
-}
-
-impl SubsetFilter {
-    /// Keep the v1 subset of a parsed d2 file and return the warnings for everything else and the errors for rejected keys.
+impl<'sink> SubsetFilter<'sink> {
+    /// Filter a parsed d2 document to the v1 subset, recording the warnings for everything else and the errors for rejected keys.
     pub(crate) fn filter_document(
         statements: Vec<SyntaxStatement>,
-    ) -> (D2Document, Vec<UnsupportedConstruct>, Vec<SyntaxError>) {
-        let mut filter = Self {
-            warnings: Vec::new(),
-            errors: Vec::new(),
-        };
+        diagnostics: &'sink mut Diagnostics,
+    ) -> D2Document {
+        let mut filter = Self { diagnostics };
         let statements = filter.filter_statements(statements);
-        let document = D2Document { statements };
-        (document, filter.warnings, filter.errors)
+        D2Document { statements }
     }
 
+    /// Filter every statement of a list, keeping those the subset holds.
     fn filter_statements(&mut self, statements: Vec<SyntaxStatement>) -> Vec<Statement> {
         statements
             .into_iter()
@@ -93,11 +55,14 @@ impl SubsetFilter {
             .collect()
     }
 
+    /// Filter one statement, warning on edge references and spreads.
     fn filter_statement(&mut self, statement: SyntaxStatement) -> Option<Statement> {
         match statement {
             SyntaxStatement::Declaration(declaration) => self.filter_declaration(declaration),
             SyntaxStatement::EdgeReference(span) => {
-                self.drop_construct(Construct::EdgeReference, span)
+                self.diagnostics
+                    .record_warning(Construct::EdgeReference, span);
+                None
             }
             SyntaxStatement::Spread { value, span } => {
                 let is_import = matches!(value, SyntaxValue::Import(_import_span));
@@ -106,11 +71,13 @@ impl SubsetFilter {
                 } else {
                     Construct::Variables
                 };
-                self.drop_construct(construct, span)
+                self.diagnostics.record_warning(construct, span);
+                None
             }
         }
     }
 
+    /// Filter a declaration by its head: a key or an edge chain.
     fn filter_declaration(&mut self, declaration: SyntaxDeclaration) -> Option<Statement> {
         let SyntaxDeclaration {
             head,
@@ -125,6 +92,7 @@ impl SubsetFilter {
         }
     }
 
+    /// Filter a key declaration into a shape declaration or a field assignment, by its key's role.
     fn filter_key_declaration(
         &mut self,
         key: SyntaxKey,
@@ -132,7 +100,8 @@ impl SubsetFilter {
         span: Span,
     ) -> Option<Statement> {
         let path = self.filter_plain_path(key)?;
-        match KeyRole::of(path) {
+        let key_role = KeyRole::of(path);
+        match key_role {
             KeyRole::Shape(path) => self.filter_shape_declaration(path, assignment, span),
             KeyRole::Field(field_key) => self.filter_field_assignment(field_key, assignment, span),
         }
@@ -143,7 +112,8 @@ impl SubsetFilter {
         let has_glob_segment = key.segments.iter().any(|segment| segment.is_glob);
         let is_glob_or_filter = has_glob_segment || key.is_filtered;
         if is_glob_or_filter {
-            return self.drop_construct(Construct::Glob, key.span);
+            self.diagnostics.record_warning(Construct::Glob, key.span);
+            return None;
         }
         let mut syntax_segments = key.segments;
         let parent_references = syntax_segments
@@ -156,12 +126,15 @@ impl SubsetFilter {
             .find(|segment| segment.is_parent_reference);
         if let Some(misplaced_parent_reference) = misplaced_parent_reference {
             let message = "`_` names the parent scope only at the start of a key, e.g. `_.x`";
-            return self.reject(message, misplaced_parent_reference.segment.span);
+            let misplaced_span = misplaced_parent_reference.segment.span;
+            self.diagnostics.record_error(message, misplaced_span);
+            return None;
         }
         let is_only_parent_references = named_segments.is_empty();
         if is_only_parent_references {
             let message = "a key needs a name after its `_` parent references";
-            return self.reject(message, key.span);
+            self.diagnostics.record_error(message, key.span);
+            return None;
         }
         let segments = named_segments
             .into_iter()
@@ -175,6 +148,7 @@ impl SubsetFilter {
         Some(path)
     }
 
+    /// Filter a shape declaration, its value kept as its label and its map as its body; a `null` deletion is warned on and dropped.
     fn filter_shape_declaration(
         &mut self,
         path: KeyPath,
@@ -182,10 +156,7 @@ impl SubsetFilter {
         span: Span,
     ) -> Option<Statement> {
         let SyntaxAssignment { value, map } = assignment;
-        if let Some(SyntaxValue::Null(_null_span)) = value {
-            return self.drop_construct(Construct::Null, span);
-        }
-        let label = value.and_then(|value| self.filter_scalar(value));
+        let label = self.filter_label(value, span)?;
         let body = map
             .map(|map| self.filter_statements(map))
             .unwrap_or_default();
@@ -195,9 +166,21 @@ impl SubsetFilter {
             body,
             span,
         };
-        Some(Statement::Shape(shape))
+        let statement = Statement::Shape(shape);
+        Some(statement)
     }
 
+    /// Filter a declaration's value into its optional label, or `None` for a `null` deletion, warned on so its declaration is dropped.
+    fn filter_label(&mut self, value: Option<SyntaxValue>, span: Span) -> Option<Option<Scalar>> {
+        if let Some(SyntaxValue::Null(_null_span)) = value {
+            self.diagnostics.record_warning(Construct::Null, span);
+            return None;
+        }
+        let label = value.and_then(|value| self.filter_scalar(value));
+        Some(label)
+    }
+
+    /// Filter a field assignment by its keyword, warning on the classes, boards and reserved fields the subset drops.
     fn filter_field_assignment(
         &mut self,
         field_key: FieldKey,
@@ -225,17 +208,20 @@ impl SubsetFilter {
             Keyword::Style => self.filter_style_field(rest, assignment, span)?,
             Keyword::Vars => self.filter_vars_field(rest, assignment, span)?,
             Keyword::Class | Keyword::Classes => {
-                return self.drop_construct(Construct::Classes, span);
+                self.diagnostics.record_warning(Construct::Classes, span);
+                return None;
             }
             Keyword::Layers | Keyword::Scenarios | Keyword::Steps => {
-                let board_keyword = keyword.name().to_owned();
+                let board_keyword = keyword.name();
                 let construct = Construct::Board(board_keyword);
-                return self.drop_construct(construct, span);
+                self.diagnostics.record_warning(construct, span);
+                return None;
             }
             reserved_keyword => {
-                let reserved_name = reserved_keyword.name().to_owned();
+                let reserved_name = reserved_keyword.name();
                 let construct = Construct::ReservedField(reserved_name);
-                return self.drop_construct(construct, span);
+                self.diagnostics.record_warning(construct, span);
+                return None;
             }
         };
         let assignment = FieldAssignment {
@@ -243,10 +229,11 @@ impl SubsetFilter {
             field,
             span,
         };
-        Some(Statement::Field(assignment))
+        let statement = Statement::Field(assignment);
+        Some(statement)
     }
 
-    /// Keep `keyword: value`; a sub-key (`label.near`) or a value-less form is dropped, a map beside the value is ignored.
+    /// Filter a scalar field `keyword: value`; a sub-key (`label.near`) or a value-less form is dropped, a map beside the value is ignored.
     fn filter_scalar_field(
         &mut self,
         keyword: Keyword,
@@ -254,86 +241,110 @@ impl SubsetFilter {
         assignment: SyntaxAssignment,
         span: Span,
     ) -> Option<Scalar> {
-        let SyntaxAssignment { value, map } = assignment;
-        let keyword_name = keyword.name();
         let has_sub_key = !rest.is_empty();
         if has_sub_key {
-            let dotted_name = Self::dotted_name(keyword_name, &rest);
-            let construct = Construct::FieldForm(dotted_name);
-            return self.drop_construct(construct, span);
+            self.warn_sub_keyed_form(keyword, &rest, span);
+            return None;
         }
+        let value = self.take_value_warning_on_map(keyword, assignment, span)?;
+        self.filter_scalar(value)
+    }
+
+    /// Warn on the sub-keyed form `keyword.sub.key: …`, spelled with its sub-keys.
+    fn warn_sub_keyed_form(&mut self, keyword: Keyword, rest: &[KeySegment], span: Span) {
+        let keyword_name = keyword.name();
+        let rest_names = rest.iter().map(|segment| segment.name.as_str());
+        let names: Vec<&str> = std::iter::once(keyword_name).chain(rest_names).collect();
+        let dotted_name = names.join(".");
+        let construct = Construct::FieldForm(dotted_name);
+        self.diagnostics.record_warning(construct, span);
+    }
+
+    /// Take the value of `keyword: value`, warning on a map beside it and on a form without one, which is dropped.
+    fn take_value_warning_on_map(
+        &mut self,
+        keyword: Keyword,
+        assignment: SyntaxAssignment,
+        span: Span,
+    ) -> Option<SyntaxValue> {
+        let SyntaxAssignment { value, map } = assignment;
         let Some(value) = value else {
-            let construct = Construct::FieldForm(keyword_name.to_owned());
-            return self.drop_construct(construct, span);
+            self.warn_field_form(keyword, span);
+            return None;
         };
         let has_map_beside_value = map.is_some();
         if has_map_beside_value {
-            let construct = Construct::FieldForm(keyword_name.to_owned());
-            self.warn(construct, span);
+            self.warn_field_form(keyword, span);
         }
-        self.filter_scalar(value)
+        Some(value)
+    }
+
+    /// Take the map of `keyword: { … }`, warning on a value beside it and on a form without one, which is dropped.
+    fn take_map_warning_on_value(
+        &mut self,
+        keyword: Keyword,
+        assignment: SyntaxAssignment,
+        span: Span,
+    ) -> Option<Vec<SyntaxStatement>> {
+        let SyntaxAssignment { value, map } = assignment;
+        let Some(map) = map else {
+            self.warn_field_form(keyword, span);
+            return None;
+        };
+        let has_value_beside_map = value.is_some();
+        if has_value_beside_map {
+            self.warn_field_form(keyword, span);
+        }
+        Some(map)
+    }
+
+    /// Warn on a form of the field `keyword` that the subset does not take.
+    fn warn_field_form(&mut self, keyword: Keyword, span: Span) {
+        let keyword_name = keyword.name().to_owned();
+        let field_form = Construct::FieldForm(keyword_name);
+        self.diagnostics.record_warning(field_form, span);
     }
 
     /// Keep `style.name: value` and `style: { name: value; … }` as style properties.
     fn filter_style_field(
         &mut self,
-        rest: Vec<KeySegment>,
+        mut rest: Vec<KeySegment>,
         assignment: SyntaxAssignment,
         span: Span,
     ) -> Option<Field> {
-        let SyntaxAssignment { value, map } = assignment;
-        let mut rest = rest;
-        let dotted_property_name = rest.pop();
+        let sub_key_property_name = rest.pop();
         let is_deeper_than_one_property = !rest.is_empty();
         if is_deeper_than_one_property {
-            let style_form = Construct::style_form();
-            return self.drop_construct(style_form, span);
+            self.warn_field_form(Keyword::Style, span);
+            return None;
         }
-        let Some(name) = dotted_property_name else {
-            return self.filter_style_map(value, map, span);
+        let Some(name) = sub_key_property_name else {
+            return self.filter_style_map(assignment, span);
         };
-        let Some(value) = value else {
-            let style_form = Construct::style_form();
-            return self.drop_construct(style_form, span);
-        };
-        let has_map_beside_value = map.is_some();
-        if has_map_beside_value {
-            let style_form = Construct::style_form();
-            self.warn(style_form, span);
-        }
+        let value = self.take_value_warning_on_map(Keyword::Style, assignment, span)?;
         let property = self.filter_style_entry(name, value, span)?;
         let properties = vec![property];
-        Some(Field::Style(properties))
+        let style_field = Field::Style(properties);
+        Some(style_field)
     }
 
-    fn filter_style_map(
-        &mut self,
-        value: Option<SyntaxValue>,
-        map: Option<Vec<SyntaxStatement>>,
-        span: Span,
-    ) -> Option<Field> {
-        let Some(map) = map else {
-            let style_form = Construct::style_form();
-            return self.drop_construct(style_form, span);
-        };
-        let has_value_beside_map = value.is_some();
-        if has_value_beside_map {
-            let style_form = Construct::style_form();
-            self.warn(style_form, span);
-        }
+    /// Filter the map of `style: { … }` into its style properties.
+    fn filter_style_map(&mut self, assignment: SyntaxAssignment, span: Span) -> Option<Field> {
+        let map = self.take_map_warning_on_value(Keyword::Style, assignment, span)?;
         let properties = map
             .into_iter()
             .filter_map(|statement| self.filter_style_property(statement))
             .collect();
-        Some(Field::Style(properties))
+        let style_field = Field::Style(properties);
+        Some(style_field)
     }
 
     /// Keep one `name: value` line of a `style: { … }` map.
     fn filter_style_property(&mut self, statement: SyntaxStatement) -> Option<StyleProperty> {
         let SyntaxStatement::Declaration(declaration) = statement else {
             let span = statement.span();
-            let style_form = Construct::style_form();
-            return self.drop_construct(style_form, span);
+            self.warn_field_form(Keyword::Style, span);
+            return None;
         };
         let SyntaxDeclaration {
             head,
@@ -341,29 +352,20 @@ impl SubsetFilter {
             span,
         } = declaration;
         let SyntaxHead::Key(key) = head else {
-            let style_form = Construct::style_form();
-            return self.drop_construct(style_form, span);
+            self.warn_field_form(Keyword::Style, span);
+            return None;
         };
         let path = self.filter_plain_path(key)?;
         let has_parent_reference = path.parent_references > 0;
         if has_parent_reference {
-            let style_form = Construct::style_form();
-            return self.drop_construct(style_form, span);
+            self.warn_field_form(Keyword::Style, span);
+            return None;
         }
         let Ok([name]) = <[KeySegment; 1]>::try_from(path.segments) else {
-            let style_form = Construct::style_form();
-            return self.drop_construct(style_form, span);
+            self.warn_field_form(Keyword::Style, span);
+            return None;
         };
-        let SyntaxAssignment { value, map } = assignment;
-        let Some(value) = value else {
-            let style_form = Construct::style_form();
-            return self.drop_construct(style_form, span);
-        };
-        let has_map_beside_value = map.is_some();
-        if has_map_beside_value {
-            let style_form = Construct::style_form();
-            self.warn(style_form, span);
-        }
+        let value = self.take_value_warning_on_map(Keyword::Style, assignment, span)?;
         self.filter_style_entry(name, value, span)
     }
 
@@ -374,12 +376,14 @@ impl SubsetFilter {
         value: SyntaxValue,
         span: Span,
     ) -> Option<StyleProperty> {
-        let Some(_style_key) = StyleKey::find(&name.name) else {
+        let Some(_style_key) = AnyStyleKey::find(&name.name) else {
             let unknown_style_key = Construct::UnknownStyleKey(name.name);
-            return self.drop_construct(unknown_style_key, span);
+            self.diagnostics.record_warning(unknown_style_key, span);
+            return None;
         };
         let value = self.filter_scalar(value)?;
-        Some(StyleProperty { name, value, span })
+        let property = StyleProperty { name, value, span };
+        Some(property)
     }
 
     /// Keep the `svugy` variable of a `vars: { … }` map as the carrier; every other variable is warned on, as the subset substitutes none.
@@ -389,82 +393,74 @@ impl SubsetFilter {
         assignment: SyntaxAssignment,
         span: Span,
     ) -> Option<Field> {
-        let SyntaxAssignment { value, map } = assignment;
-        let vars_name = Keyword::Vars.name();
         let has_sub_key = !rest.is_empty();
         if has_sub_key {
-            let dotted_name = Self::dotted_name(vars_name, &rest);
-            let construct = Construct::FieldForm(dotted_name);
-            return self.drop_construct(construct, span);
+            self.warn_sub_keyed_form(Keyword::Vars, &rest, span);
+            return None;
         }
-        let Some(map) = map else {
-            let construct = Construct::FieldForm(vars_name.to_owned());
-            return self.drop_construct(construct, span);
-        };
-        let has_value_beside_map = value.is_some();
-        if has_value_beside_map {
-            let construct = Construct::FieldForm(vars_name.to_owned());
-            self.warn(construct, span);
-        }
-        let mut properties = Vec::new();
-        for statement in map {
-            self.collect_vars_entry(statement, &mut properties);
-        }
+        let map = self.take_map_warning_on_value(Keyword::Vars, assignment, span)?;
+        let properties: Vec<SvugyProperty> = map
+            .into_iter()
+            .flat_map(|statement| self.collect_vars_entry(statement))
+            .collect();
         let is_carrier_absent = properties.is_empty();
         if is_carrier_absent {
             return None;
         }
-        Some(Field::Svugy(properties))
+        let svugy_field = Field::Svugy(properties);
+        Some(svugy_field)
     }
 
     /// Collect the carrier properties of a `vars` entry when it is the `svugy` variable, warning on any other variable.
-    fn collect_vars_entry(
-        &mut self,
-        statement: SyntaxStatement,
-        properties: &mut Vec<SvugyProperty>,
-    ) {
+    fn collect_vars_entry(&mut self, statement: SyntaxStatement) -> Vec<SvugyProperty> {
         let span = statement.span();
         let Some((key, assignment)) = statement.into_key_declaration() else {
-            return self.warn(Construct::Variables, span);
+            self.diagnostics.record_warning(Construct::Variables, span);
+            return Vec::new();
         };
         let first_segment = key.segments.first();
-        let is_user_variable =
-            first_segment.is_none_or(|first_segment| first_segment.segment.name != SVUGY_VARIABLE);
+        let is_user_variable = first_segment
+            .is_none_or(|first_segment| first_segment.segment.name != SvugyProperty::VARIABLE);
         if is_user_variable {
-            return self.warn(Construct::Variables, span);
+            self.diagnostics.record_warning(Construct::Variables, span);
+            return Vec::new();
         }
         let Some(path) = self.filter_plain_path(key) else {
-            return;
+            return Vec::new();
         };
-        let name = Self::carrier_name(&path.segments);
-        self.collect_svugy_properties(name, assignment, span, properties);
+        let below_variable_segments = path.segments.into_iter().skip(1);
+        let attribute_path = below_variable_segments
+            .map(|segment| segment.name)
+            .collect();
+        self.collect_svugy_properties(attribute_path, assignment, span)
     }
 
-    /// Collect every `key: value` below the key `name` as a carrier property named by its full path; anything else there is an error.
+    /// Collect every `key: value` below `attribute_path` as a carrier property addressed by its full path; anything else there is an error.
     fn collect_svugy_properties(
         &mut self,
-        name: String,
+        attribute_path: Vec<String>,
         assignment: SyntaxAssignment,
         span: Span,
-        properties: &mut Vec<SvugyProperty>,
-    ) {
+    ) -> Vec<SvugyProperty> {
+        let mut properties = Vec::new();
         let SyntaxAssignment { value, map } = assignment;
         let carried_value = value.and_then(|value| self.filter_carried_value(value));
         if let Some(value) = carried_value {
+            let property_attribute_path = attribute_path.clone();
             let property = SvugyProperty {
-                name: name.clone(),
+                attribute_path: property_attribute_path,
                 value,
                 span,
             };
             properties.push(property);
         }
         let Some(map) = map else {
-            return;
+            return properties;
         };
         for statement in map {
             let entry_span = statement.span();
             let Some((key, entry_assignment)) = statement.into_key_declaration() else {
-                self.error(SVUGY_ENTRY_ERROR, entry_span);
+                self.diagnostics.record_error(SVUGY_ENTRY_ERROR, entry_span);
                 continue;
             };
             let Some(path) = self.filter_plain_path(key) else {
@@ -472,13 +468,17 @@ impl SubsetFilter {
             };
             let has_parent_reference = path.parent_references > 0;
             if has_parent_reference {
-                self.error(SVUGY_ENTRY_ERROR, entry_span);
+                self.diagnostics.record_error(SVUGY_ENTRY_ERROR, entry_span);
                 continue;
             }
-            let entry_path_name = Self::carrier_name(&path.segments);
-            let entry_name = format!("{name}.{entry_path_name}");
-            self.collect_svugy_properties(entry_name, entry_assignment, entry_span, properties);
+            let entry_names = path.segments.into_iter().map(|segment| segment.name);
+            let mut entry_attribute_path = attribute_path.clone();
+            entry_attribute_path.extend(entry_names);
+            let entry_properties =
+                self.collect_svugy_properties(entry_attribute_path, entry_assignment, entry_span);
+            properties.extend(entry_properties);
         }
+        properties
     }
 
     /// Keep a carried value: a scalar as itself, an array as a list of its scalar items, each other item an error.
@@ -489,11 +489,13 @@ impl SubsetFilter {
             return Some(carried_scalar);
         };
         let SyntaxArray { items, span } = array;
-        let mut scalar_items = Vec::with_capacity(items.len());
+        let item_count = items.len();
+        let mut scalar_items = Vec::with_capacity(item_count);
         for item in items {
             let SyntaxValue::Scalar(scalar) = item else {
                 let item_span = item.span();
-                self.error(SVUGY_LIST_ITEM_ERROR, item_span);
+                self.diagnostics
+                    .record_error(SVUGY_LIST_ITEM_ERROR, item_span);
                 continue;
             };
             scalar_items.push(scalar);
@@ -505,13 +507,7 @@ impl SubsetFilter {
         Some(list)
     }
 
-    /// Spell carrier key segments as a model path does, quoting a segment that holds a dot, so `desk.sqlite` and `"desk.sqlite"` stay apart.
-    fn carrier_name(segments: &[KeySegment]) -> String {
-        let names = segments.iter().map(|segment| segment.name.as_str());
-        let carrier_path = ElementPath::from_segments(names);
-        carrier_path.to_string()
-    }
-
+    /// Filter an edge chain, its value kept as its label and its map as its fields; a `null` deletion is warned on and dropped.
     fn filter_edge_declaration(
         &mut self,
         source: SyntaxKey,
@@ -520,7 +516,8 @@ impl SubsetFilter {
         span: Span,
     ) -> Option<Statement> {
         let source = self.filter_plain_path(source)?;
-        let mut kept_links = Vec::with_capacity(links.len());
+        let link_count = links.len();
+        let mut kept_links = Vec::with_capacity(link_count);
         for link in links {
             let target = self.filter_plain_path(link.target)?;
             let kept_link = EdgeLink {
@@ -531,10 +528,7 @@ impl SubsetFilter {
             kept_links.push(kept_link);
         }
         let SyntaxAssignment { value, map } = assignment;
-        if let Some(SyntaxValue::Null(_null_span)) = value {
-            return self.drop_construct(Construct::Null, span);
-        }
-        let label = value.and_then(|value| self.filter_scalar(value));
+        let label = self.filter_label(value, span)?;
         let fields = map
             .map(|map| self.filter_edge_fields(map))
             .unwrap_or_default();
@@ -545,23 +539,28 @@ impl SubsetFilter {
             fields,
             span,
         };
-        Some(Statement::Edge(edge))
+        let statement = Statement::Edge(edge);
+        Some(statement)
     }
 
     /// Keep the fields of an edge's map; anything declaring shapes or edges there is dropped.
     fn filter_edge_fields(&mut self, map: Vec<SyntaxStatement>) -> Vec<Field> {
         let statements = self.filter_statements(map);
-        let mut fields = Vec::with_capacity(statements.len());
+        let statement_count = statements.len();
+        let mut fields = Vec::with_capacity(statement_count);
         for statement in statements {
             let Statement::Field(assignment) = statement else {
-                self.warn(Construct::DeclarationInEdgeMap, statement.span());
+                let declaration_span = statement.span();
+                self.diagnostics
+                    .record_warning(Construct::DeclarationInEdgeMap, declaration_span);
                 continue;
             };
             let has_target_segment = !assignment.target.segments.is_empty();
             let has_parent_reference = assignment.target.parent_references > 0;
             let has_target = has_target_segment || has_parent_reference;
             if has_target {
-                self.warn(Construct::DeclarationInEdgeMap, assignment.span);
+                self.diagnostics
+                    .record_warning(Construct::DeclarationInEdgeMap, assignment.span);
                 continue;
             }
             fields.push(assignment.field);
@@ -569,6 +568,7 @@ impl SubsetFilter {
         fields
     }
 
+    /// Filter a value down to a scalar, warning on every other kind of value.
     fn filter_scalar(&mut self, value: SyntaxValue) -> Option<Scalar> {
         let (construct, span) = match value {
             SyntaxValue::Scalar(scalar) => return Some(scalar),
@@ -579,38 +579,13 @@ impl SubsetFilter {
             SyntaxValue::Array(array) => (Construct::Array, array.span),
             SyntaxValue::Map(span) => (Construct::ArrayMap, span),
         };
-        self.drop_construct(construct, span)
-    }
-
-    fn drop_construct<T>(&mut self, construct: Construct, span: Span) -> Option<T> {
-        self.warn(construct, span);
+        self.diagnostics.record_warning(construct, span);
         None
-    }
-
-    fn warn(&mut self, construct: Construct, span: Span) {
-        let warning = UnsupportedConstruct::new(construct, span);
-        self.warnings.push(warning);
-    }
-
-    /// Record an error and drop the statement it sits in.
-    fn reject<T>(&mut self, message: &str, span: Span) -> Option<T> {
-        self.error(message, span);
-        None
-    }
-
-    fn error(&mut self, message: &str, span: Span) {
-        let error = SyntaxError::new(message.to_owned(), span);
-        self.errors.push(error);
-    }
-
-    fn dotted_name(head_name: &str, rest: &[KeySegment]) -> String {
-        let rest_names = rest.iter().map(|segment| segment.name.as_str());
-        let names: Vec<&str> = std::iter::once(head_name).chain(rest_names).collect();
-        names.join(".")
     }
 }
 
 impl KeyRole {
+    /// Tell the role of `path` from its first reserved keyword, a shape when it holds none.
     fn of(path: KeyPath) -> Self {
         let keyword_position = path
             .segments
@@ -645,67 +620,6 @@ impl KeyRole {
     }
 }
 
-impl Keyword {
-    /// Spell every keyword as d2 does, the one table both directions read.
-    const SPELLINGS: [(&'static str, Keyword); 26] = [
-        ("shape", Self::Shape),
-        ("label", Self::Label),
-        ("direction", Self::Direction),
-        ("link", Self::Link),
-        ("style", Self::Style),
-        ("vars", Self::Vars),
-        ("class", Self::Class),
-        ("classes", Self::Classes),
-        ("layers", Self::Layers),
-        ("scenarios", Self::Scenarios),
-        ("steps", Self::Steps),
-        ("icon", Self::Icon),
-        ("constraint", Self::Constraint),
-        ("tooltip", Self::Tooltip),
-        ("near", Self::Near),
-        ("width", Self::Width),
-        ("height", Self::Height),
-        ("top", Self::Top),
-        ("left", Self::Left),
-        ("grid-rows", Self::GridRows),
-        ("grid-columns", Self::GridColumns),
-        ("grid-gap", Self::GridGap),
-        ("vertical-gap", Self::VerticalGap),
-        ("horizontal-gap", Self::HorizontalGap),
-        ("source-arrowhead", Self::SourceArrowhead),
-        ("target-arrowhead", Self::TargetArrowhead),
-    ];
-
-    /// Recognise `name` as a keyword case-insensitively, as d2 does.
-    fn recognise(name: &str) -> Option<Self> {
-        let lowercase_name = name.to_ascii_lowercase();
-        let mut spellings = Self::SPELLINGS.iter();
-        let spelling = spellings.find(|(spelled_name, _keyword)| *spelled_name == lowercase_name);
-        spelling.map(|(_spelled_name, keyword)| *keyword)
-    }
-
-    pub(crate) fn name(self) -> &'static str {
-        let mut spellings = Self::SPELLINGS.iter();
-        let spelling = spellings.find(|(_spelled_name, keyword)| *keyword == self);
-        let (spelled_name, _keyword) = spelling.expect("every keyword has a spelling");
-        spelled_name
-    }
-}
-
-impl Field {
-    /// Name the keyword this field was written under.
-    pub(crate) fn keyword(&self) -> Keyword {
-        match self {
-            Self::Shape(_shape) => Keyword::Shape,
-            Self::Label(_label) => Keyword::Label,
-            Self::Direction(_direction) => Keyword::Direction,
-            Self::Link(_link) => Keyword::Link,
-            Self::Style(_properties) => Keyword::Style,
-            Self::Svugy(_properties) => Keyword::Vars,
-        }
-    }
-}
-
 impl SyntaxStatement {
     /// Read a map entry as a key declaration, or `None` for an edge, a spread or an edge reference.
     fn into_key_declaration(self) -> Option<(SyntaxKey, SyntaxAssignment)> {
@@ -716,11 +630,5 @@ impl SyntaxStatement {
             return None;
         };
         Some((key, declaration.assignment))
-    }
-}
-
-impl Construct {
-    fn style_form() -> Self {
-        Self::FieldForm("style".to_owned())
     }
 }

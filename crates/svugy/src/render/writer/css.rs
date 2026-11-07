@@ -1,23 +1,59 @@
-//! Build CSS text from escaped identifiers and values written from typed colors.
-
-use std::fmt::Write as _;
+//! Build CSS text from static identifiers and values written from typed colors.
 
 use svugy_model::color::Rgba;
 
-use super::SvgWriter;
-
-const NONE_KEYWORD: &str = "none";
-
-/// Holds a CSS identifier escaped for a raw selector or property name.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct CssIdentifier {
-    escaped: String,
+/// Builds a style sheet from static rules and sanitised selectors and declarations.
+#[derive(Default)]
+pub(crate) struct StyleSheet {
+    css: String,
 }
 
-/// Holds a CSS value written only from a typed color, `none`, a custom-property reference or static text.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct CssValue {
-    text: String,
+impl StyleSheet {
+    /// Start an empty style sheet.
+    pub(crate) fn new() -> Self {
+        StyleSheet::default()
+    }
+
+    /// Push `css` spelled in the source, as is.
+    pub(crate) fn push_static(&mut self, css: &'static str) {
+        self.css.push_str(css);
+    }
+
+    /// Push one rule: `selector`, then its `declarations`.
+    pub(crate) fn push_rule(&mut self, selector: &CssSelector, declarations: &[CssDeclaration]) {
+        self.css.push_str(&selector.text);
+        self.css.push('{');
+        for (declaration_index, declaration) in declarations.iter().enumerate() {
+            if declaration_index > 0 {
+                self.css.push(';');
+            }
+            let property = declaration.property.as_str();
+            let value = declaration.value.as_str();
+            self.css.push_str(property);
+            self.css.push(':');
+            self.css.push_str(value);
+        }
+        self.css.push_str("}\n");
+    }
+
+    /// Push one rule applied only while media `query` matches, as `@media query{selector{…}}`.
+    pub(crate) fn push_media_rule(
+        &mut self,
+        query: &'static str,
+        selector: &CssSelector,
+        declarations: &[CssDeclaration],
+    ) {
+        self.css.push_str("@media ");
+        self.css.push_str(query);
+        self.css.push_str("{\n");
+        self.push_rule(selector, declarations);
+        self.css.push_str("}\n");
+    }
+
+    /// Borrow the style sheet's CSS as a str.
+    pub(crate) fn as_str(&self) -> &str {
+        &self.css
+    }
 }
 
 /// Holds a selector built only from static attribute names.
@@ -26,55 +62,43 @@ pub(crate) struct CssSelector {
     text: String,
 }
 
-/// Pairs an escaped property name with a value.
+impl CssSelector {
+    /// Select the elements carrying attribute `name`, a static name so no input reaches the selector.
+    pub(crate) fn attribute(name: &'static str) -> Self {
+        let text = format!("[{name}]");
+        CssSelector { text }
+    }
+}
+
+/// Pairs a static property name with a value as one declaration.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct CssDeclaration {
     pub(crate) property: CssIdentifier,
     pub(crate) value: CssValue,
 }
 
-/// Builds CSS text from static rules and sanitised selectors and declarations.
-#[derive(Default)]
-pub(crate) struct StyleSheet {
-    css: String,
+/// Holds a CSS identifier spelled in the source, so no input reaches a selector or property name.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct CssIdentifier {
+    name: &'static str,
 }
 
 impl CssIdentifier {
-    /// Escapes like CSSOM's "serialize an identifier", after stripping what XML 1.0 forbids.
-    pub(crate) fn escape(raw: &str) -> Self {
-        let characters: Vec<char> = raw.chars().filter(SvgWriter::is_xml_char).collect();
-        let is_lone_hyphen = characters == ['-'];
-        if is_lone_hyphen {
-            let escaped = "\\-".to_owned();
-            return CssIdentifier { escaped };
-        }
-        let starts_with_hyphen = characters.first() == Some(&'-');
-        let mut escaped = String::new();
-        for (index, &character) in characters.iter().enumerate() {
-            let is_control = matches!(character, '\u{1}'..='\u{1F}' | '\u{7F}');
-            let is_first_digit = index == 0 && character.is_ascii_digit();
-            let is_digit_after_leading_hyphen =
-                index == 1 && starts_with_hyphen && character.is_ascii_digit();
-            if is_control || is_first_digit || is_digit_after_leading_hyphen {
-                let _infallible = write!(escaped, "\\{:x} ", u32::from(character));
-                continue;
-            }
-            let is_non_ascii = character >= '\u{80}';
-            let is_name_punctuation = character == '-' || character == '_';
-            let is_ascii_alphanumeric = character.is_ascii_alphanumeric();
-            if is_non_ascii || is_name_punctuation || is_ascii_alphanumeric {
-                escaped.push(character);
-                continue;
-            }
-            escaped.push('\\');
-            escaped.push(character);
-        }
-        CssIdentifier { escaped }
+    /// Take identifier `name`, a static name so no input reaches the CSS.
+    pub(crate) fn from_static(name: &'static str) -> Self {
+        CssIdentifier { name }
     }
 
+    /// Borrow the identifier as a str.
     pub(crate) fn as_str(&self) -> &str {
-        &self.escaped
+        self.name
     }
+}
+
+/// Holds a CSS value written only from a typed color, a custom-property reference or static text.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct CssValue {
+    text: String,
 }
 
 impl CssValue {
@@ -90,60 +114,22 @@ impl CssValue {
         CssValue { text }
     }
 
-    pub(crate) fn none() -> Self {
-        let text = NONE_KEYWORD.to_owned();
-        CssValue { text }
-    }
-
     /// Write a value spelled in the source, such as a font-family stack.
     pub(crate) fn from_static(value: &'static str) -> Self {
         let text = value.to_owned();
         CssValue { text }
     }
 
+    /// Reference `custom_property` as `var(..)`.
     pub(crate) fn custom_property_reference(custom_property: &CssIdentifier) -> Self {
-        let text = format!("var({})", custom_property.as_str());
+        let custom_property_name = custom_property.as_str();
+        let text = format!("var({custom_property_name})");
         CssValue { text }
     }
 
+    /// Borrow the value's CSS text as a str.
     pub(crate) fn as_str(&self) -> &str {
         &self.text
-    }
-}
-
-impl CssSelector {
-    /// Select the elements carrying attribute `name`, a static name so no input reaches the selector.
-    pub(crate) fn attribute(name: &'static str) -> Self {
-        let text = format!("[{name}]");
-        CssSelector { text }
-    }
-}
-
-impl StyleSheet {
-    pub(crate) fn new() -> Self {
-        StyleSheet::default()
-    }
-
-    pub(crate) fn push_static(&mut self, css: &'static str) {
-        self.css.push_str(css);
-    }
-
-    pub(crate) fn push_rule(&mut self, selector: &CssSelector, declarations: &[CssDeclaration]) {
-        self.css.push_str(&selector.text);
-        self.css.push('{');
-        for (declaration_index, declaration) in declarations.iter().enumerate() {
-            if declaration_index > 0 {
-                self.css.push(';');
-            }
-            self.css.push_str(declaration.property.as_str());
-            self.css.push(':');
-            self.css.push_str(declaration.value.as_str());
-        }
-        self.css.push_str("}\n");
-    }
-
-    pub(crate) fn as_str(&self) -> &str {
-        &self.css
     }
 }
 
@@ -152,33 +138,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn identifiers_are_escaped_for_selectors() {
-        let cases = [
-            ("block", "block"),
-            ("--svugy-canvas", "--svugy-canvas"),
-            ("1st", "\\31 st"),
-            ("-1", "-\\31 "),
-            ("-", "\\-"),
-            ("a.b", "a\\.b"),
-            ("a b", "a\\ b"),
-            ("x{}</style>", "x\\{\\}\\<\\/style\\>"),
-            ("tab\tnew\nline", "tab\\9 new\\a line"),
-            ("drop\u{0}\u{FFFE}\u{FFFF}me", "dropme"),
-            ("café", "café"),
-            ("]]>", "\\]\\]\\>"),
-        ];
-        for (raw, expected) in cases {
-            assert_eq!(CssIdentifier::escape(raw).as_str(), expected, "{raw:?}");
-        }
-    }
-
-    #[test]
     fn colors_are_written_as_six_digit_hex_unless_translucent() {
         let opaque = Rgba::from_packed(0x3478f6ff);
         let translucent = Rgba::from_packed(0x3478f680);
         assert_eq!(CssValue::color(opaque).as_str(), "#3478f6");
         assert_eq!(CssValue::color(translucent).as_str(), "#3478f680");
-        assert_eq!(CssValue::none().as_str(), "none");
     }
 
     #[test]
@@ -186,11 +150,11 @@ mod tests {
         let mut style_sheet = StyleSheet::new();
         style_sheet.push_static(":root{color-scheme:light dark}\n");
         let selector = CssSelector::attribute("data-x");
-        let fill_property = CssIdentifier::escape("fill");
-        let canvas_property = CssIdentifier::escape("--svugy-canvas");
+        let fill_property = CssIdentifier::from_static("fill");
+        let canvas_property = CssIdentifier::from_static("--svugy-canvas");
         let fill_value = CssValue::custom_property_reference(&canvas_property);
-        let stroke_property = CssIdentifier::escape("stroke");
-        let stroke_value = CssValue::none();
+        let stroke_property = CssIdentifier::from_static("stroke");
+        let stroke_value = CssValue::from_static("none");
         let declarations = [
             CssDeclaration {
                 property: fill_property,

@@ -35,6 +35,7 @@ impl fmt::Display for PathData<'_> {
 }
 
 impl PathData<'_> {
+    /// Write `command` then its `points`, each as `x,y` in fixed decimals.
     fn write_command(
         formatter: &mut fmt::Formatter<'_>,
         command: char,

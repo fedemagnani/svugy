@@ -5,38 +5,49 @@ mod interactive;
 mod level_view;
 mod paint;
 mod static_profile;
+mod traveler;
 
-use kurbo::{Affine, BezPath, Line, Rect};
+use kurbo::{BezPath, Line, Rect};
+use svugy_model::disclose::DisclosedModel;
 use svugy_model::model::Model;
 use svugy_model::path::ElementPath;
 
 use crate::geometry::{
-    Badge, Connection, Face, Group, Heading, KeySample, Label, LegendPanel, PlatedLabel, Scene,
-    Solid,
+    Badge, Connection, Face, FaceShade, Group, Heading, KeySample, Label, LegendPanel, PlatedLabel,
+    Scene, Solid,
 };
-use crate::metrics::{BundledFont, LabelRole};
+use crate::metrics::LabelRole;
 use crate::render::contract::{ContractAnnotator, RuntimeContract};
 use crate::render::theme::Token;
 use crate::render::writer::css::CssValue;
 use crate::render::writer::path_data::PathData;
-use crate::render::writer::{Attributes, Matrix, SvgWriter, ViewBox};
+use crate::render::writer::{Attributes, SvgWriter, ViewBox};
 use arrowhead::ArrowheadMarkers;
 pub(crate) use interactive::Interactive;
 use level_view::LevelViews;
 pub(crate) use paint::Paint;
 use paint::{Dashes, ModelPaints, PlatePaint, SolidPaint};
 pub(crate) use static_profile::Static;
+use traveler::{ResolvedTraveler, TravelerSymbols};
 
+/// Name the SVG namespace the root declares.
 const SVG_NAMESPACE: &str = "http://www.w3.org/2000/svg";
+/// Round the canvas corners by this radius.
 const CANVAS_CORNER_RADIUS: f64 = 14.0;
+/// Draw connection strokes at this opacity.
 const CONNECTION_OPACITY: f64 = 0.9;
+/// Draw plate outlines at this stroke opacity.
 const PLATE_STROKE_OPACITY: f64 = 0.55;
+/// Draw captions at this opacity.
 const CAPTION_OPACITY: f64 = 0.85;
-const DOT_RADIUS: f64 = 3.0;
-const DOT_TRAVEL_DURATION: &str = "2.4s";
+/// Fill a closed container's sheet at this opacity.
+const SHEET_FILL_OPACITY: f64 = 0.35;
+/// Outline a closed container's sheet at this stroke opacity.
+const SHEET_STROKE_OPACITY: f64 = 0.3;
 
-/// Expresses what differs between output targets: how a paint is written, how a label is drawn, whether live-only content exists, what runtime embeds the document.
+/// Express an output profile: how a paint is written, how a label is drawn, whether live-only content is shown, what runtime embeds the document.
 pub(crate) trait Profile {
+    /// Write `token` as the CSS value this profile gives it.
     fn token_value(&self, token: Token) -> CssValue;
 
     /// Write `paint` as a CSS value: a token as the profile writes it, a literal as its color, no paint as `none`.
@@ -44,20 +55,14 @@ pub(crate) trait Profile {
         match paint {
             Paint::Token(token) => self.token_value(token),
             Paint::Literal(color) => CssValue::color(color),
-            Paint::None => CssValue::none(),
+            Paint::None => CssValue::from_static("none"),
         }
     }
 
-    /// Draw `label` on its plane, measured in `font`, carrying the renderer's `presentation` attributes.
-    fn write_label(
-        &self,
-        writer: &mut SvgWriter,
-        label: &Label,
-        font: &BundledFont,
-        presentation: Attributes,
-    );
+    /// Draw `label` on its plane, carrying the renderer's `presentation` attributes.
+    fn write_label(&self, writer: &mut SvgWriter, label: &Label, presentation: Attributes);
 
-    /// Emit what only a live viewer can show, entered-view overlays and animated dots, which `write_live_content` draws.
+    /// Emit what only a live viewer can show, which `write_live_content` draws.
     fn write_live_only(
         &self,
         writer: &mut SvgWriter,
@@ -68,91 +73,269 @@ pub(crate) trait Profile {
     fn embed_in_runtime(&self, writer: &mut SvgWriter, write_content: impl FnOnce(&mut SvgWriter));
 }
 
-/// Renders a scene as one SVG document carrying the runtime contract, painted from the model's styles and expressed in profile `P`.
-pub(crate) struct Renderer<'m, 'f, P> {
+/// Renders scenes as SVG documents carrying the runtime contract, expressed in profile `P`.
+pub(crate) struct Renderer<P> {
     profile: P,
-    font: &'f BundledFont,
-    paints: ModelPaints<'m>,
-    annotator: ContractAnnotator<'m>,
 }
 
 /// Renders the interactive profile, the product: themed in both palettes, labels in the viewer's font, the runtime embedded.
-pub(crate) type InteractiveRenderer<'m, 'f> = Renderer<'m, 'f, Interactive>;
+pub(crate) type InteractiveRenderer = Renderer<Interactive>;
 
 /// Renders the self-contained static profile in the dark palette.
-pub(crate) type StaticRenderer<'m, 'f> = Renderer<'m, 'f, Static>;
+pub(crate) type StaticRenderer<'f> = Renderer<Static<'f>>;
 
-impl<'m, 'f, P: Profile + Default> Renderer<'m, 'f, P> {
-    /// Render scenes whose labels were measured in `font`, painted from `model`'s styles.
-    pub(crate) fn new(model: &'m Model, font: &'f BundledFont) -> Self {
-        let profile = P::default();
-        let paints = ModelPaints::new(model);
-        let annotator = ContractAnnotator::new(model);
-        Self {
-            profile,
-            font,
-            paints,
-            annotator,
-        }
+/// Pairs a disclosure layer with the scene projected from it: one layer of the interactive document.
+pub(crate) struct LayerScene<'d> {
+    disclosure: &'d DisclosedModel,
+    scene: Scene,
+}
+
+/// Holds the definitions every layer of a document references: one arrowhead marker per connection paint, one symbol per traveler.
+struct Definitions {
+    arrowheads: ArrowheadMarkers,
+    travelers: TravelerSymbols,
+}
+
+/// Writes one layer's scene in a single pass, painted from the model it draws, ending each arc in its shared arrowhead, moving each traveler as its shared symbol and framing each level in its collected view.
+struct LayerPass<'r, 'm, P> {
+    profile: &'r P,
+    scene: &'r Scene,
+    model: &'m Model,
+    paints: ModelPaints<'m>,
+    annotator: ContractAnnotator<'m>,
+    definitions: &'r Definitions,
+    level_views: LevelViews,
+}
+
+impl<P: Profile> Renderer<P> {
+    /// Render scenes expressed in `profile`.
+    pub(crate) fn new(profile: P) -> Self {
+        Self { profile }
     }
 
-    /// Write `scene` as a standalone document whose viewBox and size are the root view, its content the ground grid, the diagram's heading and legend, then the root level's group.
-    pub(crate) fn write_document(&self, scene: &Scene) -> String {
-        let arrowheads = ArrowheadMarkers::collect(&scene.root, &self.paints);
-        let level_views = LevelViews::collect(&scene.root);
-        let mut writer = SvgWriter::new();
-        let document_view = scene.root.view;
-        let svg_attributes = Self::svg_attributes(document_view);
-        writer.open_element("svg", &svg_attributes);
-        self.profile.embed_in_runtime(&mut writer, |writer| {
-            arrowheads.write_defs(writer, &self.profile);
+    /// Write `scene`, projected whole from `model`, as a document of one unwrapped layer sized to its root view: the definitions, the canvas, then the layer's ground grid, heading, legend and root level.
+    pub(crate) fn write_document(&self, model: &Model, scene: &Scene) -> String {
+        let drawn_layer = (&scene.root, model);
+        let definitions = Definitions::collect(&[drawn_layer]);
+        let annotator = ContractAnnotator::new(model);
+        let layer_pass = LayerPass::new(&self.profile, scene, model, annotator, &definitions);
+        let document_view = scene.root_view();
+        self.write_root(document_view, |writer| {
+            definitions.write(writer, &self.profile);
             self.write_canvas(writer, document_view);
-            for ground_line in &scene.ground_lines {
-                self.write_ground_line(writer, ground_line);
-            }
-            self.write_heading(writer, &scene.heading);
-            if let Some(legend) = &scene.legend {
-                self.write_legend(writer, legend);
-            }
-            self.write_root_level(writer, &arrowheads, &level_views, scene);
-        });
+            layer_pass.write_layer(writer);
+        })
+    }
+
+    /// Write the root sized to `view` around `write_content`, embedded in the profile's runtime.
+    fn write_root(&self, view: Rect, write_content: impl FnOnce(&mut SvgWriter)) -> String {
+        let mut writer = SvgWriter::new();
+        let svg_attributes = Self::svg_attributes(view);
+        writer.open_element("svg", &svg_attributes);
+        self.profile.embed_in_runtime(&mut writer, write_content);
         writer.close_element();
         writer.finish()
     }
 
+    /// Declare the root's namespace and contract version, its viewBox `view` and its size the view's.
     fn svg_attributes(view: Rect) -> Attributes {
         let view_box = ViewBox(view).to_string();
+        let view_width = view.width();
+        let view_height = view.height();
         Attributes::new()
             .with_text("xmlns", SVG_NAMESPACE)
             .with_text(RuntimeContract::CONTRACT, RuntimeContract::VERSION)
             .with_text("viewBox", &view_box)
-            .with_number("width", view.width())
-            .with_number("height", view.height())
+            .with_number("width", view_width)
+            .with_number("height", view_height)
     }
 
+    /// Paint the canvas: a rounded rectangle filling `view`.
     fn write_canvas(&self, writer: &mut SvgWriter, view: Rect) {
         let canvas_paint = Paint::Token(Token::Canvas);
         let canvas_fill = self.profile.paint_value(canvas_paint);
+        let view_width = view.width();
+        let view_height = view.height();
         let canvas_attributes = Attributes::new()
             .with_number("x", view.x0)
             .with_number("y", view.y0)
-            .with_number("width", view.width())
-            .with_number("height", view.height())
+            .with_number("width", view_width)
+            .with_number("height", view_height)
             .with_number("rx", CANVAS_CORNER_RADIUS)
             .with_css_value("fill", &canvas_fill);
         writer.empty_element("rect", &canvas_attributes);
     }
+}
 
-    /// Set the diagram's title in text ink and its subtitle muted, outside every level group, so they stay in document space whatever level is entered.
+impl InteractiveRenderer {
+    /// Write `layer_scenes`, disclosed from `model`, as the interactive document sized to layer 0's root view: the model's title, the definitions every layer shares, one canvas under every layer's root view, then one group per layer, layer 0 shown.
+    pub(crate) fn write_layered_document(
+        &self,
+        model: &Model,
+        layer_scenes: &[LayerScene],
+    ) -> String {
+        let drawn_layers: Vec<(&Group, &Model)> = layer_scenes
+            .iter()
+            .map(|layer_scene| {
+                let layer_model = layer_scene.disclosure.model();
+                (&layer_scene.scene.root, layer_model)
+            })
+            .collect();
+        let definitions = Definitions::collect(&drawn_layers);
+        let layer_passes: Vec<LayerPass<'_, '_, Interactive>> = layer_scenes
+            .iter()
+            .map(|layer_scene| {
+                let layer_model = layer_scene.disclosure.model();
+                let annotator =
+                    ContractAnnotator::new(model).with_disclosure(layer_scene.disclosure);
+                let scene = &layer_scene.scene;
+                LayerPass::new(&self.profile, scene, layer_model, annotator, &definitions)
+            })
+            .collect();
+        let root_views = layer_scenes
+            .iter()
+            .map(|layer_scene| layer_scene.scene.root_view());
+        let canvas_view = root_views
+            .reduce(|covered_view, root_view| covered_view.union(root_view))
+            .expect("disclosure yields layer 0 at least");
+        let first_layer_view = layer_scenes[0].scene.root_view();
+        self.write_root(first_layer_view, |writer| {
+            if let Some(title) = model.title() {
+                let no_attributes = Attributes::new();
+                writer.text_element("title", &no_attributes, title);
+            }
+            definitions.write(writer, &self.profile);
+            self.write_canvas(writer, canvas_view);
+            for (layer_index, layer_pass) in layer_passes.iter().enumerate() {
+                let layer_value = layer_index.to_string();
+                let layer_attributes =
+                    Attributes::new().with_text(RuntimeContract::LAYER, &layer_value);
+                let is_first_layer = layer_index == 0;
+                let shown_layer_attributes = if is_first_layer {
+                    layer_attributes.with_text(RuntimeContract::SHOWN, "")
+                } else {
+                    layer_attributes
+                };
+                writer.open_element("g", &shown_layer_attributes);
+                layer_pass.write_layer(writer);
+                writer.close_element();
+            }
+        })
+    }
+}
+
+impl<'d> LayerScene<'d> {
+    /// Pair `disclosure` with `scene`, projected from its model.
+    pub(crate) fn new(disclosure: &'d DisclosedModel, scene: Scene) -> Self {
+        Self { disclosure, scene }
+    }
+}
+
+impl Definitions {
+    /// Collect the arrowheads and travelers of every layer of `drawn_layers`, each a root level and the model it is drawn from.
+    fn collect(drawn_layers: &[(&Group, &Model)]) -> Self {
+        let arrowheads = ArrowheadMarkers::collect(drawn_layers);
+        let travelers = TravelerSymbols::collect(drawn_layers);
+        Self {
+            arrowheads,
+            travelers,
+        }
+    }
+
+    /// Write a `<defs>` holding the arrowhead markers, then the traveler symbols a live viewer moves, or nothing when neither was collected.
+    fn write<P: Profile>(&self, writer: &mut SvgWriter, profile: &P) {
+        let has_no_marker = self.arrowheads.is_empty();
+        let has_no_traveler = self.travelers.is_empty();
+        let has_no_definition = has_no_marker && has_no_traveler;
+        if has_no_definition {
+            return;
+        }
+        let no_attributes = Attributes::new();
+        writer.open_element("defs", &no_attributes);
+        self.arrowheads.write_markers(writer, profile);
+        profile.write_live_only(writer, |writer| self.travelers.write_symbols(writer));
+        writer.close_element();
+    }
+}
+
+impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
+    /// Set up the pass over layer `scene`, painted from `model`, annotated by `annotator`, referencing `definitions`.
+    fn new(
+        profile: &'r P,
+        scene: &'r Scene,
+        model: &'m Model,
+        annotator: ContractAnnotator<'m>,
+        definitions: &'r Definitions,
+    ) -> Self {
+        let paints = ModelPaints::new(model);
+        let level_views = LevelViews::collect(scene);
+        Self {
+            profile,
+            scene,
+            model,
+            paints,
+            annotator,
+            definitions,
+            level_views,
+        }
+    }
+
+    /// Write the layer's scene: its ground grid, heading, legend, then root level.
+    fn write_layer(&self, writer: &mut SvgWriter) {
+        for ground_line in &self.scene.ground_lines {
+            self.write_ground_line(writer, ground_line);
+        }
+        if let Some(heading) = &self.scene.heading {
+            self.write_heading(writer, heading);
+        }
+        if let Some(legend) = &self.scene.legend {
+            self.write_legend(writer, legend);
+        }
+        let root = ElementPath::root();
+        self.write_level(writer, &root, &self.scene.root);
+    }
+
+    /// Draw one line of the ground grid in the grid-line color.
+    fn write_ground_line(&self, writer: &mut SvgWriter, ground_line: &Line) {
+        let grid_paint = Paint::Token(Token::GridLine);
+        let grid_stroke = self.profile.paint_value(grid_paint);
+        let line_attributes = Attributes::new()
+            .with_number("x1", ground_line.p0.x)
+            .with_number("y1", ground_line.p0.y)
+            .with_number("x2", ground_line.p1.x)
+            .with_number("y2", ground_line.p1.y)
+            .with_css_value("stroke", &grid_stroke);
+        writer.empty_element("line", &line_attributes);
+    }
+
+    /// Write the heading: the diagram's title in text ink and its subtitle muted, outside every level group, so they stay in document space whatever level is entered.
     fn write_heading(&self, writer: &mut SvgWriter, heading: &Heading) {
         let title_ink = Paint::Token(Token::Text);
         let subtitle_ink = Paint::Token(Token::TextMuted);
-        if let Some(title) = &heading.title {
-            self.write_label_in_ink(writer, title, title_ink);
+        match heading {
+            Heading::Titled { title, subtitle } => {
+                self.write_label_in_ink(writer, title, title_ink);
+                if let Some(subtitle) = subtitle {
+                    self.write_label_in_ink(writer, subtitle, subtitle_ink);
+                }
+            }
+            Heading::Subtitled(subtitle) => {
+                self.write_label_in_ink(writer, subtitle, subtitle_ink);
+            }
         }
-        if let Some(subtitle) = &heading.subtitle {
-            self.write_label_in_ink(writer, subtitle, subtitle_ink);
-        }
+    }
+
+    /// Draw `label` in `ink`, a caption at the caption opacity.
+    fn write_label_in_ink(&self, writer: &mut SvgWriter, label: &Label, ink: Paint) {
+        let ink_fill = self.profile.paint_value(ink);
+        let ink_presentation = Attributes::new().with_css_value("fill", &ink_fill);
+        let is_caption = label.role == LabelRole::Caption;
+        let presentation = if is_caption {
+            ink_presentation.with_number("opacity", CAPTION_OPACITY)
+        } else {
+            ink_presentation
+        };
+        self.profile.write_label(writer, label, presentation);
     }
 
     /// Set the legend's title in text ink and its entries muted, then each key row's sample and its muted description, outside every level group like the heading.
@@ -199,91 +382,75 @@ impl<'m, 'f, P: Profile + Default> Renderer<'m, 'f, P> {
         }
     }
 
-    /// Paint the root level's group around its content.
-    fn write_root_level(
-        &self,
-        writer: &mut SvgWriter,
-        arrowheads: &ArrowheadMarkers,
-        level_views: &LevelViews,
-        scene: &Scene,
-    ) {
-        let root = ElementPath::root();
-        let root_attributes = Self::level_attributes(level_views, &root, &scene.root);
-        writer.open_element("g", &root_attributes);
-        self.write_group_content(writer, arrowheads, level_views, &root, &scene.root);
-        writer.close_element();
+    /// Stroke an unfilled path like a connection: in `paint`, at the connection width and opacity, dashed by `dashes` unless solid.
+    fn stroke_attributes(&self, paint: Paint, dashes: Option<Dashes>) -> Attributes {
+        let stroke = self.profile.paint_value(paint);
+        Attributes::new()
+            .with_text("fill", "none")
+            .with_css_value("stroke", &stroke)
+            .with_number("stroke-width", Connection::STROKE_WIDTH)
+            .with_number("opacity", CONNECTION_OPACITY)
+            .with_dash_array(dashes)
     }
 
-    /// Carry level `level`'s path, its document view and, when `group` is framed, its frame.
-    fn level_attributes(
-        level_views: &LevelViews,
-        level: &ElementPath,
-        group: &Group,
-    ) -> Attributes {
-        let level_value = level.to_string();
-        let view = level_views.view_of(level);
-        let view_value = ViewBox(view).to_string();
-        let level_attributes = Attributes::new()
-            .with_text(RuntimeContract::LEVEL, &level_value)
-            .with_text(RuntimeContract::VIEW, &view_value);
-        let is_framed = group.frame != Affine::IDENTITY;
-        if !is_framed {
-            return level_attributes;
-        }
-        let frame_transform = Matrix(group.frame).to_string();
-        level_attributes.with_text("transform", &frame_transform)
+    /// Paint one face of a solid in `solid_paint`: filled in its shade, outlined in the solid's outline.
+    fn write_face(&self, writer: &mut SvgWriter, face: &Face, solid_paint: &SolidPaint) {
+        let face_paint = solid_paint.face(face.shade);
+        let face_fill = self.profile.paint_value(face_paint);
+        let outline = solid_paint.outline();
+        let outline_stroke = self.profile.paint_value(outline.paint);
+        let outline_data = PathData(&face.outline).to_string();
+        let face_attributes = Attributes::new()
+            .with_text("d", &outline_data)
+            .with_css_value("fill", &face_fill)
+            .with_css_value("stroke", &outline_stroke)
+            .with_number("stroke-width", outline.width)
+            .with_dash_array(outline.dashes);
+        writer.empty_element("path", &face_attributes);
     }
 
-    fn write_ground_line(&self, writer: &mut SvgWriter, ground_line: &Line) {
-        let grid_paint = Paint::Token(Token::GridLine);
-        let grid_stroke = self.profile.paint_value(grid_paint);
-        let line_attributes = Attributes::new()
-            .with_number("x1", ground_line.p0.x)
-            .with_number("y1", ground_line.p0.y)
-            .with_number("x2", ground_line.p1.x)
-            .with_number("y2", ground_line.p1.y)
-            .with_css_value("stroke", &grid_stroke);
-        writer.empty_element("line", &line_attributes);
-    }
-
-    /// Paint level `level` back to front: solids, connection arcs, their plated labels over every arc, then its overlay.
-    fn write_group_content(
-        &self,
-        writer: &mut SvgWriter,
-        arrowheads: &ArrowheadMarkers,
-        level_views: &LevelViews,
-        level: &ElementPath,
-        group: &Group,
-    ) {
+    /// Paint `group` as level `level`'s group, back to front: solids, connection arcs, their plated labels over every arc, then its overlay.
+    fn write_level(&self, writer: &mut SvgWriter, level: &ElementPath, group: &Group) {
+        let level_attributes = self.level_attributes(level, group);
+        writer.open_element("g", &level_attributes);
         for solid in &group.solids {
-            self.write_solid(writer, arrowheads, level_views, solid);
+            self.write_solid(writer, solid);
         }
         for connection in &group.connections {
-            self.write_connection_arc(writer, arrowheads, connection);
+            self.write_connection_arc(writer, connection);
         }
         for connection in &group.connections {
             self.write_connection_label(writer, connection);
         }
         self.profile
             .write_live_only(writer, |writer| self.write_overlay(writer, level, group));
+        writer.close_element();
     }
 
-    /// Paint a solid as its element's group: its faces, then its interior level, then its labels, then its badges.
-    fn write_solid(
-        &self,
-        writer: &mut SvgWriter,
-        arrowheads: &ArrowheadMarkers,
-        level_views: &LevelViews,
-        solid: &Solid,
-    ) {
-        let element_group = self.annotator.element(&solid.element);
+    /// Carry level `level`'s path, its document view and its frame.
+    fn level_attributes(&self, level: &ElementPath, group: &Group) -> Attributes {
+        let level_value = level.to_string();
+        let view = self.level_views.view_of(level);
+        let view_value = ViewBox(view).to_string();
+        Attributes::new()
+            .with_text(RuntimeContract::LEVEL, &level_value)
+            .with_text(RuntimeContract::VIEW, &view_value)
+            .with_transform(group.frame)
+    }
+
+    /// Paint a solid as its element's group: its sheet, then its faces, then its interior level, then its labels, then its badges.
+    fn write_solid(&self, writer: &mut SvgWriter, solid: &Solid) {
+        let element_group = self.annotator.element_group(&solid.element);
         element_group.write_around(writer, |writer| {
             let solid_paint = self.paints.solid(&solid.element);
+            if let Some(sheet) = &solid.sheet {
+                self.write_sheet(writer, sheet, &solid_paint);
+            }
             for face in &solid.faces {
                 self.write_face(writer, face, &solid_paint);
             }
             if let Some(interior) = &solid.interior {
-                self.write_level(writer, arrowheads, level_views, &solid.element, interior);
+                self.write_level(writer, &solid.element, interior);
             }
             let label_ink = self.label_ink(solid, &solid_paint);
             for label in &solid.labels {
@@ -295,30 +462,22 @@ impl<'m, 'f, P: Profile + Default> Renderer<'m, 'f, P> {
         });
     }
 
-    /// Paint a badge as its edge's group, so it carries the edge's details: its target's mini, shaded like the target.
-    fn write_badge(&self, writer: &mut SvgWriter, badge: &Badge) {
-        let edge_group = self.annotator.edge(&badge.edge);
-        edge_group.write_around(writer, |writer| {
-            let target_paint = self.paints.solid(badge.edge.to());
-            for face in &badge.faces {
-                self.write_face(writer, face, &target_paint);
-            }
-        });
-    }
-
-    /// Paint `group` as the interior level of container `level`, nested in its solid's group.
-    fn write_level(
-        &self,
-        writer: &mut SvgWriter,
-        arrowheads: &ArrowheadMarkers,
-        level_views: &LevelViews,
-        level: &ElementPath,
-        group: &Group,
-    ) {
-        let level_attributes = Self::level_attributes(level_views, level, group);
-        writer.open_element("g", &level_attributes);
-        self.write_group_content(writer, arrowheads, level_views, level, group);
-        writer.close_element();
+    /// Paint a closed container's sheet faintly in `solid_paint`: its top face's fill and its ink's outline, both at low opacity.
+    fn write_sheet(&self, writer: &mut SvgWriter, sheet: &BezPath, solid_paint: &SolidPaint) {
+        let top_paint = solid_paint.face(FaceShade::Top);
+        let sheet_fill = self.profile.paint_value(top_paint);
+        let ink_paint = solid_paint.ink();
+        let sheet_stroke = self.profile.paint_value(ink_paint);
+        let outline = solid_paint.outline();
+        let sheet_data = PathData(sheet).to_string();
+        let sheet_attributes = Attributes::new()
+            .with_text("d", &sheet_data)
+            .with_css_value("fill", &sheet_fill)
+            .with_number("fill-opacity", SHEET_FILL_OPACITY)
+            .with_css_value("stroke", &sheet_stroke)
+            .with_number("stroke-opacity", SHEET_STROKE_OPACITY)
+            .with_number("stroke-width", outline.width);
+        writer.empty_element("path", &sheet_attributes);
     }
 
     /// Ink a solid's labels: a hanging tag and its caption lie on the level's ground and take its ink, any other label lies on a face and takes the solid's.
@@ -328,84 +487,49 @@ impl<'m, 'f, P: Profile + Default> Renderer<'m, 'f, P> {
             .iter()
             .any(|label| label.role == LabelRole::ContainerTag);
         if is_tag_hanging {
-            let enclosing_level = solid.element.parent().unwrap_or_else(ElementPath::root);
+            let enclosing_level = solid.element.enclosing_level();
             let ground = self.paints.ground(&enclosing_level);
             return ground.ink;
         }
         solid_paint.ink()
     }
 
-    fn write_face(&self, writer: &mut SvgWriter, face: &Face, solid_paint: &SolidPaint) {
-        let face_paint = solid_paint.face(face.shade);
-        let face_fill = self.profile.paint_value(face_paint);
-        let outline = solid_paint.outline();
-        let outline_stroke = self.profile.paint_value(outline.paint);
-        let outline_data = PathData(&face.outline).to_string();
-        let mut face_attributes = Attributes::new()
-            .with_text("d", &outline_data)
-            .with_css_value("fill", &face_fill)
-            .with_css_value("stroke", &outline_stroke)
-            .with_number("stroke-width", outline.width);
-        if let Some(dashes) = outline.dashes {
-            let dash_array = dashes.to_string();
-            face_attributes = face_attributes.with_text("stroke-dasharray", &dash_array);
-        }
-        writer.empty_element("path", &face_attributes);
+    /// Paint a badge as its edge's group, so it carries the edge's details: its target's mini, shaded like the target.
+    fn write_badge(&self, writer: &mut SvgWriter, badge: &Badge) {
+        let edge_group = self.annotator.edge_group(&badge.edge);
+        edge_group.write_around(writer, |writer| {
+            let target = badge.edge.to();
+            let target_paint = self.paints.solid(target);
+            for face in &badge.faces {
+                self.write_face(writer, face, &target_paint);
+            }
+        });
     }
 
-    /// Draw `label` in `ink`, a caption at the caption opacity.
-    fn write_label_in_ink(&self, writer: &mut SvgWriter, label: &Label, ink: Paint) {
-        let ink_fill = self.profile.paint_value(ink);
-        let ink_presentation = Attributes::new().with_css_value("fill", &ink_fill);
-        let is_caption = label.role == LabelRole::Caption;
-        let presentation = if is_caption {
-            ink_presentation.with_number("opacity", CAPTION_OPACITY)
-        } else {
-            ink_presentation
-        };
-        self.profile
-            .write_label(writer, label, self.font, presentation);
-    }
-
-    /// Paint a connection's arc as an edge group: its flow path, then its moving dot.
-    fn write_connection_arc(
-        &self,
-        writer: &mut SvgWriter,
-        arrowheads: &ArrowheadMarkers,
-        connection: &Connection,
-    ) {
-        let edge_group = self.annotator.edge(&connection.edge);
+    /// Paint a connection's arc as an edge group: its flow path, then its traveler.
+    fn write_connection_arc(&self, writer: &mut SvgWriter, connection: &Connection) {
+        let edge_group = self.annotator.edge_group(&connection.edge);
         edge_group.write_around(writer, |writer| {
             let connection_paint = self.paints.connection(&connection.edge);
-            self.write_flow_path(writer, arrowheads, connection, connection_paint);
+            self.write_flow_path(writer, connection, connection_paint);
             self.profile.write_live_only(writer, |writer| {
-                self.write_moving_dot(writer, connection, connection_paint);
+                self.write_traveler(writer, connection, connection_paint);
             });
         });
     }
 
-    /// Paint a connection's plated label, if any, as a second group of the same edge, so it lies over every arc of the level.
-    fn write_connection_label(&self, writer: &mut SvgWriter, connection: &Connection) {
-        let Some(plated_label) = &connection.label else {
-            return;
-        };
-        let edge_group = self.annotator.edge(&connection.edge);
-        edge_group.write_around(writer, |writer| {
-            let connection_paint = self.paints.connection(&connection.edge);
-            let plate_paint = PlatePaint::over_arcs(connection_paint);
-            self.write_plated_label(writer, plated_label, plate_paint);
-        });
-    }
-
+    /// Stroke a connection's flow path in `connection_paint`, dashed like its edge and ending in its arrowhead.
     fn write_flow_path(
         &self,
         writer: &mut SvgWriter,
-        arrowheads: &ArrowheadMarkers,
         connection: &Connection,
         connection_paint: Paint,
     ) {
         let path_data = PathData(&connection.path).to_string();
-        let marker_reference = arrowheads.marker_reference(connection_paint);
+        let marker_reference = self
+            .definitions
+            .arrowheads
+            .marker_reference(connection_paint);
         let dashes = self.paints.connection_dashes(&connection.edge);
         let path_attributes = self
             .stroke_attributes(connection_paint, dashes)
@@ -415,23 +539,8 @@ impl<'m, 'f, P: Profile + Default> Renderer<'m, 'f, P> {
         writer.empty_element("path", &path_attributes);
     }
 
-    /// Stroke an unfilled path like a connection: in `paint`, at the connection width and opacity, dashed by `dashes` unless solid.
-    fn stroke_attributes(&self, paint: Paint, dashes: Option<Dashes>) -> Attributes {
-        let stroke = self.profile.paint_value(paint);
-        let stroke_attributes = Attributes::new()
-            .with_text("fill", "none")
-            .with_css_value("stroke", &stroke)
-            .with_number("stroke-width", Connection::STROKE_WIDTH)
-            .with_number("opacity", CONNECTION_OPACITY);
-        let Some(dashes) = dashes else {
-            return stroke_attributes;
-        };
-        let dash_array = dashes.to_string();
-        stroke_attributes.with_text("stroke-dasharray", &dash_array)
-    }
-
-    /// Draw the dot SMIL moves along the connection's port-to-port path, when the connection has one.
-    fn write_moving_dot(
+    /// Draw the traveler the connection's edge carries moving upright along its port-to-port path, painted in `connection_paint`, when the connection has one.
+    fn write_traveler(
         &self,
         writer: &mut SvgWriter,
         connection: &Connection,
@@ -440,19 +549,22 @@ impl<'m, 'f, P: Profile + Default> Renderer<'m, 'f, P> {
         let Some(dot_path) = &connection.dot_path else {
             return;
         };
-        let dot_fill = self.profile.paint_value(connection_paint);
-        let dot_attributes = Attributes::new()
-            .with_text(RuntimeContract::DOT, "")
-            .with_number("r", DOT_RADIUS)
-            .with_css_value("fill", &dot_fill);
-        let motion_path_data = PathData(dot_path).to_string();
-        let motion_attributes = Attributes::new()
-            .with_text("path", &motion_path_data)
-            .with_text("dur", DOT_TRAVEL_DURATION)
-            .with_text("repeatCount", "indefinite");
-        writer.open_element("circle", &dot_attributes);
-        writer.empty_element("animateMotion", &motion_attributes);
-        writer.close_element();
+        let traveler = ResolvedTraveler::carried_along(&connection.edge, self.model);
+        let traveler_paint = self.profile.paint_value(connection_paint);
+        traveler.write_moving_along(writer, dot_path, &traveler_paint);
+    }
+
+    /// Paint a connection's plated label, if any, as a second group of the same edge, so it lies over every arc of the level.
+    fn write_connection_label(&self, writer: &mut SvgWriter, connection: &Connection) {
+        let Some(plated_label) = &connection.label else {
+            return;
+        };
+        let edge_group = self.annotator.edge_group(&connection.edge);
+        edge_group.write_around(writer, |writer| {
+            let connection_paint = self.paints.connection(&connection.edge);
+            let plate_paint = PlatePaint::over_arcs(connection_paint);
+            self.write_plated_label(writer, plated_label, plate_paint);
+        });
     }
 
     /// Paint a plate on its label's plane in `plate_paint`, then its label in the plate's ink.
@@ -463,29 +575,23 @@ impl<'m, 'f, P: Profile + Default> Renderer<'m, 'f, P> {
         plate_paint: PlatePaint,
     ) {
         let plate_rect = plated_label.plate.rect();
+        let plate_width = plate_rect.width();
+        let plate_height = plate_rect.height();
         let corner_radius = plated_label.plate.radii().top_left;
         let plate_fill = self.profile.paint_value(plate_paint.fill);
         let plate_outline = self.profile.paint_value(plate_paint.outline);
-        let mut plate_attributes = Attributes::new()
+        let plate_attributes = Attributes::new()
             .with_number("x", plate_rect.x0)
             .with_number("y", plate_rect.y0)
-            .with_number("width", plate_rect.width())
-            .with_number("height", plate_rect.height())
+            .with_number("width", plate_width)
+            .with_number("height", plate_height)
             .with_number("rx", corner_radius)
             .with_css_value("fill", &plate_fill)
             .with_css_value("stroke", &plate_outline)
-            .with_number("stroke-opacity", PLATE_STROKE_OPACITY);
-        let plate_plane = plated_label.label.plane;
-        let is_on_projected_plane = plate_plane != Affine::IDENTITY;
-        if is_on_projected_plane {
-            let plane_transform = Matrix(plate_plane).to_string();
-            plate_attributes = plate_attributes.with_text("transform", &plane_transform);
-        }
+            .with_number("stroke-opacity", PLATE_STROKE_OPACITY)
+            .with_transform(plated_label.label.plane);
         writer.empty_element("rect", &plate_attributes);
-        let text_fill = self.profile.paint_value(plate_paint.ink);
-        let presentation = Attributes::new().with_css_value("fill", &text_fill);
-        self.profile
-            .write_label(writer, &plated_label.label, self.font, presentation);
+        self.write_label_in_ink(writer, &plated_label.label, plate_paint.ink);
     }
 
     /// Draw level `level`'s overlay, the last child of its group: one stub group per stub marker, its plate painted like the ground it lies on, shown once the level is entered.
@@ -495,7 +601,9 @@ impl<'m, 'f, P: Profile + Default> Renderer<'m, 'f, P> {
         let ground = self.paints.ground(level);
         let plate_paint = PlatePaint::on_ground(ground);
         for (external_endpoint, stub_marker) in &group.stub_markers {
-            let stub_group = self.annotator.stub(external_endpoint, &stub_marker.edges);
+            let stub_group = self
+                .annotator
+                .stub_group(external_endpoint, &stub_marker.edges);
             stub_group.write_around(writer, |writer| {
                 self.write_plated_label(writer, &stub_marker.tag, plate_paint);
             });
@@ -506,7 +614,8 @@ impl<'m, 'f, P: Profile + Default> Renderer<'m, 'f, P> {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeSet;
+    use std::collections::{BTreeMap, BTreeSet};
+    use std::iter;
 
     use kurbo::{Affine, BezPath, Point, RoundedRect, Shape};
     use svugy_model::builder::{ElementRef, ModelBuilder};
@@ -518,8 +627,9 @@ mod tests {
     use crate::geometry::fixtures::FixedAdvanceMeasure;
     use crate::geometry::{FaceShade, NestedInterior, StubMarker};
     use crate::layout::{LevelPlan, LevelPlans};
-    use crate::metrics::TextAnchor;
+    use crate::metrics::{BundledFont, TextAnchor};
     use crate::render::theme::FaceShades;
+    use crate::{InteractiveSvg, StaticSvg};
 
     const FORBIDDEN_STATIC_MARKUP: [&str; 6] = [
         "<text",
@@ -557,21 +667,22 @@ mod tests {
         builder.build().model.expect("valid model")
     }
 
-    /// Render `scene` in profile `P`, its labels measured in the bundled font.
-    fn render_scene<P: Profile + Default>(model: &Model, scene: &Scene) -> String {
-        let font = BundledFont::new();
-        let renderer = Renderer::<P>::new(model, &font);
-        renderer.write_document(scene)
+    /// Render `scene`, painted from `model`'s styles, in `profile`.
+    fn render_scene(model: &Model, scene: &Scene, profile: impl Profile) -> String {
+        let renderer = Renderer::new(profile);
+        renderer.write_document(model, scene)
     }
 
     fn render_fixture_scene(model: &Model) -> String {
+        let font = BundledFont::new();
         let scene = Scene::two_solids_and_one_connection();
-        render_scene::<Static>(model, &scene)
+        let profile = Static::new(&font);
+        render_scene(model, &scene, profile)
     }
 
     fn render_interactive_fixture_scene(model: &Model) -> String {
         let scene = Scene::two_solids_and_one_connection();
-        render_scene::<Interactive>(model, &scene)
+        render_scene(model, &scene, Interactive)
     }
 
     #[test]
@@ -665,7 +776,13 @@ mod tests {
     fn nested_scene(depth: usize) -> Scene {
         let root_path = ElementPath::root();
         let root = nested_level(0, depth, &root_path);
-        Scene::new(Vec::new(), root)
+        let nested_levels = root
+            .nested_interiors()
+            .map(|interior| interior.container.clone());
+        let levels = iter::once(root_path).chain(nested_levels);
+        let view = Rect::new(-20.0, -20.0, 180.0, 140.0);
+        let views_by_level = levels.map(|level| (level, view)).collect();
+        Scene::new(Vec::new(), root, views_by_level)
     }
 
     /// Draw level `level` under `parent`: peer, nest (holding the next level), their connection, and a stub below the root.
@@ -698,8 +815,7 @@ mod tests {
         } else {
             Affine::new(INTERIOR_FRAME_COEFFICIENTS)
         };
-        let view = Rect::new(-20.0, -20.0, 180.0, 140.0);
-        let mut group = Group::new(frame, view);
+        let mut group = Group::new(frame);
         group.solids.push(peer_solid);
         group.solids.push(nest_solid);
         group.connections.push(connection);
@@ -744,9 +860,11 @@ mod tests {
     }
 
     fn render_nested(depth: usize) -> String {
+        let font = BundledFont::new();
         let model = nested_model(depth);
         let scene = nested_scene(depth);
-        render_scene::<Static>(&model, &scene)
+        let profile = Static::new(&font);
+        render_scene(&model, &scene, profile)
     }
 
     fn nested_path_nodes(group: &usvg::Group) -> Vec<&usvg::Path> {
@@ -847,18 +965,19 @@ mod tests {
     fn every_nested_level_carries_its_outer_view_as_its_data_view() {
         let model = nested_model(DEEP_NESTED_DEPTH);
         let scene = nested_scene(DEEP_NESTED_DEPTH);
-        let markup = render_scene::<Interactive>(&model, &scene);
+        let markup = render_scene(&model, &scene, Interactive);
         let nested_interiors: Vec<NestedInterior> = scene.root.nested_interiors().collect();
         assert_eq!(nested_interiors.len(), DEEP_NESTED_DEPTH - 1);
         for nested_interior in nested_interiors {
             let container = nested_interior.container;
-            let outer_view = nested_interior.outer_view();
+            let view = scene.view_of(container);
+            let outer_view = nested_interior.to_outer.transform_rect_bbox(view);
             let view_value = ViewBox(outer_view);
             let level_attributes =
                 format!("data-svugy-level=\"{container}\" data-svugy-view=\"{view_value}\"");
             assert!(markup.contains(&level_attributes), "{level_attributes}");
         }
-        let root_view = ViewBox(scene.root.view);
+        let root_view = ViewBox(scene.root_view());
         let root_level_attributes =
             format!("data-svugy-level=\"\" data-svugy-view=\"{root_view}\"");
         let root_view_box = format!("viewBox=\"{root_view}\"");
@@ -997,14 +1116,16 @@ mod tests {
         builder.add_child(&core, "engine", Element::new("engine"));
         let model = builder.build().model.expect("valid model");
         let view = Rect::new(-20.0, -20.0, 180.0, 140.0);
-        let mut desk_interior = Group::new(Affine::IDENTITY, view);
+        let mut desk_interior = Group::new(Affine::IDENTITY);
         let core_solid = tagged_solid(core.path(), "core");
         desk_interior.solids.push(core_solid);
         let desk_solid = tagged_solid(desk.path(), "desk").with_interior(desk_interior);
-        let mut root = Group::new(Affine::IDENTITY, view);
+        let mut root = Group::new(Affine::IDENTITY);
         root.solids.push(desk_solid);
-        let scene = Scene::new(Vec::new(), root);
-        let markup = render_scene::<Interactive>(&model, &scene);
+        let views_by_level =
+            BTreeMap::from([(ElementPath::root(), view), (desk.path().clone(), view)]);
+        let scene = Scene::new(Vec::new(), root, views_by_level);
+        let markup = render_scene(&model, &scene, Interactive);
         let desk_tag = label_line(&markup, "desk");
         let core_tag = label_line(&markup, "core");
         assert!(
@@ -1014,8 +1135,8 @@ mod tests {
         assert!(core_tag.starts_with("<text fill=\"#ffffff\""), "{core_tag}");
     }
 
-    /// Render the fixture plan's `a -> b` in profile `P`, titled and subtitled, projected in the bundled font.
-    fn render_headed_fixture<P: Profile + Default>() -> String {
+    /// Build the fixture plan's `a -> b`, titled and subtitled, projected in `font`.
+    fn headed_fixture(font: &BundledFont) -> (Model, Scene) {
         let mut builder = ModelBuilder::new()
             .with_title("svugy · how it is built")
             .with_subtitle("full Rust stack");
@@ -1025,10 +1146,8 @@ mod tests {
         let model = builder.build().model.expect("valid model");
         let plan = LevelPlan::two_boxes_and_one_route();
         let plans = LevelPlans::root_only(plan);
-        let font = BundledFont::new();
-        let scene = Scene::project(&model, &plans, &font);
-        let renderer = Renderer::<P>::new(&model, &font);
-        renderer.write_document(&scene)
+        let scene = Scene::project(&model, &plans, font);
+        (model, scene)
     }
 
     /// Return the lines between the canvas and the root level group, where the heading is drawn, leaving out the ground grid painted beneath it.
@@ -1044,7 +1163,9 @@ mod tests {
 
     #[test]
     fn interactive_heading_sets_upright_text_outside_every_level_in_text_and_muted_ink() {
-        let markup = render_headed_fixture::<Interactive>();
+        let font = BundledFont::new();
+        let (model, scene) = headed_fixture(&font);
+        let markup = render_scene(&model, &scene, Interactive);
 
         let heading_lines = lines_before_the_root_level(&markup);
 
@@ -1082,7 +1203,10 @@ mod tests {
 
     #[test]
     fn static_heading_outlines_both_lines_in_palette_literals_before_the_root_level() {
-        let markup = render_headed_fixture::<Static>();
+        let font = BundledFont::new();
+        let (model, scene) = headed_fixture(&font);
+        let profile = Static::new(&font);
+        let markup = render_scene(&model, &scene, profile);
 
         let heading_lines = lines_before_the_root_level(&markup);
 
@@ -1136,7 +1260,7 @@ mod tests {
     fn interactive_profile_overlays_every_level_with_its_stub_markers() {
         let model = nested_model(NESTED_DEPTH);
         let scene = nested_scene(NESTED_DEPTH);
-        let markup = render_scene::<Interactive>(&model, &scene);
+        let markup = render_scene(&model, &scene, Interactive);
         let overlay_group_count = markup.matches("<g data-svugy-overlay=\"\"").count();
         assert_eq!(overlay_group_count, NESTED_DEPTH);
         let stub_group =
@@ -1159,7 +1283,7 @@ mod tests {
         let mut pixmap_view = pixmap.as_mut();
         resvg::render(&tree, identity, &mut pixmap_view);
         let scene = nested_scene(NESTED_DEPTH);
-        let view_offset = scene.root.view.origin().to_vec2();
+        let view_offset = scene.root_view().origin().to_vec2();
         let view_to_pixels = Affine::translate(-view_offset);
         let interior_frame = Affine::new(INTERIOR_FRAME_COEFFICIENTS);
         let deepest_frame = view_to_pixels * interior_frame * interior_frame;
@@ -1175,10 +1299,10 @@ mod tests {
         assert!(is_deepest_face_drawn_in_place, "{expected_bounds:?}");
     }
 
-    /// Render the svugy golden in profile `P`, with its legend unless `is_unlegended`.
-    fn render_golden<P: Profile + Default>(is_unlegended: bool) -> String {
+    /// Load the svugy golden, with its legend unless `is_unlegended`.
+    fn golden_model(is_unlegended: bool) -> Model {
         let model = crate::svugy_example::SvugyExample::model();
-        let rendered_model = if is_unlegended {
+        if is_unlegended {
             let saved = model.to_json();
             let mut model_value: serde_json::Value = serde_json::from_str(&saved).expect("JSON");
             let fields = model_value
@@ -1192,15 +1316,16 @@ mod tests {
                 .expect("dropping the legend keeps a sound model")
         } else {
             model
-        };
-        Renderer::<P>::render_model(&rendered_model)
+        }
     }
 
     #[test]
     fn the_legend_is_text_in_the_interactive_profile_and_glyph_paths_in_the_static_one() {
-        let interactive_svg = render_golden::<Interactive>(false);
-        let static_svg = render_golden::<Static>(false);
-        let unlegended_static_svg = render_golden::<Static>(true);
+        let legended_model = golden_model(false);
+        let unlegended_model = golden_model(true);
+        let interactive_svg = InteractiveSvg::render(&legended_model);
+        let static_svg = StaticSvg::render(&legended_model);
+        let unlegended_static_svg = StaticSvg::render(&unlegended_model);
 
         assert!(interactive_svg.contains(">Read it as a story</text>"));
         assert!(interactive_svg.contains(">reads the bundled font</text>"));
@@ -1226,15 +1351,14 @@ mod tests {
     fn a_badge_is_its_edges_one_group_with_its_details_inside_its_sources_group_in_both_profiles() {
         let source_group = r#"<g data-svugy-element="pipeline.render.profile">"#;
         let next_source_group = r#"<g data-svugy-element="pipeline.render.writer">"#;
-        let badge_group_opening =
-            r#"<g data-svugy-edge="(pipeline.render.profile -&gt; pipeline.inter)[0]">"#;
+        let badge_group_opening = r#"<g data-svugy-edge="(pipeline.render.profile -&gt; pipeline.inter)[0]" data-svugy-from="pipeline.render.profile" data-svugy-to="pipeline.inter">"#;
         let badge_details = r#"<title>outlines</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.profile -&gt; pipeline.inter)[0]","from":"pipeline.render.profile","to":"pipeline.inter","label":"outlines"}</desc>"#;
         let badge_group = format!("{badge_group_opening}\n{badge_details}");
-        for svg in [
-            render_golden::<Interactive>(false),
-            render_golden::<Static>(false),
-        ] {
+        let model = golden_model(false);
+        let interactive_svg = InteractiveSvg::render(&model);
+        let static_svg = StaticSvg::render(&model);
+        for svg in [interactive_svg, static_svg] {
             let source_start = svg.find(source_group).expect("profile is drawn");
             let next_source_start = svg.find(next_source_group).expect("writer is drawn");
             let badge_start = svg

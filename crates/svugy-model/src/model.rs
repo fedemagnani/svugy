@@ -4,68 +4,44 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::ops::Bound;
 
+use miette::SourceSpan;
 use serde::{Deserialize, Serialize};
 
 use crate::legend::Legend;
 use crate::path::ElementPath;
+use crate::unique_key_map::UniqueKeyMapVisitor;
 
-/// Model a system that passed every error-level check: every edge endpoint and every ancestor of an element exists.
-#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+/// Largest magnitude a numeric style value, a position coordinate or a height may take, so no valid model can explode the output.
+pub const MAX_MAGNITUDE: f64 = 1_000_000.0;
+
+/// Model a system as the diagram's title, subtitle and legend, elements keyed by path and edges keyed by id; every model handed out of this crate has its edge endpoints and ancestors declared.
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Model {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    title: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    subtitle: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    legend: Option<Legend>,
-    elements: BTreeMap<ElementPath, Element>,
-    #[serde(serialize_with = "crate::json::serialize_edges")]
-    edges: BTreeMap<EdgeId, Edge>,
+    pub(crate) title: Option<String>,
+    pub(crate) subtitle: Option<String>,
+    pub(crate) legend: Option<Legend>,
+    pub(crate) elements: BTreeMap<ElementPath, Element>,
+    pub(crate) edges: BTreeMap<EdgeId, Edge>,
 }
 
 impl Model {
-    /// Assemble a model without checking references; it leaves the crate only through `Model::admit`.
-    pub(crate) fn new_unchecked(
-        elements: BTreeMap<ElementPath, Element>,
-        edges: BTreeMap<EdgeId, Edge>,
-    ) -> Self {
-        Self {
-            title: None,
-            subtitle: None,
-            legend: None,
-            elements,
-            edges,
-        }
-    }
-
-    /// Set the diagram's title, drawn at the top-left of the top-level view; the model leaves the crate only through `Model::admit`.
-    pub(crate) fn with_title(mut self, title: impl Into<String>) -> Self {
-        let title = title.into();
-        self.title = Some(title);
-        self
-    }
-
-    /// Set the diagram's subtitle, drawn under its title; the model leaves the crate only through `Model::admit`.
-    pub(crate) fn with_subtitle(mut self, subtitle: impl Into<String>) -> Self {
-        let subtitle = subtitle.into();
-        self.subtitle = Some(subtitle);
-        self
-    }
-
-    /// Set the diagram's legend, drawn at the top-right of the top-level view; the model leaves the crate only through `Model::admit`.
-    pub(crate) fn with_legend(mut self, legend: Legend) -> Self {
-        self.legend = Some(legend);
-        self
-    }
-
-    /// Insert an element without checking references; the model leaves the crate only through `Model::admit`.
-    pub(crate) fn insert_element(&mut self, path: ElementPath, element: Element) {
-        self.elements.insert(path, element);
-    }
-
-    /// Insert an edge without checking references; the model leaves the crate only through `Model::admit`.
-    pub(crate) fn insert_edge(&mut self, id: EdgeId, edge: Edge) {
-        self.edges.insert(id, edge);
+    /// Insert `edge` from `from` to `to` with the next free ordinal for that pair, so parallel edges stay distinct.
+    pub(crate) fn insert_edge_with_next_free_ordinal(
+        &mut self,
+        from: ElementPath,
+        to: ElementPath,
+        edge: Edge,
+    ) -> EdgeId {
+        let first_parallel_id = EdgeId::new(from, to, 0);
+        let last_parallel_id = first_parallel_id.parallel(u32::MAX);
+        let parallel_ids = &first_parallel_id..=&last_parallel_id;
+        let mut parallel_edges = self.edges.range::<EdgeId, _>(parallel_ids);
+        let last_parallel_edge = parallel_edges.next_back();
+        let ordinal = last_parallel_edge.map_or(0, |(id, _edge)| id.ordinal() + 1);
+        let id = first_parallel_id.parallel(ordinal);
+        let inserted_id = id.clone();
+        self.edges.insert(inserted_id, edge);
+        id
     }
 
     /// Yield the edges Layout may see: every edge except those joining an element to its ancestor or descendant.
@@ -92,7 +68,9 @@ impl Model {
         &'a self,
         source: &'a ElementPath,
     ) -> impl Iterator<Item = &'a EdgeId> {
-        let first_edge_from_source = EdgeId::new(source.clone(), ElementPath::root(), 0);
+        let source_path = source.clone();
+        let root = ElementPath::root();
+        let first_edge_from_source = EdgeId::new(source_path, root, 0);
         let from_source_onwards = self.edges.range(first_edge_from_source..);
         let edges_from_source =
             from_source_onwards.take_while(move |(id, _edge)| id.from() == source);
@@ -102,13 +80,24 @@ impl Model {
 
     /// Tell whether `id` is drawn as a badge on its source's top face instead of an arc: its target is a leaf marked badge and its source a leaf.
     pub fn is_badge_edge(&self, id: &EdgeId) -> bool {
-        let is_badged_target = self.is_badged_leaf(id.to());
-        let is_source_leaf = !self.is_container(id.from());
+        let target = id.to();
+        let source = id.from();
+        let is_badged_target = self.is_badged_leaf(target);
+        let is_source_leaf = !self.is_container(source);
         is_badged_target && is_source_leaf
     }
 
+    /// Tell whether `id` runs from a container into a leaf marked badge, so it stays an arc although its target is badged.
+    pub(crate) fn is_arc_from_container_into_badge_target(&self, id: &EdgeId) -> bool {
+        let target = id.to();
+        let source = id.from();
+        let is_badged_target = self.is_badged_leaf(target);
+        let is_source_container = self.is_container(source);
+        is_badged_target && is_source_container
+    }
+
     /// Tell whether `path` is a leaf marked badge, the only kind of element edges are badged into.
-    pub(crate) fn is_badged_leaf(&self, path: &ElementPath) -> bool {
+    fn is_badged_leaf(&self, path: &ElementPath) -> bool {
         let element = self.element(path);
         let is_badge_target = element.is_some_and(Element::is_badge_target);
         let is_leaf = !self.is_container(path);
@@ -142,36 +131,43 @@ impl Model {
         descendants.next().is_some()
     }
 
+    /// Return the diagram's title, drawn at the top-left of the top-level view.
     pub fn title(&self) -> Option<&str> {
         self.title.as_deref()
     }
 
+    /// Return the diagram's subtitle, drawn under its title.
     pub fn subtitle(&self) -> Option<&str> {
         self.subtitle.as_deref()
     }
 
+    /// Return the diagram's legend, drawn at the top-right of the top-level view.
     pub fn legend(&self) -> Option<&Legend> {
         self.legend.as_ref()
     }
 
+    /// Return the element at `path`, if one is declared there.
     pub fn element(&self, path: &ElementPath) -> Option<&Element> {
         self.elements.get(path)
     }
 
+    /// Return every element keyed by its path, in path order.
     pub fn elements(&self) -> &BTreeMap<ElementPath, Element> {
         &self.elements
     }
 
+    /// Return the edge identified by `id`, if there is one.
     pub fn edge(&self, id: &EdgeId) -> Option<&Edge> {
         self.edges.get(id)
     }
 
+    /// Return every edge keyed by its id, in edge order.
     pub fn edges(&self) -> &BTreeMap<EdgeId, Edge> {
         &self.edges
     }
 }
 
-/// Describe a component or container, everything except its path and its children.
+/// Describe an element: a component or container, everything except its path and its children.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Element {
@@ -182,12 +178,12 @@ pub struct Element {
     shape: Option<Shape>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     height: Option<f64>,
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    badge: bool,
+    #[serde(rename = "badge", default, skip_serializing_if = "std::ops::Not::not")]
+    badge_target: bool,
     #[serde(
         default,
         skip_serializing_if = "BTreeMap::is_empty",
-        deserialize_with = "crate::json::deserialize_unique_keys"
+        deserialize_with = "UniqueKeyMapVisitor::deserialize"
     )]
     style: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -201,7 +197,7 @@ pub struct Element {
     #[serde(
         default,
         skip_serializing_if = "BTreeMap::is_empty",
-        deserialize_with = "crate::json::deserialize_unique_keys"
+        deserialize_with = "UniqueKeyMapVisitor::deserialize"
     )]
     metadata: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -209,6 +205,7 @@ pub struct Element {
 }
 
 impl Element {
+    /// Create a new element drawn with `label`, every optional attribute unset.
     pub fn new(label: impl Into<String>) -> Self {
         let label = label.into();
         Self {
@@ -216,7 +213,7 @@ impl Element {
             caption: None,
             shape: None,
             height: None,
-            badge: false,
+            badge_target: false,
             style: BTreeMap::new(),
             child_placement: None,
             position: None,
@@ -228,7 +225,7 @@ impl Element {
     }
 
     /// Replace the label `new` was given, as an importer does once a source names the element twice.
-    pub fn with_label(mut self, label: impl Into<String>) -> Self {
+    pub fn relabeled(mut self, label: impl Into<String>) -> Self {
         self.label = label.into();
         self
     }
@@ -240,6 +237,7 @@ impl Element {
         self
     }
 
+    /// Set the shape the element is drawn as, overriding the renderer's pick.
     pub fn with_shape(mut self, shape: Shape) -> Self {
         self.shape = Some(shape);
         self
@@ -252,8 +250,8 @@ impl Element {
     }
 
     /// Mark this leaf a badge target: every edge into it is drawn as a mini of it on its source's top face instead of an arc.
-    pub fn with_badge(mut self) -> Self {
-        self.badge = true;
+    pub fn with_badge_target(mut self) -> Self {
+        self.badge_target = true;
         self
     }
 
@@ -290,6 +288,7 @@ impl Element {
         self
     }
 
+    /// Record a free-form metadata entry, carried into the rendered element's annotations.
     pub fn with_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         let key = key.into();
         let value = value.into();
@@ -303,10 +302,12 @@ impl Element {
         self
     }
 
+    /// Return the label drawn on the element.
     pub fn label(&self) -> &str {
         &self.label
     }
 
+    /// Return the secondary line drawn under the label, if any.
     pub fn caption(&self) -> Option<&str> {
         self.caption.as_deref()
     }
@@ -323,35 +324,47 @@ impl Element {
 
     /// Tell whether the element is marked a badge target; `Model::is_badge_edge` decides which edges that badges.
     pub fn is_badge_target(&self) -> bool {
-        self.badge
+        self.badge_target
     }
 
+    /// Return the element's raw style entries, keyed by style name.
     pub fn style(&self) -> &BTreeMap<String, String> {
         &self.style
     }
 
+    /// Return how this element, once a container, places its children, if authored.
     pub fn child_placement(&self) -> Option<PlacementHint> {
         self.child_placement
     }
 
+    /// Return the pinned plan-space position inside the parent, if authored.
     pub fn position(&self) -> Option<Position> {
         self.position
     }
 
+    /// Return the unresolved drill-down target or URL the element links to, if any.
     pub fn link(&self) -> Option<&str> {
         self.link.as_deref()
     }
 
+    /// Return where in an imported source the link value was written, as a byte range.
     pub fn link_span(&self) -> Option<ByteRange> {
         self.link_span
     }
 
+    /// Return the element's metadata entries, keyed by name.
     pub fn metadata(&self) -> &BTreeMap<String, String> {
         &self.metadata
     }
 
+    /// Return where in an imported source this element was declared, as a byte range.
     pub fn span(&self) -> Option<ByteRange> {
         self.span
+    }
+
+    /// Return where in an imported source this element was declared, as a miette span.
+    pub fn source_span(&self) -> Option<SourceSpan> {
+        self.span.map(SourceSpan::from)
     }
 }
 
@@ -365,6 +378,17 @@ pub enum Shape {
     Disc,
 }
 
+/// Name the symbol an animated edge carries along its path.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Traveler {
+    Dot,
+    Envelope,
+    Parcel,
+    Document,
+    Key,
+}
+
 /// Hint the strategy a container places its children with.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase", deny_unknown_fields)]
@@ -373,6 +397,25 @@ pub enum PlacementHint {
     Grid { columns: u32 },
     Row,
     Column,
+}
+
+impl PlacementHint {
+    /// Most columns or rows a packed level holds along one axis: grid lines are counted in an i16, less one.
+    pub const MAX_PACKED_TRACKS: u32 = 32_766;
+
+    /// Return the (columns, rows) this hint packs n children in, rows = ⌈n / columns⌉; `None` for layered or an empty grid.
+    pub fn packed_tracks(self, child_count: usize) -> Option<(usize, usize)> {
+        match self {
+            Self::Layered | Self::Grid { columns: 0 } => None,
+            Self::Grid { columns } => {
+                let column_count = usize::try_from(columns).unwrap_or(usize::MAX);
+                let row_count = child_count.div_ceil(column_count);
+                Some((column_count, row_count))
+            }
+            Self::Row => Some((child_count, 1)),
+            Self::Column => Some((1, child_count)),
+        }
+    }
 }
 
 /// Position a footprint's min corner (min x, min y) in the parent level's plan space, from that level's origin, in plan units.
@@ -392,12 +435,13 @@ pub struct ByteRange {
 }
 
 impl ByteRange {
+    /// Create a new byte range from `start` up to `end`.
     pub fn new(start: usize, end: usize) -> Self {
         Self { start, end }
     }
 }
 
-impl From<ByteRange> for miette::SourceSpan {
+impl From<ByteRange> for SourceSpan {
     fn from(range: ByteRange) -> Self {
         let byte_range = range.start..range.end;
         byte_range.into()
@@ -413,6 +457,7 @@ pub struct EdgeId {
 }
 
 impl EdgeId {
+    /// Create a new edge id from its endpoints and its ordinal among their parallel edges.
     pub fn new(from: ElementPath, to: ElementPath, ordinal: u32) -> Self {
         Self { from, to, ordinal }
     }
@@ -421,10 +466,16 @@ impl EdgeId {
     pub fn home_level(&self) -> ElementPath {
         let is_self_loop = self.from == self.to;
         if is_self_loop {
-            let parent = self.from.parent();
-            return parent.unwrap_or_else(ElementPath::root);
+            return self.from.enclosing_level();
         }
         self.from.lowest_common_ancestor(&self.to)
+    }
+
+    /// Return the id of the parallel edge numbered `ordinal` between this id's endpoints.
+    pub(crate) fn parallel(&self, ordinal: u32) -> Self {
+        let from = self.from.clone();
+        let to = self.to.clone();
+        Self { from, to, ordinal }
     }
 
     /// Tell whether one endpoint contains the other, which Layout cannot draw.
@@ -434,14 +485,17 @@ impl EdgeId {
         is_from_ancestor || is_to_ancestor
     }
 
+    /// Return the path the edge starts from.
     pub fn from(&self) -> &ElementPath {
         &self.from
     }
 
+    /// Return the path the edge points to.
     pub fn to(&self) -> &ElementPath {
         &self.to
     }
 
+    /// Return the ordinal telling apart the parallel edges of one endpoint pair.
     pub fn ordinal(&self) -> u32 {
         self.ordinal
     }
@@ -457,19 +511,22 @@ impl fmt::Display for EdgeId {
     }
 }
 
-/// Describe a connection, everything except its identity.
+/// Describe an edge: a connection, everything except its identity.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Edge {
-    label: Option<String>,
-    style: BTreeMap<String, String>,
-    span: Option<ByteRange>,
+    pub(crate) label: Option<String>,
+    pub(crate) style: BTreeMap<String, String>,
+    pub(crate) traveler: Option<Traveler>,
+    pub(crate) span: Option<ByteRange>,
 }
 
 impl Edge {
+    /// Create a new edge, unlabelled and unstyled.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Set the label drawn along the edge.
     pub fn with_label(mut self, label: impl Into<String>) -> Self {
         let label = label.into();
         self.label = Some(label);
@@ -484,21 +541,40 @@ impl Edge {
         self
     }
 
+    /// Set the symbol the edge carries along its path when animated, instead of the default dot.
+    pub fn with_traveler(mut self, traveler: Traveler) -> Self {
+        self.traveler = Some(traveler);
+        self
+    }
+
     /// Record where in an imported source this edge was declared.
     pub fn with_span(mut self, span: ByteRange) -> Self {
         self.span = Some(span);
         self
     }
 
+    /// Return the label drawn along the edge, if any.
     pub fn label(&self) -> Option<&str> {
         self.label.as_deref()
     }
 
+    /// Return the edge's raw style entries, keyed by style name.
     pub fn style(&self) -> &BTreeMap<String, String> {
         &self.style
     }
 
+    /// Return the symbol the edge carries along its path, if one was set instead of the default dot.
+    pub fn traveler(&self) -> Option<Traveler> {
+        self.traveler
+    }
+
+    /// Return where in an imported source this edge was declared, as a byte range.
     pub fn span(&self) -> Option<ByteRange> {
         self.span
+    }
+
+    /// Return where in an imported source this edge was declared, as a miette span.
+    pub fn source_span(&self) -> Option<SourceSpan> {
+        self.span.map(SourceSpan::from)
     }
 }

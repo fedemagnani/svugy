@@ -1,4 +1,4 @@
-//! Measure label text before layout.
+//! Measure and outline label text in the label fonts.
 
 mod bundled;
 mod sized_face;
@@ -8,39 +8,39 @@ use svugy_model::model::Element;
 
 pub(crate) use bundled::BundledFont;
 
-const BUNDLED_FAMILY: &str = "Inter";
-
 /// Measures the line box a single-line label occupies.
 pub(crate) trait TextMeasure {
+    /// Measure the line box of `spec`.
     fn measure(&self, spec: &TextSpec) -> TextSize;
 }
 
 /// Outlines a single-line label as glyph paths, so it renders without fonts.
 pub(crate) trait TextOutline {
+    /// Outline `spec` as glyph paths, anchored at `baseline_origin` by `anchor`.
     fn outline(&self, spec: &TextSpec, baseline_origin: Point, anchor: TextAnchor) -> BezPath;
 }
 
-/// Specifies a label and the font request it is set in.
+/// Specifies a label and the weight, size and spacing it is set in.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct TextSpec<'a> {
     pub(crate) text: &'a str,
-    pub(crate) family: &'a str,
     pub(crate) weight: u16,
     pub(crate) size: f64,
     pub(crate) letter_spacing: f64,
 }
 
 impl<'a> TextSpec<'a> {
-    pub(crate) fn new(text: &'a str, family: &'a str, weight: u16, size: f64) -> Self {
+    /// Build the text spec of `text` at `weight` and `size`, with no letter spacing.
+    pub(crate) fn new(text: &'a str, weight: u16, size: f64) -> Self {
         Self {
             text,
-            family,
             weight,
             size,
             letter_spacing: 0.0,
         }
     }
 
+    /// Space the letters by `letter_spacing`.
     pub(crate) fn with_letter_spacing(self, letter_spacing: f64) -> Self {
         Self {
             letter_spacing,
@@ -63,6 +63,7 @@ pub(crate) enum LabelRole {
     Title,
     Caption,
     ConnectionLabel,
+    StubTag,
     ContainerTag,
     DiagramTitle,
     DiagramSubtitle,
@@ -80,22 +81,22 @@ impl LabelRole {
     /// Specify `text` in this role's font.
     pub(crate) fn text_spec(self, text: &str) -> TextSpec<'_> {
         match self {
-            Self::Title => TextSpec::new(text, BUNDLED_FAMILY, 650, 12.0),
-            Self::Caption => TextSpec::new(text, BUNDLED_FAMILY, 450, 8.5),
-            Self::ConnectionLabel => TextSpec::new(text, BUNDLED_FAMILY, 500, 10.5),
+            Self::Title => TextSpec::new(text, 650, 12.0),
+            Self::Caption => TextSpec::new(text, 450, 8.5),
+            Self::ConnectionLabel | Self::StubTag => TextSpec::new(text, 500, 10.5),
             Self::ContainerTag => {
-                let unspaced = TextSpec::new(text, BUNDLED_FAMILY, 600, 9.0);
+                let unspaced = TextSpec::new(text, 600, 9.0);
                 unspaced.with_letter_spacing(0.3)
             }
-            Self::DiagramTitle => TextSpec::new(text, BUNDLED_FAMILY, 700, 17.0),
-            Self::DiagramSubtitle => TextSpec::new(text, BUNDLED_FAMILY, 400, 11.5),
-            Self::LegendTitle => TextSpec::new(text, BUNDLED_FAMILY, 700, 12.5),
-            Self::LegendLine => TextSpec::new(text, BUNDLED_FAMILY, 400, 11.0),
+            Self::DiagramTitle => TextSpec::new(text, 700, 17.0),
+            Self::DiagramSubtitle => TextSpec::new(text, 400, 11.5),
+            Self::LegendTitle => TextSpec::new(text, 700, 12.5),
+            Self::LegendLine => TextSpec::new(text, 400, 11.0),
         }
     }
 }
 
-/// Measures an element's label block, its title over its caption, and spaces it: the one set of metrics layout sizes room by and geometry places labels by.
+/// Measures an element's label block, its title over its caption, the one set of metrics layout sizes room by and geometry places labels by.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct LabelBlock {
     pub(crate) title: TextSize,
@@ -106,15 +107,7 @@ impl LabelBlock {
     /// Inset around a block lying on a top face, a little looser than the 3–4 a tightly drawn block leaves.
     const TOP_FACE_INSET: f64 = 6.0;
     /// Inset of a container's hanging tag from its slab's west corner, as the example hangs it, kept on the east too.
-    const TAG_INSET: f64 = 9.0;
-    /// Drop from the title's baseline to the caption's.
-    pub(crate) const CAPTION_LINE_OFFSET: f64 = 13.0;
-    /// Title baseline on a top face, from the face's centre.
-    pub(crate) const TOP_FACE_TITLE_BASELINE: Point = Point::new(0.0, -2.0);
-    /// Title baseline stood upright, from the top face's projected centre.
-    pub(crate) const UPRIGHT_TITLE_BASELINE: Point = Point::new(0.0, 4.0);
-    /// Tag baseline on a front face, from its west top corner: the tag inset along it, below the top edge.
-    pub(crate) const HANGING_TAG_BASELINE: Point = Point::new(Self::TAG_INSET, 21.5);
+    pub(crate) const TAG_INSET: f64 = 9.0;
 
     /// Measure `element`'s title in `title_role`'s font and its caption, if any, in the caption font.
     pub(crate) fn measure(
@@ -132,9 +125,8 @@ impl LabelBlock {
 
     /// Return the plan room the block needs lying on a top face: its widest line along x and both lines along y, inset on every side.
     pub(crate) fn top_face_room(&self) -> Size {
-        let caption_width = self.caption.map_or(0.0, |caption| caption.width);
+        let block_width = self.widest_line_width();
         let caption_line_height = self.caption.map_or(0.0, |caption| caption.line_height);
-        let block_width = self.title.width.max(caption_width);
         let block_depth = self.title.line_height + caption_line_height;
         let inset_width = block_width + 2.0 * Self::TOP_FACE_INSET;
         let inset_depth = block_depth + 2.0 * Self::TOP_FACE_INSET;
@@ -143,9 +135,14 @@ impl LabelBlock {
 
     /// Return the width the block needs hung along a front face, its widest line inset from both corners.
     pub(crate) fn hanging_width(&self) -> f64 {
-        let caption_width = self.caption.map_or(0.0, |caption| caption.width);
-        let block_width = self.title.width.max(caption_width);
+        let block_width = self.widest_line_width();
         block_width + 2.0 * Self::TAG_INSET
+    }
+
+    /// Return the width of the block's widest line, its title or its caption.
+    fn widest_line_width(&self) -> f64 {
+        let caption_width = self.caption.map_or(0.0, |caption| caption.width);
+        self.title.width.max(caption_width)
     }
 }
 
@@ -157,6 +154,7 @@ pub(crate) enum TextAnchor {
 }
 
 impl TextAnchor {
+    /// Return the share of the width set before the anchor's origin.
     pub(crate) fn width_share_before_origin(self) -> f64 {
         match self {
             Self::Start => 0.0,

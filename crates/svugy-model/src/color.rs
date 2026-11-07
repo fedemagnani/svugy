@@ -2,12 +2,128 @@
 
 use std::fmt;
 
+/// Spell the keyword of the fully transparent color.
 const TRANSPARENT_KEYWORD: &str = "transparent";
+/// Spell the alpha digits of a fully opaque color.
 const OPAQUE_ALPHA_DIGITS: &str = "ff";
+/// Count the hex digits of `#rrggbb`.
 const RGB_HEX_DIGIT_COUNT: usize = 6;
+/// Count the hex digits of `#rrggbbaa`.
 const RGBA_HEX_DIGIT_COUNT: usize = 8;
+/// Count the hex digits of the short forms `#rgb` and `#rgba`.
 const SHORT_HEX_DIGIT_COUNTS: [usize; 2] = [3, 4];
-/// Every CSS named color with its sRGB value, sorted by name.
+
+/// Holds an 8-bit sRGB color.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Rgb {
+    pub red: u8,
+    pub green: u8,
+    pub blue: u8,
+}
+
+/// Holds an 8-bit sRGB color with straight 8-bit alpha.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Rgba {
+    pub rgb: Rgb,
+    pub alpha: u8,
+}
+
+impl Rgb {
+    /// Unpack a color from its packed `0xRRGGBB` form.
+    pub const fn from_packed(packed: u32) -> Self {
+        Rgb {
+            red: (packed >> 16) as u8,
+            green: (packed >> 8) as u8,
+            blue: packed as u8,
+        }
+    }
+}
+
+impl fmt::Display for Rgb {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Rgb { red, green, blue } = *self;
+        write!(formatter, "#{red:02x}{green:02x}{blue:02x}")
+    }
+}
+
+impl Rgba {
+    /// Name the fully transparent color, the value of `transparent`.
+    pub const TRANSPARENT: Rgba = Rgba::from_packed(0x0000_0000);
+
+    /// Make `rgb` fully opaque.
+    pub const fn opaque(rgb: Rgb) -> Self {
+        Rgba {
+            rgb,
+            alpha: u8::MAX,
+        }
+    }
+
+    /// Unpack a color from its packed `0xRRGGBBAA` form.
+    pub const fn from_packed(packed: u32) -> Self {
+        let rgb = Rgb::from_packed(packed >> 8);
+        let alpha = packed as u8;
+        Rgba { rgb, alpha }
+    }
+
+    /// Parse a hex color of 3, 4, 6 or 8 digits, a CSS named color or `transparent`, ignoring case.
+    pub fn parse(text: &str) -> Option<Self> {
+        let lowercase = text.to_ascii_lowercase();
+        let is_transparent = lowercase == TRANSPARENT_KEYWORD;
+        if is_transparent {
+            return Some(Rgba::TRANSPARENT);
+        }
+        let lowercase_name = lowercase.as_str();
+        let named_color_index =
+            NAMED_COLORS.binary_search_by_key(&lowercase_name, |&(name, _rgb)| name);
+        if let Ok(named_color_index) = named_color_index {
+            let (_name, named_rgb) = NAMED_COLORS[named_color_index];
+            let named_color = Rgba::opaque(named_rgb);
+            return Some(named_color);
+        }
+        Self::parse_hex(&lowercase)
+    }
+
+    /// Parse `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa` by first spelling it as `#rrggbbaa`.
+    fn parse_hex(text: &str) -> Option<Self> {
+        let digits = text.strip_prefix('#')?;
+        let has_non_hex_digit = digits.bytes().any(|digit| !digit.is_ascii_hexdigit());
+        if has_non_hex_digit {
+            return None;
+        }
+        let digit_count = digits.len();
+        let is_short_form = SHORT_HEX_DIGIT_COUNTS.contains(&digit_count);
+        let long_digits: String = if is_short_form {
+            digits.chars().flat_map(|digit| [digit, digit]).collect()
+        } else {
+            digits.to_owned()
+        };
+        let is_alpha_omitted = long_digits.len() == RGB_HEX_DIGIT_COUNT;
+        let rgba_digits = if is_alpha_omitted {
+            long_digits + OPAQUE_ALPHA_DIGITS
+        } else {
+            long_digits
+        };
+        let is_diff_rgba_length = rgba_digits.len() != RGBA_HEX_DIGIT_COUNT;
+        if is_diff_rgba_length {
+            return None;
+        }
+        let packed = u32::from_str_radix(&rgba_digits, 16).ok()?;
+        let color = Rgba::from_packed(packed);
+        Some(color)
+    }
+
+    /// Tell whether the color is fully opaque.
+    pub fn is_opaque(self) -> bool {
+        self.alpha == u8::MAX
+    }
+
+    /// Tell whether the color is fully transparent.
+    pub fn is_transparent(self) -> bool {
+        self.alpha == 0
+    }
+}
+
+/// List every CSS named color with its sRGB value, sorted by name.
 pub const NAMED_COLORS: [(&str, Rgb); 148] = [
     ("aliceblue", Rgb::from_packed(0xf0f8ff)),
     ("antiquewhite", Rgb::from_packed(0xfaebd7)),
@@ -158,111 +274,6 @@ pub const NAMED_COLORS: [(&str, Rgb); 148] = [
     ("yellow", Rgb::from_packed(0xffff00)),
     ("yellowgreen", Rgb::from_packed(0x9acd32)),
 ];
-
-/// Holds an 8-bit sRGB color.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Rgb {
-    pub red: u8,
-    pub green: u8,
-    pub blue: u8,
-}
-
-/// Holds an 8-bit sRGB color with straight 8-bit alpha.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Rgba {
-    pub rgb: Rgb,
-    pub alpha: u8,
-}
-
-impl Rgb {
-    pub const fn from_packed(packed: u32) -> Self {
-        Rgb {
-            red: (packed >> 16) as u8,
-            green: (packed >> 8) as u8,
-            blue: packed as u8,
-        }
-    }
-}
-
-impl fmt::Display for Rgb {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let Rgb { red, green, blue } = *self;
-        write!(formatter, "#{red:02x}{green:02x}{blue:02x}")
-    }
-}
-
-impl Rgba {
-    pub const TRANSPARENT: Rgba = Rgba {
-        rgb: Rgb::from_packed(0x000000),
-        alpha: 0,
-    };
-
-    pub const fn opaque(rgb: Rgb) -> Self {
-        Rgba {
-            rgb,
-            alpha: u8::MAX,
-        }
-    }
-
-    pub const fn from_packed(packed: u32) -> Self {
-        let rgb = Rgb::from_packed(packed >> 8);
-        let alpha = packed as u8;
-        Rgba { rgb, alpha }
-    }
-
-    /// Parse a hex color of 3, 4, 6 or 8 digits, a CSS named color or `transparent`, ignoring case.
-    pub fn parse(text: &str) -> Option<Self> {
-        let lowercase = text.to_ascii_lowercase();
-        let is_transparent = lowercase == TRANSPARENT_KEYWORD;
-        if is_transparent {
-            return Some(Rgba::TRANSPARENT);
-        }
-        let named_color_index =
-            NAMED_COLORS.binary_search_by_key(&lowercase.as_str(), |&(name, _rgb)| name);
-        if let Ok(named_color_index) = named_color_index {
-            let (_name, named_rgb) = NAMED_COLORS[named_color_index];
-            let named_color = Rgba::opaque(named_rgb);
-            return Some(named_color);
-        }
-        Self::parse_hex(&lowercase)
-    }
-
-    /// Parse `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa` by first spelling it as `#rrggbbaa`.
-    fn parse_hex(text: &str) -> Option<Self> {
-        let digits = text.strip_prefix('#')?;
-        let has_non_hex_digit = digits.bytes().any(|digit| !digit.is_ascii_hexdigit());
-        if has_non_hex_digit {
-            return None;
-        }
-        let is_short_form = SHORT_HEX_DIGIT_COUNTS.contains(&digits.len());
-        let long_digits: String = if is_short_form {
-            digits.chars().flat_map(|digit| [digit, digit]).collect()
-        } else {
-            digits.to_owned()
-        };
-        let is_alpha_omitted = long_digits.len() == RGB_HEX_DIGIT_COUNT;
-        let rgba_digits = if is_alpha_omitted {
-            long_digits + OPAQUE_ALPHA_DIGITS
-        } else {
-            long_digits
-        };
-        let is_diff_rgba_length = rgba_digits.len() != RGBA_HEX_DIGIT_COUNT;
-        if is_diff_rgba_length {
-            return None;
-        }
-        let packed = u32::from_str_radix(&rgba_digits, 16).ok()?;
-        let color = Rgba::from_packed(packed);
-        Some(color)
-    }
-
-    pub fn is_opaque(self) -> bool {
-        self.alpha == u8::MAX
-    }
-
-    pub fn is_transparent(self) -> bool {
-        self.alpha == 0
-    }
-}
 
 #[cfg(test)]
 mod tests {

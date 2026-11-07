@@ -1,51 +1,23 @@
 //! Render for browsers: colors as custom properties of a light and a dark palette, labels as text in the viewer's font, the runtime embedded.
 
-use kurbo::Affine;
-
 use super::Profile;
 use crate::geometry::Label;
-use crate::metrics::{BundledFont, TextAnchor};
+use crate::metrics::TextAnchor;
 use crate::render::contract::RuntimeContract;
 use crate::render::theme::{DARK_PALETTE, LIGHT_PALETTE, Token};
 use crate::render::writer::css::{
     CssDeclaration, CssIdentifier, CssSelector, CssValue, StyleSheet,
 };
-use crate::render::writer::{Attributes, Matrix, SvgWriter};
+use crate::render::writer::{Attributes, SvgWriter};
 
+/// Set labels in Inter, else in the viewer's closest system sans-serif.
 const LABEL_FONT_FAMILY_STACK: &str =
     "Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif";
-const LIGHT_SCHEME_OPENING: &str = "@media (prefers-color-scheme: light){\n";
-const MEDIA_CLOSING: &str = "}\n";
+/// Match viewers who prefer the light color scheme.
+const LIGHT_SCHEME_QUERY: &str = "(prefers-color-scheme: light)";
 
-/// Writes tokens as custom properties, dark unless the viewer prefers light, sets labels as viewer-font text, and embeds the runtime that navigates levels.
-#[derive(Default)]
+/// Renders the interactive profile: tokens as custom properties, dark unless the viewer prefers light, labels as viewer-font text, the runtime that navigates levels embedded.
 pub(crate) struct Interactive;
-
-impl Interactive {
-    pub(crate) const RUNTIME_SCRIPT: &'static str = include_str!("../../../runtime/svugy.js");
-    pub(crate) const RUNTIME_STYLE: &'static str = include_str!("../../../runtime/svugy.css");
-
-    /// Build the style sheet: both palettes as custom properties of the root, the label font inherited from it, then the runtime's rules.
-    fn style_sheet() -> StyleSheet {
-        let root = CssSelector::attribute(RuntimeContract::CONTRACT);
-        let font_family_property = CssIdentifier::escape("font-family");
-        let font_family_stack = CssValue::from_static(LABEL_FONT_FAMILY_STACK);
-        let font_family = CssDeclaration {
-            property: font_family_property,
-            value: font_family_stack,
-        };
-        let mut dark_declarations = DARK_PALETTE.custom_property_declarations();
-        dark_declarations.push(font_family);
-        let light_declarations = LIGHT_PALETTE.custom_property_declarations();
-        let mut style_sheet = StyleSheet::new();
-        style_sheet.push_rule(&root, &dark_declarations);
-        style_sheet.push_static(LIGHT_SCHEME_OPENING);
-        style_sheet.push_rule(&root, &light_declarations);
-        style_sheet.push_static(MEDIA_CLOSING);
-        style_sheet.push_static(Self::RUNTIME_STYLE);
-        style_sheet
-    }
-}
 
 impl Profile for Interactive {
     fn token_value(&self, token: Token) -> CssValue {
@@ -54,13 +26,7 @@ impl Profile for Interactive {
     }
 
     /// Set `label` as `<text>` in the font family it was measured in, its `textLength` pinned to the measured width so a drifting viewer font still fits.
-    fn write_label(
-        &self,
-        writer: &mut SvgWriter,
-        label: &Label,
-        _font: &BundledFont,
-        presentation: Attributes,
-    ) {
+    fn write_label(&self, writer: &mut SvgWriter, label: &Label, presentation: Attributes) {
         let spec = label.text_spec();
         let anchor_keyword = label.anchor.svg_keyword();
         let font_weight = f64::from(spec.weight);
@@ -70,19 +36,13 @@ impl Profile for Interactive {
             .with_text("text-anchor", anchor_keyword)
             .with_number("font-size", spec.size)
             .with_number("font-weight", font_weight)
-            .with_number("textLength", label.size.width);
+            .with_number("textLength", label.size.width)
+            .with_transform(label.plane);
         let is_letter_spaced = spec.letter_spacing != 0.0;
         if is_letter_spaced {
             text_attributes = text_attributes.with_number("letter-spacing", spec.letter_spacing);
         }
-        let is_on_projected_plane = label.plane != Affine::IDENTITY;
-        if is_on_projected_plane {
-            let plane_transform = Matrix(label.plane).to_string();
-            text_attributes = text_attributes.with_text("transform", &plane_transform);
-        }
-        writer.open_element("text", &text_attributes);
-        writer.text(&label.text);
-        writer.close_element();
+        writer.text_element("text", &text_attributes, &label.text);
     }
 
     fn write_live_only(
@@ -109,5 +69,31 @@ impl TextAnchor {
             TextAnchor::Start => "start",
             TextAnchor::Middle => "middle",
         }
+    }
+}
+
+impl Interactive {
+    /// Embed the runtime script that navigates levels.
+    pub(crate) const RUNTIME_SCRIPT: &'static str = include_str!("../../../runtime/svugy.js");
+    /// Embed the runtime style sheet.
+    pub(crate) const RUNTIME_STYLE: &'static str = include_str!("../../../runtime/svugy.css");
+
+    /// Build the style sheet: both palettes as custom properties of the root, the label font inherited from it, then the runtime's rules.
+    fn style_sheet() -> StyleSheet {
+        let root = CssSelector::attribute(RuntimeContract::CONTRACT);
+        let font_family_property = CssIdentifier::from_static("font-family");
+        let font_family_stack = CssValue::from_static(LABEL_FONT_FAMILY_STACK);
+        let font_family = CssDeclaration {
+            property: font_family_property,
+            value: font_family_stack,
+        };
+        let mut dark_declarations = DARK_PALETTE.custom_property_declarations();
+        dark_declarations.push(font_family);
+        let light_declarations = LIGHT_PALETTE.custom_property_declarations();
+        let mut style_sheet = StyleSheet::new();
+        style_sheet.push_rule(&root, &dark_declarations);
+        style_sheet.push_media_rule(LIGHT_SCHEME_QUERY, &root, &light_declarations);
+        style_sheet.push_static(Self::RUNTIME_STYLE);
+        style_sheet
     }
 }

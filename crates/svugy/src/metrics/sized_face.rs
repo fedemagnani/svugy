@@ -3,6 +3,7 @@ use ttf_parser::{Face, GlyphId, OutlineBuilder};
 
 use super::{TextAnchor, TextSize};
 
+/// Stands in for every character the face has no glyph for.
 const NOTDEF_GLYPH: GlyphId = GlyphId(0);
 
 /// Places the glyphs of one face at one pixel size along their advances.
@@ -12,19 +13,25 @@ pub(super) struct SizedFace<'f> {
 }
 
 impl<'f> SizedFace<'f> {
+    /// Size `face` at `size` pixels per em.
     pub(super) fn new(face: &'f Face<'static>, size: f64) -> Self {
-        let units_per_em = f64::from(face.units_per_em());
+        let raw_units_per_em = face.units_per_em();
+        let units_per_em = f64::from(raw_units_per_em);
         Self {
             face,
             pixels_per_unit: size / units_per_em,
         }
     }
 
+    /// Measure the line box of `text` set with `letter_spacing`.
     pub(super) fn measure(&self, text: &str, letter_spacing: f64) -> TextSize {
         let width = self.label_width(text, letter_spacing);
-        let ascender_units = f64::from(self.face.ascender());
-        let descender_units = f64::from(self.face.descender());
-        let line_gap_units = f64::from(self.face.line_gap());
+        let raw_ascender_units = self.face.ascender();
+        let raw_descender_units = self.face.descender();
+        let raw_line_gap_units = self.face.line_gap();
+        let ascender_units = f64::from(raw_ascender_units);
+        let descender_units = f64::from(raw_descender_units);
+        let line_gap_units = f64::from(raw_line_gap_units);
         let line_height_units = ascender_units - descender_units + line_gap_units;
         let baseline_from_top_units = ascender_units + line_gap_units / 2.0;
         TextSize {
@@ -34,6 +41,7 @@ impl<'f> SizedFace<'f> {
         }
     }
 
+    /// Outline `text` set with `letter_spacing` as glyph paths, anchored at `baseline_origin` by `anchor`.
     pub(super) fn outline(
         &self,
         text: &str,
@@ -55,11 +63,13 @@ impl<'f> SizedFace<'f> {
         label_path
     }
 
+    /// Return the width of `text` set with `letter_spacing`, from the first pen position to the last glyph's advance.
     fn label_width(&self, text: &str, letter_spacing: f64) -> f64 {
         let last_glyph = self.place_glyphs(text, letter_spacing).last();
         last_glyph.map_or(0.0, |glyph| glyph.pen_x + glyph.advance)
     }
 
+    /// Place the glyphs of `text` along their advances, each spaced `letter_spacing` past the last.
     fn place_glyphs<'t>(
         &'t self,
         text: &'t str,
@@ -113,8 +123,11 @@ impl<'p> GlyphPen<'p> {
         }
     }
 
+    /// Map font units (x, y) to pixels.
     fn to_pixels(&self, x: f32, y: f32) -> Point {
-        let font_point = Point::new(f64::from(x), f64::from(y));
+        let font_x = f64::from(x);
+        let font_y = f64::from(y);
+        let font_point = Point::new(font_x, font_y);
         self.font_units_to_pixels * font_point
     }
 }

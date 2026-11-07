@@ -11,26 +11,27 @@ pub(super) struct DepthOrder<'a> {
 }
 
 impl<'a> DepthOrder<'a> {
-    pub(super) fn new(footprints: &'a BTreeMap<ElementPath, Rect>) -> Self {
+    /// Return every path of `footprints` back to front: each next one is the first in path order that no pending footprint must precede, else the first pending.
+    pub(super) fn back_to_front(
+        footprints: &'a BTreeMap<ElementPath, Rect>,
+    ) -> Vec<&'a ElementPath> {
         let pending = footprints
             .iter()
             .map(|(path, footprint)| (path, *footprint))
             .collect();
-        Self { pending }
-    }
-
-    /// Return every path back to front: each next one is the first in path order that no pending footprint must precede.
-    pub(super) fn back_to_front(mut self) -> Vec<&'a ElementPath> {
-        let mut ordered = Vec::with_capacity(self.pending.len());
-        while !self.pending.is_empty() {
-            let unobstructed_index = self.first_unobstructed_index();
+        let mut depth_order = Self { pending };
+        let footprint_count = footprints.len();
+        let mut ordered = Vec::with_capacity(footprint_count);
+        for _ordered_count in 0..footprint_count {
+            let unobstructed_index = depth_order.first_unobstructed_index();
             let next_index = unobstructed_index.unwrap_or(0);
-            let (path, _footprint) = self.pending.remove(next_index);
+            let (path, _footprint) = depth_order.pending.remove(next_index);
             ordered.push(path);
         }
         ordered
     }
 
+    /// Return the index of the first pending footprint no other pending one must be painted before.
     fn first_unobstructed_index(&self) -> Option<usize> {
         let mut indices = 0..self.pending.len();
         indices.find(|&candidate_index| self.is_unobstructed(candidate_index))
@@ -50,7 +51,7 @@ impl<'a> DepthOrder<'a> {
     }
 
     /// Tell whether some sight line, a ground line x − y = k, meets `behind` before `front`: their x − y spans overlap and `behind` lies wholly at lower x or lower y.
-    pub(super) fn must_paint_before(behind: Rect, front: Rect) -> bool {
+    fn must_paint_before(behind: Rect, front: Rect) -> bool {
         let behind_starts_before_front_ends = behind.x0 - behind.y1 < front.x1 - front.y0;
         let front_starts_before_behind_ends = front.x0 - front.y1 < behind.x1 - behind.y0;
         let is_screen_x_overlap =
@@ -78,7 +79,7 @@ mod tests {
     }
 
     fn assert_no_footprint_painted_over_a_nearer_one(footprints: &BTreeMap<ElementPath, Rect>) {
-        let order = DepthOrder::new(footprints).back_to_front();
+        let order = DepthOrder::back_to_front(footprints);
         assert_eq!(order.len(), footprints.len());
         for (earlier_index, earlier) in order.iter().enumerate() {
             for later in &order[earlier_index + 1..] {
@@ -98,7 +99,7 @@ mod tests {
             ("a_small_front", Rect::new(10.0, 10.0, 20.0, 20.0)),
             ("z_long_back", Rect::new(0.0, 0.0, 100.0, 10.0)),
         ]);
-        let order = DepthOrder::new(&set).back_to_front();
+        let order = DepthOrder::back_to_front(&set);
         assert_eq!(names(&order), ["z_long_back", "a_small_front"]);
         assert_no_footprint_painted_over_a_nearer_one(&set);
     }
@@ -109,7 +110,7 @@ mod tests {
             ("a_long_front", Rect::new(0.0, 10.0, 100.0, 20.0)),
             ("z_small_back", Rect::new(50.0, 0.0, 60.0, 10.0)),
         ]);
-        let order = DepthOrder::new(&set).back_to_front();
+        let order = DepthOrder::back_to_front(&set);
         assert_eq!(names(&order), ["z_small_back", "a_long_front"]);
         assert_no_footprint_painted_over_a_nearer_one(&set);
     }
@@ -166,8 +167,8 @@ mod tests {
             .map(|(name, rect)| (name.as_str(), *rect))
             .collect();
         let set = footprints(&borrowed);
-        let first_run = names(&DepthOrder::new(&set).back_to_front());
-        let second_run = names(&DepthOrder::new(&set).back_to_front());
+        let first_run = names(&DepthOrder::back_to_front(&set));
+        let second_run = names(&DepthOrder::back_to_front(&set));
         assert_eq!(first_run, second_run);
         assert_no_footprint_painted_over_a_nearer_one(&set);
     }

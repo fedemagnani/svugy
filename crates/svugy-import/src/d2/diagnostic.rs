@@ -5,9 +5,9 @@ use std::fmt;
 use miette::{Diagnostic, SourceSpan};
 use thiserror::Error;
 
-use super::ast::EdgeOperator;
+use super::ast::{EdgeOperator, Span};
 
-/// Reject source text d2 cannot read or compile; the statement it sits in is dropped.
+/// Report a syntax error: source text d2 cannot read or compile, whose statement is dropped.
 #[derive(Debug, Clone, PartialEq, Eq, Error, Diagnostic)]
 #[error("{message}")]
 #[diagnostic(code(svugy::d2::syntax), severity(Error))]
@@ -32,7 +32,7 @@ pub struct UnsupportedConstruct {
 pub enum Construct {
     Variables,
     Classes,
-    Board(String),
+    Board(&'static str),
     Import,
     Glob,
     EdgeReference,
@@ -41,28 +41,57 @@ pub enum Construct {
     Null,
     Array,
     ArrayMap,
-    ReservedField(String),
+    ReservedField(&'static str),
     FieldForm(String),
     DeclarationInEdgeMap,
     UnmappedShape(String),
     UnmappedDirection(String),
     ArrowheadForm(EdgeOperator),
-    FieldOnEdge(String),
-    FieldOnRoot(String),
+    FieldOnEdge(&'static str),
+    FieldOnRoot(&'static str),
     UnknownStyleKey(String),
 }
 
-impl SyntaxError {
-    pub(crate) fn new(message: String, span: impl Into<SourceSpan>) -> Self {
-        let span = span.into();
-        Self { message, span }
-    }
+/// Record the diagnostics, every error and warning, the importer's stages raise, handed from one stage to the next.
+#[derive(Debug, Default)]
+pub(crate) struct Diagnostics {
+    errors: Vec<SyntaxError>,
+    warnings: Vec<UnsupportedConstruct>,
 }
 
-impl UnsupportedConstruct {
-    pub(crate) fn new(construct: Construct, span: impl Into<SourceSpan>) -> Self {
-        let span = span.into();
-        Self { construct, span }
+impl Diagnostics {
+    /// Create diagnostics carrying on the `errors` and `warnings` an earlier stage recorded.
+    pub(crate) fn from_parts(
+        errors: Vec<SyntaxError>,
+        warnings: Vec<UnsupportedConstruct>,
+    ) -> Self {
+        Self { errors, warnings }
+    }
+
+    /// Record a warning that `construct` at `span` is ignored.
+    pub(crate) fn record_warning(&mut self, construct: Construct, span: Span) {
+        let span = SourceSpan::from(span);
+        let warning = UnsupportedConstruct { construct, span };
+        self.warnings.push(warning);
+    }
+
+    /// Record a syntax error of `message` at `span`.
+    pub(crate) fn record_error(&mut self, message: impl Into<String>, span: Span) {
+        let message = message.into();
+        let span = SourceSpan::from(span);
+        let error = SyntaxError { message, span };
+        self.errors.push(error);
+    }
+
+    /// Sort the errors and the warnings each by where they start in the source, ties kept in recording order.
+    pub(crate) fn sort_by_source_offset(&mut self) {
+        self.errors.sort_by_key(|error| error.span.offset());
+        self.warnings.sort_by_key(|warning| warning.span.offset());
+    }
+
+    /// Split the diagnostics into their errors and their warnings.
+    pub(crate) fn into_parts(self) -> (Vec<SyntaxError>, Vec<UnsupportedConstruct>) {
+        (self.errors, self.warnings)
     }
 }
 
@@ -93,5 +122,19 @@ impl fmt::Display for Construct {
             Self::FieldOnRoot(keyword) => write!(formatter, "the field `{keyword}` on the root"),
             Self::UnknownStyleKey(key) => write!(formatter, "the style key `{key}`"),
         }
+    }
+}
+
+/// Locate a labelled diagnostic by where its first label starts in the source.
+pub trait LabelledDiagnostic {
+    /// Return where the diagnostic's first label starts, or `None` when it has no label.
+    fn first_label_offset(&self) -> Option<usize>;
+}
+
+impl<D: Diagnostic + ?Sized> LabelledDiagnostic for D {
+    fn first_label_offset(&self) -> Option<usize> {
+        let mut labels = self.labels().into_iter().flatten();
+        let first_label = labels.next();
+        first_label.map(|label| label.offset())
     }
 }

@@ -1,10 +1,11 @@
 //! Prove d2 lowering merges repeated keys, declares endpoints and warns on every construct the model cannot hold.
 
 use miette::SourceSpan;
-use svugy_import::d2::{Construct, D2Document, D2Import, EdgeOperator};
-use svugy_model::model::{Model, Shape};
+use svugy_import::d2::{Construct, D2Import, D2Parse, EdgeOperator};
+use svugy_model::legend::DashKey;
+use svugy_model::model::{Edge, EdgeId, Model, Shape, Traveler};
 use svugy_model::path::ElementPath;
-use svugy_model::validate::Problem;
+use svugy_model::problem::Problem;
 
 const NESTING: &str = include_str!("fixtures/d2/nesting.d2");
 const EDGES: &str = include_str!("fixtures/d2/edges.d2");
@@ -79,8 +80,8 @@ fn fixtures_inside_the_mapped_subset_lower_without_diagnostics() {
         .into_iter()
         .map(|source| {
             let import = import(source);
-            let is_model_sound = import.admission.model.is_some();
             let diagnostic_count = import.diagnostics().len();
+            let is_model_sound = import.admission.model.is_some();
             (diagnostic_count, is_model_sound)
         })
         .collect();
@@ -106,11 +107,8 @@ fn unmapped_constructs_warn_at_their_source_text() {
             (Construct::UnmappedShape("queue".to_owned()), "queue"),
             (Construct::UnmappedDirection("left".to_owned()), "left"),
             (Construct::ArrowheadForm(EdgeOperator::Bidirectional), "<->"),
-            (Construct::FieldOnEdge("shape".to_owned()), "circle"),
-            (
-                Construct::FieldOnEdge("link".to_owned()),
-                "https://example.com"
-            ),
+            (Construct::FieldOnEdge("shape"), "circle"),
+            (Construct::FieldOnEdge("link"), "https://example.com"),
             (Construct::ArrowheadForm(EdgeOperator::Undirected), "--"),
             (Construct::UnmappedDirection("down".to_owned()), "down"),
             (Construct::SpecialShape("sql_table".to_owned()), "sql_table"),
@@ -139,7 +137,7 @@ fn parse_errors_and_warnings_survive_lowering_in_source_order() {
         warning_constructs,
         [
             Construct::UnmappedShape("queue".to_owned()),
-            Construct::ReservedField("icon".to_owned()),
+            Construct::ReservedField("icon"),
         ]
     );
 }
@@ -158,7 +156,8 @@ fn unknown_style_keys_warn_and_mistyped_style_values_reach_the_model_report() {
             (warning.construct.clone(), text)
         })
         .collect();
-    let report = import.admission.report;
+    let admission = import.admission;
+    let report = &admission.report;
     let mismatches: Vec<(String, &str, &str)> = report
         .problems()
         .iter()
@@ -180,7 +179,7 @@ fn unknown_style_keys_warn_and_mistyped_style_values_reach_the_model_report() {
             "a.style.foo: x"
         )]
     );
-    assert!(import.admission.model.is_none());
+    assert!(admission.model.is_none());
     assert!(report.has_errors());
     assert_eq!(report.problems().len(), 1);
     assert_eq!(mismatches, [("element `b`".to_owned(), "notacolor", "b")]);
@@ -236,8 +235,8 @@ fn misplaced_or_overreaching_parent_references_are_errors() {
 
     let import = import(source);
 
-    let errors: Vec<(&str, &str)> = import
-        .errors
+    let syntax_errors = import.errors.to_vec();
+    let errors: Vec<(&str, &str)> = syntax_errors
         .iter()
         .map(|error| {
             let text = text_at(source, error.span);
@@ -298,8 +297,9 @@ fn the_svugy_variable_carries_a_height_that_validation_then_bounds() {
 
     let import = import(source);
 
-    let impossible_heights: Vec<(String, f64, &str)> = import
-        .admission
+    let is_free_of_syntax_errors = import.errors.is_empty();
+    let admission = import.admission;
+    let impossible_heights: Vec<(String, f64, &str)> = admission
         .report
         .problems()
         .iter()
@@ -316,8 +316,8 @@ fn the_svugy_variable_carries_a_height_that_validation_then_bounds() {
             (element, impossible_height.height, text)
         })
         .collect();
-    assert!(import.errors.is_empty());
-    assert!(import.admission.model.is_none());
+    assert!(is_free_of_syntax_errors);
+    assert!(admission.model.is_none());
     assert_eq!(impossible_heights, [("flat".to_owned(), 0.0, "flat")]);
     let sound_source = source.replace("height: 0", "height: 7");
     let model = import_model(&sound_source);
@@ -342,8 +342,8 @@ fn a_malformed_height_is_a_spanned_error_that_drops_only_the_height() {
 
     let import = import(source);
 
-    let errors: Vec<(&str, &str)> = import
-        .errors
+    let syntax_errors = import.errors.to_vec();
+    let errors: Vec<(&str, &str)> = syntax_errors
         .iter()
         .map(|error| {
             let text = text_at(source, error.span);
@@ -392,8 +392,8 @@ fn the_root_carrier_rejects_element_attributes_and_elements_reject_a_subtitle() 
 
     let import = import(source);
 
-    let errors: Vec<(&str, &str)> = import
-        .errors
+    let syntax_errors = import.errors.to_vec();
+    let errors: Vec<(&str, &str)> = syntax_errors
         .iter()
         .map(|error| {
             let text = text_at(source, error.span);
@@ -431,10 +431,7 @@ fn the_root_carrier_rejects_element_attributes_and_elements_reject_a_subtitle() 
     );
     assert_eq!(
         warnings,
-        [(
-            Construct::FieldOnRoot("shape".to_owned()),
-            "shape: cylinder"
-        )]
+        [(Construct::FieldOnRoot("shape"), "shape: cylinder")]
     );
     assert_eq!(model.title(), None);
     assert_eq!(model.subtitle(), None);
@@ -471,13 +468,14 @@ fn malformed_carrier_values_are_errors_and_the_rest_of_the_carrier_lands() {
 }
 b.vars: { svugy: { shape: slab; position.x: 4 } }
 vars: { svugy: { caption: nowhere } }
-e -> f: { vars: { svugy: { caption: edge } } }
+e -> f: { vars: { svugy: { caption: edge; traveler: pigeon } } }
+g -> h: { vars: { svugy: { traveler: Envelope } } }
 ";
 
     let import = import(source);
 
-    let errors: Vec<(&str, &str)> = import
-        .errors
+    let syntax_errors = import.errors.to_vec();
+    let errors: Vec<(&str, &str)> = syntax_errors
         .iter()
         .map(|error| {
             let text = text_at(source, error.span);
@@ -529,15 +527,17 @@ e -> f: { vars: { svugy: { caption: edge } } }
                 "`svugy.caption` is not a svugy attribute of the root: expected `svugy.subtitle` or `svugy.legend` with `title`, `entries`, `dashes` or `badges`, and the title is the root's own `label`",
                 "caption: nowhere"
             ),
+            (
+                "`svugy.caption` is not a svugy attribute of an edge: expected `svugy.traveler`",
+                "caption: edge"
+            ),
+            (
+                "`pigeon` is not a svugy traveler: expected `dot`, `envelope`, `parcel`, `document` or `key`",
+                "pigeon"
+            ),
         ]
     );
-    assert_eq!(
-        warnings,
-        [
-            (Construct::Variables, "color: red"),
-            (Construct::FieldOnEdge("vars".to_owned()), "caption: edge"),
-        ]
-    );
+    assert_eq!(warnings, [(Construct::Variables, "color: red")]);
     assert_eq!(model.title(), None);
     assert_eq!(model.subtitle(), None);
     assert_eq!(a.caption(), Some("kept"));
@@ -545,6 +545,16 @@ e -> f: { vars: { svugy: { caption: edge } } }
     assert_eq!(a.position(), None);
     assert_eq!(b.shape(), Some(Shape::Slab));
     assert_eq!(b.position(), None);
+    let e = ElementPath::from_segments(["e"]);
+    let f = ElementPath::from_segments(["f"]);
+    let g = ElementPath::from_segments(["g"]);
+    let h = ElementPath::from_segments(["h"]);
+    let e_to_f = EdgeId::new(e, f, 0);
+    let g_to_h = EdgeId::new(g, h, 0);
+    let e_to_f_traveler = model.edge(&e_to_f).and_then(Edge::traveler);
+    let g_to_h_traveler = model.edge(&g_to_h).and_then(Edge::traveler);
+    assert_eq!(e_to_f_traveler, None);
+    assert_eq!(g_to_h_traveler, Some(Traveler::Envelope));
 }
 
 #[test]
@@ -673,14 +683,15 @@ vars: { svugy: { legend: { entries: ["kept"; [nested]; { map: 1 }] } } }
     let sqlite_path = ElementPath::from_segments(["desk", "sqlite"]);
     let sqlite = model.element(&sqlite_path).expect("sqlite is declared");
     assert_eq!(legend.entries(), ["kept"]);
-    assert_eq!(legend.dashes().keys().collect::<Vec<_>>(), ["2"]);
+    let dash_keys: Vec<String> = legend.dashes().keys().map(DashKey::to_string).collect();
+    assert_eq!(dash_keys, ["2"]);
     assert_eq!(legend.badge_description(&sqlite_path), Some("kept"));
     assert!(!sqlite.is_badge_target());
     assert_eq!(sqlite.caption(), None);
 }
 
 fn import(source: &str) -> D2Import {
-    let parsed = D2Document::parse(source);
+    let parsed = D2Parse::parse(source);
     parsed.lower()
 }
 

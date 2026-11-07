@@ -4,8 +4,12 @@ use ttf_parser::Face;
 use super::sized_face::SizedFace;
 use super::{TextAnchor, TextMeasure, TextOutline, TextSize, TextSpec};
 
+/// Name the lightest weight of the middle band CSS matches within first, the normal weight.
+const MIDDLE_BAND_LIGHTEST_WEIGHT: u16 = 400;
+/// Name the heaviest weight of the middle band CSS matches within first.
 const MIDDLE_BAND_HEAVIEST_WEIGHT: u16 = 500;
 
+/// Bundles every Inter face with its CSS weight, by ascending weight.
 const INTER_BY_ASCENDING_WEIGHT: [(u16, &[u8]); 4] = [
     (400, include_bytes!("../../assets/fonts/Inter-Regular.ttf")),
     (500, include_bytes!("../../assets/fonts/Inter-Medium.ttf")),
@@ -13,12 +17,13 @@ const INTER_BY_ASCENDING_WEIGHT: [(u16, &[u8]); 4] = [
     (700, include_bytes!("../../assets/fonts/Inter-Bold.ttf")),
 ];
 
-/// Sets every label in the bundled static Inter faces, whatever family is requested.
+/// Sets every label in the bundled static Inter faces.
 pub(crate) struct BundledFont {
     faces_by_ascending_weight: Vec<WeightedFace>,
 }
 
 impl BundledFont {
+    /// Parse every bundled Inter face, by ascending weight.
     pub(crate) fn new() -> Self {
         let faces_by_ascending_weight = INTER_BY_ASCENDING_WEIGHT
             .iter()
@@ -48,6 +53,7 @@ impl TextOutline for BundledFont {
 }
 
 impl BundledFont {
+    /// Size the face matching `spec`'s weight at `spec`'s size.
     fn sized_face_matching(&self, spec: &TextSpec) -> SizedFace<'_> {
         let weighted_face = self.face_matching_css_weight(spec.weight);
         SizedFace::new(&weighted_face.face, spec.size)
@@ -70,11 +76,11 @@ impl BundledFont {
             faces.find(|face| middle_band_from_requested.contains(&face.weight))
         };
         let matched_face = match requested_weight {
-            0..400 => lighter_or_equal().or_else(heavier_or_equal),
-            400..=MIDDLE_BAND_HEAVIEST_WEIGHT => within_middle_band()
+            0..MIDDLE_BAND_LIGHTEST_WEIGHT => lighter_or_equal().or_else(heavier_or_equal),
+            MIDDLE_BAND_LIGHTEST_WEIGHT..=MIDDLE_BAND_HEAVIEST_WEIGHT => within_middle_band()
                 .or_else(lighter_or_equal)
                 .or_else(heavier_or_equal),
-            _ => heavier_or_equal().or_else(lighter_or_equal),
+            _heavier_than_middle_band => heavier_or_equal().or_else(lighter_or_equal),
         };
         matched_face.expect("a font has at least one face")
     }
@@ -107,7 +113,7 @@ mod tests {
         for &size in sizes {
             for (weight, _face_bytes) in INTER_BY_ASCENDING_WEIGHT {
                 for label in LABELS {
-                    let spec = TextSpec::new(label, "Inter", weight, size);
+                    let spec = TextSpec::new(label, weight, size);
                     let measured = font.measure(&spec);
                     let row = format!("{size:.0}px {weight} {label:?} {:.3}\n", measured.width);
                     table.push_str(&row);
@@ -222,7 +228,7 @@ mod tests {
     #[test]
     fn letter_spacing_widens_each_gap_between_characters() {
         let font = BundledFont::new();
-        let unspaced = TextSpec::new("Order API", "Inter", 400, 12.0);
+        let unspaced = TextSpec::new("Order API", 400, 12.0);
         let spaced = unspaced.with_letter_spacing(0.5);
 
         let unspaced_width = font.measure(&unspaced).width;
@@ -236,7 +242,7 @@ mod tests {
     #[test]
     fn line_box_comes_from_the_face_metrics() {
         let font = BundledFont::new();
-        let spec = TextSpec::new("Order API", "Inter", 600, 12.0);
+        let spec = TextSpec::new("Order API", 600, 12.0);
 
         let measured = font.measure(&spec);
 
@@ -250,7 +256,7 @@ mod tests {
     #[test]
     fn outline_spans_the_measured_width_around_its_anchor() {
         let font = BundledFont::new();
-        let spec = TextSpec::new("Order API", "Inter", 500, 14.0);
+        let spec = TextSpec::new("Order API", 500, 14.0);
         let baseline_origin = Point::new(100.0, 50.0);
 
         let measured_width = font.measure(&spec).width;

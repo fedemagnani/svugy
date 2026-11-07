@@ -22,8 +22,9 @@ impl GroundGrid {
 
     /// Cover `boundary` with whole cells, plus one more on every side, in the smallest cell that keeps both axes within the line cap.
     pub(super) fn covering(boundary: Rect) -> Self {
+        let example_cell = Some(Self::EXAMPLE_CELL);
         let cells_doubling_from_the_example =
-            iter::successors(Some(Self::EXAMPLE_CELL), |cell| Some(cell * 2.0));
+            iter::successors(example_cell, |cell| Some(cell * 2.0));
         let mut grids =
             cells_doubling_from_the_example.map(|cell| Self::covering_in_cells(boundary, cell));
         grids
@@ -34,25 +35,32 @@ impl GroundGrid {
     /// Return the projected lines of constant x, west to east, then those of constant y, north to south.
     pub(super) fn lines(&self) -> Vec<Line> {
         let ground = IsometricProjection::horizontal_plane_at(0.0);
-        let north_y = self.cell_coordinate(*self.rows.start());
-        let south_y = self.cell_coordinate(*self.rows.end());
-        let west_x = self.cell_coordinate(*self.columns.start());
-        let east_x = self.cell_coordinate(*self.columns.end());
+        let first_row = *self.rows.start();
+        let last_row = *self.rows.end();
+        let first_column = *self.columns.start();
+        let last_column = *self.columns.end();
+        let north_y = self.cell_coordinate(first_row);
+        let south_y = self.cell_coordinate(last_row);
+        let west_x = self.cell_coordinate(first_column);
+        let east_x = self.cell_coordinate(last_column);
         let constant_x_lines = self.columns.clone().map(|column| {
             let x = self.cell_coordinate(column);
             let north_end = Point::new(x, north_y);
             let south_end = Point::new(x, south_y);
-            ground * Line::new(north_end, south_end)
+            let plan_line = Line::new(north_end, south_end);
+            ground * plan_line
         });
         let constant_y_lines = self.rows.clone().map(|row| {
             let y = self.cell_coordinate(row);
             let west_end = Point::new(west_x, y);
             let east_end = Point::new(east_x, y);
-            ground * Line::new(west_end, east_end)
+            let plan_line = Line::new(west_end, east_end);
+            ground * plan_line
         });
         constant_x_lines.chain(constant_y_lines).collect()
     }
 
+    /// Cover `boundary` with whole cells `cell` wide, plus one more on every side.
     fn covering_in_cells(boundary: Rect, cell: f64) -> Self {
         let first_column = Self::cell_index_at_or_below(boundary.x0, cell) - 1;
         let last_column = Self::cell_index_at_or_above(boundary.x1, cell) + 1;
@@ -65,6 +73,7 @@ impl GroundGrid {
         }
     }
 
+    /// Tell whether neither axis rules more lines than the cap.
     fn is_within_line_cap(&self) -> bool {
         let column_line_count = self.columns.end() - self.columns.start() + 1;
         let row_line_count = self.rows.end() - self.rows.start() + 1;
@@ -73,16 +82,19 @@ impl GroundGrid {
         is_column_count_within_cap && is_row_count_within_cap
     }
 
+    /// Return ⌊coordinate / cell⌋, the index of the cell line at or below `coordinate`.
     fn cell_index_at_or_below(coordinate: f64, cell: f64) -> i64 {
         let cells = coordinate / cell;
         cells.floor() as i64
     }
 
+    /// Return ⌈coordinate / cell⌉, the index of the cell line at or above `coordinate`.
     fn cell_index_at_or_above(coordinate: f64, cell: f64) -> i64 {
         let cells = coordinate / cell;
         cells.ceil() as i64
     }
 
+    /// Return the plan coordinate of cell line `index`.
     fn cell_coordinate(&self, index: i64) -> f64 {
         index as f64 * self.cell
     }

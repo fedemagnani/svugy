@@ -7,11 +7,18 @@ use svugy_model::color::{Rgb, Rgba};
 
 use crate::render::writer::css::{CssDeclaration, CssIdentifier, CssValue};
 
+/// Dim a base into its left face's shade.
 const LEFT_FACE_DIMMING: f64 = 0.835;
+/// Dim a base into its right face's shade.
 const RIGHT_FACE_DIMMING: f64 = 0.72;
-const CSS_CUSTOM_PROPERTY_PREFIX: &str = "--svugy-";
+/// Bound from below the Oklab lightness of a base light enough for dark ink.
+const LIGHT_BASE_LIGHTNESS: f64 = 0.7;
+/// Dim a light base into the dark ink of its labels.
+const DARK_INK_DIMMING: f64 = 0.25;
+/// Ink the labels of a dark base in white.
+const LIGHT_INK: Rgb = Rgb::from_packed(0xffffff);
 
-/// Names a themed color: a flat role, or a face or the ink of a shaded surface.
+/// Names a theme token: a flat color role, or a face or the ink of a shaded surface.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Token {
     Canvas,
@@ -33,7 +40,7 @@ pub(crate) enum Surface {
     ContainerBlue,
 }
 
-/// Holds the base color of every token for one color scheme.
+/// Holds one color scheme's palette: the base color of every token.
 pub(crate) struct Palette {
     canvas: Rgb,
     grid_line: Rgb,
@@ -45,10 +52,18 @@ pub(crate) struct Palette {
     container_blue: SurfaceColors,
 }
 
+/// Holds the colors of one surface: the base its faces are shaded from and the ink of its labels.
 #[derive(Clone, Copy)]
 struct SurfaceColors {
     base: Rgb,
     ink: Rgb,
+}
+
+/// Holds the colors a solid shaded from one authored base is drawn in: its face shades and the ink of its labels.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct BaseShades {
+    pub(crate) faces: FaceShades,
+    pub(crate) ink: Rgb,
 }
 
 /// Holds the top, left and right face shades of one base color.
@@ -71,7 +86,7 @@ pub(crate) const DARK_PALETTE: Palette = Palette {
     container_blue: SurfaceColors::new(0x1b2436, 0x8aa0c8),
 };
 
-/// The dark palette mirrored in Oklab lightness (L ↦ 1.13 − L, hue kept).
+/// Paint every token for a light canvas, mirroring the dark palette in Oklab lightness: L ↦ 1.13 − L, hue kept.
 pub(crate) const LIGHT_PALETTE: Palette = Palette {
     canvas: Rgb::from_packed(0xf6f8ff),
     grid_line: Rgb::from_packed(0xe1e4f4),
@@ -84,7 +99,7 @@ pub(crate) const LIGHT_PALETTE: Palette = Palette {
 };
 
 impl Token {
-    /// Lists every token in a fixed order, for emitting custom-property declarations.
+    /// List every token in a fixed order, for emitting custom-property declarations.
     pub(crate) fn all() -> Vec<Token> {
         let flat_tokens = [
             Token::Canvas,
@@ -105,50 +120,56 @@ impl Token {
         flat_tokens.into_iter().chain(surface_tokens).collect()
     }
 
-    /// Names the CSS custom property that carries this token's color.
+    /// Name the CSS custom property that carries this token's color.
     pub(crate) fn css_custom_property(self) -> CssIdentifier {
         let property_name = match self {
-            Token::Canvas => format!("{CSS_CUSTOM_PROPERTY_PREFIX}canvas"),
-            Token::GridLine => format!("{CSS_CUSTOM_PROPERTY_PREFIX}grid-line"),
-            Token::FaceOutline => format!("{CSS_CUSTOM_PROPERTY_PREFIX}face-outline"),
-            Token::Text => format!("{CSS_CUSTOM_PROPERTY_PREFIX}text"),
-            Token::TextMuted => format!("{CSS_CUSTOM_PROPERTY_PREFIX}text-muted"),
-            Token::ExternalOutline => format!("{CSS_CUSTOM_PROPERTY_PREFIX}external-outline"),
-            Token::SurfaceTop(surface) => {
-                let slug = surface.slug();
-                format!("{CSS_CUSTOM_PROPERTY_PREFIX}{slug}-top")
-            }
-            Token::SurfaceLeft(surface) => {
-                let slug = surface.slug();
-                format!("{CSS_CUSTOM_PROPERTY_PREFIX}{slug}-left")
-            }
-            Token::SurfaceRight(surface) => {
-                let slug = surface.slug();
-                format!("{CSS_CUSTOM_PROPERTY_PREFIX}{slug}-right")
-            }
-            Token::SurfaceInk(surface) => {
-                let slug = surface.slug();
-                format!("{CSS_CUSTOM_PROPERTY_PREFIX}{slug}-ink")
-            }
+            Token::Canvas => "--svugy-canvas",
+            Token::GridLine => "--svugy-grid-line",
+            Token::FaceOutline => "--svugy-face-outline",
+            Token::Text => "--svugy-text",
+            Token::TextMuted => "--svugy-text-muted",
+            Token::ExternalOutline => "--svugy-external-outline",
+            Token::SurfaceTop(Surface::Neutral) => "--svugy-neutral-top",
+            Token::SurfaceLeft(Surface::Neutral) => "--svugy-neutral-left",
+            Token::SurfaceRight(Surface::Neutral) => "--svugy-neutral-right",
+            Token::SurfaceInk(Surface::Neutral) => "--svugy-neutral-ink",
+            Token::SurfaceTop(Surface::ContainerBlue) => "--svugy-container-blue-top",
+            Token::SurfaceLeft(Surface::ContainerBlue) => "--svugy-container-blue-left",
+            Token::SurfaceRight(Surface::ContainerBlue) => "--svugy-container-blue-right",
+            Token::SurfaceInk(Surface::ContainerBlue) => "--svugy-container-blue-ink",
         };
-        CssIdentifier::escape(&property_name)
+        CssIdentifier::from_static(property_name)
     }
 }
 
 impl Surface {
+    /// List all surfaces.
     pub(crate) const ALL: [Surface; 2] = [Surface::Neutral, Surface::ContainerBlue];
-
-    fn slug(self) -> &'static str {
-        match self {
-            Surface::Neutral => "neutral",
-            Surface::ContainerBlue => "container-blue",
-        }
-    }
 }
 
 impl Palette {
-    /// Resolves a token to the literal color a profile inlines.
-    pub(crate) fn literal(&self, token: Token) -> Rgb {
+    /// Declare every token's custom property as this palette's literal, the rule one color scheme applies.
+    pub(crate) fn custom_property_declarations(&self) -> Vec<CssDeclaration> {
+        let tokens = Token::all();
+        tokens
+            .into_iter()
+            .map(|token| {
+                let property = token.css_custom_property();
+                let value = self.literal_value(token);
+                CssDeclaration { property, value }
+            })
+            .collect()
+    }
+
+    /// Write `token` as this palette's literal, an opaque CSS color.
+    pub(crate) fn literal_value(&self, token: Token) -> CssValue {
+        let literal = self.literal(token);
+        let opaque_literal = Rgba::opaque(literal);
+        CssValue::color(opaque_literal)
+    }
+
+    /// Resolve a token to the literal color a profile inlines.
+    fn literal(&self, token: Token) -> Rgb {
         match token {
             Token::Canvas => self.canvas,
             Token::GridLine => self.grid_line,
@@ -163,26 +184,13 @@ impl Palette {
         }
     }
 
-    /// Declare every token's custom property as this palette's literal, the rule one color scheme applies.
-    pub(crate) fn custom_property_declarations(&self) -> Vec<CssDeclaration> {
-        let tokens = Token::all();
-        tokens
-            .into_iter()
-            .map(|token| {
-                let property = token.css_custom_property();
-                let literal = self.literal(token);
-                let opaque_literal = Rgba::opaque(literal);
-                let value = CssValue::color(opaque_literal);
-                CssDeclaration { property, value }
-            })
-            .collect()
-    }
-
+    /// Shade the faces of `surface` from its base.
     fn face_shades(&self, surface: Surface) -> FaceShades {
         let surface_colors = self.surface_colors(surface);
         FaceShades::from_base(surface_colors.base)
     }
 
+    /// Return the colors of `surface` in this palette.
     fn surface_colors(&self, surface: Surface) -> SurfaceColors {
         match surface {
             Surface::Neutral => self.neutral,
@@ -192,10 +200,27 @@ impl Palette {
 }
 
 impl SurfaceColors {
+    /// Unpack a surface's colors from its packed base and ink.
     const fn new(packed_base: u32, packed_ink: u32) -> Self {
         let base = Rgb::from_packed(packed_base);
         let ink = Rgb::from_packed(packed_ink);
         SurfaceColors { base, ink }
+    }
+}
+
+impl BaseShades {
+    /// Shade `base`: faces dimmed from it, ink = L(base) ≥ 0.7 ? 0.25·base in Oklab (a dark tint of its hue) : white.
+    pub(crate) fn from_base(base: Rgb) -> Self {
+        let faces = FaceShades::from_base(base);
+        let base_oklab = Oklab::from_rgb(base);
+        let is_light_base = base_oklab.lightness >= LIGHT_BASE_LIGHTNESS;
+        let dark_ink = base_oklab.dimmed(DARK_INK_DIMMING);
+        let ink = if is_light_base {
+            dark_ink.to_rgb()
+        } else {
+            LIGHT_INK
+        };
+        BaseShades { faces, ink }
     }
 }
 
