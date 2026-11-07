@@ -11,7 +11,8 @@ jobs:
     name: Release-plz release
     runs-on: ubuntu-latest
     environment: release
-    if: ${{ github.repository_owner == 'fedemagnani' }}
+    # squash merges take the PR title, so only release PR merges ask for approval
+    if: "${{ github.repository_owner == 'fedemagnani' && startsWith(github.event.head_commit.message, 'chore: release') }}"
     permissions:
       contents: write
       pull-requests: read
@@ -47,7 +48,7 @@ jobs:
   release-pr:
     name: Release-plz PR
     runs-on: ubuntu-latest
-    environment: release
+    environment: release-pr
     if: ${{ github.repository_owner == 'fedemagnani' }}
     permissions:
       contents: write
