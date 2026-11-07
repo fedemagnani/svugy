@@ -18,7 +18,7 @@ serde.workspace = true
 serde_json.workspace = true
 
 [dev-dependencies]
-svugy-parse.workspace = true
+svugy-parse = { path = "../svugy-parse" }
 fontdb.workspace = true
 roxmltree.workspace = true
 resvg.workspace = true
