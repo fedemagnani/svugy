@@ -55,7 +55,9 @@ jobs:
     environment:
       name: release-pr
       deployment: false
-    if: ${{ github.repository_owner == 'fedemagnani' }}
+    # waits for publishing, so a just-merged version never looks unreleased
+    needs: release
+    if: ${{ !failure() && !cancelled() && github.repository_owner == 'fedemagnani' }}
     permissions:
       contents: write
       pull-requests: write
