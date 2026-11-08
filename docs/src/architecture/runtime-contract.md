@@ -111,10 +111,10 @@ The runtime keeps the shown layer K and the focused level F, whose view fills th
 - **`data-svugy-goto="LEVEL"`:** overrides the above. F becomes LEVEL; K becomes max(K, depth(LEVEL)).
 - **Heading:** show the diagram's description; K and F stay.
 - **Description link** to target T (see the Markdown subset below): focus T's reading level, in the first layer from K on that draws that level open and an edge T as written. The reading level is a container's own level, a leaf's or a badge's enclosing level, an arc's home level. The description panel keeps the text it showed, so the reader keeps reading; Escape then shows F's description. Put the `svugy-highlighted` class on T's groups in the shown layer.
-- **Escape or a click on empty canvas:** undo one step: if a click changed the description panel and the panel is open or F has a description, show F's description again; else show layer K − 1 if K > depth(F), else focus F's parent; nothing at the root of layer 0. A click waits 300 ms first: a second click makes it a double click, which only recentres.
+- **Escape or a click on empty canvas:** undo one step: first bring F home, both at once: if a click changed the description panel and the panel is open or F has a description, show F's description again, and if the reader zoomed or panned away from F's view, animate back to it; only when F was already home, focus F's parent in layer K, so each step out widens the view; at the root, show layer K − 1; nothing at the root of layer 0. A click waits 300 ms first: a second click makes it a double click, which only recentres.
 - **Double click,** anywhere: animate back to F's own view, undoing any pan or zoom; K and F stay.
 
-Example: from the root of layer 0, click closed container A (layer 1), A's slab (F = A), then A's closed child a1 (layer 2). Three Escapes give A in layer 1, the root in layer 1, the root in layer 0.
+Example: from the root of layer 0, click closed container A (layer 1), A's slab (F = A), then A's closed child a1 (layer 2). Three Escapes give the root in layer 2, the root in layer 1, the root in layer 0.
 
 The reader can also move the view without navigating; K and F stay:
 

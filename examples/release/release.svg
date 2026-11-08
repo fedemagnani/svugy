@@ -523,6 +523,7 @@
   const MIN_VIEW_WIDTH = 80;
   const MAX_ZOOM_OUT_CANVASES = 2;
   const DOUBLE_CLICK_MS = 300;
+  const VIEW_MATCH_TOLERANCE = 0.001;
   const HEADING_VIEW_MARGIN_PX = 20;
   const HEADING_SCREEN_SCALE = 1.6;
 
@@ -794,6 +795,16 @@
       const x = view.x + (view.width - width) / 2;
       const y = view.y + (view.height - height) / 2;
       return { x, y, width, height };
+    },
+
+    // views match when every edge lies within a thousandth of the width: fitting and rounding never move a view further
+    isNear(view, other) {
+      const tolerance = view.width * VIEW_MATCH_TOLERANCE;
+      const isXNear = Math.abs(view.x - other.x) <= tolerance;
+      const isYNear = Math.abs(view.y - other.y) <= tolerance;
+      const isWidthNear = Math.abs(view.width - other.width) <= tolerance;
+      const isHeightNear = Math.abs(view.height - other.height) <= tolerance;
+      return isXNear && isYNear && isWidthNear && isHeightNear;
     },
 
     interpolate(start, target, fraction) {
@@ -1264,22 +1275,33 @@
       return Contract.levelAt(this.shownLayer, ROOT_LEVEL_PATH);
     }
 
-    /** Undoes one step: closes the deepest open containers while the shown layer is deeper than the focused level, else focuses its parent; any navigation discards a pan or zoom. */
+    /** Animates back to the focused level's own view when the reader zoomed or panned away from it; returns whether it did. */
+    returnToFocusedView() {
+      const currentView = this.animator.currentView();
+      const focusedView = this.focusedView();
+      const fittedFocusedView = View.fittedToAspect(focusedView, this.animator.canvasAspect);
+      const isAwayFromFocusedView = !View.isNear(currentView, fittedFocusedView);
+      if (isAwayFromFocusedView) {
+        this.animator.tweenTo(focusedView);
+      }
+      return isAwayFromFocusedView;
+    }
+
+    /** Steps out once: focuses the focused level's parent, keeping the open containers open, so every step widens the view; at the root, closes the deepest open containers; any navigation discards a pan or zoom. */
     exitOneStep() {
-      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
-      const focusedDepth = Contract.depthOf(this.focusedLevel);
-      const isLayerDeeperThanFocus = shownLayerIndex > focusedDepth;
-      if (isLayerDeeperThanFocus) {
-        const shallowerLayer = this.layers[shownLayerIndex - 1];
-        const focusedPath = this.focusedLevel.getAttribute(LEVEL);
-        this.showLayer(shallowerLayer, focusedPath, this.focusedLevel);
-        return;
-      }
       const parentLevel = Contract.enclosingLevelOf(this.focusedLevel);
-      if (parentLevel === null) {
+      if (parentLevel !== null) {
+        this.focus(parentLevel);
         return;
       }
-      this.focus(parentLevel);
+      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
+      const isOnFirstLayer = shownLayerIndex === 0;
+      if (isOnFirstLayer) {
+        return;
+      }
+      const shallowerLayer = this.layers[shownLayerIndex - 1];
+      const focusedPath = this.focusedLevel.getAttribute(LEVEL);
+      this.showLayer(shallowerLayer, focusedPath, this.focusedLevel);
     }
 
     /** Animates back to the focused level's own centred view, undoing any pan or zoom; the shown layer and the focused level stay. */
@@ -2340,10 +2362,13 @@
       highlighter.highlight(shownGroups);
     },
 
+    // first bring the focused level back home, its own description and its own view; only a level already home steps out
     exitOneStep(navigator, panel, descriptionPanel) {
       panel.hide();
       const hasLeftClick = descriptionPanel.stepBackFromClick();
-      if (hasLeftClick) {
+      const hasReturnedToFocusedView = navigator.returnToFocusedView();
+      const wasAwayFromHome = hasLeftClick || hasReturnedToFocusedView;
+      if (wasAwayFromHome) {
         return;
       }
       navigator.exitOneStep();
