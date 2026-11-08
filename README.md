@@ -6,6 +6,8 @@
 - Write your diagram in [Markdown](https://svugy.dev/docs/run/markdown.html) or in [another supported language](examples/webapp).
 - Render it [as an SVG, or serve it for live rendering](#export-svg-and-rendering).
 
+![svugy demo](docs/demo.gif)
+
 ## Quickstart
 
 ```sh
