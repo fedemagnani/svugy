@@ -1,6 +1,6 @@
-# svugy reference
+# svugy syntax
 
-What SKILL.md leaves out. Read only the section you need.
+Rules SKILL.md's example and rules leave out.
 
 ## File
 
@@ -71,46 +71,3 @@ Checkout turns a cart into a charged card.
 - Quoted value: `"…"`, escapes `\"` and `\\`. Required when the value holds `,`, `(`, `)` or `"`.
 - Labels follow the same rule; a label ending in `(…)` must be quoted.
 - A key appears once per list. Styles apply left to right, then `key=value` entries override them regardless of position.
-
-## Legend
-
-```markdown
-## Legend: Read it as a story
-- ① your text becomes a model
-- (line=dashed): data flows this way
-- (line=badge, target=font): reads the bundled font
-```
-
-- An item is free text, or a key row `(PROPERTIES): TEXT` drawn next to a sample.
-- Key rows take `line` (`solid`, `dashed`, `dotted`, `badge`) and, for `badge`, `target=REF`. A key row describing nothing the diagram draws is a warning.
-
-## Diagnostics
-
-`svugy validate FILE --format json` prints one JSON object. Each entry of `related`:
-
-| Field | Content |
-|---|---|
-| `message` | the problem, with any `did you mean` |
-| `severity` | `error` or `warning` |
-| `code` | `svugy::markdown` for format errors; model checks have their own, e.g. `svugy::ignored_container_shape` |
-| `labels` | `{label, line, column, span: {offset, length}}`; line and column from 1, span in bytes |
-
-Exit codes: 0 valid (warnings allowed), 1 errors, 2 usage, 3 file unreadable or unwritable.
-
-Messages whose fix isn't in the message:
-
-| Message | Fix |
-|---|---|
-| `X` is indented but not nested: the comment above ends its parent's list | indent the comment like the item after it |
-| a label ending in parentheses needs quotes | `- cache: "Cache (Redis)"` |
-| no style `Redis` (after a label) | same: quote the label |
-| a chain takes no label | split `a -> b -> c: x` into `a -> b: x` and `b -> c` |
-| an edge cannot join `orders` and its descendant | nesting already shows ownership; drop the edge or target a sibling |
-| a badge edge needs a leaf at both ends | target a leaf inside the container, or drop `line=badge` |
-| malformed frontmatter: mapping values are not allowed | quote the YAML value holding `: ` |
-
-## Importing
-
-- `svugy import in.d2 -o out.md`; `-o out.json` writes the model as JSON. JSON input works the same.
-- If the model holds something Markdown can't say (e.g. a d2 key with a space), import lists every such part and writes nothing.
-- Imported items spell every property out; factor repeated sets into frontmatter styles if the user will keep editing.

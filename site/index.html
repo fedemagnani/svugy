@@ -59,21 +59,22 @@
           <button class="icon-button" type="button" data-copy-command aria-label="Copy command" title="Copy"></button>
         </div>
       </div>
-      <div class="hero-foot">
-        <label class="picker">
-          <span class="visually-hidden">Example</span>
-          <select data-example-picker>
-            <option value="webapp">Web app</option>
-            <option value="cluster">Kubernetes cluster</option>
-            <option value="events">Order events</option>
-            <option value="release">Release pipeline</option>
-          </select>
-        </label>
-        <button class="outline-button" type="button" data-copy-skill disabled>Copy skill prompt</button>
-      </div>
+      <p class="ask-agent">
+        Or ask your agent:
+        <button class="outline-button" type="button" data-copy-install-prompt disabled>Copy installation prompt</button>
+      </p>
     </section>
 
     <section class="try" aria-label="Try it">
+      <label class="picker">
+        <span class="visually-hidden">Example</span>
+        <select data-example-picker>
+          <option value="webapp">Web app</option>
+          <option value="cluster">Kubernetes cluster</option>
+          <option value="events">Order events</option>
+          <option value="release">Release pipeline</option>
+        </select>
+      </label>
       <div class="svugy-live" data-svugy-curtain>
         <textarea data-svugy-language="markdown" aria-label="Markdown source"></textarea>
         <object class="svugy" type="image/svg+xml" data="models/webapp.svg#svugy="

@@ -29,11 +29,15 @@ Edit `webapp.md` ([Markdown](markdown.md) has every rule), then run `svugy valid
 | `2` | usage error, e.g. an unknown flag or an input not ending in `.md`, `.d2` or `.json` |
 | `3` | a file can't be read, written or opened, or `view` can't listen on its port |
 
-## Let Claude Code draw
+## Let an agent draw
 
-`svugy skill install` writes a skill teaching the Markdown format and the write, validate, render loop to `.claude/skills/svugy/`; `--user` writes it to `~/.claude/skills/svugy/`. `svugy skill` prints it.
+The svugy skill teaches an agent the Markdown format and the write, validate, render loop.
 
-The installed skill is a copy of the one built into `svugy`: after updating svugy, rerun `svugy skill install` (with `--user` if you used it) so Claude follows the new version's rules.
+- Any agent: `npx skills add fedemagnani/svugy`.
+- Claude Code: `svugy skill install` writes the skill to `.claude/skills/svugy/`; `--user` writes it to `~/.claude/skills/svugy/`. `svugy skill` prints it.
+- To have an agent install both svugy and the skill, paste it the [installation prompt](https://svugy.dev/install.md).
+
+The installed skill is a copy: after updating svugy, rerun the command you installed it with so the agent follows the new version's rules.
 
 ## Other inputs
 

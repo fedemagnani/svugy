@@ -27,7 +27,7 @@ github-action-commits = { "actions/checkout" = "d23441a48e516b6c34aea4fa41551a30
 github-attestations-phase = "host"
 github-release = "host"
 
-# Publish the skill the binary embeds, so svugy.dev/skill serves the released, attested copy
+# Publish the skill the binary embeds, its references flattened; svugy.dev/install.md serves the released, attested install.md
 [[dist.extra-artifacts]]
-artifacts = ["crates/svugy-cli/skill/SKILL.md", "crates/svugy-cli/skill/reference.md"]
+artifacts = ["crates/svugy-cli/skill/SKILL.md", "crates/svugy-cli/skill/references/syntax.md", "crates/svugy-cli/skill/references/legend.md", "crates/svugy-cli/skill/references/troubleshoot.md", "crates/svugy-cli/skill/references/install.md"]
 build = ["true"]
