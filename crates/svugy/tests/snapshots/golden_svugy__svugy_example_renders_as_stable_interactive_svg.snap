@@ -1332,11 +1332,13 @@ expression: interactive_svg
   const ZOOM_PER_WHEEL_PIXEL = 0.002;
   const WHEEL_LINE_PX = 16;
   const MIN_VIEW_WIDTH = 80;
+  const LEAF_ZOOM_CONTEXT = 3;
+  const LEAF_ZOOM_MAX_LEVEL_SHARE = 0.7;
+  const LEAF_ZOOM_MARGIN = 12;
   const MAX_ZOOM_OUT_CANVASES = 2;
-  const DOUBLE_CLICK_MS = 300;
   const VIEW_MATCH_TOLERANCE = 0.001;
   const HEADING_VIEW_MARGIN_PX = 20;
-  const HEADING_SCREEN_SCALE = 1.6;
+  const HEADING_SCREEN_SCALE = 1.2;
 
   const ARROW = '\u2192';
   const ELLIPSIS = '\u2026';
@@ -1627,10 +1629,26 @@ expression: interactive_svg
       };
     },
 
-    // ease(t) = 4t³ for t < ½, else 1 − (2 − 2t)³ / 2
-    easeInOutCubic(fraction) {
-      const isFirstHalf = fraction < 0.5;
-      return isFirstHalf ? 4 * fraction ** 3 : 1 - (2 - 2 * fraction) ** 3 / 2;
+    // per side s: max(min(k·leaf s, ρ·level s), leaf s + 2m), centred on the leaf; k = LEAF_ZOOM_CONTEXT, ρ = LEAF_ZOOM_MAX_LEVEL_SHARE, m = LEAF_ZOOM_MARGIN; width also ≥ MIN_VIEW_WIDTH
+    aroundLeaf(leafBounds, levelView) {
+      const leafCentre = centreOf(leafBounds);
+      const contextWidth = View.leafZoomSide(leafBounds.width, levelView.width);
+      const width = Math.max(contextWidth, MIN_VIEW_WIDTH);
+      const height = View.leafZoomSide(leafBounds.height, levelView.height);
+      return { x: leafCentre.x - width / 2, y: leafCentre.y - height / 2, width, height };
+    },
+
+    leafZoomSide(leafSide, levelSide) {
+      const contextSide = LEAF_ZOOM_CONTEXT * leafSide;
+      const levelShareSide = LEAF_ZOOM_MAX_LEVEL_SHARE * levelSide;
+      const cappedSide = Math.min(contextSide, levelShareSide);
+      const marginedLeafSide = leafSide + 2 * LEAF_ZOOM_MARGIN;
+      return Math.max(cappedSide, marginedLeafSide);
+    },
+
+    // ease(t) = 1 − (1 − t)³
+    easeOutCubic(fraction) {
+      return 1 - (1 - fraction) ** 3;
     },
   };
 
@@ -1656,7 +1674,7 @@ expression: interactive_svg
       const step = (now) => {
         startTime ??= now;
         const elapsedFraction = Math.min(1, (now - startTime) / TWEEN_DURATION_MS);
-        const easedFraction = View.easeInOutCubic(elapsedFraction);
+        const easedFraction = View.easeOutCubic(elapsedFraction);
         const view = View.interpolate(startView, targetView, easedFraction);
         this.show(view);
         const isTweenRunning = elapsedFraction < 1;
@@ -1930,7 +1948,7 @@ expression: interactive_svg
         return;
       }
       fadingLayer.style.pointerEvents = 'none';
-      const timing = { duration: TWEEN_DURATION_MS, easing: 'ease-in-out' };
+      const timing = { duration: TWEEN_DURATION_MS, easing: 'ease-out' };
       const fadeOut = fadingLayer.animate(FADE_OUT_KEYFRAMES, timing);
       const fadeIn = appearingLayer.animate(FADE_IN_KEYFRAMES, timing);
       fadeOut.onfinish = () => this.finishRunningFade();
@@ -2007,8 +2025,34 @@ expression: interactive_svg
       if (isClosedContainer) {
         return this.revealOneMoreDepth(group);
       }
+      const isElement = group.hasAttribute(ELEMENT);
+      const interiorLevel = Contract.interiorLevelOf(group);
+      const isLeaf = isElement && interiorLevel === null;
+      if (isLeaf) {
+        return this.zoomOntoLeaf(group);
+      }
       const reachedLevel = this.levelReachedThrough(group);
       return this.focus(reachedLevel);
+    }
+
+    /** Focuses `leaf`'s enclosing level and zooms onto the leaf, its neighbours still in sight, as a zoom away from that level's view; tells whether the view moved. */
+    zoomOntoLeaf(leaf) {
+      const enclosingLevel = Contract.enclosingLevelOf(leaf);
+      this.focus(enclosingLevel);
+      const leafBounds = this.userBoundsOf(leaf);
+      const levelView = this.viewOf(enclosingLevel);
+      const isUnmeasurable = leafBounds === null || levelView === null;
+      if (isUnmeasurable) {
+        return false;
+      }
+      const leafView = View.aroundLeaf(leafBounds, levelView);
+      const currentView = this.animator.currentView();
+      const fittedLeafView = View.fittedToAspect(leafView, this.animator.canvasAspect);
+      const isAwayFromLeafView = !View.isNear(currentView, fittedLeafView);
+      if (isAwayFromLeafView) {
+        this.animator.tweenTo(leafView);
+      }
+      return isAwayFromLeafView;
     }
 
     /** Shows `target`, an element or edge group of the deepest layer, where a description link reads it best: a container as the focused level, a leaf or a badge in its enclosing level, an arc in its home level; each in the first layer from the shown one drawing that level open, the edge as written. */
@@ -2115,12 +2159,6 @@ expression: interactive_svg
       this.showLayer(shallowerLayer, focusedPath, this.focusedLevel);
     }
 
-    /** Animates back to the focused level's own centred view, undoing any pan or zoom; the shown layer and the focused level stay. */
-    recenterFocusedLevel() {
-      const focusedView = this.focusedView();
-      this.animator.tweenTo(focusedView);
-    }
-
     /** Returns the focused level's own view, as its `data-svugy-view` frames it. */
     focusedView() {
       return this.viewOf(this.focusedLevel);
@@ -2186,16 +2224,28 @@ expression: interactive_svg
     }
 
     userCenterOf(node) {
+      const userBounds = this.userBoundsOf(node);
+      return userBounds === null ? null : centreOf(userBounds);
+    }
+
+    /** Returns `node`'s on-screen box in user units, wherever the view is, or null before the SVG is laid out. */
+    userBoundsOf(node) {
       const screenMatrix = this.svg.getScreenCTM();
       if (screenMatrix === null) {
         return null;
       }
       const screenToUserMatrix = screenMatrix.inverse();
-      const bounds = node.getBoundingClientRect();
-      const clientCenterX = bounds.left + bounds.width / 2;
-      const clientCenterY = bounds.top + bounds.height / 2;
-      const clientCenter = new DOMPoint(clientCenterX, clientCenterY);
-      return clientCenter.matrixTransform(screenToUserMatrix);
+      const clientBounds = node.getBoundingClientRect();
+      const clientTopLeft = new DOMPoint(clientBounds.left, clientBounds.top);
+      const clientBottomRight = new DOMPoint(clientBounds.right, clientBounds.bottom);
+      const userTopLeft = clientTopLeft.matrixTransform(screenToUserMatrix);
+      const userBottomRight = clientBottomRight.matrixTransform(screenToUserMatrix);
+      return {
+        x: userTopLeft.x,
+        y: userTopLeft.y,
+        width: userBottomRight.x - userTopLeft.x,
+        height: userBottomRight.y - userTopLeft.y,
+      };
     }
 
     moveEnteredMarkTo(level) {
@@ -2547,22 +2597,13 @@ expression: interactive_svg
       this.showClicked(diagramContent);
     }
 
-    /** Goes back from a clicked description to the focused level's and tells whether that changed the panel; a click that closed the panel over an undescribed level changed nothing to go back from. */
+    /** Goes back from a clicked description to the focused level's. */
     stepBackFromClick() {
       const isFocusedLevelShown = !this.isClickShown;
       if (isFocusedLevelShown) {
-        return false;
+        return;
       }
-      this.isClickShown = false;
-      const focusedContent = this.contentOfFocusedLevel();
-      const isPanelClosed = !this.panel.isConnected;
-      const isFocusedLevelUndescribed = focusedContent.length === 0;
-      const isPanelUnchanged = isPanelClosed && isFocusedLevelUndescribed;
-      if (isPanelUnchanged) {
-        return false;
-      }
-      this.show(focusedContent);
-      return true;
+      this.describeFocusedLevel(this.focusedPath);
     }
 
     contentOfFocusedLevel() {
@@ -3056,7 +3097,6 @@ expression: interactive_svg
       descriptionPanel.addTargetLinkListener((target) => {
         Interactions.followTargetLink(target, navigator, panel, descriptionPanel, highlighter);
       });
-      let pendingStepOut = 0;
       svg.addEventListener('click', (event) => {
         const heading = Interactions.headingAt(event.target);
         if (heading !== null) {
@@ -3065,20 +3105,14 @@ expression: interactive_svg
         }
         const group = Interactions.groupAt(event.target);
         const clientPoint = { x: event.clientX, y: event.clientY };
-        // a click on empty canvas steps out once no second click makes it a double click, which only recentres
+        // a double click on empty canvas steps out once: its second click is ignored
         if (group === null) {
-          clearTimeout(pendingStepOut);
           const isSecondClick = event.detail > 1;
           if (isSecondClick) return;
-          pendingStepOut = setTimeout(() => Interactions.exitOneStep(navigator, panel, descriptionPanel), DOUBLE_CLICK_MS);
+          Interactions.exitOneStep(navigator, panel, descriptionPanel);
           return;
         }
         Interactions.activate(group, clientPoint, navigator, panel, descriptionPanel);
-      });
-      svg.addEventListener('dblclick', () => {
-        clearTimeout(pendingStepOut);
-        panel.hide();
-        navigator.recenterFocusedLevel();
       });
       svg.addEventListener('keydown', (event) => {
         const isEscape = event.key === 'Escape';
@@ -3173,13 +3207,12 @@ expression: interactive_svg
       highlighter.highlight(shownGroups);
     },
 
-    // first bring the focused level back home, its own description and its own view; only a level already home steps out
+    // the focused level's own description comes back at once; a view zoomed or panned away first returns to the focused level, a view already there steps out
     exitOneStep(navigator, panel, descriptionPanel) {
       panel.hide();
-      const hasLeftClick = descriptionPanel.stepBackFromClick();
+      descriptionPanel.stepBackFromClick();
       const hasReturnedToFocusedView = navigator.returnToFocusedView();
-      const wasAwayFromHome = hasLeftClick || hasReturnedToFocusedView;
-      if (wasAwayFromHome) {
+      if (hasReturnedToFocusedView) {
         return;
       }
       navigator.exitOneStep();
