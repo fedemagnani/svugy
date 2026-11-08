@@ -1,5 +1,6 @@
 //! Place one level's children as footprints: pinned ones where the author put them, free ones automatically around them.
 
+mod compound;
 mod footprints;
 mod layered;
 mod packed;
@@ -12,6 +13,7 @@ use svugy_model::path::ElementPath;
 
 use super::{PlacedLevel, PlacedLevels};
 use crate::metrics::{LabelBlock, LabelRole, TextMeasure};
+pub(super) use compound::CompoundRegions;
 use footprints::Footprints;
 use layered::Layered;
 use packed::Packed;
@@ -158,10 +160,12 @@ impl SiblingGraph {
         (pinned, free_siblings)
     }
 
-    /// Place the footprints with the strategy `hint` names; no hint, as at the root, means layered.
+    /// Place the footprints with the strategy `hint` names; no hint means layered when edges join the children, else a row along the rank axis, since there is no flow to rank.
     fn place_by_hint(&self, hint: Option<PlacementHint>) -> Footprints {
         let child_count = self.sizes.len();
+        let has_no_joined_pairs = self.joined_pairs.is_empty();
         let packed = match hint {
+            None if has_no_joined_pairs => Packed::in_columns(child_count, child_count),
             None | Some(PlacementHint::Layered) => {
                 let layered_by_path = Layered.place_footprints(self);
                 return Footprints::new(layered_by_path);
