@@ -39,11 +39,12 @@ svugy render webapp.md -o webapp.svg --open
 ```
 
 - Windows: `irm https://svugy.dev/install.ps1 | iex`. With a Rust toolchain: `cargo install svugy-cli`.
+- To update, rerun the command you installed with; it replaces `svugy` with the latest release.
 - `svugy view my.md` shows the diagram in your browser and reloads it on every save, keeping the focused level.
 - `svugy validate my.md` reports every problem in one run, with line and column; `--format json` for scripts and agents.
 - `svugy render my.md --profile static -o my.svg` writes an SVG without script, for `<img>` tags, READMEs and design tools.
 - `svugy import my.d2 -o my.md` converts d2 to Markdown; `-o my.json` writes the model as JSON. `render` reads `.d2` and `.json` directly too.
-- `svugy skill install` installs a Claude Code skill that writes, validates and renders diagrams.
+- `svugy skill install` installs a Claude Code skill that writes, validates and renders diagrams. The skill is a copy: rerun it after updating svugy.
 
 [Markdown](docs/src/run/markdown.md) lists every rule.
 

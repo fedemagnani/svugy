@@ -8,6 +8,8 @@ svugy render webapp.md -o webapp.svg --open
 
 The installer puts `svugy` in `~/.cargo/bin` and adds it to `PATH`. On Windows run `irm https://svugy.dev/install.ps1 | iex`; with a Rust toolchain, `cargo install svugy-cli`.
 
+To update, rerun the command you installed with: it replaces `svugy` with the latest release. `svugy --version` prints the installed version.
+
 `example` writes a sample diagram of a web app; `--open` opens the written SVG in your default browser.
 
 `svugy view webapp.md` serves the diagram in your default browser and reloads it on every save of `webapp.md`, keeping the focused level.
@@ -30,6 +32,8 @@ Edit `webapp.md` ([Markdown](markdown.md) has every rule), then run `svugy valid
 ## Let Claude Code draw
 
 `svugy skill install` writes a skill teaching the Markdown format and the write, validate, render loop to `.claude/skills/svugy/`; `--user` writes it to `~/.claude/skills/svugy/`. `svugy skill` prints it.
+
+The installed skill is a copy of the one built into `svugy`: after updating svugy, rerun `svugy skill install` (with `--user` if you used it) so Claude follows the new version's rules.
 
 ## Other inputs
 
