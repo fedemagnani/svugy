@@ -90,7 +90,9 @@ impl Scene {
             .level(&root_path)
             .expect("layout plans the root level");
         let projector = LevelProjector::new(model, closed_containers, plans, measure);
-        let mut root = projector.project_level(&root_path, root_plan, Affine::IDENTITY);
+        let no_floor_branches = Vec::new();
+        let mut root =
+            projector.project_level(&root_path, root_plan, Affine::IDENTITY, no_floor_branches);
         let mut stub_markers_by_container =
             root.plate_stub_markers_per_container(model, plans, measure);
         root.hand_stub_markers_to_interiors(&mut stub_markers_by_container);
@@ -174,7 +176,9 @@ impl Scene {
 pub(crate) struct Group {
     /// Maps this level's local screen space into its parent's; identity for the root.
     pub(crate) frame: Affine,
-    /// Solids back to front, painted before every connection.
+    /// Connections traced flat on this level's floor, its flat routes then the bundled branches handed to it, painted before the solids standing on it.
+    pub(crate) traces: Vec<Connection>,
+    /// Solids back to front, painted before every lifted connection.
     pub(crate) solids: Vec<Solid>,
     /// Connections back to front, painted over the solids, their labels over every path.
     pub(crate) connections: Vec<Connection>,
@@ -187,6 +191,7 @@ impl Group {
     pub(crate) fn new(frame: Affine) -> Self {
         Self {
             frame,
+            traces: Vec::new(),
             solids: Vec::new(),
             connections: Vec::new(),
             stub_markers: BTreeMap::new(),
@@ -238,11 +243,14 @@ impl Group {
         NestedInteriors::below(&self.solids)
     }
 
-    /// Yield every drawable this level draws itself: each solid's, then each connection's, interiors left out.
+    /// Yield every drawable this level draws itself: each trace's, each solid's, then each lifted connection's, interiors left out.
     fn drawables(&self) -> impl Iterator<Item = Drawable<'_>> {
+        let trace_drawables = self.traces.iter().flat_map(Connection::drawables);
         let solid_drawables = self.solids.iter().flat_map(Solid::drawables);
         let connection_drawables = self.connections.iter().flat_map(Connection::drawables);
-        solid_drawables.chain(connection_drawables)
+        trace_drawables
+            .chain(solid_drawables)
+            .chain(connection_drawables)
     }
 }
 
@@ -437,12 +445,13 @@ pub(crate) enum FaceShade {
     Right,
 }
 
-/// Draws one edge's connection path in screen space, its arrowhead at the target.
+/// Draws one edge's connection path in screen space, its arrowhead at the target; a bundled edge draws one per trunk and branch, only the one reaching the target headed.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Connection {
     pub(crate) edge: EdgeId,
-    /// Smoothed path, already shortened so the arrowhead tip lands on the target port.
+    /// Smoothed path, already shortened so the arrowhead tip, if any, lands on the target port.
     pub(crate) path: BezPath,
+    pub(crate) ends_in_arrowhead: bool,
     /// Path the animated dot travels, which the static profile drops.
     pub(crate) dot_path: Option<BezPath>,
     pub(crate) label: Option<PlatedLabel>,
@@ -452,14 +461,21 @@ impl Connection {
     /// Screen width every connection is stroked at, which also scales its arrowhead.
     pub(crate) const STROKE_WIDTH: f64 = 1.6;
 
-    /// Stroke `edge`'s connection along `path`, with no dot path and no label.
+    /// Stroke `edge`'s connection along `path` into its arrowhead, with no dot path and no label.
     pub(crate) fn new(edge: EdgeId, path: BezPath) -> Self {
         Self {
             edge,
             path,
+            ends_in_arrowhead: true,
             dot_path: None,
             label: None,
         }
+    }
+
+    /// Drop the connection's arrowhead, for a piece of a bundled route short of the target.
+    pub(crate) fn without_arrowhead(mut self) -> Self {
+        self.ends_in_arrowhead = false;
+        self
     }
 
     /// Move the connection's dot along `dot_path`.

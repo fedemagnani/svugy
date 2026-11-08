@@ -398,6 +398,30 @@ expression: interactive_svg
 <path d="M1236.684,952 L888.542,1153 L888.542,1142.5 L1236.684,941.5 Z" fill="#0d131f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M467.654,497.5 L1236.684,941.5 L888.542,1142.5 L119.512,698.5 Z" fill="#1b2436" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <g data-svugy-level="pipeline" data-svugy-view="157.865 487 1007.415 570.371" transform="matrix(1 0 0 1 467.654 497.5)">
+<g data-svugy-edge="(pipeline.geometry -&gt; pipeline.render)[0]" data-svugy-from="pipeline.geometry" data-svugy-to="pipeline.render">
+<title>(pipeline.geometry -&gt; pipeline.render)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry -&gt; pipeline.render)[0]","from":"pipeline.geometry","to":"pipeline.render"}</desc>
+<path d="M-194.856,220.5 L195.618,445.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M-194.856,220.5 L196.588,446.5" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.layout -&gt; pipeline.geometry)[0]" data-svugy-from="pipeline.layout" data-svugy-to="pipeline.geometry">
+<title>③</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout -&gt; pipeline.geometry)[0]","from":"pipeline.layout","to":"pipeline.geometry","label":"③"}</desc>
+<path d="M-25.981,87 L-196.484,185.44" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M-25.981,87 L-197.454,186" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.metrics -&gt; pipeline.layout)[0]" data-svugy-from="pipeline.metrics" data-svugy-to="pipeline.layout">
+<title>(pipeline.metrics -&gt; pipeline.layout)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.metrics -&gt; pipeline.layout)[0]","from":"pipeline.metrics","to":"pipeline.layout"}</desc>
+<path d="M459.859,334.5 L34.745,89.06" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M459.859,334.5 L33.775,88.5" repeatCount="indefinite"/>
+</use>
+</g>
 <g data-svugy-closed="" data-svugy-element="pipeline.geometry">
 <title>geometry</title>
 <desc data-svugy-details="">{"kind":"element","path":"pipeline.geometry","label":"geometry","caption":"screen space"}</desc>
@@ -456,35 +480,11 @@ expression: interactive_svg
 <path d="M278.361,437.852 C278.361,440.902 274.063,443.159 268.761,442.893 C263.459,442.627 259.161,439.94 259.161,436.89 C259.161,433.841 263.459,431.584 268.761,431.85 C274.063,432.115 278.361,434.803 278.361,437.852 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 </g>
 </g>
-<g data-svugy-edge="(pipeline.geometry -&gt; pipeline.render)[0]" data-svugy-from="pipeline.geometry" data-svugy-to="pipeline.render">
-<title>(pipeline.geometry -&gt; pipeline.render)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry -&gt; pipeline.render)[0]","from":"pipeline.geometry","to":"pipeline.render"}</desc>
-<path d="M-194.856,198 Q0.583,90.356 196.021,423.035" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M-194.856,198 Q0.866,90.2 196.588,424" repeatCount="indefinite"/>
-</use>
-</g>
 <g data-svugy-edge="(pipeline.layout -&gt; pipeline.geometry)[0]" data-svugy-from="pipeline.layout" data-svugy-to="pipeline.geometry">
 <title>③</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout -&gt; pipeline.geometry)[0]","from":"pipeline.layout","to":"pipeline.geometry","label":"③"}</desc>
-<path d="M-25.981,64.5 Q-111.464,-4.994 -196.946,162.504" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M-25.981,64.5 Q-111.717,-5.2 -197.454,163.5" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-edge="(pipeline.metrics -&gt; pipeline.layout)[0]" data-svugy-from="pipeline.metrics" data-svugy-to="pipeline.layout">
-<title>(pipeline.metrics -&gt; pipeline.layout)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.metrics -&gt; pipeline.layout)[0]","from":"pipeline.metrics","to":"pipeline.layout"}</desc>
-<path d="M459.859,312 Q247.311,-46.966 34.763,65.475" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M459.859,312 Q246.817,-47.8 33.775,66" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-edge="(pipeline.layout -&gt; pipeline.geometry)[0]" data-svugy-from="pipeline.layout" data-svugy-to="pipeline.geometry">
-<title>③</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout -&gt; pipeline.geometry)[0]","from":"pipeline.layout","to":"pipeline.geometry","label":"③"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="34.591" x="-129.013" y="46.548"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" x="-111.717" y="58.22">③</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="34.591" x="-129.013" y="128.648"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" x="-111.717" y="140.32">③</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="" data-svugy-stub="contract">
@@ -539,6 +539,22 @@ expression: interactive_svg
 <path d="M-35.119,547.724 L-263.749,679.724 L-263.749,669.224 L-35.119,537.224 Z" fill="#0b1510" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M-251.147,412.5 L-35.119,537.224 L-263.749,669.224 L-479.778,544.5 Z" fill="#17271f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <g data-svugy-level="model" data-svugy-view="-472.601 384 430.306 228.374" transform="matrix(1 0 0 1 -251.147 412.5)">
+<g data-svugy-edge="(model.graph -&gt; model.validate)[0]" data-svugy-from="model.graph" data-svugy-to="model.validate">
+<title>(model.graph -&gt; model.validate)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model.graph -&gt; model.validate)[0]","from":"model.graph","to":"model.validate"}</desc>
+<path d="M92.426,137.362 L50.857,161.362 L-60.731,96.937 L-101.33,120.377" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#14f195" height="10" href="#traveler-dot" stroke="#14f195" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M92.426,137.362 L50.857,161.362 L-60.731,96.937 L-102.3,120.937" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(model.path -&gt; model.graph)[0]" data-svugy-from="model.path" data-svugy-to="model.graph">
+<title>(model.path -&gt; model.graph)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model.path -&gt; model.graph)[0]","from":"model.path","to":"model.graph"}</desc>
+<path d="M33.775,70.5 L84.767,99.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#14f195" height="10" href="#traveler-dot" stroke="#14f195" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M33.775,70.5 L85.737,100.5" repeatCount="indefinite"/>
+</use>
+</g>
 <g data-svugy-element="model.path">
 <title>path</title>
 <desc data-svugy-details="">{"kind":"element","path":"model.path","label":"path","caption":"ids"}</desc>
@@ -565,22 +581,6 @@ expression: interactive_svg
 <path d="M-140.296,76.5 L-64.303,120.374 L-121.461,153.374 L-197.454,109.5 Z" fill="#14f195" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <text fill="#001f0f" font-size="12" font-weight="650" text-anchor="middle" textLength="46.74" transform="matrix(0.866 0.5 -0.866 0.5 -130.879 114.937)" x="0" y="-2">validate</text>
 <text fill="#001f0f" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="75.749" transform="matrix(0.866 0.5 -0.866 0.5 -130.879 114.937)" x="0" y="11">problems · bounds</text>
-</g>
-<g data-svugy-edge="(model.graph -&gt; model.validate)[0]" data-svugy-from="model.graph" data-svugy-to="model.validate">
-<title>(model.graph -&gt; model.validate)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(model.graph -&gt; model.validate)[0]","from":"model.graph","to":"model.validate"}</desc>
-<path d="M92.426,114.862 Q-4.538,2.838 -101.503,97.654" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#14f195" height="10" href="#traveler-dot" stroke="#14f195" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M92.426,114.862 Q-4.937,2.377 -102.3,98.437" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-edge="(model.path -&gt; model.graph)[0]" data-svugy-from="model.path" data-svugy-to="model.graph">
-<title>(model.path -&gt; model.graph)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(model.path -&gt; model.graph)[0]","from":"model.path","to":"model.graph"}</desc>
-<path d="M33.775,48 Q59.581,-0.67 85.387,76.942" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#14f195" height="10" href="#traveler-dot" stroke="#14f195" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M33.775,48 Q59.756,-1 85.737,78" repeatCount="indefinite"/>
-</use>
 </g>
 <g data-svugy-overlay=""/>
 </g>
@@ -790,6 +790,30 @@ expression: interactive_svg
 <path d="M1354.966,1020.29 L944.47,1257.29 L944.47,1246.79 L1354.966,1009.79 Z" fill="#0d131f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M467.654,497.5 L1354.966,1009.79 L944.47,1246.79 L57.158,734.5 Z" fill="#1b2436" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <g data-svugy-level="pipeline" data-svugy-view="126.688 494.5 1038.591 740.29" transform="matrix(1 0 0 1 467.654 497.5)">
+<g data-svugy-edge="(pipeline.geometry -&gt; pipeline.render)[0]" data-svugy-from="pipeline.geometry" data-svugy-to="pipeline.render">
+<title>(pipeline.geometry -&gt; pipeline.render)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry -&gt; pipeline.render)[0]","from":"pipeline.geometry","to":"pipeline.render"}</desc>
+<path d="M41.569,384 L172.235,459.44" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M41.569,384 L173.205,460" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.layout -&gt; pipeline.geometry)[0]" data-svugy-from="pipeline.layout" data-svugy-to="pipeline.geometry">
+<title>③</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout -&gt; pipeline.geometry)[0]","from":"pipeline.layout","to":"pipeline.geometry","label":"③"}</desc>
+<path d="M72.846,180.058 L-66.48,260.498" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M72.846,180.058 L-67.45,261.058" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.metrics -&gt; pipeline.layout)[0]" data-svugy-from="pipeline.metrics" data-svugy-to="pipeline.layout">
+<title>(pipeline.metrics -&gt; pipeline.layout)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.metrics -&gt; pipeline.layout)[0]","from":"pipeline.metrics","to":"pipeline.layout"}</desc>
+<path d="M452.065,339 L287.159,243.791" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M452.065,339 L286.189,243.231" repeatCount="indefinite"/>
+</use>
+</g>
 <g data-svugy-element="pipeline.inter">
 <title>Inter</title>
 <desc data-svugy-details="">{"kind":"element","path":"pipeline.inter","label":"Inter"}</desc>
@@ -804,6 +828,22 @@ expression: interactive_svg
 <path d="M322.562,222.231 L234.228,273.231 L234.228,262.731 L322.562,211.731 Z" fill="#101e3f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M0,25.5 L322.562,211.731 L234.228,262.731 L-88.335,76.5 Z" fill="#1f3566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <g data-svugy-level="pipeline.layout" data-svugy-view="386.496 494.5 396.543 271.731" transform="matrix(1 0 0 1 0 25.5)">
+<g data-svugy-edge="(pipeline.layout.place -&gt; pipeline.layout.route)[0]" data-svugy-from="pipeline.layout.place" data-svugy-to="pipeline.layout.route">
+<title>(pipeline.layout.place -&gt; pipeline.layout.route)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout.place -&gt; pipeline.layout.route)[0]","from":"pipeline.layout.place","to":"pipeline.layout.route"}</desc>
+<path d="M45.893,77.497 L84.767,99.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M45.893,77.497 L85.737,100.5" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.layout.route -&gt; pipeline.layout.stub)[0]" data-svugy-from="pipeline.layout.route" data-svugy-to="pipeline.layout.stub">
+<title>(pipeline.layout.route -&gt; pipeline.layout.stub)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout.route -&gt; pipeline.layout.stub)[0]","from":"pipeline.layout.route","to":"pipeline.layout.stub"}</desc>
+<path d="M148.09,136.5 L199.082,165.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M148.09,136.5 L200.052,166.5" repeatCount="indefinite"/>
+</use>
+</g>
 <g data-svugy-element="pipeline.layout.place">
 <title>place</title>
 <desc data-svugy-details="">{"kind":"element","path":"pipeline.layout.place","label":"place","caption":"dagre · taffy · pins"}</desc>
@@ -831,22 +871,6 @@ expression: interactive_svg
 <text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="26.15" transform="matrix(0.866 0.5 -0.866 0.5 231.429 162.116)" x="0" y="-2">stub</text>
 <text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="60.463" transform="matrix(0.866 0.5 -0.866 0.5 231.429 162.116)" x="0" y="11">boundary slots</text>
 </g>
-<g data-svugy-edge="(pipeline.layout.place -&gt; pipeline.layout.route)[0]" data-svugy-from="pipeline.layout.place" data-svugy-to="pipeline.layout.route">
-<title>(pipeline.layout.place -&gt; pipeline.layout.route)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout.place -&gt; pipeline.layout.route)[0]","from":"pipeline.layout.place","to":"pipeline.layout.route"}</desc>
-<path d="M45.893,54.997 Q65.661,8.457 85.43,76.93" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M45.893,54.997 Q65.815,8.096 85.737,78" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-edge="(pipeline.layout.route -&gt; pipeline.layout.stub)[0]" data-svugy-from="pipeline.layout.route" data-svugy-to="pipeline.layout.stub">
-<title>(pipeline.layout.route -&gt; pipeline.layout.stub)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout.route -&gt; pipeline.layout.stub)[0]","from":"pipeline.layout.route","to":"pipeline.layout.stub"}</desc>
-<path d="M148.09,114 Q173.896,65.33 199.702,142.942" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M148.09,114 Q174.071,65 200.052,144" repeatCount="indefinite"/>
-</use>
-</g>
 <g data-svugy-overlay=""/>
 </g>
 <text fill="#ffffff" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="28.487" transform="matrix(0.866 0.5 0 1 -88.335 76.5)" x="9" y="21.5">layout</text>
@@ -859,6 +883,22 @@ expression: interactive_svg
 <path d="M93.531,354 L5.196,405 L5.196,394.5 L93.531,343.5 Z" fill="#101e3f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M-228.631,157.5 L93.531,343.5 L5.196,394.5 L-316.965,208.5 Z" fill="#1f3566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <g data-svugy-level="pipeline.geometry" data-svugy-view="157.865 626.5 396.142 271.5" transform="matrix(1 0 0 1 -228.631 157.5)">
+<g data-svugy-edge="(pipeline.geometry.primitive -&gt; pipeline.geometry.depth)[0]" data-svugy-from="pipeline.geometry.primitive" data-svugy-to="pipeline.geometry.depth">
+<title>(pipeline.geometry.primitive -&gt; pipeline.geometry.depth)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry.primitive -&gt; pipeline.geometry.depth)[0]","from":"pipeline.geometry.primitive","to":"pipeline.geometry.depth"}</desc>
+<path d="M148.09,136.5 L199.082,165.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M148.09,136.5 L200.052,166.5" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.geometry.projection -&gt; pipeline.geometry.primitive)[0]" data-svugy-from="pipeline.geometry.projection" data-svugy-to="pipeline.geometry.primitive">
+<title>(pipeline.geometry.projection -&gt; pipeline.geometry.primitive)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry.projection -&gt; pipeline.geometry.primitive)[0]","from":"pipeline.geometry.projection","to":"pipeline.geometry.primitive"}</desc>
+<path d="M37.806,72.827 L84.767,99.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M37.806,72.827 L85.737,100.5" repeatCount="indefinite"/>
+</use>
+</g>
 <g data-svugy-element="pipeline.geometry.projection">
 <title>projection</title>
 <desc data-svugy-details="">{"kind":"element","path":"pipeline.geometry.projection","label":"projection","caption":"exact constants"}</desc>
@@ -885,22 +925,6 @@ expression: interactive_svg
 <path d="M228.631,127.5 L290.985,163.5 L233.827,196.5 L171.473,160.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="34.143" transform="matrix(0.866 0.5 -0.866 0.5 231.229 162)" x="0" y="-2">depth</text>
 <text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="59.969" transform="matrix(0.866 0.5 -0.866 0.5 231.229 162)" x="0" y="11">painter's order</text>
-</g>
-<g data-svugy-edge="(pipeline.geometry.primitive -&gt; pipeline.geometry.depth)[0]" data-svugy-from="pipeline.geometry.primitive" data-svugy-to="pipeline.geometry.depth">
-<title>(pipeline.geometry.primitive -&gt; pipeline.geometry.depth)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry.primitive -&gt; pipeline.geometry.depth)[0]","from":"pipeline.geometry.primitive","to":"pipeline.geometry.depth"}</desc>
-<path d="M148.09,114 Q173.896,65.33 199.702,142.942" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M148.09,114 Q174.071,65 200.052,144" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-edge="(pipeline.geometry.projection -&gt; pipeline.geometry.primitive)[0]" data-svugy-from="pipeline.geometry.projection" data-svugy-to="pipeline.geometry.primitive">
-<title>(pipeline.geometry.projection -&gt; pipeline.geometry.primitive)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry.projection -&gt; pipeline.geometry.primitive)[0]","from":"pipeline.geometry.projection","to":"pipeline.geometry.primitive"}</desc>
-<path d="M37.806,50.327 Q61.603,2.365 85.4,76.938" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M37.806,50.327 Q61.771,2.026 85.737,78" repeatCount="indefinite"/>
-</use>
 </g>
 <g data-svugy-overlay=""/>
 </g>
@@ -929,6 +953,22 @@ expression: interactive_svg
 <path d="M596.328,644.29 L476.816,713.29 L476.816,702.79 L596.328,633.79 Z" fill="#101e3f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M225.167,419.5 L596.328,633.79 L476.816,702.79 L105.655,488.5 Z" fill="#1f3566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <g data-svugy-level="pipeline.render" data-svugy-view="611.663 906.5 413.965 299.105" transform="matrix(1 0 0 1 225.167 419.5)">
+<g data-svugy-edge="(pipeline.render.profile -&gt; pipeline.render.writer)[0]" data-svugy-from="pipeline.render.profile" data-svugy-to="pipeline.render.writer">
+<title>(pipeline.render.profile -&gt; pipeline.render.writer)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.profile -&gt; pipeline.render.writer)[0]","from":"pipeline.render.profile","to":"pipeline.render.writer"}</desc>
+<path d="M158.847,160.71 L199.082,183.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M158.847,160.71 L200.052,184.5" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.render.theme -&gt; pipeline.render.profile)[0]" data-svugy-from="pipeline.render.theme" data-svugy-to="pipeline.render.profile">
+<title>(pipeline.render.theme -&gt; pipeline.render.profile)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.theme -&gt; pipeline.render.profile)[0]","from":"pipeline.render.theme","to":"pipeline.render.profile"}</desc>
+<path d="M33.775,88.5 L84.767,117.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M33.775,88.5 L85.737,118.5" repeatCount="indefinite"/>
+</use>
+</g>
 <g data-svugy-element="pipeline.render.theme">
 <title>theme</title>
 <desc data-svugy-details="">{"kind":"element","path":"pipeline.render.theme","label":"theme","caption":"tokens · Oklab"}</desc>
@@ -962,22 +1002,6 @@ expression: interactive_svg
 <text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="34.77" transform="matrix(0.866 0.5 -0.866 0.5 240.14 185.145)" x="0" y="-2">writer</text>
 <text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="80.58" transform="matrix(0.866 0.5 -0.866 0.5 240.14 185.145)" x="0" y="11">escaping · decimals</text>
 </g>
-<g data-svugy-edge="(pipeline.render.profile -&gt; pipeline.render.writer)[0]" data-svugy-from="pipeline.render.profile" data-svugy-to="pipeline.render.writer">
-<title>(pipeline.render.profile -&gt; pipeline.render.writer)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.profile -&gt; pipeline.render.writer)[0]","from":"pipeline.render.profile","to":"pipeline.render.writer"}</desc>
-<path d="M158.847,138.21 Q179.293,91.431 199.739,160.931" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M158.847,138.21 Q179.449,91.073 200.052,162" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-edge="(pipeline.render.theme -&gt; pipeline.render.profile)[0]" data-svugy-from="pipeline.render.theme" data-svugy-to="pipeline.render.profile">
-<title>(pipeline.render.theme -&gt; pipeline.render.profile)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.theme -&gt; pipeline.render.profile)[0]","from":"pipeline.render.theme","to":"pipeline.render.profile"}</desc>
-<path d="M33.775,66 Q59.581,17.33 85.387,94.942" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M33.775,66 Q59.756,17 85.737,96" repeatCount="indefinite"/>
-</use>
-</g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="" data-svugy-stub="contract">
 <title>to runtime contract</title>
@@ -996,35 +1020,11 @@ expression: interactive_svg
 <text fill="#ffffff" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="30.412" transform="matrix(0.866 0.5 0 1 105.655 488.5)" x="9" y="21.5">render</text>
 <text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="30.783" transform="matrix(0.866 0.5 0 1 105.655 488.5)" x="9" y="34.5">markup</text>
 </g>
-<g data-svugy-edge="(pipeline.geometry -&gt; pipeline.render)[0]" data-svugy-from="pipeline.geometry" data-svugy-to="pipeline.render">
-<title>(pipeline.geometry -&gt; pipeline.render)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry -&gt; pipeline.render)[0]","from":"pipeline.geometry","to":"pipeline.render"}</desc>
-<path d="M49.363,369 Q107.178,310.487 164.992,452.964" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M49.363,369 Q107.387,310.275 165.411,454" repeatCount="indefinite"/>
-</use>
-</g>
 <g data-svugy-edge="(pipeline.layout -&gt; pipeline.geometry)[0]" data-svugy-from="pipeline.layout" data-svugy-to="pipeline.geometry">
 <title>③</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout -&gt; pipeline.geometry)[0]","from":"pipeline.layout","to":"pipeline.geometry","label":"③"}</desc>
-<path d="M72.947,169.616 Q2.942,105.481 -67.062,249.494" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M72.947,169.616 Q2.698,105.258 -67.55,250.5" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-edge="(pipeline.metrics -&gt; pipeline.layout)[0]" data-svugy-from="pipeline.metrics" data-svugy-to="pipeline.layout">
-<title>(pipeline.metrics -&gt; pipeline.layout)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.metrics -&gt; pipeline.layout)[0]","from":"pipeline.metrics","to":"pipeline.layout"}</desc>
-<path d="M459.859,312 Q369.521,146.386 279.183,236.441" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M459.859,312 Q369.127,145.663 278.395,237.231" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-edge="(pipeline.layout -&gt; pipeline.geometry)[0]" data-svugy-from="pipeline.layout" data-svugy-to="pipeline.geometry">
-<title>③</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout -&gt; pipeline.geometry)[0]","from":"pipeline.layout","to":"pipeline.geometry","label":"③"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="34.591" x="-14.597" y="149.806"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" x="2.698" y="161.477">③</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="34.591" x="-14.597" y="212.706"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" x="2.698" y="224.377">③</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="" data-svugy-stub="contract">
@@ -1079,6 +1079,22 @@ expression: interactive_svg
 <path d="M-35.119,547.724 L-263.749,679.724 L-263.749,669.224 L-35.119,537.224 Z" fill="#0b1510" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M-251.147,412.5 L-35.119,537.224 L-263.749,669.224 L-479.778,544.5 Z" fill="#17271f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <g data-svugy-level="model" data-svugy-view="-472.601 384 430.306 228.374" transform="matrix(1 0 0 1 -251.147 412.5)">
+<g data-svugy-edge="(model.graph -&gt; model.validate)[0]" data-svugy-from="model.graph" data-svugy-to="model.validate">
+<title>(model.graph -&gt; model.validate)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model.graph -&gt; model.validate)[0]","from":"model.graph","to":"model.validate"}</desc>
+<path d="M92.426,137.362 L50.857,161.362 L-60.731,96.937 L-101.33,120.377" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#14f195" height="10" href="#traveler-dot" stroke="#14f195" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M92.426,137.362 L50.857,161.362 L-60.731,96.937 L-102.3,120.937" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(model.path -&gt; model.graph)[0]" data-svugy-from="model.path" data-svugy-to="model.graph">
+<title>(model.path -&gt; model.graph)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model.path -&gt; model.graph)[0]","from":"model.path","to":"model.graph"}</desc>
+<path d="M33.775,70.5 L84.767,99.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#14f195" height="10" href="#traveler-dot" stroke="#14f195" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M33.775,70.5 L85.737,100.5" repeatCount="indefinite"/>
+</use>
+</g>
 <g data-svugy-element="model.path">
 <title>path</title>
 <desc data-svugy-details="">{"kind":"element","path":"model.path","label":"path","caption":"ids"}</desc>
@@ -1105,22 +1121,6 @@ expression: interactive_svg
 <path d="M-140.296,76.5 L-64.303,120.374 L-121.461,153.374 L-197.454,109.5 Z" fill="#14f195" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <text fill="#001f0f" font-size="12" font-weight="650" text-anchor="middle" textLength="46.74" transform="matrix(0.866 0.5 -0.866 0.5 -130.879 114.937)" x="0" y="-2">validate</text>
 <text fill="#001f0f" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="75.749" transform="matrix(0.866 0.5 -0.866 0.5 -130.879 114.937)" x="0" y="11">problems · bounds</text>
-</g>
-<g data-svugy-edge="(model.graph -&gt; model.validate)[0]" data-svugy-from="model.graph" data-svugy-to="model.validate">
-<title>(model.graph -&gt; model.validate)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(model.graph -&gt; model.validate)[0]","from":"model.graph","to":"model.validate"}</desc>
-<path d="M92.426,114.862 Q-4.538,2.838 -101.503,97.654" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#14f195" height="10" href="#traveler-dot" stroke="#14f195" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M92.426,114.862 Q-4.937,2.377 -102.3,98.437" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-edge="(model.path -&gt; model.graph)[0]" data-svugy-from="model.path" data-svugy-to="model.graph">
-<title>(model.path -&gt; model.graph)[0]</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(model.path -&gt; model.graph)[0]","from":"model.path","to":"model.graph"}</desc>
-<path d="M33.775,48 Q59.581,-0.67 85.387,76.942" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#14f195" height="10" href="#traveler-dot" stroke="#14f195" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M33.775,48 Q59.756,-1 85.737,78" repeatCount="indefinite"/>
-</use>
 </g>
 <g data-svugy-overlay=""/>
 </g>
@@ -1462,7 +1462,24 @@ expression: interactive_svg
         const isSameOrdinal = edge.getAttribute(EDGE) === writtenEdgeName;
         return isSameEndpoints && isSameOrdinal;
       });
-      return targetedEdge ?? null;
+      return targetedEdge === undefined ? null : Contract.homeGroupOf(scope, targetedEdge);
+    },
+
+    /** Finds the group of `group`'s edge in its home level, the outermost of the edge's groups in `scope`, since a bundled edge's branches lie in its containers' levels; `group` itself when it draws no edge. */
+    homeGroupOf(scope, group) {
+      const edgeName = group.getAttribute(EDGE);
+      if (edgeName === null) {
+        return group;
+      }
+      const levelDepthOf = (edgeGroup) => {
+        const enclosingLevel = Contract.enclosingLevelOf(edgeGroup);
+        return Contract.depthOf(enclosingLevel);
+      };
+      const edgeGroups = Contract.edgesAt(scope, edgeName);
+      return edgeGroups.reduce((homeGroup, candidate) => {
+        const isCandidateOuter = levelDepthOf(candidate) < levelDepthOf(homeGroup);
+        return isCandidateOuter ? candidate : homeGroup;
+      });
     },
 
     /** Lists the groups of `scope` drawing the element or edge `group` draws: the element's group, or every group of the edge, its label's included. */
@@ -2031,7 +2048,8 @@ expression: interactive_svg
       if (isLeaf) {
         return this.zoomOntoLeaf(group);
       }
-      const reachedLevel = this.levelReachedThrough(group);
+      const homeGroup = Contract.homeGroupOf(this.shownLayer, group);
+      const reachedLevel = this.levelReachedThrough(homeGroup);
       return this.focus(reachedLevel);
     }
 

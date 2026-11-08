@@ -139,7 +139,7 @@ A link naming nothing, or several things, is a warning and shows as plain text.
 | `shape` | `box` (default), `slab`, `cylinder`, `disc` | a leaf's solid |
 | `height` | number > 0 | a leaf's height |
 | `position` | `X,Y` | top-left corner in the parent; unpinned components are placed automatically |
-| `layout` | `layered` (default), `grid`, `row`, `column` | how a container places its children |
+| `layout` | `layered` (default), `grid`, `row`, `column` | how a container places its children; without it, children with no edges among them line up facing the container's edges, near the neighbours they connect to |
 | `columns` | integer > 0 | column count, required by `layout=grid` |
 | `link` | component REF or URL | a click goes to that component, or opens the URL |
 | `meta.NAME` | text | a `NAME: value` line in the hover panel |

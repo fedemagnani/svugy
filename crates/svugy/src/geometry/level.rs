@@ -1,21 +1,21 @@
 //! Project every laid-out level into nested scene groups.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::iter;
 
 use glam::DVec3;
-use kurbo::{Affine, Rect};
+use kurbo::{Affine, Point, Rect, Vec2};
 use svugy_model::model::{Edge, EdgeId, Model};
 use svugy_model::path::ElementPath;
 
 use super::badge::{BadgeIcon, BadgeSeater};
-use super::connection::LiftedArc;
+use super::connection::{ConnectionShape, FlatTrace, LiftedArc};
 use super::depth::DepthOrder;
 use super::obstruction::Obstructions;
 use super::primitive::ResolvedPrimitive;
 use super::projection::IsometricProjection;
 use super::{Connection, Group, PlatedLabel, Solid};
-use crate::layout::{LevelPlacement, LevelPlan, LevelPlans, Route};
+use crate::layout::{Branch, Course, LevelPlacement, LevelPlan, LevelPlans, Route};
 use crate::metrics::TextMeasure;
 
 /// Projects levels top-down, each container's interior onto its solid's top, a sheet under each closed container.
@@ -24,6 +24,14 @@ pub(super) struct LevelProjector<'a, M> {
     closed_containers: &'a BTreeSet<ElementPath>,
     plans: &'a LevelPlans,
     measure: &'a M,
+}
+
+/// Hands one bundled edge's branch to the projector of the container it runs on, traced on that container's floor in its frame.
+pub(super) struct FloorBranch {
+    edge_id: EdgeId,
+    trace: FlatTrace,
+    ends_in_arrowhead: bool,
+    carries_label: bool,
 }
 
 impl<'a, M: TextMeasure> LevelProjector<'a, M> {
@@ -42,18 +50,23 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
         }
     }
 
-    /// Project `level` as `plan` lays it out, mapped into its parent by `frame`: solids back to front with their interiors, then arcs of the edges homed here with plates clear of the solids' labels.
+    /// Project `level` as `plan` lays it out, mapped into its parent by `frame`: solids back to front with their interiors, then traces of the edges homed here and of the `floor_branches` handed to it, then arcs of the edges homed here, trace plates placed first, every plate clear of the solids' labels and of the plates before it.
     pub(super) fn project_level(
         &self,
         level: &ElementPath,
         plan: &LevelPlan,
         frame: Affine,
+        floor_branches: Vec<FloorBranch>,
     ) -> Group {
         let solids = self.project_solids_back_to_front(plan);
-        let obstructions = Obstructions::around_text_of(&solids);
-        let connections = self.arc_connections_homed_at(level, plan, obstructions);
+        let mut obstructions = Obstructions::around_text_of(&solids);
+        let mut traces = self.trace_connections_homed_at(plan, &mut obstructions);
+        let branch_traces = self.trace_floor_branches(floor_branches, &mut obstructions);
+        traces.extend(branch_traces);
+        let connections = self.arc_connections_homed_at(level, plan, &mut obstructions);
         let empty_group = Group::new(frame);
         Group {
+            traces,
             solids,
             connections,
             ..empty_group
@@ -64,6 +77,7 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
     fn project_solids_back_to_front(&self, plan: &LevelPlan) -> Vec<Solid> {
         let placed = plan.placed();
         let footprints = placed.footprints();
+        let routes = plan.routes();
         let back_to_front = DepthOrder::back_to_front(footprints);
         back_to_front
             .into_iter()
@@ -79,8 +93,13 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
                     BadgeSeater::on_top_of(&sheeted_solid, footprint, primitive.height);
                 let badges = badge_seater.seat_badges(badge_icons);
                 let badged_solid = sheeted_solid.with_badges(badges);
-                let solid =
-                    self.stack_planned_interior(path, footprint, primitive.height, badged_solid);
+                let solid = self.stack_planned_interior(
+                    path,
+                    footprint,
+                    primitive.height,
+                    routes,
+                    badged_solid,
+                );
                 Some(solid)
             })
             .collect()
@@ -115,65 +134,221 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
             .collect()
     }
 
-    /// Stack the planned interior of `path`, if any, on its solid: the interior's origin is the footprint's top-left corner raised to the primitive's top, `primitive_height` up.
+    /// Stack the planned interior of `path`, if any, on its solid, handing it the branches of `enclosing_level_routes` that run on its floor: the interior's origin is the footprint's top-left corner raised to the primitive's top, `primitive_height` up.
     fn stack_planned_interior(
         &self,
         path: &ElementPath,
         footprint: Rect,
         primitive_height: f64,
+        enclosing_level_routes: &BTreeMap<EdgeId, Route>,
         drawn_solid: Solid,
     ) -> Solid {
         let Some(interior_plan) = self.plans.level(path) else {
             return drawn_solid;
         };
+        let floor_branches =
+            FloorBranch::every_one_on_floor_of(path, footprint, enclosing_level_routes);
         let raised_origin = DVec3::new(footprint.x0, footprint.y0, primitive_height);
         let projected_origin = IsometricProjection::project(raised_origin);
         let interior_offset = projected_origin.to_vec2();
         let interior_frame = Affine::translate(interior_offset);
-        let interior = self.project_level(path, interior_plan, interior_frame);
+        let interior = self.project_level(path, interior_plan, interior_frame, floor_branches);
         drawn_solid.with_interior(interior)
     }
 
-    /// Arc the route of every edge homed at `level`, plating each label where its arc is least obstructed, clear of the plates before it, in route order.
-    fn arc_connections_homed_at(
+    /// Trace the flat route of every edge homed at this level on its floor, ports at floor height, plating each label where its trace is least obstructed and recording it among `obstructions`, in route order.
+    fn trace_connections_homed_at(
         &self,
-        level: &ElementPath,
         plan: &LevelPlan,
-        mut obstructions: Obstructions,
+        obstructions: &mut Obstructions,
     ) -> Vec<Connection> {
+        let level_floor_height = 0.0;
         let routes = plan.routes();
         routes
             .iter()
-            .map(|(edge_id, route)| {
-                self.arc_connection_homed_at(level, edge_id, route, &mut obstructions)
+            .filter_map(|(edge_id, route)| {
+                let Course::Flat { bends } = &route.course else {
+                    return None;
+                };
+                let source_port = iter::once(route.source.point);
+                let bend_points = bends.iter().copied();
+                let target_port = iter::once(route.target.point);
+                let plan_corners = source_port.chain(bend_points).chain(target_port);
+                let trace = FlatTrace::on_floor_through(level_floor_height, plan_corners);
+                let connection = self.connection_along(edge_id, &trace, obstructions);
+                Some(connection)
             })
             .collect()
     }
 
-    /// Arc `edge_id`'s `route`, homed at `level`, from its ports raised by the solids under them, its label, if any, plated where the arc is least obstructed and recorded among `obstructions`.
+    /// Trace every branch handed to this level on its floor, headed only where it reaches its edge's target, plating each label it carries where its trace is least obstructed and recording it among `obstructions`.
+    fn trace_floor_branches(
+        &self,
+        floor_branches: Vec<FloorBranch>,
+        obstructions: &mut Obstructions,
+    ) -> Vec<Connection> {
+        floor_branches
+            .into_iter()
+            .map(|floor_branch| {
+                let FloorBranch {
+                    edge_id,
+                    trace,
+                    ends_in_arrowhead,
+                    carries_label,
+                } = floor_branch;
+                let stroke = Self::stroke_along(&edge_id, &trace, ends_in_arrowhead);
+                let is_label_elsewhere = !carries_label;
+                if is_label_elsewhere {
+                    return stroke;
+                }
+                self.with_label_plated_along(stroke, &trace, obstructions)
+            })
+            .collect()
+    }
+
+    /// Arc the lifted route of every edge homed at `level`, a bundled one as its trunk, plating each arc's label where it is least obstructed and recording it among `obstructions`, in route order.
+    fn arc_connections_homed_at(
+        &self,
+        level: &ElementPath,
+        plan: &LevelPlan,
+        obstructions: &mut Obstructions,
+    ) -> Vec<Connection> {
+        let routes = plan.routes();
+        routes
+            .iter()
+            .filter_map(|(edge_id, route)| {
+                let (source_branch, target_branch) = match &route.course {
+                    Course::Lifted => (None, None),
+                    Course::Bundled {
+                        source_branch,
+                        target_branch,
+                    } => (source_branch.as_ref(), target_branch.as_ref()),
+                    Course::Flat { bends: _bends } => return None,
+                };
+                let connection = self.arc_connection_homed_at(
+                    level,
+                    edge_id,
+                    route,
+                    source_branch,
+                    target_branch,
+                    obstructions,
+                );
+                Some(connection)
+            })
+            .collect()
+    }
+
+    /// Arc `edge_id`'s `route`, homed at `level`, between its trunk ends. Unbranched, its dot runs port to port and its label is plated where the arc is least obstructed and recorded among `obstructions`; branched, its dot runs along `source_branch`, the trunk and `target_branch`, and the arrowhead and the label are the branches'.
     fn arc_connection_homed_at(
         &self,
         level: &ElementPath,
         edge_id: &EdgeId,
         route: &Route,
+        source_branch: Option<&Branch>,
+        target_branch: Option<&Branch>,
         obstructions: &mut Obstructions,
     ) -> Connection {
         let source = edge_id.from();
         let target = edge_id.to();
-        let source_elevation = self.elevation_above(level, source);
-        let target_elevation = self.elevation_above(level, target);
-        let arc = LiftedArc::over_route(route, source_elevation, target_elevation);
-        let stroked_path = arc.path_under_target_arrowhead();
-        let dot_path = arc.port_to_port_path();
+        let source_port = route.source.point;
+        let target_port = route.target.point;
+        let source_end = self.trunk_end_above(level, source, source_port, source_branch);
+        let target_end = self.trunk_end_above(level, target, target_port, target_branch);
+        let trunk = LiftedArc::between(source_end, target_end);
+        let is_unbranched = matches!((source_branch, target_branch), (None, None));
+        if is_unbranched {
+            return self.connection_along(edge_id, &trunk, obstructions);
+        }
+        let source_branch_trace = source_branch.map(|branch| {
+            let plan_corners = branch.corners_from_port_to_slot(source_port);
+            self.branch_trace_above(level, branch, plan_corners)
+        });
+        let target_branch_trace = target_branch.map(|branch| {
+            let plan_corners = branch.corners_from_slot_to_port(target_port);
+            self.branch_trace_above(level, branch, plan_corners)
+        });
+        let dot_path =
+            trunk.port_to_port_path_via(source_branch_trace.as_ref(), target_branch_trace.as_ref());
+        let is_trunk_reaching_target = target_branch.is_none();
+        let trunk_stroke = Self::stroke_along(edge_id, &trunk, is_trunk_reaching_target);
+        trunk_stroke.with_dot_path(dot_path)
+    }
+
+    /// Return where a trunk lands, above `level`'s floor, at the end on `endpoint`: the slot of `branch`, if any, at its container's floor height, else `port` raised by the solids under it.
+    fn trunk_end_above(
+        &self,
+        level: &ElementPath,
+        endpoint: &ElementPath,
+        port: Point,
+        branch: Option<&Branch>,
+    ) -> DVec3 {
+        let Some(branch) = branch else {
+            let endpoint_elevation = self.elevation_above(level, endpoint);
+            return DVec3::new(port.x, port.y, endpoint_elevation);
+        };
+        let slot = branch.slot.point;
+        let container_floor_height = self.elevation_above(level, &branch.container);
+        DVec3::new(slot.x, slot.y, container_floor_height)
+    }
+
+    /// Trace `branch` through `plan_corners` on its container's floor, as high above `level`'s floor as the container's top.
+    fn branch_trace_above(
+        &self,
+        level: &ElementPath,
+        branch: &Branch,
+        plan_corners: Vec<Point>,
+    ) -> FlatTrace {
+        let container_floor_height = self.elevation_above(level, &branch.container);
+        FlatTrace::on_floor_through(container_floor_height, plan_corners)
+    }
+
+    /// Connect `edge_id` along `shape`, stroked under its target arrowhead, its dot travelling port to port, its label, if any, plated where `shape` is least obstructed and recorded among `obstructions`.
+    fn connection_along(
+        &self,
+        edge_id: &EdgeId,
+        shape: &impl ConnectionShape,
+        obstructions: &mut Obstructions,
+    ) -> Connection {
+        let stroked_path = shape.path_under_target_arrowhead();
+        let dot_path = shape.port_to_port_path();
         let connection_edge_id = edge_id.clone();
         let connection = Connection::new(connection_edge_id, stroked_path).with_dot_path(dot_path);
-        let edge = self.model.edge(edge_id);
+        self.with_label_plated_along(connection, shape, obstructions)
+    }
+
+    /// Stroke `edge_id` along `shape`: under the arrowhead when it reaches the edge's target, else whole and headless.
+    fn stroke_along(
+        edge_id: &EdgeId,
+        shape: &impl ConnectionShape,
+        is_reaching_target: bool,
+    ) -> Connection {
+        let connection_edge_id = edge_id.clone();
+        if is_reaching_target {
+            let stroked_path = shape.path_under_target_arrowhead();
+            return Connection::new(connection_edge_id, stroked_path);
+        }
+        let whole_path = shape.port_to_port_path();
+        Connection::new(connection_edge_id, whole_path).without_arrowhead()
+    }
+
+    /// Plate the label of `connection`'s edge, if any, where `shape` is least obstructed, recording it among `obstructions`.
+    fn with_label_plated_along(
+        &self,
+        connection: Connection,
+        shape: &impl ConnectionShape,
+        obstructions: &mut Obstructions,
+    ) -> Connection {
+        let edge = self.model.edge(&connection.edge);
         let edge_label = edge.and_then(Edge::label);
         let Some(label_text) = edge_label else {
             return connection;
         };
-        let plated_label =
-            PlatedLabel::place_least_obstructed_along(label_text, &arc, obstructions, self.measure);
+        let plated_label = PlatedLabel::place_least_obstructed_along(
+            label_text,
+            shape,
+            obstructions,
+            self.measure,
+        );
         connection.with_label(plated_label)
     }
 
@@ -193,18 +368,104 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
     }
 }
 
+impl FloorBranch {
+    /// Trace in `container`'s frame the branch of every bundled route among `routes` that runs on its floor, `footprint` being where it stands in their plan: a target branch ends in the arrowhead and carries the label, a source branch carries it only when its route has no target branch.
+    fn every_one_on_floor_of(
+        container: &ElementPath,
+        footprint: Rect,
+        routes: &BTreeMap<EdgeId, Route>,
+    ) -> Vec<Self> {
+        let container_offset = footprint.origin().to_vec2();
+        let mut floor_branches = Vec::new();
+        for (edge_id, route) in routes {
+            let Course::Bundled {
+                source_branch,
+                target_branch,
+            } = &route.course
+            else {
+                continue;
+            };
+            let source_branch_here = source_branch
+                .as_ref()
+                .filter(|branch| branch.container == *container);
+            if let Some(branch) = source_branch_here {
+                let source_port = route.source.point;
+                let plan_corners = branch.corners_from_port_to_slot(source_port);
+                let trace = Self::trace_on_container_floor(plan_corners, container_offset);
+                let is_target_unbranched = target_branch.is_none();
+                let floor_branch = Self {
+                    edge_id: edge_id.clone(),
+                    trace,
+                    ends_in_arrowhead: false,
+                    carries_label: is_target_unbranched,
+                };
+                floor_branches.push(floor_branch);
+            }
+            let target_branch_here = target_branch
+                .as_ref()
+                .filter(|branch| branch.container == *container);
+            if let Some(branch) = target_branch_here {
+                let target_port = route.target.point;
+                let plan_corners = branch.corners_from_slot_to_port(target_port);
+                let trace = Self::trace_on_container_floor(plan_corners, container_offset);
+                let floor_branch = Self {
+                    edge_id: edge_id.clone(),
+                    trace,
+                    ends_in_arrowhead: true,
+                    carries_label: true,
+                };
+                floor_branches.push(floor_branch);
+            }
+        }
+        floor_branches
+    }
+
+    /// Trace the polyline through `plan_corners`, in the enclosing level's plan, on the floor of the container whose footprint corner lies `container_offset` from that plan's origin.
+    fn trace_on_container_floor(plan_corners: Vec<Point>, container_offset: Vec2) -> FlatTrace {
+        let container_floor_height = 0.0;
+        let container_corners = plan_corners
+            .into_iter()
+            .map(|plan_corner| plan_corner - container_offset);
+        FlatTrace::on_floor_through(container_floor_height, container_corners)
+    }
+}
+
+impl Branch {
+    /// Return the branch's plan corners in flow order at a source end: from `source_port` back through the bends to the slot.
+    fn corners_from_port_to_slot(&self, source_port: Point) -> Vec<Point> {
+        let port_corner = iter::once(source_port);
+        let bends_from_port = self.bends.iter().rev().copied();
+        let slot_corner = iter::once(self.slot.point);
+        port_corner
+            .chain(bends_from_port)
+            .chain(slot_corner)
+            .collect()
+    }
+
+    /// Return the branch's plan corners in flow order at a target end: from the slot through the bends to `target_port`.
+    fn corners_from_slot_to_port(&self, target_port: Point) -> Vec<Point> {
+        let slot_corner = iter::once(self.slot.point);
+        let bends_from_slot = self.bends.iter().copied();
+        let port_corner = iter::once(target_port);
+        slot_corner
+            .chain(bends_from_slot)
+            .chain(port_corner)
+            .collect()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::{BTreeMap, BTreeSet};
 
-    use kurbo::{ParamCurve, Point, Shape as _, Size};
+    use kurbo::{BezPath, ParamCurve, PathEl, Point, Shape as _, Size};
     use svugy_model::builder::ModelBuilder;
     use svugy_model::disclose::DisclosedModel;
     use svugy_model::model::{Element, Shape};
 
     use super::*;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
-    use crate::geometry::{Face, Label, Scene};
+    use crate::geometry::{ArrowheadMarker, Face, Label, Scene};
     use crate::layout::{PlacedLevel, Port, Side, Stub};
 
     const SLAB_TOP: f64 = 10.5;
@@ -421,6 +682,111 @@ mod tests {
     }
 
     #[test]
+    fn a_bundled_edge_branches_on_each_containers_floor_under_one_trunk_and_one_traveler() {
+        let mut builder = ModelBuilder::new();
+        let app = builder.add_top_level("a", Element::new("app"));
+        let ui = builder.add_child(&app, "x", Element::new("ui"));
+        let backend = builder.add_top_level("b", Element::new("backend"));
+        let api = builder.add_child(&backend, "y", Element::new("api"));
+        let feeds = Edge::new().with_label("feeds");
+        let ui_into_api = builder.add_edge(&ui, &api, feeds);
+        let model = builder.build().model.expect("fixture model is valid");
+        let ui_east_port = Port::new(Side::East, Point::new(60.0, 40.0));
+        let app_east_slot = Port::new(Side::East, Point::new(100.0, 40.0));
+        let backend_west_slot = Port::new(Side::West, Point::new(200.0, 40.0));
+        let api_west_port = Port::new(Side::West, Point::new(240.0, 60.0));
+        let backend_bends = vec![Point::new(220.0, 40.0), Point::new(220.0, 60.0)];
+        let source_branch = Branch {
+            container: path("a"),
+            slot: app_east_slot,
+            bends: Vec::new(),
+        };
+        let target_branch = Branch {
+            container: path("b"),
+            slot: backend_west_slot,
+            bends: backend_bends,
+        };
+        let bundled_course = Course::Bundled {
+            source_branch: Some(source_branch),
+            target_branch: Some(target_branch),
+        };
+        let bundled_route = Route {
+            source: ui_east_port,
+            target: api_west_port,
+            course: bundled_course,
+        };
+        let root_footprints = BTreeMap::from([
+            (path("a"), Rect::new(0.0, 0.0, 100.0, 100.0)),
+            (path("b"), Rect::new(200.0, 0.0, 300.0, 100.0)),
+        ]);
+        let root_routes = BTreeMap::from([(ui_into_api, bundled_route)]);
+        let root_extent = Size::new(300.0, 100.0);
+        let root_placed = PlacedLevel::new(root_extent, root_footprints);
+        let root_plan = LevelPlan::new(root_placed, root_routes, BTreeMap::new());
+        let container_extent = Size::new(100.0, 100.0);
+        let app_footprints = BTreeMap::from([(path("a.x"), Rect::new(20.0, 20.0, 60.0, 60.0))]);
+        let app_placed = PlacedLevel::new(container_extent, app_footprints);
+        let app_plan = LevelPlan::new(app_placed, BTreeMap::new(), BTreeMap::new());
+        let backend_footprints = BTreeMap::from([(path("b.y"), Rect::new(40.0, 40.0, 80.0, 80.0))]);
+        let backend_placed = PlacedLevel::new(container_extent, backend_footprints);
+        let backend_plan = LevelPlan::new(backend_placed, BTreeMap::new(), BTreeMap::new());
+        let plans_by_level = BTreeMap::from([
+            (ElementPath::root(), root_plan),
+            (path("a"), app_plan),
+            (path("b"), backend_plan),
+        ]);
+        let plans = LevelPlans::new(plans_by_level);
+
+        let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
+
+        let [trunk] = &scene.root.connections[..] else {
+            panic!("the home level arcs the trunk alone");
+        };
+        assert!(!trunk.ends_in_arrowhead, "the arrowhead is never mid-route");
+        assert!(
+            trunk.label.is_none(),
+            "the trunk is shared, so it carries no label"
+        );
+        let app_interior = interior_of(&scene.root, "a");
+        let [source_branch_trace] = &app_interior.traces[..] else {
+            panic!("the source branch is traced on a's floor, under a's children");
+        };
+        assert!(!source_branch_trace.ends_in_arrowhead);
+        assert!(source_branch_trace.label.is_none());
+        let backend_interior = interior_of(&scene.root, "b");
+        let [target_branch_trace] = &backend_interior.traces[..] else {
+            panic!("the target branch is traced on b's floor, under b's children");
+        };
+        assert!(target_branch_trace.ends_in_arrowhead);
+        let target_label = target_branch_trace.label.as_ref().expect("plated");
+        assert_eq!(target_label.label.text, "feeds");
+        let dot_path = trunk
+            .dot_path
+            .as_ref()
+            .expect("the trunk moves the traveler");
+        let dot_path_elements = dot_path.elements();
+        let move_count = dot_path_elements
+            .iter()
+            .filter(|element| matches!(element, PathEl::MoveTo(_point)))
+            .count();
+        assert_eq!(move_count, 1, "the traveler never jumps");
+        let dot_start = dot_path.segments().next().expect("dot path has a segment");
+        let dot_end = dot_path.segments().last().expect("dot path has a segment");
+        let ui_port_on_app_floor = DVec3::new(60.0, 40.0, SLAB_TOP);
+        let api_port_on_backend_floor = DVec3::new(240.0, 60.0, SLAB_TOP);
+        let projected_ui_port = IsometricProjection::project(ui_port_on_app_floor);
+        let projected_api_port = IsometricProjection::project(api_port_on_backend_floor);
+        assert_near(dot_start.start(), projected_ui_port);
+        assert_near(dot_end.end(), projected_api_port);
+        let target_branch_start = target_branch_trace.path.segments().next().expect("segment");
+        let backend_to_root = scene.root.frame * backend_interior.frame;
+        let target_branch_start_in_root = backend_to_root * target_branch_start.start();
+        let backend_slot_on_its_floor = DVec3::new(200.0, 40.0, SLAB_TOP);
+        let projected_backend_slot = IsometricProjection::project(backend_slot_on_its_floor);
+        assert_near(target_branch_start_in_root, projected_backend_slot);
+    }
+
+    #[test]
     fn every_container_level_tags_its_stub_slots_with_the_external_endpoint() {
         let scene = nested_scene();
         let outer = interior_of(&scene.root, "a");
@@ -554,6 +920,70 @@ mod tests {
         assert_eq!(stroked_segment.start(), dot_segment.start());
         let shortfall = (stroked_segment.end() - dot_segment.end()).hypot2().sqrt();
         assert!((shortfall - 1.12).abs() < 0.01);
+    }
+
+    #[test]
+    fn a_flat_route_is_traced_on_the_floor_port_to_port_its_stroke_stopping_under_the_arrowhead() {
+        let model = two_boxes_model();
+        let lifted_plan = LevelPlan::two_boxes_and_one_route();
+        let lifted_routes = lifted_plan.routes();
+        let (edge_id, lifted_route) = lifted_routes.iter().next().expect("fixture has a route");
+        let source_port = lifted_route.source;
+        let target_port = lifted_route.target;
+        let plan_corners = [
+            source_port.point,
+            Point::new(110.0, 50.0),
+            Point::new(110.0, 70.0),
+            target_port.point,
+        ];
+        let bends = plan_corners[1..3].to_vec();
+        let flat_route = Route::traced_through(source_port, bends, target_port);
+        let flat_routes = BTreeMap::from([(edge_id.clone(), flat_route)]);
+        let placed = lifted_plan.placed().clone();
+        let flat_plan = LevelPlan::new(placed, flat_routes, BTreeMap::new());
+        let plans = LevelPlans::root_only(flat_plan);
+
+        let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
+
+        let is_lifted_connection_drawn = !scene.root.connections.is_empty();
+        assert!(
+            !is_lifted_connection_drawn,
+            "a flat route draws no lifted connection"
+        );
+        let [trace] = &scene.root.traces[..] else {
+            panic!("a flat route draws exactly one trace");
+        };
+        let floor = IsometricProjection::horizontal_plane_at(0.0);
+        let floor_corners = plan_corners.map(|plan_corner| floor * plan_corner);
+        let [
+            source_on_floor,
+            first_bend_on_floor,
+            last_bend_on_floor,
+            target_on_floor,
+        ] = floor_corners;
+        let mut port_to_port_on_floor = BezPath::new();
+        port_to_port_on_floor.move_to(source_on_floor);
+        port_to_port_on_floor.line_to(first_bend_on_floor);
+        port_to_port_on_floor.line_to(last_bend_on_floor);
+        port_to_port_on_floor.line_to(target_on_floor);
+        let dot_path = trace.dot_path.as_ref().expect("traces carry a dot path");
+        assert_eq!(
+            *dot_path, port_to_port_on_floor,
+            "the dot runs from port to port through the bends, all on the floor"
+        );
+        let stroked_segments = trace.path.segments();
+        let last_stroked_segment = stroked_segments.last().expect("trace has a segment");
+        let stroked_end = last_stroked_segment.end();
+        let last_leg = target_on_floor - last_bend_on_floor;
+        let last_leg_direction = last_leg.normalize();
+        let arrowhead_tip = stroked_end + last_leg_direction * ArrowheadMarker::TIP_OVERHANG;
+        let tip_miss = (arrowhead_tip - target_on_floor).hypot2().sqrt();
+        assert!(
+            tip_miss < 1e-9,
+            "the stroke stops one arrowhead overhang short of the target port along the last leg"
+        );
+        let plated_label = trace.label.as_ref().expect("labelled edge is plated");
+        assert_eq!(plated_label.label.text, "calls");
     }
 
     #[test]

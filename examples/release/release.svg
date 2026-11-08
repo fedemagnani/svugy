@@ -226,7 +226,41 @@
 <path d="M-95.272,214.995 L491.883,553.989 L491.883,543.489 L-95.272,204.495 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M710.121,427.989 L491.883,553.989 L491.883,543.489 L710.121,417.489 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M122.967,78.495 L710.121,417.489 L491.883,543.489 L-95.272,204.495 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<g data-svugy-level="github" data-svugy-view="-52.204 78.655 704.704 422.795" transform="matrix(1 0 0 1 122.967 78.495)">
+<g data-svugy-level="github" data-svugy-view="-52.204 74.828 704.704 426.623" transform="matrix(1 0 0 1 122.967 78.495)">
+<g data-svugy-edge="(github.approval -&gt; github.releaseplz)[0]" data-svugy-from="github.approval" data-svugy-to="github.releaseplz">
+<title>unlocks publishing</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(github.approval -&gt; github.releaseplz)[0]","from":"github.approval","to":"github.releaseplz","label":"unlocks publishing"}</desc>
+<path d="M53.948,100.147 L115.332,135.587" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-3)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#f0a020" height="10" href="#traveler-dot" stroke="#f0a020" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M53.948,100.147 L116.302,136.147" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(github.dist -&gt; github.releases)[0]" data-svugy-from="github.dist" data-svugy-to="github.releases">
+<title>uploads the installers</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(github.dist -&gt; github.releases)[0]","from":"github.dist","to":"github.releases","label":"uploads the installers"}</desc>
+<path d="M355.464,274.227 L416.848,309.667" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="parcel" fill="#3478f6" height="10" href="#traveler-parcel" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M355.464,274.227 L417.818,310.227" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(github.releaseplz -&gt; github.dist)[0]" data-svugy-from="github.releaseplz" data-svugy-to="github.dist">
+<title>pushes the svugy-cli tag</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(github.releaseplz -&gt; github.dist)[0]","from":"github.releaseplz","to":"github.dist","label":"pushes the svugy-cli tag"}</desc>
+<path d="M203.908,186.726 L265.292,222.166" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M203.908,186.726 L266.262,222.726" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(maintainer -&gt; github.approval)[0]" data-svugy-from="maintainer" data-svugy-to="github.approval">
+<title>approves the release</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(maintainer -&gt; github.approval)[0]","from":"maintainer","to":"github.approval","label":"approves the release"}</desc>
+<path d="M-70.826,40.891 L-55.237,49.891 L-44.167,43.5 L-29.549,51.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+</g>
+<g data-svugy-edge="(maintainer -&gt; github.ci)[0]" data-svugy-from="maintainer" data-svugy-to="github.ci">
+<title>merges a change</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(maintainer -&gt; github.ci)[0]","from":"maintainer","to":"github.ci","label":"merges a change"}</desc>
+<path d="M-70.826,40.891 L-52.88,51.252 L-140.537,101.861 L-123.562,111.662" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+</g>
 <g data-svugy-element="github.approval">
 <title>Approval</title>
 <desc data-svugy-details="">{"kind":"element","path":"github.approval","label":"Approval","caption":"release environment","description":"The `release` environment holds the publishing secrets and waits for the maintainer to approve each run."}</desc>
@@ -274,44 +308,32 @@
 <g data-svugy-edge="(github.approval -&gt; github.releaseplz)[0]" data-svugy-from="github.approval" data-svugy-to="github.releaseplz">
 <title>unlocks publishing</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(github.approval -&gt; github.releaseplz)[0]","from":"github.approval","to":"github.releaseplz","label":"unlocks publishing"}</desc>
-<path d="M53.948,89.647 Q84.947,21.241 115.945,112.591" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-3)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#f0a020" height="10" href="#traveler-dot" stroke="#f0a020" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M53.948,89.647 Q85.125,20.847 116.302,113.647" repeatCount="indefinite"/>
-</use>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#f0a020" stroke-opacity="0.55" width="114.033" x="7.324" y="98.295"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="94.033" x="64.341" y="109.967">unlocks publishing</text>
 </g>
 <g data-svugy-edge="(github.dist -&gt; github.releases)[0]" data-svugy-from="github.dist" data-svugy-to="github.releases">
 <title>uploads the installers</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(github.dist -&gt; github.releases)[0]","from":"github.dist","to":"github.releases","label":"uploads the installers"}</desc>
-<path d="M355.464,251.727 Q386.454,196.758 417.445,283.676" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="parcel" fill="#3478f6" height="10" href="#traveler-parcel" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M355.464,251.727 Q386.641,196.427 417.818,284.727" repeatCount="indefinite"/>
-</use>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="126.887" x="318.001" y="281.375"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="106.887" x="381.445" y="293.047">uploads the installers</text>
 </g>
 <g data-svugy-edge="(github.releaseplz -&gt; github.dist)[0]" data-svugy-from="github.releaseplz" data-svugy-to="github.dist">
 <title>pushes the svugy-cli tag</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(github.releaseplz -&gt; github.dist)[0]","from":"github.releaseplz","to":"github.dist","label":"pushes the svugy-cli tag"}</desc>
-<path d="M203.908,164.226 Q234.896,113.735 265.883,199.177" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M203.908,164.226 Q235.085,113.426 266.262,200.226" repeatCount="indefinite"/>
-</use>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="143.857" x="142.372" y="184.874"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="123.857" x="214.3" y="196.546">pushes the svugy-cli tag</text>
 </g>
-<g data-svugy-edge="(github.approval -&gt; github.releaseplz)[0]" data-svugy-from="github.approval" data-svugy-to="github.releaseplz">
-<title>unlocks publishing</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(github.approval -&gt; github.releaseplz)[0]","from":"github.approval","to":"github.releaseplz","label":"unlocks publishing"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#f0a020" stroke-opacity="0.55" width="114.033" x="28.109" y="53.395"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="94.033" x="85.125" y="65.067">unlocks publishing</text>
+<g data-svugy-edge="(maintainer -&gt; github.approval)[0]" data-svugy-from="maintainer" data-svugy-to="github.approval">
+<title>approves the release</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(maintainer -&gt; github.approval)[0]","from":"maintainer","to":"github.approval","label":"approves the release"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#9945ff" stroke-opacity="0.55" width="125.687" x="-125.875" y="37.539"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="105.687" x="-63.031" y="49.211">approves the release</text>
 </g>
-<g data-svugy-edge="(github.dist -&gt; github.releases)[0]" data-svugy-from="github.dist" data-svugy-to="github.releases">
-<title>uploads the installers</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(github.dist -&gt; github.releases)[0]","from":"github.dist","to":"github.releases","label":"uploads the installers"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="126.887" x="332.914" y="233.104"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="106.887" x="396.357" y="244.776">uploads the installers</text>
-</g>
-<g data-svugy-edge="(github.releaseplz -&gt; github.dist)[0]" data-svugy-from="github.releaseplz" data-svugy-to="github.dist">
-<title>pushes the svugy-cli tag</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(github.releaseplz -&gt; github.dist)[0]","from":"github.releaseplz","to":"github.dist","label":"pushes the svugy-cli tag"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="143.857" x="179.754" y="159.307"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="123.857" x="251.683" y="170.978">pushes the svugy-cli tag</text>
+<g data-svugy-edge="(maintainer -&gt; github.ci)[0]" data-svugy-from="maintainer" data-svugy-to="github.ci">
+<title>merges a change</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(maintainer -&gt; github.ci)[0]","from":"maintainer","to":"github.ci","label":"merges a change"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#9945ff" stroke-opacity="0.55" width="106.774" x="-150.095" y="68.704"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="86.774" x="-96.709" y="80.376">merges a change</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="" data-svugy-stub="cratesio">
@@ -323,8 +345,8 @@
 <g data-svugy-goto="" data-svugy-stub="maintainer">
 <title>to Maintainer</title>
 <desc data-svugy-details="">{"kind":"stub","target":"maintainer","edges":[{"kind":"edge","edge":"(maintainer -&gt; github.approval)[0]","from":"maintainer","to":"github.approval","label":"approves the release"},{"kind":"edge","edge":"(maintainer -&gt; github.ci)[0]","from":"maintainer","to":"github.ci","label":"merges a change"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -64.16 46.395)" width="73.233" x="-36.617" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="53.233" transform="matrix(0.866 -0.5 0.866 0.5 -64.16 46.395)" x="0" y="3.82">Maintainer</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -57.53 42.567)" width="73.233" x="-36.617" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="53.233" transform="matrix(0.866 -0.5 0.866 0.5 -57.53 42.567)" x="0" y="3.82">Maintainer</text>
 </g>
 <g data-svugy-goto="" data-svugy-stub="site">
 <title>to svugy.dev</title>
@@ -373,17 +395,17 @@
 <g data-svugy-edge="(maintainer -&gt; github.approval)[0]" data-svugy-from="maintainer" data-svugy-to="github.approval">
 <title>approves the release</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(maintainer -&gt; github.approval)[0]","from":"maintainer","to":"github.approval","label":"approves the release"}</desc>
-<path d="M25.972,68.495 Q60.004,16.992 94.037,119.435" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M25.972,68.495 Q39.056,18.338 52.141,119.386" data-svugy-flow="" fill="none" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="key" fill="#9945ff" height="10" href="#traveler-key" stroke="#9945ff" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M25.972,68.495 Q60.18,16.727 94.388,120.495" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M25.972,68.495 Q39.056,18.338 52.141,119.386 L67.729,128.386 L78.799,121.995 L94.388,130.995" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(maintainer -&gt; github.ci)[0]" data-svugy-from="maintainer" data-svugy-to="github.ci">
 <title>merges a change</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(maintainer -&gt; github.ci)[0]","from":"maintainer","to":"github.ci","label":"merges a change"}</desc>
-<path d="M6.919,79.495 Q3.659,17.418 0.399,167.1" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M25.972,68.495 Q39.056,18.338 52.141,119.386" data-svugy-flow="" fill="none" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="document" fill="#9945ff" height="10" href="#traveler-document" stroke="#9945ff" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M6.919,79.495 Q3.647,17.187 0.375,168.216" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M25.972,68.495 Q39.056,18.338 52.141,119.386 L70.086,129.747 L-17.571,180.356 L0.375,190.716" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(site -&gt; github.releases)[0]" data-svugy-from="site" data-svugy-to="github.releases">
@@ -405,20 +427,8 @@
 <g data-svugy-edge="(github.releaseplz -&gt; cratesio)[0]" data-svugy-from="github.releaseplz" data-svugy-to="cratesio">
 <title>publishes the crates</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(github.releaseplz -&gt; cratesio)[0]","from":"github.releaseplz","to":"cratesio","label":"publishes the crates"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="121.519" x="189.881" y="257.286"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="101.519" x="250.641" y="268.958">publishes the crates</text>
-</g>
-<g data-svugy-edge="(maintainer -&gt; github.approval)[0]" data-svugy-from="maintainer" data-svugy-to="github.approval">
-<title>approves the release</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(maintainer -&gt; github.approval)[0]","from":"maintainer","to":"github.approval","label":"approves the release"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#9945ff" stroke-opacity="0.55" width="125.687" x="12.968" y="67.759"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="105.687" x="75.811" y="79.431">approves the release</text>
-</g>
-<g data-svugy-edge="(maintainer -&gt; github.ci)[0]" data-svugy-from="maintainer" data-svugy-to="github.ci">
-<title>merges a change</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(maintainer -&gt; github.ci)[0]","from":"maintainer","to":"github.ci","label":"merges a change"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#9945ff" stroke-opacity="0.55" width="106.774" x="-51.046" y="88.86"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="86.774" x="2.341" y="100.532">merges a change</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="121.519" x="189.207" y="281.997"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="101.519" x="249.966" y="293.669">publishes the crates</text>
 </g>
 <g data-svugy-edge="(site -&gt; github.releases)[0]" data-svugy-from="site" data-svugy-to="github.releases">
 <title>302 to the latest installer</title>
@@ -651,7 +661,24 @@
         const isSameOrdinal = edge.getAttribute(EDGE) === writtenEdgeName;
         return isSameEndpoints && isSameOrdinal;
       });
-      return targetedEdge ?? null;
+      return targetedEdge === undefined ? null : Contract.homeGroupOf(scope, targetedEdge);
+    },
+
+    /** Finds the group of `group`'s edge in its home level, the outermost of the edge's groups in `scope`, since a bundled edge's branches lie in its containers' levels; `group` itself when it draws no edge. */
+    homeGroupOf(scope, group) {
+      const edgeName = group.getAttribute(EDGE);
+      if (edgeName === null) {
+        return group;
+      }
+      const levelDepthOf = (edgeGroup) => {
+        const enclosingLevel = Contract.enclosingLevelOf(edgeGroup);
+        return Contract.depthOf(enclosingLevel);
+      };
+      const edgeGroups = Contract.edgesAt(scope, edgeName);
+      return edgeGroups.reduce((homeGroup, candidate) => {
+        const isCandidateOuter = levelDepthOf(candidate) < levelDepthOf(homeGroup);
+        return isCandidateOuter ? candidate : homeGroup;
+      });
     },
 
     /** Lists the groups of `scope` drawing the element or edge `group` draws: the element's group, or every group of the edge, its label's included. */
@@ -1220,7 +1247,8 @@
       if (isLeaf) {
         return this.zoomOntoLeaf(group);
       }
-      const reachedLevel = this.levelReachedThrough(group);
+      const homeGroup = Contract.homeGroupOf(this.shownLayer, group);
+      const reachedLevel = this.levelReachedThrough(homeGroup);
       return this.focus(reachedLevel);
     }
 

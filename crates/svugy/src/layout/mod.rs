@@ -1,9 +1,12 @@
 //! Lay out every hierarchy level in plan space: place levels bottom-up, anchor their routes, then side stubs where those routes leave containers.
 
+mod bundle;
 mod edge_levels;
+mod facing;
 mod place;
 mod route;
 mod stub;
+mod trace;
 
 use std::collections::BTreeMap;
 use std::iter;
@@ -15,8 +18,9 @@ use svugy_model::path::ElementPath;
 
 use crate::metrics::TextMeasure;
 use edge_levels::{HomedEdges, LeavingEdges};
+use facing::Arrangements;
 use place::{CompoundRegions, RankedPlacement, RearrangedFromSeed, SiblingGraph};
-pub(crate) use route::Route;
+pub(crate) use route::{Branch, Course, Route};
 pub(crate) use stub::Stub;
 
 /// Holds one value per hierarchy level keyed by level path, so the root comes first and parents precede their children.
@@ -42,10 +46,10 @@ impl<L> Levels<L> {
 }
 
 impl LevelPlans {
-    /// Lay out every level, ranking each ranked level and the ranked containers absorbed in it with one compound dagre layout.
+    /// Lay out every level, ranking each ranked level and the ranked containers absorbed in it with one compound dagre layout, the containers free to arrange faced toward their edges and ordered by their neighbours.
     pub(crate) fn lay_out(model: &Model, measure: &impl TextMeasure) -> Self {
-        let compound_regions = CompoundRegions::of(model);
-        Self::lay_out_ranking_by(model, &compound_regions, measure)
+        let (plans, _arrangements) = Self::lay_out_arranged(model, measure);
+        plans
     }
 
     /// Lay out every layer, ranking the deepest one afresh and rearranging every shallower one from it, so each layer keeps the deepest arrangement.
@@ -57,23 +61,46 @@ impl LevelPlans {
             return Vec::new();
         };
         let deepest_model = deepest_layer.model();
-        let deepest_plans = Self::lay_out(deepest_model, measure);
+        let (deepest_plans, arrangements) = Self::lay_out_arranged(deepest_model, measure);
         let rearranged_from_seed = RearrangedFromSeed::new(&deepest_plans);
         let mut layer_plans: Vec<Self> = shallower_layers
             .iter()
             .map(|layer| {
                 let layer_model = layer.model();
-                Self::lay_out_ranking_by(layer_model, &rearranged_from_seed, measure)
+                Self::lay_out_ranking_by(layer_model, &rearranged_from_seed, &arrangements, measure)
             })
             .collect();
         layer_plans.push(deepest_plans);
         layer_plans
     }
 
-    /// Lay out every level: place them bottom-up with `ranked_placement` for the ranked ones, anchor every level's routes, side every container's stubs where those routes leave it, then plan each level with all three.
+    /// Lay out every level as authored, again with the containers free to arrange faced toward their edges, and once more with their children ordered by where their neighbours sit, skipping a pass that changes nothing; return the final plans and the arrangements.
+    fn lay_out_arranged(model: &Model, measure: &impl TextMeasure) -> (Self, Arrangements) {
+        let compound_regions = CompoundRegions::of(model);
+        let authored = Arrangements::none();
+        let authored_plans = Self::lay_out_ranking_by(model, &compound_regions, &authored, measure);
+        let facing = Arrangements::facing_from(model, &authored_plans);
+        let faces_none = facing.faces_none();
+        let faced_plans = if faces_none {
+            authored_plans
+        } else {
+            Self::lay_out_ranking_by(model, &compound_regions, &facing, measure)
+        };
+        let arrangements = facing.with_packing_orders_from(model, &faced_plans);
+        let keeps_source_orders = arrangements.keeps_source_orders();
+        if keeps_source_orders {
+            return (faced_plans, arrangements);
+        }
+        let arranged_plans =
+            Self::lay_out_ranking_by(model, &compound_regions, &arrangements, measure);
+        (arranged_plans, arrangements)
+    }
+
+    /// Lay out every level: place them bottom-up with `ranked_placement` for the ranked ones and `arrangements` picking the unhinted packings, anchor every level's routes, bundle the routes entering containers together, side every container's stubs where those routes leave it, then plan each level with all three.
     fn lay_out_ranking_by(
         model: &Model,
         ranked_placement: &impl RankedPlacement,
+        arrangements: &Arrangements,
         measure: &impl TextMeasure,
     ) -> Self {
         let homed_edges = HomedEdges::of(model);
@@ -81,11 +108,13 @@ impl LevelPlans {
         let placed_levels = PlacedLevels::place_bottom_up(
             model,
             ranked_placement,
+            arrangements,
             &homed_edges,
             &leaving_edges,
             measure,
         );
         let mut level_routes = placed_levels.anchor_homed_routes(&homed_edges);
+        placed_levels.bundle_routes_entering_containers(&homed_edges, &mut level_routes);
         let mut level_stubs =
             placed_levels.side_stubs_at_home_route_crossings(&leaving_edges, &level_routes);
         let plans_by_level = placed_levels
@@ -103,10 +132,11 @@ impl LevelPlans {
 }
 
 impl PlacedLevels {
-    /// Place every level after the levels nested in it, so each container's extent is known before its parent places it: ranked levels by `ranked_placement`, the rest packed or layered by their hint.
+    /// Place every level after the levels nested in it, so each container's extent is known before its parent places it: ranked levels by `ranked_placement`, the rest packed or layered by the hint and order `arrangements` gives them.
     fn place_bottom_up(
         model: &Model,
         ranked_placement: &impl RankedPlacement,
+        arrangements: &Arrangements,
         homed_edges: &HomedEdges,
         leaving_edges: &LeavingEdges,
         measure: &impl TextMeasure,
@@ -142,8 +172,16 @@ impl PlacedLevels {
                 measure,
             );
             let is_left_by_edges = leaving_edges.is_left_by_edges(level);
-            let placed_level =
-                PlacedLevel::place_children(model, level, siblings, is_left_by_edges, measure);
+            let arranged_siblings = arrangements.arranged_siblings(level, siblings);
+            let hint = arrangements.hint_of(model, level);
+            let placed_level = PlacedLevel::place_children(
+                model,
+                level,
+                arranged_siblings,
+                hint,
+                is_left_by_edges,
+                measure,
+            );
             let level_key = level.clone();
             placed_levels.by_level.insert(level_key, placed_level);
         }
@@ -339,6 +377,16 @@ impl Side {
             Self::East => Vec2::new(-1.0, 0.0),
             Self::South => Vec2::new(0.0, -1.0),
             Self::West => Vec2::new(1.0, 0.0),
+        }
+    }
+
+    /// Return the side across the rectangle from this one.
+    pub(crate) fn opposite(self) -> Self {
+        match self {
+            Self::North => Self::South,
+            Self::East => Self::West,
+            Self::South => Self::North,
+            Self::West => Self::East,
         }
     }
 }

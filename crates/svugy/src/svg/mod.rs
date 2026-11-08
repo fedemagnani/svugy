@@ -31,13 +31,13 @@ mod tests {
 
     use crate::geometry::{Badge, Connection};
 
-    /// Collect the connections of every level of `scene`, the root's first, then each interior's in paint order.
+    /// Collect the traces and arcs of every level of `scene`, the root's first, then each interior's in paint order.
     fn connections_of_every_level(scene: &Scene) -> Vec<&Connection> {
-        let root_connections = scene.root.connections.iter();
-        let nested_connections = scene
-            .root
-            .nested_interiors()
-            .flat_map(|interior| &interior.group.connections);
+        let root_connections = scene.root.traces.iter().chain(&scene.root.connections);
+        let nested_connections = scene.root.nested_interiors().flat_map(|interior| {
+            let group = interior.group;
+            group.traces.iter().chain(&group.connections)
+        });
         root_connections.chain(nested_connections).collect()
     }
 

@@ -45,9 +45,8 @@ impl Obstructions {
                     .solids
                     .iter()
                     .flat_map(|solid| solid.drawables_over_slab_of(container));
-                let connection_plates = group
-                    .connections
-                    .iter()
+                let traces_and_connections = group.traces.iter().chain(&group.connections);
+                let connection_plates = traces_and_connections
                     .filter_map(|connection| connection.label.as_ref())
                     .map(Drawable::Plate);
                 let drawn_over_slab = solid_drawables.chain(connection_plates);

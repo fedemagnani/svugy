@@ -23,14 +23,17 @@ pub(crate) struct ArrowheadMarkers {
 }
 
 impl ArrowheadMarkers {
-    /// Collect the paint of every connection of `drawn_layers`, interiors included, each painted from the model its layer is drawn from, since each ends in an arrowhead.
+    /// Collect the paint of every connection of `drawn_layers` ending in an arrowhead, traces and arcs, interiors included, each painted from the model its layer is drawn from.
     pub(crate) fn collect(drawn_layers: &[(&Group, &Model)]) -> Self {
         let mut connection_paints = BTreeSet::new();
         for &(root, model) in drawn_layers {
             let paints = ModelPaints::new(model);
             let levels = root.this_and_nested_levels();
-            let connections = levels.flat_map(|(group, _to_root)| &group.connections);
-            let layer_paints = connections.map(|connection| paints.connection(&connection.edge));
+            let connections =
+                levels.flat_map(|(group, _to_root)| group.traces.iter().chain(&group.connections));
+            let headed_connections = connections.filter(|connection| connection.ends_in_arrowhead);
+            let layer_paints =
+                headed_connections.map(|connection| paints.connection(&connection.edge));
             connection_paints.extend(layer_paints);
         }
         Self {

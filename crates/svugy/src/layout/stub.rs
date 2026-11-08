@@ -55,26 +55,18 @@ impl PlacedLevels {
         LevelStubs::new(stubs_by_container)
     }
 
-    /// Cross the home line of every edge leaving `container` with its boundary, gathering the crossings per external endpoint.
+    /// Cross the home route of every edge leaving `container` with its boundary, gathering the crossings per external endpoint.
     fn boundary_crossings_of(
         &self,
         container: &ElementPath,
         leaving_edges: &[LeavingEdge],
         level_routes: &LevelRoutes,
     ) -> BTreeMap<ElementPath, BoundaryCrossings> {
-        let boundary = self.by_level[container].boundary();
         let mut crossings_by_external_endpoint: BTreeMap<ElementPath, BoundaryCrossings> =
             BTreeMap::new();
         for leaving_edge in leaving_edges {
             let edge = leaving_edge.edge();
-            let home = edge.home_level();
-            let container_footprint = self.footprint_in_level(container, &home);
-            let container_origin = container_footprint.origin();
-            let home_to_container = container_origin.to_vec2();
-            let home_line = self.home_line_of(leaving_edge, level_routes);
-            let inner_point = home_line.p0 - home_to_container;
-            let outer_point = home_line.p1 - home_to_container;
-            let crossing = Port::leaving(boundary, inner_point, outer_point);
+            let crossing = self.boundary_crossing_of(container, leaving_edge, level_routes);
             let external_endpoint = leaving_edge.external_endpoint();
             let external_endpoint_key = external_endpoint.clone();
             let crossings = crossings_by_external_endpoint
@@ -84,6 +76,32 @@ impl PlacedLevels {
             crossings.add(crossed_edge, crossing);
         }
         crossings_by_external_endpoint
+    }
+
+    /// Return where `leaving_edge`'s home route leaves `container`'s boundary, in `container`'s plan: its branch's slot when it is bundled into `container`, where its home line crosses the boundary otherwise.
+    fn boundary_crossing_of(
+        &self,
+        container: &ElementPath,
+        leaving_edge: &LeavingEdge,
+        level_routes: &LevelRoutes,
+    ) -> Port {
+        let edge = leaving_edge.edge();
+        let home = edge.home_level();
+        let container_footprint = self.footprint_in_level(container, &home);
+        let container_origin = container_footprint.origin();
+        let home_to_container = container_origin.to_vec2();
+        let home_routes = level_routes.level(&home);
+        let home_route = home_routes.and_then(|routes| routes.get(edge));
+        let branch_on_container = home_route.and_then(|route| route.branch_on(container));
+        if let Some(branch) = branch_on_container {
+            let slot_point = branch.slot.point - home_to_container;
+            return Port::new(branch.slot.side, slot_point);
+        }
+        let boundary = self.by_level[container].boundary();
+        let home_line = self.home_line_of(leaving_edge, level_routes);
+        let inner_point = home_line.p0 - home_to_container;
+        let outer_point = home_line.p1 - home_to_container;
+        Port::leaving(boundary, inner_point, outer_point)
     }
 
     /// Return the straight line `leaving_edge` runs along in its home level, from its inner end out: between its endpoints' footprint centres for a badge, which has no route, between its route's ports otherwise.
@@ -111,7 +129,7 @@ impl PlacedLevels {
 
 impl Port {
     /// Return where the ray from `inside` through `outside` leaves `rect`: on the side it reaches at the least t = (side − inside) / (outside − inside) > 0, snapped onto that side.
-    fn leaving(rect: Rect, inside: Point, outside: Point) -> Self {
+    pub(super) fn leaving(rect: Rect, inside: Point, outside: Point) -> Self {
         let offset = outside - inside;
         let gaps_and_steps_by_side = [
             (Side::North, rect.y0 - inside.y, offset.y),

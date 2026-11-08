@@ -107,7 +107,7 @@ struct Definitions {
     ground: Option<EndlessGround>,
 }
 
-/// Writes one layer's scene in a single pass, painted from the model it draws, ending each arc in its shared arrowhead, moving each traveler as its shared symbol and framing each level in its collected view.
+/// Writes one layer's scene in a single pass, painted from the model it draws, ending each connection in its shared arrowhead, moving each traveler as its shared symbol and framing each level in its collected view.
 struct LayerPass<'r, 'm, P> {
     profile: &'r P,
     scene: &'r Scene,
@@ -446,17 +446,21 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         writer.empty_element("path", &face_attributes);
     }
 
-    /// Paint `group` as level `level`'s group, back to front: solids, connection arcs, their plated labels over every arc, then its overlay.
+    /// Paint `group` as level `level`'s group, back to front: traces on its floor, solids, lifted arcs, every connection's plated label over all of them, then its overlay.
     fn write_level(&self, writer: &mut SvgWriter, level: &ElementPath, group: &Group) {
         let level_attributes = self.level_attributes(level, group);
         writer.open_element("g", &level_attributes);
+        for trace in &group.traces {
+            self.write_connection_path(writer, trace);
+        }
         for solid in &group.solids {
             self.write_solid(writer, solid);
         }
-        for connection in &group.connections {
-            self.write_connection_arc(writer, connection);
+        for arc in &group.connections {
+            self.write_connection_path(writer, arc);
         }
-        for connection in &group.connections {
+        let traces_and_arcs = group.traces.iter().chain(&group.connections);
+        for connection in traces_and_arcs {
             self.write_connection_label(writer, connection);
         }
         self.profile
@@ -543,8 +547,8 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         });
     }
 
-    /// Paint a connection's arc as an edge group: its flow path, then its traveler.
-    fn write_connection_arc(&self, writer: &mut SvgWriter, connection: &Connection) {
+    /// Paint a connection, traced or lifted, as an edge group: its flow path, then its traveler.
+    fn write_connection_path(&self, writer: &mut SvgWriter, connection: &Connection) {
         let edge_group = self.annotator.edge_group(&connection.edge);
         edge_group.write_around(writer, |writer| {
             let connection_paint = self.paints.connection(&connection.edge);
@@ -555,7 +559,7 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         });
     }
 
-    /// Stroke a connection's flow path in `connection_paint`, dashed like its edge and ending in its arrowhead.
+    /// Stroke a connection's flow path in `connection_paint`, dashed like its edge and ending in its arrowhead, if it has one.
     fn write_flow_path(
         &self,
         writer: &mut SvgWriter,
@@ -563,17 +567,22 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         connection_paint: Paint,
     ) {
         let path_data = PathData(&connection.path).to_string();
-        let marker_reference = self
-            .definitions
-            .arrowheads
-            .marker_reference(connection_paint);
         let dashes = self.paints.connection_dashes(&connection.edge);
         let path_attributes = self
             .stroke_attributes(connection_paint, dashes)
             .with_text(RuntimeContract::FLOW, "")
-            .with_text("d", &path_data)
-            .with_text("marker-end", &marker_reference);
-        writer.empty_element("path", &path_attributes);
+            .with_text("d", &path_data);
+        let is_headless = !connection.ends_in_arrowhead;
+        if is_headless {
+            writer.empty_element("path", &path_attributes);
+            return;
+        }
+        let marker_reference = self
+            .definitions
+            .arrowheads
+            .marker_reference(connection_paint);
+        let headed_path_attributes = path_attributes.with_text("marker-end", &marker_reference);
+        writer.empty_element("path", &headed_path_attributes);
     }
 
     /// Draw the traveler the connection's edge carries moving upright along its port-to-port path, painted in `connection_paint`, when the connection has one.
@@ -591,7 +600,7 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         traveler.write_moving_along(writer, dot_path, &traveler_paint);
     }
 
-    /// Paint a connection's plated label, if any, as a second group of the same edge, so it lies over every arc of the level.
+    /// Paint a connection's plated label, if any, as a second group of the same edge, so it lies over every solid and connection of the level.
     fn write_connection_label(&self, writer: &mut SvgWriter, connection: &Connection) {
         let Some(plated_label) = &connection.label else {
             return;
@@ -1289,6 +1298,82 @@ mod tests {
                 .any(|line| line.contains(&marker_reference) && line.contains(&connection_stroke));
             assert!(is_connection_referencing_its_marker, "level {level}");
         }
+    }
+
+    #[test]
+    fn a_trace_lies_under_the_solids_of_its_level_and_its_label_over_them() {
+        let model = model_with_a_and_b(Element::new("a"));
+        let mut scene = Scene::two_solids_and_one_connection();
+        let labelled_connection = scene.root.connections.remove(0);
+        scene.root.traces.push(labelled_connection);
+
+        let markup = render_scene(&model, &scene, Interactive);
+
+        let document = roxmltree::Document::parse(&markup).expect("well-formed XML");
+        let root_level = document
+            .descendants()
+            .find(|node| node.attribute(RuntimeContract::LEVEL) == Some(""))
+            .expect("the root level is drawn");
+        let painted_children: Vec<roxmltree::Node> = root_level
+            .children()
+            .filter(roxmltree::Node::is_element)
+            .collect();
+        let [trace_group, a_group, b_group, label_group, overlay] = painted_children[..] else {
+            panic!("expected trace, a, b, trace label, overlay: {painted_children:?}");
+        };
+        let edge_attributes = [
+            (RuntimeContract::EDGE, "(a -> b)[0]"),
+            (RuntimeContract::FROM, "a"),
+            (RuntimeContract::TO, "b"),
+        ];
+        for (name, value) in edge_attributes {
+            let trace_value = trace_group.attribute(name);
+            let label_value = label_group.attribute(name);
+            assert_eq!(
+                trace_value,
+                Some(value),
+                "a trace is an edge group like an arc"
+            );
+            assert_eq!(
+                label_value,
+                Some(value),
+                "a trace label is a second group of its edge"
+            );
+        }
+        let a_path = a_group.attribute(RuntimeContract::ELEMENT);
+        let b_path = b_group.attribute(RuntimeContract::ELEMENT);
+        let is_overlay_last = overlay.has_attribute(RuntimeContract::OVERLAY);
+        assert_eq!(a_path, Some("a"));
+        assert_eq!(b_path, Some("b"));
+        assert!(is_overlay_last, "the overlay stays the level's last child");
+        let flow_path = trace_group
+            .children()
+            .find(|child| child.has_attribute(RuntimeContract::FLOW))
+            .expect("a trace strokes a flow path the runtime animates");
+        let marker_end = flow_path.attribute("marker-end");
+        assert_eq!(
+            marker_end,
+            Some("url(#arrowhead-0)"),
+            "a trace ends in its paint's arrowhead"
+        );
+        let traveler_use = trace_group
+            .children()
+            .find(|child| child.has_attribute(RuntimeContract::TRAVELER))
+            .expect("a trace moves its traveler");
+        let traveler_name = traveler_use.attribute(RuntimeContract::TRAVELER);
+        assert_eq!(traveler_name, Some("dot"));
+        let defined_ids: Vec<&str> = document
+            .descendants()
+            .filter_map(|node| node.attribute("id"))
+            .collect();
+        assert!(
+            defined_ids.contains(&"arrowhead-0"),
+            "a trace's arrowhead is defined: {defined_ids:?}"
+        );
+        assert!(
+            defined_ids.contains(&"traveler-dot"),
+            "a trace's traveler is defined: {defined_ids:?}"
+        );
     }
 
     #[test]
