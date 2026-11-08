@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/fedemagnani/svugy/compare/svugy-cli-v0.1.0...svugy-cli-v0.1.1) - 2026-11-08
+
+### Other
+
+- install from svugy.dev, crates.io badge ([#16](https://github.com/fedemagnani/svugy/pull/16))
+- smoke test fix ([#14](https://github.com/fedemagnani/svugy/pull/14))
+
 ## [0.1.0](https://github.com/fedemagnani/svugy/releases/tag/svugy-cli-v0.1.0) - 2026-11-07
 
 ### Added
