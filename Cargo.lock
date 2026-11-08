@@ -1290,7 +1290,7 @@ dependencies = [
 
 [[package]]
 name = "svugy"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "dagre-dgl-rs",
  "fontdb",
@@ -1312,7 +1312,7 @@ dependencies = [
 
 [[package]]
 name = "svugy-cli"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "clap",
  "miette",
@@ -1325,14 +1325,14 @@ dependencies = [
 
 [[package]]
 name = "svugy-dagre"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "indexmap",
 ]
 
 [[package]]
 name = "svugy-examples"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "serde_json",
  "svugy",
@@ -1342,7 +1342,7 @@ dependencies = [
 
 [[package]]
 name = "svugy-model"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "insta",
  "miette",
@@ -1355,7 +1355,7 @@ dependencies = [
 
 [[package]]
 name = "svugy-parse"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chumsky",
  "comrak",
@@ -1372,7 +1372,7 @@ dependencies = [
 
 [[package]]
 name = "svugy-wasm"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "miette",
  "serde",
