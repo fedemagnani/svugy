@@ -1,6 +1,7 @@
 //! Render the static and interactive profiles from one scene graph.
 
 mod arrowhead;
+mod ground;
 mod interactive;
 mod level_view;
 mod paint;
@@ -23,6 +24,7 @@ use crate::render::writer::css::CssValue;
 use crate::render::writer::path_data::PathData;
 use crate::render::writer::{Attributes, SvgWriter, ViewBox};
 use arrowhead::ArrowheadMarkers;
+use ground::EndlessGround;
 pub(crate) use interactive::Interactive;
 use level_view::LevelViews;
 pub(crate) use paint::Paint;
@@ -98,10 +100,11 @@ pub(crate) struct LayerScene<'d> {
     scene: Scene,
 }
 
-/// Holds the definitions every layer of a document references: one arrowhead marker per connection paint, one symbol per traveler.
+/// Holds the definitions every layer of a document references: one arrowhead marker per connection paint, one symbol per traveler, and the endless ground's pattern when the document has one.
 struct Definitions {
     arrowheads: ArrowheadMarkers,
     travelers: TravelerSymbols,
+    ground: Option<EndlessGround>,
 }
 
 /// Writes one layer's scene in a single pass, painted from the model it draws, ending each arc in its shared arrowhead, moving each traveler as its shared symbol and framing each level in its collected view.
@@ -131,6 +134,7 @@ impl<P: Profile> Renderer<P> {
         self.write_root(document_view, |writer| {
             definitions.write(writer, &self.profile);
             self.write_canvas(writer, document_view);
+            layer_pass.write_ground_grid(writer);
             layer_pass.write_layer(writer);
         })
     }
@@ -176,7 +180,7 @@ impl<P: Profile> Renderer<P> {
 }
 
 impl InteractiveRenderer {
-    /// Write `layer_scenes`, disclosed from `model`, as the interactive document sized to the canvas covering every layer's root view, so changing layer never changes its aspect ratio: the model's title, its diagram details, the definitions every layer shares, one canvas under every layer's root view, then one group per layer, the deepest shown so a viewer without scripts sees the whole diagram.
+    /// Write `layer_scenes`, disclosed from `model`, as the interactive document sized to the canvas covering every layer's root view, so changing layer never changes its aspect ratio: the model's title, its diagram details, the definitions every layer shares, one canvas under every layer's root view, the endless ground the reader pans across, then one group per layer, the deepest shown so a viewer without scripts sees the whole diagram.
     pub(crate) fn write_layered_document(
         &self,
         model: &Model,
@@ -189,7 +193,7 @@ impl InteractiveRenderer {
                 (&layer_scene.scene.root, layer_model)
             })
             .collect();
-        let definitions = Definitions::collect(&drawn_layers);
+        let definitions = Definitions::collect(&drawn_layers).with_endless_ground();
         let layer_passes: Vec<LayerPass<'_, '_, Interactive>> = layer_scenes
             .iter()
             .map(|layer_scene| {
@@ -218,6 +222,7 @@ impl InteractiveRenderer {
             }
             definitions.write(writer, &self.profile);
             self.write_canvas(writer, canvas_view);
+            EndlessGround::write_plane(writer);
             for (layer_index, layer_pass) in layer_passes.iter().enumerate() {
                 let layer_value = layer_index.to_string();
                 let layer_attributes =
@@ -251,14 +256,25 @@ impl Definitions {
         Self {
             arrowheads,
             travelers,
+            ground: None,
         }
     }
 
-    /// Write a `<defs>` holding the arrowhead markers, then the traveler symbols a live viewer moves, or nothing when neither was collected.
+    /// Add the endless ground's pattern, for a document the reader can pan across without end.
+    fn with_endless_ground(self) -> Self {
+        let ground = EndlessGround::new();
+        Self {
+            ground: Some(ground),
+            ..self
+        }
+    }
+
+    /// Write a `<defs>` holding the arrowhead markers, the traveler symbols a live viewer moves, then the ground pattern, or nothing when none was collected.
     fn write<P: Profile>(&self, writer: &mut SvgWriter, profile: &P) {
         let has_no_marker = self.arrowheads.is_empty();
         let has_no_traveler = self.travelers.is_empty();
-        let has_no_definition = has_no_marker && has_no_traveler;
+        let has_no_ground = self.ground.is_none();
+        let has_no_definition = has_no_marker && has_no_traveler && has_no_ground;
         if has_no_definition {
             return;
         }
@@ -266,6 +282,9 @@ impl Definitions {
         writer.open_element("defs", &no_attributes);
         self.arrowheads.write_markers(writer, profile);
         profile.write_live_only(writer, |writer| self.travelers.write_symbols(writer));
+        if let Some(ground) = &self.ground {
+            ground.write_pattern(writer, profile);
+        }
         writer.close_element();
     }
 }
@@ -292,11 +311,15 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         }
     }
 
-    /// Write the layer's scene: its ground grid, heading, legend, then root level.
-    fn write_layer(&self, writer: &mut SvgWriter) {
+    /// Rule the layer's finite ground grid, for a document whose ground ends with its layer.
+    fn write_ground_grid(&self, writer: &mut SvgWriter) {
         for ground_line in &self.scene.ground_lines {
             self.write_ground_line(writer, ground_line);
         }
+    }
+
+    /// Write the layer's scene: its heading, legend, then root level.
+    fn write_layer(&self, writer: &mut SvgWriter) {
         if let Some(heading) = &self.scene.heading {
             self.write_heading(writer, heading);
         }

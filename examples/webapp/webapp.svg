@@ -1,4 +1,4 @@
-<svg data-svugy-contract="2" height="648.797" viewBox="-316.284 -32.743 1038.217 648.797" width="1038.217" xmlns="http://www.w3.org/2000/svg">
+<svg data-svugy-contract="2" height="627.9" viewBox="-112.335 -89.743 876.192 627.9" width="876.192" xmlns="http://www.w3.org/2000/svg">
 <style>/*<![CDATA[*/[data-svugy-contract]{--svugy-canvas:#0a0b10;--svugy-grid-line:#151722;--svugy-face-outline:#0a0b10;--svugy-text:#e6e8ee;--svugy-text-muted:#8b93a5;--svugy-external-outline:#5b6170;--svugy-neutral-top:#3a3f4b;--svugy-neutral-left:#2b2f39;--svugy-neutral-right:#22252d;--svugy-neutral-ink:#e6e8ee;--svugy-container-blue-top:#1b2436;--svugy-container-blue-left:#131a28;--svugy-container-blue-right:#0d131f;--svugy-container-blue-ink:#8aa0c8;font-family:Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif}
 @media (prefers-color-scheme: light){
 [data-svugy-contract]{--svugy-canvas:#f6f8ff;--svugy-grid-line:#e1e4f4;--svugy-face-outline:#f6f8ff;--svugy-text:#14161a;--svugy-text-muted:#535a6a;--svugy-external-outline:#858b9b;--svugy-neutral-top:#acb2c0;--svugy-neutral-left:#868b96;--svugy-neutral-right:#6d717b;--svugy-neutral-ink:#14161a;--svugy-container-blue-top:#c8d4ed;--svugy-container-blue-left:#9da6ba;--svugy-container-blue-right:#808898;--svugy-container-blue-ink:#3c4f72}
@@ -16,7 +16,11 @@
 [data-svugy-contract] [tabindex]:focus { outline: none; }
 :is([data-svugy-element], [data-svugy-edge], [data-svugy-stub], [data-svugy-heading])[role="button"] { cursor: pointer; }
 [data-svugy-contract] [data-svugy-heading]:focus-visible { outline: 1px dashed var(--svugy-text-muted); outline-offset: 4px; }
-:is([data-svugy-element], [data-svugy-stub])[role="button"]:has([data-svugy-entered]) { cursor: auto; }
+:is([data-svugy-element], [data-svugy-stub])[role="button"]:has([data-svugy-entered]) { cursor: grab; }
+[data-svugy-contract] { background: var(--svugy-canvas); cursor: grab; touch-action: pan-x pan-y; -webkit-user-select: none; user-select: none; }
+[data-svugy-contract] .svugy-description { -webkit-user-select: text; user-select: text; }
+[data-svugy-contract][data-svugy-panning], [data-svugy-contract][data-svugy-panning] * { cursor: grabbing; }
+[data-svugy-contract][data-svugy-panning] .svugy-panel { visibility: hidden; }
 :is([data-svugy-element], [data-svugy-stub])[role="button"]:hover:not(:has([role="button"]:hover, [data-svugy-entered])) > :is(path, rect),
 :is([data-svugy-element], [data-svugy-edge], [data-svugy-stub]):focus-visible:not(:has([data-svugy-entered])) > :is(path, rect) { stroke: var(--svugy-text); stroke-opacity: 1; stroke-width: 2; fill-opacity: 0.8; }
 [data-svugy-contract] .svugy-highlighted { animation: svugy-highlight 0.3s ease-in-out 4 alternate; }
@@ -90,59 +94,44 @@
 <path d="M0,-3.75 L3.25,-1.875 L3.25,1.875 L0,3.75 L-3.25,1.875 L-3.25,-1.875 Z" fill-opacity="0.35"/>
 <path d="M-3.25,-1.875 L0,0 L3.25,-1.875 M0,0 L0,3.75 M-1.625,-2.813 L1.625,-0.938 M1.625,-2.813 L-1.625,-0.938" fill="none"/>
 </symbol>
+<pattern height="60" id="ground-grid" patternTransform="matrix(0.866 0.5 -0.866 0.5 0 0)" patternUnits="userSpaceOnUse" width="60">
+<path d="M0,0 L60,0 L60,60 L0,60 Z" fill="none" stroke="var(--svugy-grid-line)" stroke-width="1.155"/>
+</pattern>
 </defs>
-<rect fill="var(--svugy-canvas)" height="648.797" rx="14" width="1038.217" x="-316.284" y="-32.743"/>
+<rect fill="var(--svugy-canvas)" height="627.9" rx="14" width="876.192" x="-112.335" y="-89.743"/>
+<rect fill="url(#ground-grid)" height="2000000" width="2000000" x="-1000000" y="-1000000"/>
 <g data-svugy-layer="0">
-<line stroke="var(--svugy-grid-line)" x1="0" x2="-363.731" y1="-60" y2="150"/>
-<line stroke="var(--svugy-grid-line)" x1="51.962" x2="-311.769" y1="-30" y2="180"/>
-<line stroke="var(--svugy-grid-line)" x1="103.923" x2="-259.808" y1="0" y2="210"/>
-<line stroke="var(--svugy-grid-line)" x1="155.885" x2="-207.846" y1="30" y2="240"/>
-<line stroke="var(--svugy-grid-line)" x1="207.846" x2="-155.885" y1="60" y2="270"/>
-<line stroke="var(--svugy-grid-line)" x1="259.808" x2="-103.923" y1="90" y2="300"/>
-<line stroke="var(--svugy-grid-line)" x1="311.769" x2="-51.962" y1="120" y2="330"/>
-<line stroke="var(--svugy-grid-line)" x1="363.731" x2="0" y1="150" y2="360"/>
-<line stroke="var(--svugy-grid-line)" x1="415.692" x2="51.962" y1="180" y2="390"/>
-<line stroke="var(--svugy-grid-line)" x1="467.654" x2="103.923" y1="210" y2="420"/>
-<line stroke="var(--svugy-grid-line)" x1="519.615" x2="155.885" y1="240" y2="450"/>
-<line stroke="var(--svugy-grid-line)" x1="0" x2="519.615" y1="-60" y2="240"/>
-<line stroke="var(--svugy-grid-line)" x1="-51.962" x2="467.654" y1="-30" y2="270"/>
-<line stroke="var(--svugy-grid-line)" x1="-103.923" x2="415.692" y1="0" y2="300"/>
-<line stroke="var(--svugy-grid-line)" x1="-155.885" x2="363.731" y1="30" y2="330"/>
-<line stroke="var(--svugy-grid-line)" x1="-207.846" x2="311.769" y1="60" y2="360"/>
-<line stroke="var(--svugy-grid-line)" x1="-259.808" x2="259.808" y1="90" y2="390"/>
-<line stroke="var(--svugy-grid-line)" x1="-311.769" x2="207.846" y1="120" y2="420"/>
-<line stroke="var(--svugy-grid-line)" x1="-363.731" x2="155.885" y1="150" y2="450"/>
 <g data-svugy-heading="">
-<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="87.341" x="-155.885" y="7.726">A web app</text>
-<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="234.835" x="-155.885" y="25.726">from the browser to the database and back</text>
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="87.341" x="-57.158" y="-49.274">A web app</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="234.835" x="-57.158" y="-31.274">from the browser to the database and back</text>
 </g>
-<g data-svugy-level="" data-svugy-view="-179.885 -32.743 551.592 361.22">
+<g data-svugy-level="" data-svugy-view="-81.158 -89.743 452.865 418.22">
 <g data-svugy-closed="" data-svugy-element="backend">
 <title>Backend</title>
 <desc data-svugy-details="">{"kind":"element","path":"backend","label":"Backend","caption":"your servers","description":"Every browser request lands on [the API](#backend.api). From there:\n- the API answers the browser right away\n- work that can wait, like the receipt, goes through [the queue](#backend.queue) to [the worker](#backend.worker)"}</desc>
-<path d="M18.187,156 L80.54,192 L80.54,187.5 L18.187,151.5 Z M137.698,159 L80.54,192 L80.54,187.5 L137.698,154.5 Z M75.344,118.5 L137.698,154.5 L80.54,187.5 L18.187,151.5 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
-<path d="M18.187,151.5 L80.54,187.5 L80.54,165 L18.187,129 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M137.698,154.5 L80.54,187.5 L80.54,165 L137.698,132 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M75.344,96 L137.698,132 L80.54,165 L18.187,129 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="51.111" transform="matrix(0.866 0.5 -0.866 0.5 77.942 130.5)" x="0" y="-2">Backend</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="51.291" transform="matrix(0.866 0.5 -0.866 0.5 77.942 130.5)" x="0" y="11">your servers</text>
+<path d="M67.55,127.5 L129.904,163.5 L129.904,159 L67.55,123 Z M187.061,130.5 L129.904,163.5 L129.904,159 L187.061,126 Z M124.708,90 L187.061,126 L129.904,159 L67.55,123 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M67.55,123 L129.904,159 L129.904,136.5 L67.55,100.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M187.061,126 L129.904,159 L129.904,136.5 L187.061,103.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M124.708,67.5 L187.061,103.5 L129.904,136.5 L67.55,100.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="51.111" transform="matrix(0.866 0.5 -0.866 0.5 127.306 102)" x="0" y="-2">Backend</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="51.291" transform="matrix(0.866 0.5 -0.866 0.5 127.306 102)" x="0" y="11">your servers</text>
 </g>
 <g data-svugy-element="browser">
 <title>Browser</title>
 <desc data-svugy-details="">{"kind":"element","path":"browser","label":"Browser","caption":"the user's tab"}</desc>
-<path d="M-155.885,108 L-93.531,144 L-93.531,121.5 L-155.885,85.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-36.373,111 L-93.531,144 L-93.531,121.5 L-36.373,88.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-98.727,52.5 L-36.373,88.5 L-93.531,121.5 L-155.885,85.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="49.143" transform="matrix(0.866 0.5 -0.866 0.5 -96.129 87)" x="0" y="-2">Browser</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="55.715" transform="matrix(0.866 0.5 -0.866 0.5 -96.129 87)" x="0" y="11">the user's tab</text>
+<path d="M-57.158,51 L5.196,87 L5.196,64.5 L-57.158,28.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,54 L5.196,87 L5.196,64.5 L62.354,31.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,-4.5 L62.354,31.5 L5.196,64.5 L-57.158,28.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="49.143" transform="matrix(0.866 0.5 -0.866 0.5 2.598 30)" x="0" y="-2">Browser</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="55.715" transform="matrix(0.866 0.5 -0.866 0.5 2.598 30)" x="0" y="11">the user's tab</text>
 </g>
 <g data-svugy-element="cdn">
 <title>CDN</title>
 <desc data-svugy-details="">{"kind":"element","path":"cdn","label":"CDN","caption":"static files"}</desc>
-<path d="M-63.078,197.381 L-63.078,207.881 C-63.078,221.316 -44.143,233.156 -20.785,234.326 C2.574,235.497 21.509,225.554 21.509,212.119 L21.509,201.619 C21.509,215.054 2.574,224.997 -20.785,223.826 C-44.143,222.656 -63.078,210.816 -63.078,197.381 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M21.509,201.619 C21.509,215.054 2.574,224.997 -20.785,223.826 C-44.143,222.656 -63.078,210.816 -63.078,197.381 C-63.078,183.946 -44.143,174.003 -20.785,175.174 C2.574,176.344 21.509,188.184 21.509,201.619 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="26.689" transform="matrix(0.866 0.5 -0.866 0.5 -20.785 199.5)" x="0" y="-2">CDN</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="41.583" transform="matrix(0.866 0.5 -0.866 0.5 -20.785 199.5)" x="0" y="11">static files</text>
+<path d="M-13.715,168.881 L-13.715,179.381 C-13.715,192.816 5.221,204.656 28.579,205.826 C51.937,206.997 70.872,197.054 70.872,183.619 L70.872,173.119 C70.872,186.554 51.937,196.497 28.579,195.326 C5.221,194.156 -13.715,182.316 -13.715,168.881 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M70.872,173.119 C70.872,186.554 51.937,196.497 28.579,195.326 C5.221,194.156 -13.715,182.316 -13.715,168.881 C-13.715,155.446 5.221,145.503 28.579,146.674 C51.937,147.844 70.872,159.684 70.872,173.119 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="26.689" transform="matrix(0.866 0.5 -0.866 0.5 28.579 171)" x="0" y="-2">CDN</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="41.583" transform="matrix(0.866 0.5 -0.866 0.5 28.579 171)" x="0" y="11">static files</text>
 </g>
 <g data-svugy-closed="" data-svugy-element="data">
 <title>Data</title>
@@ -166,92 +155,72 @@
 <g data-svugy-edge="(backend -&gt; data)[0]" data-svugy-from="backend" data-svugy-to="data">
 <title>Backend → Data</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"backend","to":"data","edges":[{"kind":"edge","edge":"(backend.api -&gt; data.cache)[0]","from":"backend.api","to":"data.cache","label":"looks up"},{"kind":"edge","edge":"(backend.api -&gt; data.db)[0]","from":"backend.api","to":"data.db","label":"saves the order"}]}</desc>
-<path d="M118.645,143 Q169.441,75.721 220.237,155.059" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M168.009,114.5 Q194.265,66.405 220.521,154.93" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M118.645,143 Q169.741,75.324 220.836,156" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M168.009,114.5 Q194.423,66.116 220.836,156" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(backend -&gt; mail)[0]" data-svugy-from="backend" data-svugy-to="mail">
 <title>sends the receipt</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"backend","to":"mail","label":"sends the receipt","edges":[{"kind":"edge","edge":"(backend.worker -&gt; mail)[0]","from":"backend.worker","to":"mail","label":"sends the receipt","description":"The email provider delivers the receipt to the user's inbox."}]}</desc>
-<path d="M99.593,154 Q114.475,108.766 129.356,216.166" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M148.956,125.5 Q139.272,79.272 129.587,216.158" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="envelope" fill="var(--svugy-text-muted)" height="10" href="#traveler-envelope" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M99.593,154 Q114.551,108.534 129.509,217.272" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M148.956,125.5 Q139.233,79.085 129.509,217.272" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(browser -&gt; backend)[0]" data-svugy-from="browser" data-svugy-to="backend">
 <title>Browser → Backend</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"browser","to":"backend","edges":[{"kind":"edge","edge":"(browser -&gt; backend.api)[0]","from":"browser","to":"backend.api","label":"signs in"},{"kind":"edge","edge":"(browser -&gt; backend.api)[1]","from":"browser","to":"backend.api","label":"places an order"}]}</desc>
-<path d="M-55.426,99.5 Q-4.63,32.221 46.166,111.559" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M43.301,42.5 Q69.557,-5.595 95.813,82.93" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M-55.426,99.5 Q-4.33,31.824 46.765,112.5" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M43.301,42.5 Q69.715,-5.884 96.129,84" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(browser -&gt; cdn)[0]" data-svugy-from="browser" data-svugy-to="cdn">
 <title>loads the page</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; cdn)[0]","from":"browser","to":"cdn","label":"loads the page"}</desc>
-<path d="M-74.478,110.5 Q-63.271,60.056 -52.065,180.388" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M24.249,53.5 Q10.875,1.175 -2.5,151.887" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M-74.478,110.5 Q-63.22,59.824 -51.962,181.5" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M24.249,53.5 Q10.825,0.982 -2.598,153" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(backend -&gt; mail)[0]" data-svugy-from="backend" data-svugy-to="mail">
 <title>sends the receipt</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"backend","to":"mail","label":"sends the receipt","edges":[{"kind":"edge","edge":"(backend.worker -&gt; mail)[0]","from":"backend.worker","to":"mail","label":"sends the receipt","description":"The email provider delivers the receipt to the user's inbox."}]}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="107.107" x="65.46" y="152.103"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="87.107" x="119.014" y="163.775">sends the receipt</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="107.107" x="84.435" y="124.008"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="87.107" x="137.989" y="135.68">sends the receipt</text>
 </g>
 <g data-svugy-edge="(browser -&gt; cdn)[0]" data-svugy-from="browser" data-svugy-to="cdn">
 <title>loads the page</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; cdn)[0]","from":"browser","to":"cdn","label":"loads the page"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="93.879" x="-105.898" y="114.669"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="73.879" x="-58.959" y="126.341">loads the page</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="93.879" x="-38.954" y="57.075"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="73.879" x="7.986" y="68.747">loads the page</text>
 </g>
 <g data-svugy-overlay=""/>
 </g>
 </g>
 <g data-svugy-layer="1" data-svugy-shown="">
-<line stroke="var(--svugy-grid-line)" x1="0" x2="-519.615" y1="-60" y2="240"/>
-<line stroke="var(--svugy-grid-line)" x1="51.962" x2="-467.654" y1="-30" y2="270"/>
-<line stroke="var(--svugy-grid-line)" x1="103.923" x2="-415.692" y1="0" y2="300"/>
-<line stroke="var(--svugy-grid-line)" x1="155.885" x2="-363.731" y1="30" y2="330"/>
-<line stroke="var(--svugy-grid-line)" x1="207.846" x2="-311.769" y1="60" y2="360"/>
-<line stroke="var(--svugy-grid-line)" x1="259.808" x2="-259.808" y1="90" y2="390"/>
-<line stroke="var(--svugy-grid-line)" x1="311.769" x2="-207.846" y1="120" y2="420"/>
-<line stroke="var(--svugy-grid-line)" x1="363.731" x2="-155.885" y1="150" y2="450"/>
-<line stroke="var(--svugy-grid-line)" x1="415.692" x2="-103.923" y1="180" y2="480"/>
-<line stroke="var(--svugy-grid-line)" x1="467.654" x2="-51.962" y1="210" y2="510"/>
-<line stroke="var(--svugy-grid-line)" x1="519.615" x2="0" y1="240" y2="540"/>
-<line stroke="var(--svugy-grid-line)" x1="571.577" x2="51.962" y1="270" y2="570"/>
-<line stroke="var(--svugy-grid-line)" x1="623.538" x2="103.923" y1="300" y2="600"/>
-<line stroke="var(--svugy-grid-line)" x1="675.5" x2="155.885" y1="330" y2="630"/>
-<line stroke="var(--svugy-grid-line)" x1="727.461" x2="207.846" y1="360" y2="660"/>
-<line stroke="var(--svugy-grid-line)" x1="779.423" x2="259.808" y1="390" y2="690"/>
-<line stroke="var(--svugy-grid-line)" x1="831.384" x2="311.769" y1="420" y2="720"/>
-<line stroke="var(--svugy-grid-line)" x1="883.346" x2="363.731" y1="450" y2="750"/>
-<line stroke="var(--svugy-grid-line)" x1="0" x2="883.346" y1="-60" y2="450"/>
-<line stroke="var(--svugy-grid-line)" x1="-51.962" x2="831.384" y1="-30" y2="480"/>
-<line stroke="var(--svugy-grid-line)" x1="-103.923" x2="779.423" y1="0" y2="510"/>
-<line stroke="var(--svugy-grid-line)" x1="-155.885" x2="727.461" y1="30" y2="540"/>
-<line stroke="var(--svugy-grid-line)" x1="-207.846" x2="675.5" y1="60" y2="570"/>
-<line stroke="var(--svugy-grid-line)" x1="-259.808" x2="623.538" y1="90" y2="600"/>
-<line stroke="var(--svugy-grid-line)" x1="-311.769" x2="571.577" y1="120" y2="630"/>
-<line stroke="var(--svugy-grid-line)" x1="-363.731" x2="519.615" y1="150" y2="660"/>
-<line stroke="var(--svugy-grid-line)" x1="-415.692" x2="467.654" y1="180" y2="690"/>
-<line stroke="var(--svugy-grid-line)" x1="-467.654" x2="415.692" y1="210" y2="720"/>
-<line stroke="var(--svugy-grid-line)" x1="-519.615" x2="363.731" y1="240" y2="750"/>
 <g data-svugy-heading="">
-<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="87.341" x="-292.284" y="76.313">A web app</text>
-<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="234.835" x="-292.284" y="94.313">from the browser to the database and back</text>
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="87.341" x="-88.335" y="-31.274">A web app</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="234.835" x="-88.335" y="-13.274">from the browser to the database and back</text>
 </g>
-<g data-svugy-level="" data-svugy-view="-316.284 35.844 1038.217 580.211">
+<g data-svugy-level="" data-svugy-view="-112.335 -71.743 876.192 609.9">
+<g data-svugy-element="browser">
+<title>Browser</title>
+<desc data-svugy-details="">{"kind":"element","path":"browser","label":"Browser","caption":"the user's tab"}</desc>
+<path d="M-88.335,69 L-25.981,105 L-25.981,82.5 L-88.335,46.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M31.177,72 L-25.981,105 L-25.981,82.5 L31.177,49.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-31.177,13.5 L31.177,49.5 L-25.981,82.5 L-88.335,46.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="49.143" transform="matrix(0.866 0.5 -0.866 0.5 -28.579 48)" x="0" y="-2">Browser</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="55.715" transform="matrix(0.866 0.5 -0.866 0.5 -28.579 48)" x="0" y="11">the user's tab</text>
+</g>
 <g data-svugy-element="backend">
 <title>Backend</title>
 <desc data-svugy-details="">{"kind":"element","path":"backend","label":"Backend","caption":"your servers","description":"Every browser request lands on [the API](#backend.api). From there:\n- the API answers the browser right away\n- work that can wait, like the receipt, goes through [the queue](#backend.queue) to [the worker](#backend.worker)"}</desc>
-<path d="M-133.801,239.25 L252.363,462.202 L252.363,451.702 L-133.801,228.75 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M371.875,393.202 L252.363,462.202 L252.363,451.702 L371.875,382.702 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-14.289,159.75 L371.875,382.702 L252.363,451.702 L-133.801,228.75 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<g data-svugy-level="backend" data-svugy-view="-101.244 142.653 457.284 331.549" transform="matrix(1 0 0 1 -14.289 159.75)">
+<path d="M-10.392,150 L521.264,456.952 L521.264,446.452 L-10.392,139.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M640.776,387.952 L521.264,456.952 L521.264,446.452 L640.776,377.452 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M109.119,70.5 L640.776,377.452 L521.264,446.452 L-10.392,139.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="backend" data-svugy-view="2.722 60 640.837 398.203" transform="matrix(1 0 0 1 109.119 70.5)">
 <g data-svugy-element="backend.api">
 <title>API</title>
 <desc data-svugy-details="">{"kind":"element","path":"backend.api","label":"API","caption":"HTTP endpoints"}</desc>
@@ -264,103 +233,94 @@
 <g data-svugy-element="backend.queue">
 <title>Queue</title>
 <desc data-svugy-details="">{"kind":"element","path":"backend.queue","label":"Queue","caption":"pending jobs"}</desc>
-<path d="M72.419,143.811 L134.772,179.811 L134.772,169.311 L72.419,133.311 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M191.93,146.811 L134.772,179.811 L134.772,169.311 L191.93,136.311 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M129.576,100.311 L191.93,136.311 L134.772,169.311 L72.419,133.311 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="38.561" transform="matrix(0.866 0.5 -0.866 0.5 132.174 134.811)" x="0" y="-2">Queue</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="52.511" transform="matrix(0.866 0.5 -0.866 0.5 132.174 134.811)" x="0" y="11">pending jobs</text>
+<path d="M145.165,185.811 L207.519,221.811 L207.519,211.311 L145.165,175.311 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M264.676,188.811 L207.519,221.811 L207.519,211.311 L264.676,178.311 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M202.322,142.311 L264.676,178.311 L207.519,211.311 L145.165,175.311 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="38.561" transform="matrix(0.866 0.5 -0.866 0.5 204.921 176.811)" x="0" y="-2">Queue</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="52.511" transform="matrix(0.866 0.5 -0.866 0.5 204.921 176.811)" x="0" y="11">pending jobs</text>
 </g>
 <g data-svugy-element="backend.worker">
 <title>Worker</title>
 <desc data-svugy-details="">{"kind":"element","path":"backend.worker","label":"Worker","caption":"background jobs"}</desc>
-<path d="M197.126,215.811 L266.653,255.952 L266.653,233.452 L197.126,193.311 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M323.81,222.952 L266.653,255.952 L266.653,233.452 L323.81,200.452 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M254.284,160.311 L323.81,200.452 L266.653,233.452 L197.126,193.311 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="43.693" transform="matrix(0.866 0.5 -0.866 0.5 260.468 196.881)" x="0" y="-2">Worker</text>
-<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="68.282" transform="matrix(0.866 0.5 -0.866 0.5 260.468 196.881)" x="0" y="11">background jobs</text>
+<path d="M342.619,299.811 L412.145,339.952 L412.145,317.452 L342.619,277.311 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M469.303,306.952 L412.145,339.952 L412.145,317.452 L469.303,284.452 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M399.776,244.311 L469.303,284.452 L412.145,317.452 L342.619,277.311 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="43.693" transform="matrix(0.866 0.5 -0.866 0.5 405.961 280.881)" x="0" y="-2">Worker</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="68.282" transform="matrix(0.866 0.5 -0.866 0.5 405.961 280.881)" x="0" y="11">background jobs</text>
 </g>
 <g data-svugy-edge="(backend.api -&gt; backend.queue)[0]" data-svugy-from="backend.api" data-svugy-to="backend.queue">
 <title>schedules a receipt</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.api -&gt; backend.queue)[0]","from":"backend.api","to":"backend.queue","label":"schedules a receipt","description":"The API answers [the browser](#browser) *before* the receipt is sent."}</desc>
-<path d="M38.644,68.811 Q69.661,12.302 100.678,115.742" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M38.644,68.811 Q105.975,-0.365 173.307,157.782" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="parcel" fill="#3478f6" height="10" href="#traveler-parcel" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M38.644,68.811 Q69.821,12.011 100.997,116.811" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M38.644,68.811 Q106.194,-0.589 173.744,158.811" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(backend.queue -&gt; backend.worker)[0]" data-svugy-from="backend.queue" data-svugy-to="backend.worker">
 <title>hands over</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.queue -&gt; backend.worker)[0]","from":"backend.queue","to":"backend.worker","label":"hands over"}</desc>
-<path d="M163.351,152.811 Q194.35,84.404 225.348,175.755" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M236.097,194.811 Q303.414,113.692 370.731,259.795" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M163.351,152.811 Q194.528,84.011 225.705,176.811" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M236.097,194.811 Q303.647,113.411 371.197,260.811" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(backend.api -&gt; backend.queue)[0]" data-svugy-from="backend.api" data-svugy-to="backend.queue">
 <title>schedules a receipt</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.api -&gt; backend.queue)[0]","from":"backend.api","to":"backend.queue","label":"schedules a receipt","description":"The API answers [the browser](#browser) *before* the receipt is sent."}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="118.202" x="30.799" y="76.774"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="98.202" x="89.9" y="88.445">schedules a receipt</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="118.202" x="47.093" y="48.759"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="98.202" x="106.194" y="60.43">schedules a receipt</text>
 </g>
 <g data-svugy-edge="(backend.queue -&gt; backend.worker)[0]" data-svugy-from="backend.queue" data-svugy-to="backend.worker">
 <title>hands over</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.queue -&gt; backend.worker)[0]","from":"backend.queue","to":"backend.worker","label":"hands over"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="76.145" x="166.626" y="124.772"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="56.145" x="204.699" y="136.444">hands over</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="76.145" x="265.575" y="162.759"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="56.145" x="303.647" y="174.43">hands over</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="" data-svugy-stub="browser">
 <title>to Browser</title>
 <desc data-svugy-details="">{"kind":"stub","target":"browser","edges":[{"kind":"edge","edge":"(browser -&gt; backend.api)[0]","from":"browser","to":"backend.api","label":"signs in"},{"kind":"edge","edge":"(browser -&gt; backend.api)[1]","from":"browser","to":"backend.api","label":"places an order"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -29.356 26.301)" width="61.887" x="-30.944" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="41.887" transform="matrix(0.866 -0.5 0.866 0.5 -29.356 26.301)" x="0" y="3.82">Browser</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -48.799 37.526)" width="61.887" x="-30.944" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="41.887" transform="matrix(0.866 -0.5 0.866 0.5 -48.799 37.526)" x="0" y="3.82">Browser</text>
 </g>
 <g data-svugy-goto="data" data-svugy-stub="data.cache">
 <title>to Cache</title>
 <desc data-svugy-details="">{"kind":"stub","target":"data.cache","edges":[{"kind":"edge","edge":"(backend.api -&gt; data.cache)[0]","from":"backend.api","to":"data.cache","label":"looks up"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 233.031 143.893)" width="52.208" x="-26.104" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="32.208" transform="matrix(0.866 0.5 -0.866 0.5 233.031 143.893)" x="0" y="3.82">Cache</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 28.327 145.002)" width="52.208" x="-26.104" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="32.208" transform="matrix(0.866 0.5 -0.866 0.5 28.327 145.002)" x="0" y="3.82">Cache</text>
 </g>
 <g data-svugy-goto="data" data-svugy-stub="data.db">
 <title>to Database</title>
 <desc data-svugy-details="">{"kind":"stub","target":"data.db","edges":[{"kind":"edge","edge":"(backend.api -&gt; data.db)[0]","from":"backend.api","to":"data.db","label":"saves the order"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 294.403 266.578)" width="67.353" x="-33.676" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="47.353" transform="matrix(0.866 -0.5 0.866 0.5 294.403 266.578)" x="0" y="3.82">Database</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 82.609 176.342)" width="67.353" x="-33.676" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="47.353" transform="matrix(0.866 0.5 -0.866 0.5 82.609 176.342)" x="0" y="3.82">Database</text>
 </g>
 <g data-svugy-goto="" data-svugy-stub="mail">
 <title>to Email provider</title>
 <desc data-svugy-details="">{"kind":"stub","target":"mail","edges":[{"kind":"edge","edge":"(backend.worker -&gt; mail)[0]","from":"backend.worker","to":"mail","label":"sends the receipt","description":"The email provider delivers the receipt to the user's inbox."}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 299.691 263.525)" width="92.003" x="-46.001" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="72.003" transform="matrix(0.866 -0.5 0.866 0.5 299.691 263.525)" x="0" y="3.82">Email provider</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 463.801 336.776)" width="92.003" x="-46.001" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="72.003" transform="matrix(0.866 -0.5 0.866 0.5 463.801 336.776)" x="0" y="3.82">Email provider</text>
 </g>
 </g>
 </g>
-<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="39.712" transform="matrix(0.866 0.5 0 1 -133.801 228.75)" x="9" y="21.5">Backend</text>
-<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="51.291" transform="matrix(0.866 0.5 0 1 -133.801 228.75)" x="9" y="34.5">your servers</text>
-</g>
-<g data-svugy-element="browser">
-<title>Browser</title>
-<desc data-svugy-details="">{"kind":"element","path":"browser","label":"Browser","caption":"the user's tab"}</desc>
-<path d="M-292.284,186.75 L-229.93,222.75 L-229.93,200.25 L-292.284,164.25 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-172.772,189.75 L-229.93,222.75 L-229.93,200.25 L-172.772,167.25 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-235.126,131.25 L-172.772,167.25 L-229.93,200.25 L-292.284,164.25 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="49.143" transform="matrix(0.866 0.5 -0.866 0.5 -232.528 165.75)" x="0" y="-2">Browser</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="55.715" transform="matrix(0.866 0.5 -0.866 0.5 -232.528 165.75)" x="0" y="11">the user's tab</text>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="39.712" transform="matrix(0.866 0.5 0 1 -10.392 139.5)" x="9" y="21.5">Backend</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="51.291" transform="matrix(0.866 0.5 0 1 -10.392 139.5)" x="9" y="34.5">your servers</text>
 </g>
 <g data-svugy-element="cdn">
 <title>CDN</title>
 <desc data-svugy-details="">{"kind":"element","path":"cdn","label":"CDN","caption":"static files"}</desc>
-<path d="M-53.16,378.607 L-53.16,389.107 C-53.16,402.542 -34.225,414.382 -10.867,415.552 C12.491,416.723 31.427,406.78 31.427,393.345 L31.427,382.845 C31.427,396.28 12.491,406.223 -10.867,405.052 C-34.225,403.882 -53.16,392.042 -53.16,378.607 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M31.427,382.845 C31.427,396.28 12.491,406.223 -10.867,405.052 C-34.225,403.882 -53.16,392.042 -53.16,378.607 C-53.16,365.172 -34.225,355.229 -10.867,356.4 C12.491,357.57 31.427,369.41 31.427,382.845 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="26.689" transform="matrix(0.866 0.5 -0.866 0.5 -10.867 380.726)" x="0" y="-2">CDN</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="41.583" transform="matrix(0.866 0.5 -0.866 0.5 -10.867 380.726)" x="0" y="11">static files</text>
+<path d="M-44.189,207.286 L-44.189,217.786 C-44.189,231.221 -25.254,243.061 -1.896,244.232 C21.462,245.402 40.398,235.46 40.398,222.025 L40.398,211.525 C40.398,224.96 21.462,234.902 -1.896,233.732 C-25.254,232.561 -44.189,220.721 -44.189,207.286 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M40.398,211.525 C40.398,224.96 21.462,234.902 -1.896,233.732 C-25.254,232.561 -44.189,220.721 -44.189,207.286 C-44.189,193.851 -25.254,183.909 -1.896,185.079 C21.462,186.25 40.398,198.09 40.398,211.525 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="26.689" transform="matrix(0.866 0.5 -0.866 0.5 -1.896 209.405)" x="0" y="-2">CDN</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="41.583" transform="matrix(0.866 0.5 -0.866 0.5 -1.896 209.405)" x="0" y="11">static files</text>
 </g>
 <g data-svugy-element="data">
 <title>Data</title>
 <desc data-svugy-details="">{"kind":"element","path":"data","label":"Data","caption":"what the app remembers","description":"[The database](#data.db) keeps users and orders. [The cache](#data.cache) keeps the reads the API repeats most."}</desc>
-<path d="M354.987,474.952 L479.695,546.952 L479.695,536.452 L354.987,464.452 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M697.933,420.952 L479.695,546.952 L479.695,536.452 L697.933,410.452 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M573.226,338.452 L697.933,410.452 L479.695,536.452 L354.987,464.452 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<g data-svugy-level="data" data-svugy-view="410.803 335.032 231.314 179.339" transform="matrix(1 0 0 1 573.226 338.452)">
+<path d="M3.137,327.811 L210.983,447.811 L210.983,437.311 L3.137,317.311 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M330.494,378.811 L210.983,447.811 L210.983,437.311 L330.494,368.311 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M122.648,248.311 L330.494,368.311 L210.983,437.311 L3.137,317.311 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="data" data-svugy-view="58.953 244.891 215.726 170.339" transform="matrix(1 0 0 1 122.648 248.311)">
 <g data-svugy-element="data.cache">
 <title>Cache</title>
 <desc data-svugy-details="">{"kind":"element","path":"data.cache","label":"Cache","caption":"hot reads"}</desc>
@@ -372,115 +332,115 @@
 <g data-svugy-element="data.db">
 <title>Database</title>
 <desc data-svugy-details="">{"kind":"element","path":"data.db","label":"Database","caption":"users · orders"}</desc>
-<path d="M-138.422,99.881 L-138.422,125.381 C-138.422,138.816 -119.487,150.656 -96.129,151.826 C-72.771,152.997 -53.835,143.054 -53.835,129.619 L-53.835,104.119 C-53.835,117.554 -72.771,127.497 -96.129,126.326 C-119.487,125.156 -138.422,113.316 -138.422,99.881 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-53.835,104.119 C-53.835,117.554 -72.771,127.497 -96.129,126.326 C-119.487,125.156 -138.422,113.316 -138.422,99.881 C-138.422,86.446 -119.487,76.503 -96.129,77.674 C-72.771,78.844 -53.835,90.684 -53.835,104.119 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="55.395" transform="matrix(1 0 0 1 -96.129 102)" x="0" y="4">Database</text>
-<text fill="#1a1b1e" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="56.192" transform="matrix(1 0 0 1 -96.129 102)" x="0" y="17">users · orders</text>
+<path d="M43.443,90.881 L43.443,116.381 C43.443,129.816 62.378,141.656 85.737,142.826 C109.095,143.997 128.03,134.054 128.03,120.619 L128.03,95.119 C128.03,108.554 109.095,118.497 85.737,117.326 C62.378,116.156 43.443,104.316 43.443,90.881 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M128.03,95.119 C128.03,108.554 109.095,118.497 85.737,117.326 C62.378,116.156 43.443,104.316 43.443,90.881 C43.443,77.446 62.378,67.503 85.737,68.674 C109.095,69.844 128.03,81.684 128.03,95.119 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="55.395" transform="matrix(1 0 0 1 85.737 93)" x="0" y="4">Database</text>
+<text fill="#1a1b1e" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="56.192" transform="matrix(1 0 0 1 85.737 93)" x="0" y="17">users · orders</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="backend" data-svugy-stub="backend.api">
 <title>to API</title>
 <desc data-svugy-details="">{"kind":"stub","target":"backend.api","edges":[{"kind":"edge","edge":"(backend.api -&gt; data.cache)[0]","from":"backend.api","to":"data.cache","label":"looks up"},{"kind":"edge","edge":"(backend.api -&gt; data.db)[0]","from":"backend.api","to":"data.db","label":"saves the order"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -87.564 59.908)" width="37.042" x="-18.521" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="17.042" transform="matrix(0.866 -0.5 0.866 0.5 -87.564 59.908)" x="0" y="3.82">API</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 76.314 53.412)" width="37.042" x="-18.521" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="17.042" transform="matrix(0.866 0.5 -0.866 0.5 76.314 53.412)" x="0" y="3.82">API</text>
 </g>
 </g>
 </g>
-<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="20.913" transform="matrix(0.866 0.5 0 1 354.987 464.452)" x="9" y="21.5">Data</text>
-<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="101.498" transform="matrix(0.866 0.5 0 1 354.987 464.452)" x="9" y="34.5">what the app remembers</text>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="20.913" transform="matrix(0.866 0.5 0 1 3.137 317.311)" x="9" y="21.5">Data</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="101.498" transform="matrix(0.866 0.5 0 1 3.137 317.311)" x="9" y="34.5">what the app remembers</text>
 </g>
 <g data-svugy-element="mail">
 <title>Email provider</title>
 <desc data-svugy-details="">{"kind":"element","path":"mail","label":"Email provider","caption":"outside your servers"}</desc>
-<path d="M276.867,543.849 L360.361,592.055 L360.361,569.555 L276.867,521.349 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
-<path d="M417.519,559.055 L360.361,592.055 L360.361,569.555 L417.519,536.555 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
-<path d="M334.025,488.349 L417.519,536.555 L360.361,569.555 L276.867,521.349 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
-<text fill="var(--svugy-text-muted)" font-size="12" font-weight="650" text-anchor="middle" textLength="84.41" transform="matrix(0.866 0.5 -0.866 0.5 347.193 528.952)" x="0" y="-2">Email provider</text>
-<text fill="var(--svugy-text-muted)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="83.664" transform="matrix(0.866 0.5 -0.866 0.5 347.193 528.952)" x="0" y="11">outside your servers</text>
+<path d="M599.206,465.952 L682.7,514.157 L682.7,491.657 L599.206,443.452 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
+<path d="M739.858,481.157 L682.7,514.157 L682.7,491.657 L739.858,458.657 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
+<path d="M656.364,410.452 L739.858,458.657 L682.7,491.657 L599.206,443.452 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
+<text fill="var(--svugy-text-muted)" font-size="12" font-weight="650" text-anchor="middle" textLength="84.41" transform="matrix(0.866 0.5 -0.866 0.5 669.532 451.055)" x="0" y="-2">Email provider</text>
+<text fill="var(--svugy-text-muted)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="83.664" transform="matrix(0.866 0.5 -0.866 0.5 669.532 451.055)" x="0" y="11">outside your servers</text>
 </g>
 <g data-svugy-edge="(backend.api -&gt; data.cache)[0]" data-svugy-from="backend.api" data-svugy-to="data.cache">
 <title>looks up</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.api -&gt; data.cache)[0]","from":"backend.api","to":"data.cache","label":"looks up"}</desc>
-<path d="M33.88,223.061 Q288.901,65.492 543.921,364.6" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M157.289,133.811 Q125.767,77.41 94.246,274.207" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M33.88,223.061 Q289.264,65.268 544.647,365.452" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M157.289,133.811 Q125.679,77.252 94.069,275.311" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(backend.api -&gt; data.db)[0]" data-svugy-from="backend.api" data-svugy-to="data.db">
 <title>saves the order</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.api -&gt; data.db)[0]","from":"backend.api","to":"data.db","label":"saves the order"}</desc>
-<path d="M14.828,234.061 Q230.058,107.834 445.287,421.529" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M138.237,144.811 Q157.676,87.739 177.115,322.196" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="document" fill="#3478f6" height="10" href="#traveler-document" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M14.828,234.061 Q230.374,107.648 445.92,422.452" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M138.237,144.811 Q157.722,87.603 177.208,323.311" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(backend.worker -&gt; mail)[0]" data-svugy-from="backend.worker" data-svugy-to="mail">
 <title>sends the receipt</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.worker -&gt; mail)[0]","from":"backend.worker","to":"mail","label":"sends the receipt","description":"The email provider delivers the receipt to the user's inbox."}</desc>
-<path d="M280.942,376.702 Q293.157,323.409 305.371,503.734" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M549.843,371.452 Q588.633,312.975 627.424,425.896" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="envelope" fill="#3478f6" height="10" href="#traveler-envelope" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M280.942,376.702 Q293.194,323.245 305.446,504.849" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M549.843,371.452 Q588.814,312.702 627.785,426.952" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(browser -&gt; backend.api)[0]" data-svugy-from="browser" data-svugy-to="backend.api">
 <title>signs in</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; backend.api)[0]","from":"browser","to":"backend.api","label":"signs in"}</desc>
-<path d="M-187.061,175.5 Q-110.53,78.419 -33.998,183.346" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M16.887,57.75 Q53.293,-9.851 89.699,93.947" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="key" fill="var(--svugy-text-muted)" height="10" href="#traveler-key" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M-187.061,175.5 Q-110.202,78.003 -33.342,184.25" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M16.887,57.75 Q53.477,-10.192 90.067,95" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(browser -&gt; backend.api)[1]" data-svugy-from="browser" data-svugy-to="backend.api">
 <title>places an order</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; backend.api)[1]","from":"browser","to":"backend.api","label":"places an order"}</desc>
-<path d="M-201.351,183.75 Q-127.194,89.194 -53.037,194.336" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M2.598,66 Q36.635,-0.434 70.672,104.938" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="envelope" fill="var(--svugy-text-muted)" height="10" href="#traveler-envelope" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M-201.351,183.75 Q-126.873,88.784 -52.395,195.25" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M2.598,66 Q36.806,-0.768 71.014,106" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(browser -&gt; cdn)[0]" data-svugy-from="browser" data-svugy-to="cdn">
 <title>loads the page</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; cdn)[0]","from":"browser","to":"cdn","label":"loads the page"}</desc>
-<path d="M-215.64,192 Q-129.03,119.33 -42.42,361.672" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M-11.691,74.25 Q-22.347,21.109 -33.003,190.29" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M-215.64,192 Q-128.842,119.172 -42.044,362.726" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M-11.691,74.25 Q-22.382,20.934 -33.073,191.405" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(backend.api -&gt; data.cache)[0]" data-svugy-from="backend.api" data-svugy-to="data.cache">
 <title>looks up</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.api -&gt; data.cache)[0]","from":"backend.api","to":"data.cache","label":"looks up"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="62.461" x="258.033" y="171.91"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="42.461" x="289.264" y="183.582">looks up</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="62.461" x="87.811" y="150.717"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="42.461" x="119.042" y="162.389">looks up</text>
 </g>
 <g data-svugy-edge="(backend.api -&gt; data.db)[0]" data-svugy-from="backend.api" data-svugy-to="data.db">
 <title>saves the order</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.api -&gt; data.db)[0]","from":"backend.api","to":"data.db","label":"saves the order"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="98.253" x="181.248" y="210.1"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="78.253" x="230.374" y="221.772">saves the order</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="98.253" x="112.105" y="171.428"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="78.253" x="161.231" y="183.1">saves the order</text>
 </g>
 <g data-svugy-edge="(backend.worker -&gt; mail)[0]" data-svugy-from="backend.worker" data-svugy-to="mail">
 <title>sends the receipt</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.worker -&gt; mail)[0]","from":"backend.worker","to":"mail","label":"sends the receipt","description":"The email provider delivers the receipt to the user's inbox."}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="107.107" x="241.736" y="386.837"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="87.107" x="295.29" y="398.509">sends the receipt</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="107.107" x="548.19" y="362.067"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="87.107" x="601.744" y="373.739">sends the receipt</text>
 </g>
 <g data-svugy-edge="(browser -&gt; backend.api)[0]" data-svugy-from="browser" data-svugy-to="backend.api">
 <title>signs in</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; backend.api)[0]","from":"browser","to":"backend.api","label":"signs in"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="58.539" x="-139.471" y="121.087"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="38.539" x="-110.202" y="132.759">signs in</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="58.539" x="24.207" y="25.239"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="38.539" x="53.477" y="36.911">signs in</text>
 </g>
 <g data-svugy-edge="(browser -&gt; backend.api)[1]" data-svugy-from="browser" data-svugy-to="backend.api">
 <title>places an order</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; backend.api)[1]","from":"browser","to":"backend.api","label":"places an order"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="97.981" x="-147.279" y="140.914"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="77.981" x="-98.288" y="152.586">places an order</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="97.981" x="7.133" y="59.892"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="77.981" x="56.123" y="71.564">places an order</text>
 </g>
 <g data-svugy-edge="(browser -&gt; cdn)[0]" data-svugy-from="browser" data-svugy-to="cdn">
 <title>loads the page</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; cdn)[0]","from":"browser","to":"cdn","label":"loads the page"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="93.879" x="-175.782" y="190.415"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="73.879" x="-128.842" y="202.087">loads the page</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="93.879" x="-71.307" y="81.834"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="73.879" x="-24.367" y="93.505">loads the page</text>
 </g>
 <g data-svugy-overlay=""/>
 </g>
@@ -508,6 +468,7 @@
   const HEADING = 'data-svugy-heading';
   const ENTERED = 'data-svugy-entered';
   const DIMMED = 'data-svugy-dimmed';
+  const PANNING = 'data-svugy-panning';
 
   const LAYER_SELECTOR = `[${LAYER}]`;
   const LEVEL_SELECTOR = `[${LEVEL}]`;
@@ -538,7 +499,6 @@
 
   const DESCRIPTION_WIDTH_PX = 320;
   const DESCRIPTION_VIEW_MARGIN_PX = 12;
-  const MIN_UNCOVERED_FRACTION = 0.5;
   const LIFTED_KIND = 'lifted';
 
   const PARAGRAPH_BLOCK = 'paragraph';
@@ -566,6 +526,16 @@
 
   const HIGHLIGHTED_CLASS = 'svugy-highlighted';
   const HIGHLIGHT_DURATION_MS = 1200;
+
+  const DRAG_THRESHOLD_PX = 4;
+  const ZOOM_PER_WHEEL_PIXEL = 0.002;
+  const WHEEL_LINE_PX = 16;
+  const MIN_VIEW_WIDTH = 80;
+  const MAX_ZOOM_OUT_CANVASES = 2;
+  const DOUBLE_CLICK_MS = 300;
+  const VIEW_MATCH_TOLERANCE = 0.001;
+  const HEADING_VIEW_MARGIN_PX = 20;
+  const HEADING_SCREEN_SCALE = 1.6;
 
   const ARROW = '\u2192';
   const ELLIPSIS = '\u2026';
@@ -625,8 +595,12 @@
     const navigator = new LayerNavigator(svg, layers, initialLayer, rootLevel, animator, fader);
     const panel = new DetailPanel(svg);
     const dimmer = new UnrelatedGroupDimmer(svg);
-    const descriptionPanel = new DescriptionPanel(svg, deepestLayer, animator);
+    const descriptionPanel = new DescriptionPanel(svg, deepestLayer);
     const highlighter = new TargetHighlighter();
+    const gestures = new ViewGestures(svg, animator, navigator);
+    gestures.bind();
+    const headingPins = new HeadingPins(svg);
+    headingPins.bind();
     navigator.addNavigationListener((focusedLevel) => {
       panel.hide();
       dimmer.clear();
@@ -824,20 +798,23 @@
       return `${view.x} ${view.y} ${view.width} ${view.height}`;
     },
 
-    // width = min(max(w, h·A·f) / f, canvas width), height = width / A, A the canvas aspect; the view centred in the left f of the width, then clamped into the canvas
-    fittedInside(view, canvas, uncoveredFraction) {
-      const canvasAspect = canvas.width / canvas.height;
-      const uncoveredAspect = canvasAspect * uncoveredFraction;
-      const uncoveredWidth = Math.max(view.width, view.height * uncoveredAspect);
-      const width = Math.min(uncoveredWidth / uncoveredFraction, canvas.width);
-      const height = width / canvasAspect;
-      const centredX = view.x + (view.width - width * uncoveredFraction) / 2;
-      const centredY = view.y + (view.height - height) / 2;
-      const rightmostX = canvas.x + canvas.width - width;
-      const lowestY = canvas.y + canvas.height - height;
-      const x = Math.max(canvas.x, Math.min(centredX, rightmostX));
-      const y = Math.max(canvas.y, Math.min(centredY, lowestY));
+    // width = max(w, h·A), height = width / A, A the canvas aspect; the view stays centred on what it frames, the ground reaching past every side
+    fittedToAspect(view, aspect) {
+      const width = Math.max(view.width, view.height * aspect);
+      const height = width / aspect;
+      const x = view.x + (view.width - width) / 2;
+      const y = view.y + (view.height - height) / 2;
       return { x, y, width, height };
+    },
+
+    // views match when every edge lies within a thousandth of the width: fitting and rounding never move a view further
+    isNear(view, other) {
+      const tolerance = view.width * VIEW_MATCH_TOLERANCE;
+      const isXNear = Math.abs(view.x - other.x) <= tolerance;
+      const isYNear = Math.abs(view.y - other.y) <= tolerance;
+      const isWidthNear = Math.abs(view.width - other.width) <= tolerance;
+      const isHeightNear = Math.abs(view.height - other.height) <= tolerance;
+      return isXNear && isYNear && isWidthNear && isHeightNear;
     },
 
     interpolate(start, target, fraction) {
@@ -856,15 +833,13 @@
     },
   };
 
-  /** Tweens or jumps the root viewBox to a target view fitted to the canvas left of its covered right edge, so no letterbox ever falls outside the canvas; tweens jump under reduced motion. */
+  /** Tweens or jumps the root viewBox to a target view fitted to the canvas aspect, so changing view never changes the document's shape; tweens jump under reduced motion. */
   class ViewBoxAnimator {
     constructor(svg) {
       this.svg = svg;
       this.frameRequest = 0;
       this.canvasView = this.currentView();
-      this.requestedView = this.canvasView;
-      this.coveredWidthPx = 0;
-      this.fittedUncoveredFraction = 1;
+      this.canvasAspect = this.canvasView.width / this.canvasView.height;
     }
 
     tweenTo(requestedView, startView = this.currentView()) {
@@ -874,7 +849,7 @@
         return;
       }
       cancelAnimationFrame(this.frameRequest);
-      const targetView = this.retarget(requestedView);
+      const targetView = View.fittedToAspect(requestedView, this.canvasAspect);
       this.show(startView);
       let startTime = null;
       const step = (now) => {
@@ -893,35 +868,8 @@
 
     jumpTo(requestedView) {
       cancelAnimationFrame(this.frameRequest);
-      const targetView = this.retarget(requestedView);
+      const targetView = View.fittedToAspect(requestedView, this.canvasAspect);
       this.show(targetView);
-    }
-
-    /** Keeps the requested view clear of the right `coveredWidthPx` screen pixels, tweening to its new fit when the uncovered fraction changed. */
-    coverRightEdge(coveredWidthPx) {
-      this.coveredWidthPx = coveredWidthPx;
-      const uncoveredFraction = this.uncoveredFraction();
-      const isFitUnchanged = uncoveredFraction === this.fittedUncoveredFraction;
-      if (isFitUnchanged) {
-        return;
-      }
-      this.tweenTo(this.requestedView);
-    }
-
-    /** Records `requestedView` as the view to keep framed and returns its fit for the current cover. */
-    retarget(requestedView) {
-      const uncoveredFraction = this.uncoveredFraction();
-      this.requestedView = requestedView;
-      this.fittedUncoveredFraction = uncoveredFraction;
-      return View.fittedInside(requestedView, this.canvasView, uncoveredFraction);
-    }
-
-    // f = (client width − covered width) / client width, or 1 when that leaves less than MIN_UNCOVERED_FRACTION of the width
-    uncoveredFraction() {
-      const clientWidth = this.svg.getBoundingClientRect().width;
-      const uncoveredFraction = (clientWidth - this.coveredWidthPx) / clientWidth;
-      const isUncoveredPartWide = uncoveredFraction >= MIN_UNCOVERED_FRACTION;
-      return isUncoveredPartWide ? uncoveredFraction : 1;
     }
 
     currentView() {
@@ -932,6 +880,237 @@
     show(view) {
       const viewBoxText = View.format(view);
       this.svg.setAttribute('viewBox', viewBoxText);
+    }
+  }
+
+  /** Lets the reader look around the shown view: dragging pans it, pinching or Ctrl/⌘ + scrolling zooms it around the pointer; a one-finger touch keeps scrolling the page. */
+  class ViewGestures {
+    constructor(svg, animator, navigator) {
+      this.svg = svg;
+      this.animator = animator;
+      this.navigator = navigator;
+      this.pointerPoints = new Map();
+      this.dragOrigin = null;
+      this.isDragging = false;
+      this.isClickSwallowed = false;
+      this.safariPinchScale = 1;
+    }
+
+    bind() {
+      this.svg.addEventListener('pointerdown', (event) => this.startPointer(event));
+      this.svg.addEventListener('pointermove', (event) => this.movePointer(event));
+      this.svg.addEventListener('pointerup', (event) => this.endPointer(event));
+      this.svg.addEventListener('pointercancel', (event) => this.endPointer(event));
+      // capture, so the click a drag ends with never reaches navigation
+      this.svg.addEventListener('click', (event) => this.swallowClickOfDrag(event), true);
+      this.svg.addEventListener('wheel', (event) => this.zoomOnModifiedWheel(event), { passive: false });
+      // Safari reports trackpad pinches as gesture events, not as Ctrl + wheel
+      this.svg.addEventListener('gesturestart', (event) => this.startSafariPinch(event));
+      this.svg.addEventListener('gesturechange', (event) => this.zoomOnSafariPinch(event));
+    }
+
+    startPointer(event) {
+      const isOtherMouseButton = event.pointerType === 'mouse' && event.button !== 0;
+      if (isOtherMouseButton) return;
+      const clientPoint = { x: event.clientX, y: event.clientY };
+      this.pointerPoints.set(event.pointerId, clientPoint);
+      this.dragOrigin = clientPoint;
+    }
+
+    movePointer(event) {
+      const previousPoint = this.pointerPoints.get(event.pointerId);
+      if (previousPoint === undefined) return;
+      const clientPoint = { x: event.clientX, y: event.clientY };
+      const isPinch = this.pointerPoints.size === 2;
+      if (isPinch) {
+        this.pinch(event.pointerId, clientPoint);
+        return;
+      }
+      const isOneFingerTouch = event.pointerType === 'touch';
+      if (isOneFingerTouch) return;
+      const isDragStarting = !this.isDragging;
+      const dragDistance = distanceBetween(clientPoint, this.dragOrigin);
+      const isStillAClick = isDragStarting && dragDistance < DRAG_THRESHOLD_PX;
+      if (isStillAClick) return;
+      if (isDragStarting) this.startDrag(event.pointerId);
+      this.pointerPoints.set(event.pointerId, clientPoint);
+      const pannedX = clientPoint.x - previousPoint.x;
+      const pannedY = clientPoint.y - previousPoint.y;
+      this.panBy(pannedX, pannedY);
+    }
+
+    // capturing only once the pointer moved keeps a plain click aimed at the group under it
+    startDrag(pointerId) {
+      this.isDragging = true;
+      this.svg.setPointerCapture(pointerId);
+      this.svg.setAttribute(PANNING, '');
+    }
+
+    pinch(pointerId, clientPoint) {
+      const [firstBefore, secondBefore] = this.pointerPoints.values();
+      const midpointBefore = midpointOf(firstBefore, secondBefore);
+      const spanBefore = distanceBetween(firstBefore, secondBefore);
+      this.pointerPoints.set(pointerId, clientPoint);
+      const [firstAfter, secondAfter] = this.pointerPoints.values();
+      const midpointAfter = midpointOf(firstAfter, secondAfter);
+      const spanAfter = distanceBetween(firstAfter, secondAfter);
+      this.isDragging = true;
+      if (spanAfter === 0) return;
+      const zoomFactor = spanBefore / spanAfter;
+      this.zoomAround(midpointAfter, zoomFactor);
+      const pannedX = midpointAfter.x - midpointBefore.x;
+      const pannedY = midpointAfter.y - midpointBefore.y;
+      this.panBy(pannedX, pannedY);
+    }
+
+    endPointer(event) {
+      this.pointerPoints.delete(event.pointerId);
+      const isGestureOngoing = this.pointerPoints.size > 0;
+      if (isGestureOngoing) return;
+      const wasDragging = this.isDragging;
+      this.isDragging = false;
+      this.svg.removeAttribute(PANNING);
+      if (wasDragging) {
+        // the click a drag ends with follows pointerup in the same task
+        this.isClickSwallowed = true;
+        setTimeout(() => { this.isClickSwallowed = false; }, 0);
+      }
+    }
+
+    swallowClickOfDrag(event) {
+      const isClickOfDrag = this.isClickSwallowed;
+      if (isClickOfDrag) {
+        event.stopImmediatePropagation();
+        this.isClickSwallowed = false;
+      }
+    }
+
+    // factor = e^(k · Δy): equal scroll distances zoom by equal ratios
+    zoomOnModifiedWheel(event) {
+      const isPageScroll = !event.ctrlKey && !event.metaKey;
+      if (isPageScroll) return;
+      event.preventDefault();
+      const pixelsPerDeltaUnit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? WHEEL_LINE_PX : 1;
+      const wheelPixels = event.deltaY * pixelsPerDeltaUnit;
+      const zoomFactor = Math.exp(wheelPixels * ZOOM_PER_WHEEL_PIXEL);
+      const clientPoint = { x: event.clientX, y: event.clientY };
+      this.zoomAround(clientPoint, zoomFactor);
+    }
+
+    startSafariPinch(event) {
+      event.preventDefault();
+      this.safariPinchScale = 1;
+    }
+
+    zoomOnSafariPinch(event) {
+      event.preventDefault();
+      const zoomFactor = this.safariPinchScale / event.scale;
+      this.safariPinchScale = event.scale;
+      const clientPoint = { x: event.clientX, y: event.clientY };
+      this.zoomAround(clientPoint, zoomFactor);
+    }
+
+    panBy(pannedX, pannedY) {
+      const view = this.animator.currentView();
+      const screenMatrix = this.svg.getScreenCTM();
+      const userUnitsPerPixel = 1 / screenMatrix.a;
+      const pannedView = {
+        ...view,
+        x: view.x - pannedX * userUnitsPerPixel,
+        y: view.y - pannedY * userUnitsPerPixel,
+      };
+      this.animator.jumpTo(pannedView);
+    }
+
+    /** Zooms in around the pointer, and out toward the focused level's view, so zooming back out lands on it; the width stays within [MIN_VIEW_WIDTH, MAX_ZOOM_OUT_CANVASES · canvas width]. */
+    zoomAround(clientPoint, zoomFactor) {
+      const view = this.animator.currentView();
+      const canvasWidth = this.animator.canvasView.width;
+      const widestView = MAX_ZOOM_OUT_CANVASES * canvasWidth;
+      const requestedWidth = view.width * zoomFactor;
+      const atLeastMinWidth = Math.max(MIN_VIEW_WIDTH, requestedWidth);
+      const zoomedWidth = Math.min(widestView, atLeastMinWidth);
+      const appliedFactor = zoomedWidth / view.width;
+      const isZoomingOut = appliedFactor > 1;
+      const zoomedView = isZoomingOut
+        ? this.zoomedOutTowardHome(view, appliedFactor)
+        : this.zoomedInAround(clientPoint, view, appliedFactor);
+      this.animator.jumpTo(zoomedView);
+    }
+
+    // the point under the pointer stays put: x' = p − (p − x) · f
+    zoomedInAround(clientPoint, view, appliedFactor) {
+      const userPoint = this.userPointAt(clientPoint);
+      return {
+        x: userPoint.x - (userPoint.x - view.x) * appliedFactor,
+        y: userPoint.y - (userPoint.y - view.y) * appliedFactor,
+        width: view.width * appliedFactor,
+        height: view.height * appliedFactor,
+      };
+    }
+
+    // c' = c + (h − c) · min(1, (w' − w) / (H − w)), c the view's centre, h and H the home view's centre and width: the centre reaches home as the width does
+    zoomedOutTowardHome(view, appliedFactor) {
+      const focusedView = this.navigator.focusedView();
+      const homeView = View.fittedToAspect(focusedView, this.animator.canvasAspect);
+      const zoomedWidth = view.width * appliedFactor;
+      const zoomedHeight = view.height * appliedFactor;
+      const widthLeftToHome = homeView.width - view.width;
+      const widthGained = zoomedWidth - view.width;
+      const isAtOrPastHome = widthLeftToHome <= 0;
+      const homeward = isAtOrPastHome ? 1 : Math.min(1, widthGained / widthLeftToHome);
+      const centre = centreOf(view);
+      const homeCentre = centreOf(homeView);
+      const zoomedCentreX = centre.x + (homeCentre.x - centre.x) * homeward;
+      const zoomedCentreY = centre.y + (homeCentre.y - centre.y) * homeward;
+      return {
+        x: zoomedCentreX - zoomedWidth / 2,
+        y: zoomedCentreY - zoomedHeight / 2,
+        width: zoomedWidth,
+        height: zoomedHeight,
+      };
+    }
+
+    userPointAt(clientPoint) {
+      const screenPoint = new DOMPoint(clientPoint.x, clientPoint.y);
+      const screenMatrix = this.svg.getScreenCTM();
+      const userMatrix = screenMatrix.inverse();
+      return screenPoint.matrixTransform(userMatrix);
+    }
+  }
+
+  /** Pins every layer's heading inside the view's top-left corner at a constant on-screen size, wherever the view moves; without script it stays where rendered. */
+  class HeadingPins {
+    constructor(svg) {
+      this.svg = svg;
+      this.headings = Array.from(svg.querySelectorAll(HEADING_SELECTOR));
+    }
+
+    bind() {
+      const viewBoxObserver = new MutationObserver(() => this.pin());
+      viewBoxObserver.observe(this.svg, { attributes: true, attributeFilter: ['viewBox'] });
+      const resizeObserver = new ResizeObserver(() => this.pin());
+      resizeObserver.observe(this.svg);
+      this.pin();
+    }
+
+    // s = k·u and t = corner + m·u − s·b, with u user units per pixel and b the heading's own top-left, so it sits m pixels inside the top-left corner at k times its size
+    pin() {
+      const screenMatrix = this.svg.getScreenCTM();
+      if (screenMatrix === null) return;
+      const screenToUserMatrix = screenMatrix.inverse();
+      const svgBounds = this.svg.getBoundingClientRect();
+      const clientCorner = new DOMPoint(svgBounds.left, svgBounds.top);
+      const userCorner = clientCorner.matrixTransform(screenToUserMatrix);
+      const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
+      const scale = HEADING_SCREEN_SCALE * userUnitsPerPixel;
+      const margin = HEADING_VIEW_MARGIN_PX * userUnitsPerPixel;
+      this.headings.forEach((heading) => {
+        const headingBounds = heading.getBBox();
+        const x = userCorner.x + margin - scale * headingBounds.x;
+        const y = userCorner.y + margin - scale * headingBounds.y;
+        heading.setAttribute('transform', `translate(${x} ${y}) scale(${scale})`);
+      });
     }
   }
 
@@ -1106,22 +1285,44 @@
       return Contract.levelAt(this.shownLayer, ROOT_LEVEL_PATH);
     }
 
-    /** Undoes one step: closes the deepest open containers while the shown layer is deeper than the focused level, else focuses its parent. */
+    /** Animates back to the focused level's own view when the reader zoomed or panned away from it; returns whether it did. */
+    returnToFocusedView() {
+      const currentView = this.animator.currentView();
+      const focusedView = this.focusedView();
+      const fittedFocusedView = View.fittedToAspect(focusedView, this.animator.canvasAspect);
+      const isAwayFromFocusedView = !View.isNear(currentView, fittedFocusedView);
+      if (isAwayFromFocusedView) {
+        this.animator.tweenTo(focusedView);
+      }
+      return isAwayFromFocusedView;
+    }
+
+    /** Steps out once: focuses the focused level's parent, keeping the open containers open, so every step widens the view; at the root, closes the deepest open containers; any navigation discards a pan or zoom. */
     exitOneStep() {
-      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
-      const focusedDepth = Contract.depthOf(this.focusedLevel);
-      const isLayerDeeperThanFocus = shownLayerIndex > focusedDepth;
-      if (isLayerDeeperThanFocus) {
-        const shallowerLayer = this.layers[shownLayerIndex - 1];
-        const focusedPath = this.focusedLevel.getAttribute(LEVEL);
-        this.showLayer(shallowerLayer, focusedPath, this.focusedLevel);
-        return;
-      }
       const parentLevel = Contract.enclosingLevelOf(this.focusedLevel);
-      if (parentLevel === null) {
+      if (parentLevel !== null) {
+        this.focus(parentLevel);
         return;
       }
-      this.focus(parentLevel);
+      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
+      const isOnFirstLayer = shownLayerIndex === 0;
+      if (isOnFirstLayer) {
+        return;
+      }
+      const shallowerLayer = this.layers[shownLayerIndex - 1];
+      const focusedPath = this.focusedLevel.getAttribute(LEVEL);
+      this.showLayer(shallowerLayer, focusedPath, this.focusedLevel);
+    }
+
+    /** Animates back to the focused level's own centred view, undoing any pan or zoom; the shown layer and the focused level stay. */
+    recenterFocusedLevel() {
+      const focusedView = this.focusedView();
+      this.animator.tweenTo(focusedView);
+    }
+
+    /** Returns the focused level's own view, as its `data-svugy-view` frames it. */
+    focusedView() {
+      return this.viewOf(this.focusedLevel);
     }
 
     focus(level) {
@@ -1481,12 +1682,11 @@
     },
   };
 
-  /** Shows the author's description of the focused level, or of the last clicked group or heading, in a panel pinned top-right at a constant on-screen width that the view is framed beside; nothing without a description. */
+  /** Shows the author's description of the focused level, or of the last clicked group or heading, in a panel floating top-right at a constant on-screen width; nothing without a description. */
   class DescriptionPanel {
-    constructor(svg, deepestLayer, animator) {
+    constructor(svg, deepestLayer) {
       this.svg = svg;
       this.deepestLayer = deepestLayer;
-      this.animator = animator;
       this.body = createXhtmlElement('aside', { class: 'svugy-description', 'aria-label': 'description' });
       this.frame = createSvgElement('foreignObject', { class: 'svugy-description-frame' });
       this.frame.appendChild(this.body);
@@ -1584,7 +1784,6 @@
       const isContentless = content.length === 0;
       if (isContentless) {
         this.panel.remove();
-        this.animator.coverRightEdge(0);
         return;
       }
       const isDetached = !this.panel.isConnected;
@@ -1595,7 +1794,7 @@
       this.body.scrollTop = 0;
     }
 
-    /** Sizes and places the shown panel, then keeps the view clear of the screen width it covers. */
+    /** Sizes and places the shown panel. */
     layOut() {
       const isDetached = !this.panel.isConnected;
       if (isDetached) {
@@ -1603,8 +1802,6 @@
       }
       this.fit();
       this.place();
-      const coveredWidth = this.width + 2 * DESCRIPTION_VIEW_MARGIN_PX;
-      this.animator.coverRightEdge(coveredWidth);
     }
 
     // w = min(W, client width − 2m), h = min(content height, client height − 2m): the panel never leaves the viewport
@@ -2058,6 +2255,7 @@
       descriptionPanel.addTargetLinkListener((target) => {
         Interactions.followTargetLink(target, navigator, panel, descriptionPanel, highlighter);
       });
+      let pendingStepOut = 0;
       svg.addEventListener('click', (event) => {
         const heading = Interactions.headingAt(event.target);
         if (heading !== null) {
@@ -2066,11 +2264,20 @@
         }
         const group = Interactions.groupAt(event.target);
         const clientPoint = { x: event.clientX, y: event.clientY };
+        // a click on empty canvas steps out once no second click makes it a double click, which only recentres
         if (group === null) {
-          Interactions.exitOneStep(navigator, panel, descriptionPanel);
+          clearTimeout(pendingStepOut);
+          const isSecondClick = event.detail > 1;
+          if (isSecondClick) return;
+          pendingStepOut = setTimeout(() => Interactions.exitOneStep(navigator, panel, descriptionPanel), DOUBLE_CLICK_MS);
           return;
         }
         Interactions.activate(group, clientPoint, navigator, panel, descriptionPanel);
+      });
+      svg.addEventListener('dblclick', () => {
+        clearTimeout(pendingStepOut);
+        panel.hide();
+        navigator.recenterFocusedLevel();
       });
       svg.addEventListener('keydown', (event) => {
         const isEscape = event.key === 'Escape';
@@ -2165,10 +2372,13 @@
       highlighter.highlight(shownGroups);
     },
 
+    // first bring the focused level back home, its own description and its own view; only a level already home steps out
     exitOneStep(navigator, panel, descriptionPanel) {
       panel.hide();
       const hasLeftClick = descriptionPanel.stepBackFromClick();
-      if (hasLeftClick) {
+      const hasReturnedToFocusedView = navigator.returnToFocusedView();
+      const wasAwayFromHome = hasLeftClick || hasReturnedToFocusedView;
+      if (wasAwayFromHome) {
         return;
       }
       navigator.exitOneStep();
@@ -2185,6 +2395,18 @@
     },
 
   };
+
+  function distanceBetween(firstPoint, secondPoint) {
+    return Math.hypot(secondPoint.x - firstPoint.x, secondPoint.y - firstPoint.y);
+  }
+
+  function centreOf(view) {
+    return { x: view.x + view.width / 2, y: view.y + view.height / 2 };
+  }
+
+  function midpointOf(firstPoint, secondPoint) {
+    return { x: (firstPoint.x + secondPoint.x) / 2, y: (firstPoint.y + secondPoint.y) / 2 };
+  }
 
   function clientCenterOf(node) {
     const bounds = node.getBoundingClientRect();

@@ -14,7 +14,7 @@ use svugy_model::path::ElementPath;
 
 use crate::metrics::TextMeasure;
 use edge_levels::{HomedEdges, LeavingEdges};
-use place::SiblingGraph;
+use place::{CompoundRegions, SiblingGraph};
 pub(crate) use route::Route;
 pub(crate) use stub::Stub;
 
@@ -81,7 +81,24 @@ impl PlacedLevels {
         let levels_innermost_first = containers.rev().chain(root_level);
         let no_levels_yet = BTreeMap::new();
         let mut placed_levels = Self::new(no_levels_yet);
+        let compound_regions = CompoundRegions::of(model);
         for level in levels_innermost_first {
+            let is_absorbed = compound_regions.is_absorbed(level);
+            if is_absorbed {
+                continue;
+            }
+            let is_region_root = compound_regions.is_region_root(model, level);
+            if is_region_root {
+                let region_placed = compound_regions.place_region(
+                    model,
+                    level,
+                    leaving_edges,
+                    &placed_levels,
+                    measure,
+                );
+                placed_levels.by_level.extend(region_placed);
+                continue;
+            }
             let joined_pairs = homed_edges.lifted_pairs_in(level);
             let siblings = SiblingGraph::of_measured_children(
                 model,

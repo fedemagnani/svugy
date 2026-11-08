@@ -11,7 +11,11 @@
 [data-svugy-contract] [tabindex]:focus { outline: none; }
 :is([data-svugy-element], [data-svugy-edge], [data-svugy-stub], [data-svugy-heading])[role="button"] { cursor: pointer; }
 [data-svugy-contract] [data-svugy-heading]:focus-visible { outline: 1px dashed var(--svugy-text-muted); outline-offset: 4px; }
-:is([data-svugy-element], [data-svugy-stub])[role="button"]:has([data-svugy-entered]) { cursor: auto; }
+:is([data-svugy-element], [data-svugy-stub])[role="button"]:has([data-svugy-entered]) { cursor: grab; }
+[data-svugy-contract] { background: var(--svugy-canvas); cursor: grab; touch-action: pan-x pan-y; -webkit-user-select: none; user-select: none; }
+[data-svugy-contract] .svugy-description { -webkit-user-select: text; user-select: text; }
+[data-svugy-contract][data-svugy-panning], [data-svugy-contract][data-svugy-panning] * { cursor: grabbing; }
+[data-svugy-contract][data-svugy-panning] .svugy-panel { visibility: hidden; }
 :is([data-svugy-element], [data-svugy-stub])[role="button"]:hover:not(:has([role="button"]:hover, [data-svugy-entered])) > :is(path, rect),
 :is([data-svugy-element], [data-svugy-edge], [data-svugy-stub]):focus-visible:not(:has([data-svugy-entered])) > :is(path, rect) { stroke: var(--svugy-text); stroke-opacity: 1; stroke-width: 2; fill-opacity: 0.8; }
 [data-svugy-contract] .svugy-highlighted { animation: svugy-highlight 0.3s ease-in-out 4 alternate; }

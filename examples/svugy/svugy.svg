@@ -16,7 +16,11 @@
 [data-svugy-contract] [tabindex]:focus { outline: none; }
 :is([data-svugy-element], [data-svugy-edge], [data-svugy-stub], [data-svugy-heading])[role="button"] { cursor: pointer; }
 [data-svugy-contract] [data-svugy-heading]:focus-visible { outline: 1px dashed var(--svugy-text-muted); outline-offset: 4px; }
-:is([data-svugy-element], [data-svugy-stub])[role="button"]:has([data-svugy-entered]) { cursor: auto; }
+:is([data-svugy-element], [data-svugy-stub])[role="button"]:has([data-svugy-entered]) { cursor: grab; }
+[data-svugy-contract] { background: var(--svugy-canvas); cursor: grab; touch-action: pan-x pan-y; -webkit-user-select: none; user-select: none; }
+[data-svugy-contract] .svugy-description { -webkit-user-select: text; user-select: text; }
+[data-svugy-contract][data-svugy-panning], [data-svugy-contract][data-svugy-panning] * { cursor: grabbing; }
+[data-svugy-contract][data-svugy-panning] .svugy-panel { visibility: hidden; }
 :is([data-svugy-element], [data-svugy-stub])[role="button"]:hover:not(:has([role="button"]:hover, [data-svugy-entered])) > :is(path, rect),
 :is([data-svugy-element], [data-svugy-edge], [data-svugy-stub]):focus-visible:not(:has([data-svugy-entered])) > :is(path, rect) { stroke: var(--svugy-text); stroke-opacity: 1; stroke-width: 2; fill-opacity: 0.8; }
 [data-svugy-contract] .svugy-highlighted { animation: svugy-highlight 0.3s ease-in-out 4 alternate; }
@@ -82,68 +86,13 @@
 <symbol id="traveler-dot" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" viewBox="-5 -5 10 10">
 <path d="M2.5,0 C2.5,1.381 1.381,2.5 0,2.5 C-1.381,2.5 -2.5,1.381 -2.5,0 C-2.5,-1.381 -1.381,-2.5 0,-2.5 C1.381,-2.5 2.5,-1.381 2.5,0 Z" fill-opacity="1"/>
 </symbol>
+<pattern height="60" id="ground-grid" patternTransform="matrix(0.866 0.5 -0.866 0.5 0 0)" patternUnits="userSpaceOnUse" width="60">
+<path d="M0,0 L60,0 L60,60 L0,60 Z" fill="none" stroke="var(--svugy-grid-line)" stroke-width="1.155"/>
+</pattern>
 </defs>
 <rect fill="var(--svugy-canvas)" height="1455.521" rx="14" width="1936.438" x="-557.472" y="36.734"/>
+<rect fill="url(#ground-grid)" height="2000000" width="2000000" x="-1000000" y="-1000000"/>
 <g data-svugy-layer="0">
-<line stroke="var(--svugy-grid-line)" x1="0" x2="-1091.192" y1="-60" y2="570"/>
-<line stroke="var(--svugy-grid-line)" x1="51.962" x2="-1039.23" y1="-30" y2="600"/>
-<line stroke="var(--svugy-grid-line)" x1="103.923" x2="-987.269" y1="0" y2="630"/>
-<line stroke="var(--svugy-grid-line)" x1="155.885" x2="-935.307" y1="30" y2="660"/>
-<line stroke="var(--svugy-grid-line)" x1="207.846" x2="-883.346" y1="60" y2="690"/>
-<line stroke="var(--svugy-grid-line)" x1="259.808" x2="-831.384" y1="90" y2="720"/>
-<line stroke="var(--svugy-grid-line)" x1="311.769" x2="-779.423" y1="120" y2="750"/>
-<line stroke="var(--svugy-grid-line)" x1="363.731" x2="-727.461" y1="150" y2="780"/>
-<line stroke="var(--svugy-grid-line)" x1="415.692" x2="-675.5" y1="180" y2="810"/>
-<line stroke="var(--svugy-grid-line)" x1="467.654" x2="-623.538" y1="210" y2="840"/>
-<line stroke="var(--svugy-grid-line)" x1="519.615" x2="-571.577" y1="240" y2="870"/>
-<line stroke="var(--svugy-grid-line)" x1="571.577" x2="-519.615" y1="270" y2="900"/>
-<line stroke="var(--svugy-grid-line)" x1="623.538" x2="-467.654" y1="300" y2="930"/>
-<line stroke="var(--svugy-grid-line)" x1="675.5" x2="-415.692" y1="330" y2="960"/>
-<line stroke="var(--svugy-grid-line)" x1="727.461" x2="-363.731" y1="360" y2="990"/>
-<line stroke="var(--svugy-grid-line)" x1="779.423" x2="-311.769" y1="390" y2="1020"/>
-<line stroke="var(--svugy-grid-line)" x1="831.384" x2="-259.808" y1="420" y2="1050"/>
-<line stroke="var(--svugy-grid-line)" x1="883.346" x2="-207.846" y1="450" y2="1080"/>
-<line stroke="var(--svugy-grid-line)" x1="935.307" x2="-155.885" y1="480" y2="1110"/>
-<line stroke="var(--svugy-grid-line)" x1="987.269" x2="-103.923" y1="510" y2="1140"/>
-<line stroke="var(--svugy-grid-line)" x1="1039.23" x2="-51.962" y1="540" y2="1170"/>
-<line stroke="var(--svugy-grid-line)" x1="1091.192" x2="0" y1="570" y2="1200"/>
-<line stroke="var(--svugy-grid-line)" x1="1143.154" x2="51.962" y1="600" y2="1230"/>
-<line stroke="var(--svugy-grid-line)" x1="1195.115" x2="103.923" y1="630" y2="1260"/>
-<line stroke="var(--svugy-grid-line)" x1="1247.077" x2="155.885" y1="660" y2="1290"/>
-<line stroke="var(--svugy-grid-line)" x1="1299.038" x2="207.846" y1="690" y2="1320"/>
-<line stroke="var(--svugy-grid-line)" x1="1351" x2="259.808" y1="720" y2="1350"/>
-<line stroke="var(--svugy-grid-line)" x1="1402.961" x2="311.769" y1="750" y2="1380"/>
-<line stroke="var(--svugy-grid-line)" x1="1454.923" x2="363.731" y1="780" y2="1410"/>
-<line stroke="var(--svugy-grid-line)" x1="1506.884" x2="415.692" y1="810" y2="1440"/>
-<line stroke="var(--svugy-grid-line)" x1="1558.846" x2="467.654" y1="840" y2="1470"/>
-<line stroke="var(--svugy-grid-line)" x1="1610.807" x2="519.615" y1="870" y2="1500"/>
-<line stroke="var(--svugy-grid-line)" x1="1662.769" x2="571.577" y1="900" y2="1530"/>
-<line stroke="var(--svugy-grid-line)" x1="1714.73" x2="623.538" y1="930" y2="1560"/>
-<line stroke="var(--svugy-grid-line)" x1="1766.692" x2="675.5" y1="960" y2="1590"/>
-<line stroke="var(--svugy-grid-line)" x1="1818.653" x2="727.461" y1="990" y2="1620"/>
-<line stroke="var(--svugy-grid-line)" x1="1870.615" x2="779.423" y1="1020" y2="1650"/>
-<line stroke="var(--svugy-grid-line)" x1="0" x2="1870.615" y1="-60" y2="1020"/>
-<line stroke="var(--svugy-grid-line)" x1="-51.962" x2="1818.653" y1="-30" y2="1050"/>
-<line stroke="var(--svugy-grid-line)" x1="-103.923" x2="1766.692" y1="0" y2="1080"/>
-<line stroke="var(--svugy-grid-line)" x1="-155.885" x2="1714.73" y1="30" y2="1110"/>
-<line stroke="var(--svugy-grid-line)" x1="-207.846" x2="1662.769" y1="60" y2="1140"/>
-<line stroke="var(--svugy-grid-line)" x1="-259.808" x2="1610.807" y1="90" y2="1170"/>
-<line stroke="var(--svugy-grid-line)" x1="-311.769" x2="1558.846" y1="120" y2="1200"/>
-<line stroke="var(--svugy-grid-line)" x1="-363.731" x2="1506.884" y1="150" y2="1230"/>
-<line stroke="var(--svugy-grid-line)" x1="-415.692" x2="1454.923" y1="180" y2="1260"/>
-<line stroke="var(--svugy-grid-line)" x1="-467.654" x2="1402.961" y1="210" y2="1290"/>
-<line stroke="var(--svugy-grid-line)" x1="-519.615" x2="1351" y1="240" y2="1320"/>
-<line stroke="var(--svugy-grid-line)" x1="-571.577" x2="1299.038" y1="270" y2="1350"/>
-<line stroke="var(--svugy-grid-line)" x1="-623.538" x2="1247.077" y1="300" y2="1380"/>
-<line stroke="var(--svugy-grid-line)" x1="-675.5" x2="1195.115" y1="330" y2="1410"/>
-<line stroke="var(--svugy-grid-line)" x1="-727.461" x2="1143.154" y1="360" y2="1440"/>
-<line stroke="var(--svugy-grid-line)" x1="-779.423" x2="1091.192" y1="390" y2="1470"/>
-<line stroke="var(--svugy-grid-line)" x1="-831.384" x2="1039.23" y1="420" y2="1500"/>
-<line stroke="var(--svugy-grid-line)" x1="-883.346" x2="987.269" y1="450" y2="1530"/>
-<line stroke="var(--svugy-grid-line)" x1="-935.307" x2="935.307" y1="480" y2="1560"/>
-<line stroke="var(--svugy-grid-line)" x1="-987.269" x2="883.346" y1="510" y2="1590"/>
-<line stroke="var(--svugy-grid-line)" x1="-1039.23" x2="831.384" y1="540" y2="1620"/>
-<line stroke="var(--svugy-grid-line)" x1="-1091.192" x2="779.423" y1="570" y2="1650"/>
 <g data-svugy-heading="">
 <text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="174.242" x="-533.472" y="77.203">svugy · how it is built</text>
 <text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="266.319" x="-533.472" y="95.203">text in → model → layout → geometry → SVG out</text>
@@ -362,65 +311,6 @@
 </g>
 </g>
 <g data-svugy-layer="1">
-<line stroke="var(--svugy-grid-line)" x1="0" x2="-1091.192" y1="-60" y2="570"/>
-<line stroke="var(--svugy-grid-line)" x1="51.962" x2="-1039.23" y1="-30" y2="600"/>
-<line stroke="var(--svugy-grid-line)" x1="103.923" x2="-987.269" y1="0" y2="630"/>
-<line stroke="var(--svugy-grid-line)" x1="155.885" x2="-935.307" y1="30" y2="660"/>
-<line stroke="var(--svugy-grid-line)" x1="207.846" x2="-883.346" y1="60" y2="690"/>
-<line stroke="var(--svugy-grid-line)" x1="259.808" x2="-831.384" y1="90" y2="720"/>
-<line stroke="var(--svugy-grid-line)" x1="311.769" x2="-779.423" y1="120" y2="750"/>
-<line stroke="var(--svugy-grid-line)" x1="363.731" x2="-727.461" y1="150" y2="780"/>
-<line stroke="var(--svugy-grid-line)" x1="415.692" x2="-675.5" y1="180" y2="810"/>
-<line stroke="var(--svugy-grid-line)" x1="467.654" x2="-623.538" y1="210" y2="840"/>
-<line stroke="var(--svugy-grid-line)" x1="519.615" x2="-571.577" y1="240" y2="870"/>
-<line stroke="var(--svugy-grid-line)" x1="571.577" x2="-519.615" y1="270" y2="900"/>
-<line stroke="var(--svugy-grid-line)" x1="623.538" x2="-467.654" y1="300" y2="930"/>
-<line stroke="var(--svugy-grid-line)" x1="675.5" x2="-415.692" y1="330" y2="960"/>
-<line stroke="var(--svugy-grid-line)" x1="727.461" x2="-363.731" y1="360" y2="990"/>
-<line stroke="var(--svugy-grid-line)" x1="779.423" x2="-311.769" y1="390" y2="1020"/>
-<line stroke="var(--svugy-grid-line)" x1="831.384" x2="-259.808" y1="420" y2="1050"/>
-<line stroke="var(--svugy-grid-line)" x1="883.346" x2="-207.846" y1="450" y2="1080"/>
-<line stroke="var(--svugy-grid-line)" x1="935.307" x2="-155.885" y1="480" y2="1110"/>
-<line stroke="var(--svugy-grid-line)" x1="987.269" x2="-103.923" y1="510" y2="1140"/>
-<line stroke="var(--svugy-grid-line)" x1="1039.23" x2="-51.962" y1="540" y2="1170"/>
-<line stroke="var(--svugy-grid-line)" x1="1091.192" x2="0" y1="570" y2="1200"/>
-<line stroke="var(--svugy-grid-line)" x1="1143.154" x2="51.962" y1="600" y2="1230"/>
-<line stroke="var(--svugy-grid-line)" x1="1195.115" x2="103.923" y1="630" y2="1260"/>
-<line stroke="var(--svugy-grid-line)" x1="1247.077" x2="155.885" y1="660" y2="1290"/>
-<line stroke="var(--svugy-grid-line)" x1="1299.038" x2="207.846" y1="690" y2="1320"/>
-<line stroke="var(--svugy-grid-line)" x1="1351" x2="259.808" y1="720" y2="1350"/>
-<line stroke="var(--svugy-grid-line)" x1="1402.961" x2="311.769" y1="750" y2="1380"/>
-<line stroke="var(--svugy-grid-line)" x1="1454.923" x2="363.731" y1="780" y2="1410"/>
-<line stroke="var(--svugy-grid-line)" x1="1506.884" x2="415.692" y1="810" y2="1440"/>
-<line stroke="var(--svugy-grid-line)" x1="1558.846" x2="467.654" y1="840" y2="1470"/>
-<line stroke="var(--svugy-grid-line)" x1="1610.807" x2="519.615" y1="870" y2="1500"/>
-<line stroke="var(--svugy-grid-line)" x1="1662.769" x2="571.577" y1="900" y2="1530"/>
-<line stroke="var(--svugy-grid-line)" x1="1714.73" x2="623.538" y1="930" y2="1560"/>
-<line stroke="var(--svugy-grid-line)" x1="1766.692" x2="675.5" y1="960" y2="1590"/>
-<line stroke="var(--svugy-grid-line)" x1="1818.653" x2="727.461" y1="990" y2="1620"/>
-<line stroke="var(--svugy-grid-line)" x1="1870.615" x2="779.423" y1="1020" y2="1650"/>
-<line stroke="var(--svugy-grid-line)" x1="0" x2="1870.615" y1="-60" y2="1020"/>
-<line stroke="var(--svugy-grid-line)" x1="-51.962" x2="1818.653" y1="-30" y2="1050"/>
-<line stroke="var(--svugy-grid-line)" x1="-103.923" x2="1766.692" y1="0" y2="1080"/>
-<line stroke="var(--svugy-grid-line)" x1="-155.885" x2="1714.73" y1="30" y2="1110"/>
-<line stroke="var(--svugy-grid-line)" x1="-207.846" x2="1662.769" y1="60" y2="1140"/>
-<line stroke="var(--svugy-grid-line)" x1="-259.808" x2="1610.807" y1="90" y2="1170"/>
-<line stroke="var(--svugy-grid-line)" x1="-311.769" x2="1558.846" y1="120" y2="1200"/>
-<line stroke="var(--svugy-grid-line)" x1="-363.731" x2="1506.884" y1="150" y2="1230"/>
-<line stroke="var(--svugy-grid-line)" x1="-415.692" x2="1454.923" y1="180" y2="1260"/>
-<line stroke="var(--svugy-grid-line)" x1="-467.654" x2="1402.961" y1="210" y2="1290"/>
-<line stroke="var(--svugy-grid-line)" x1="-519.615" x2="1351" y1="240" y2="1320"/>
-<line stroke="var(--svugy-grid-line)" x1="-571.577" x2="1299.038" y1="270" y2="1350"/>
-<line stroke="var(--svugy-grid-line)" x1="-623.538" x2="1247.077" y1="300" y2="1380"/>
-<line stroke="var(--svugy-grid-line)" x1="-675.5" x2="1195.115" y1="330" y2="1410"/>
-<line stroke="var(--svugy-grid-line)" x1="-727.461" x2="1143.154" y1="360" y2="1440"/>
-<line stroke="var(--svugy-grid-line)" x1="-779.423" x2="1091.192" y1="390" y2="1470"/>
-<line stroke="var(--svugy-grid-line)" x1="-831.384" x2="1039.23" y1="420" y2="1500"/>
-<line stroke="var(--svugy-grid-line)" x1="-883.346" x2="987.269" y1="450" y2="1530"/>
-<line stroke="var(--svugy-grid-line)" x1="-935.307" x2="935.307" y1="480" y2="1560"/>
-<line stroke="var(--svugy-grid-line)" x1="-987.269" x2="883.346" y1="510" y2="1590"/>
-<line stroke="var(--svugy-grid-line)" x1="-1039.23" x2="831.384" y1="540" y2="1620"/>
-<line stroke="var(--svugy-grid-line)" x1="-1091.192" x2="779.423" y1="570" y2="1650"/>
 <g data-svugy-heading="">
 <text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="174.242" x="-533.472" y="80.726">svugy · how it is built</text>
 <text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="266.319" x="-533.472" y="98.726">text in → model → layout → geometry → SVG out</text>
@@ -813,65 +703,6 @@
 </g>
 </g>
 <g data-svugy-layer="2" data-svugy-shown="">
-<line stroke="var(--svugy-grid-line)" x1="0" x2="-1091.192" y1="-60" y2="570"/>
-<line stroke="var(--svugy-grid-line)" x1="51.962" x2="-1039.23" y1="-30" y2="600"/>
-<line stroke="var(--svugy-grid-line)" x1="103.923" x2="-987.269" y1="0" y2="630"/>
-<line stroke="var(--svugy-grid-line)" x1="155.885" x2="-935.307" y1="30" y2="660"/>
-<line stroke="var(--svugy-grid-line)" x1="207.846" x2="-883.346" y1="60" y2="690"/>
-<line stroke="var(--svugy-grid-line)" x1="259.808" x2="-831.384" y1="90" y2="720"/>
-<line stroke="var(--svugy-grid-line)" x1="311.769" x2="-779.423" y1="120" y2="750"/>
-<line stroke="var(--svugy-grid-line)" x1="363.731" x2="-727.461" y1="150" y2="780"/>
-<line stroke="var(--svugy-grid-line)" x1="415.692" x2="-675.5" y1="180" y2="810"/>
-<line stroke="var(--svugy-grid-line)" x1="467.654" x2="-623.538" y1="210" y2="840"/>
-<line stroke="var(--svugy-grid-line)" x1="519.615" x2="-571.577" y1="240" y2="870"/>
-<line stroke="var(--svugy-grid-line)" x1="571.577" x2="-519.615" y1="270" y2="900"/>
-<line stroke="var(--svugy-grid-line)" x1="623.538" x2="-467.654" y1="300" y2="930"/>
-<line stroke="var(--svugy-grid-line)" x1="675.5" x2="-415.692" y1="330" y2="960"/>
-<line stroke="var(--svugy-grid-line)" x1="727.461" x2="-363.731" y1="360" y2="990"/>
-<line stroke="var(--svugy-grid-line)" x1="779.423" x2="-311.769" y1="390" y2="1020"/>
-<line stroke="var(--svugy-grid-line)" x1="831.384" x2="-259.808" y1="420" y2="1050"/>
-<line stroke="var(--svugy-grid-line)" x1="883.346" x2="-207.846" y1="450" y2="1080"/>
-<line stroke="var(--svugy-grid-line)" x1="935.307" x2="-155.885" y1="480" y2="1110"/>
-<line stroke="var(--svugy-grid-line)" x1="987.269" x2="-103.923" y1="510" y2="1140"/>
-<line stroke="var(--svugy-grid-line)" x1="1039.23" x2="-51.962" y1="540" y2="1170"/>
-<line stroke="var(--svugy-grid-line)" x1="1091.192" x2="0" y1="570" y2="1200"/>
-<line stroke="var(--svugy-grid-line)" x1="1143.154" x2="51.962" y1="600" y2="1230"/>
-<line stroke="var(--svugy-grid-line)" x1="1195.115" x2="103.923" y1="630" y2="1260"/>
-<line stroke="var(--svugy-grid-line)" x1="1247.077" x2="155.885" y1="660" y2="1290"/>
-<line stroke="var(--svugy-grid-line)" x1="1299.038" x2="207.846" y1="690" y2="1320"/>
-<line stroke="var(--svugy-grid-line)" x1="1351" x2="259.808" y1="720" y2="1350"/>
-<line stroke="var(--svugy-grid-line)" x1="1402.961" x2="311.769" y1="750" y2="1380"/>
-<line stroke="var(--svugy-grid-line)" x1="1454.923" x2="363.731" y1="780" y2="1410"/>
-<line stroke="var(--svugy-grid-line)" x1="1506.884" x2="415.692" y1="810" y2="1440"/>
-<line stroke="var(--svugy-grid-line)" x1="1558.846" x2="467.654" y1="840" y2="1470"/>
-<line stroke="var(--svugy-grid-line)" x1="1610.807" x2="519.615" y1="870" y2="1500"/>
-<line stroke="var(--svugy-grid-line)" x1="1662.769" x2="571.577" y1="900" y2="1530"/>
-<line stroke="var(--svugy-grid-line)" x1="1714.73" x2="623.538" y1="930" y2="1560"/>
-<line stroke="var(--svugy-grid-line)" x1="1766.692" x2="675.5" y1="960" y2="1590"/>
-<line stroke="var(--svugy-grid-line)" x1="1818.653" x2="727.461" y1="990" y2="1620"/>
-<line stroke="var(--svugy-grid-line)" x1="1870.615" x2="779.423" y1="1020" y2="1650"/>
-<line stroke="var(--svugy-grid-line)" x1="0" x2="1870.615" y1="-60" y2="1020"/>
-<line stroke="var(--svugy-grid-line)" x1="-51.962" x2="1818.653" y1="-30" y2="1050"/>
-<line stroke="var(--svugy-grid-line)" x1="-103.923" x2="1766.692" y1="0" y2="1080"/>
-<line stroke="var(--svugy-grid-line)" x1="-155.885" x2="1714.73" y1="30" y2="1110"/>
-<line stroke="var(--svugy-grid-line)" x1="-207.846" x2="1662.769" y1="60" y2="1140"/>
-<line stroke="var(--svugy-grid-line)" x1="-259.808" x2="1610.807" y1="90" y2="1170"/>
-<line stroke="var(--svugy-grid-line)" x1="-311.769" x2="1558.846" y1="120" y2="1200"/>
-<line stroke="var(--svugy-grid-line)" x1="-363.731" x2="1506.884" y1="150" y2="1230"/>
-<line stroke="var(--svugy-grid-line)" x1="-415.692" x2="1454.923" y1="180" y2="1260"/>
-<line stroke="var(--svugy-grid-line)" x1="-467.654" x2="1402.961" y1="210" y2="1290"/>
-<line stroke="var(--svugy-grid-line)" x1="-519.615" x2="1351" y1="240" y2="1320"/>
-<line stroke="var(--svugy-grid-line)" x1="-571.577" x2="1299.038" y1="270" y2="1350"/>
-<line stroke="var(--svugy-grid-line)" x1="-623.538" x2="1247.077" y1="300" y2="1380"/>
-<line stroke="var(--svugy-grid-line)" x1="-675.5" x2="1195.115" y1="330" y2="1410"/>
-<line stroke="var(--svugy-grid-line)" x1="-727.461" x2="1143.154" y1="360" y2="1440"/>
-<line stroke="var(--svugy-grid-line)" x1="-779.423" x2="1091.192" y1="390" y2="1470"/>
-<line stroke="var(--svugy-grid-line)" x1="-831.384" x2="1039.23" y1="420" y2="1500"/>
-<line stroke="var(--svugy-grid-line)" x1="-883.346" x2="987.269" y1="450" y2="1530"/>
-<line stroke="var(--svugy-grid-line)" x1="-935.307" x2="935.307" y1="480" y2="1560"/>
-<line stroke="var(--svugy-grid-line)" x1="-987.269" x2="883.346" y1="510" y2="1590"/>
-<line stroke="var(--svugy-grid-line)" x1="-1039.23" x2="831.384" y1="540" y2="1620"/>
-<line stroke="var(--svugy-grid-line)" x1="-1091.192" x2="779.423" y1="570" y2="1650"/>
 <g data-svugy-heading="">
 <text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="174.242" x="-533.472" y="80.726">svugy · how it is built</text>
 <text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="266.319" x="-533.472" y="98.726">text in → model → layout → geometry → SVG out</text>
@@ -1434,6 +1265,7 @@
   const HEADING = 'data-svugy-heading';
   const ENTERED = 'data-svugy-entered';
   const DIMMED = 'data-svugy-dimmed';
+  const PANNING = 'data-svugy-panning';
 
   const LAYER_SELECTOR = `[${LAYER}]`;
   const LEVEL_SELECTOR = `[${LEVEL}]`;
@@ -1464,7 +1296,6 @@
 
   const DESCRIPTION_WIDTH_PX = 320;
   const DESCRIPTION_VIEW_MARGIN_PX = 12;
-  const MIN_UNCOVERED_FRACTION = 0.5;
   const LIFTED_KIND = 'lifted';
 
   const PARAGRAPH_BLOCK = 'paragraph';
@@ -1492,6 +1323,16 @@
 
   const HIGHLIGHTED_CLASS = 'svugy-highlighted';
   const HIGHLIGHT_DURATION_MS = 1200;
+
+  const DRAG_THRESHOLD_PX = 4;
+  const ZOOM_PER_WHEEL_PIXEL = 0.002;
+  const WHEEL_LINE_PX = 16;
+  const MIN_VIEW_WIDTH = 80;
+  const MAX_ZOOM_OUT_CANVASES = 2;
+  const DOUBLE_CLICK_MS = 300;
+  const VIEW_MATCH_TOLERANCE = 0.001;
+  const HEADING_VIEW_MARGIN_PX = 20;
+  const HEADING_SCREEN_SCALE = 1.6;
 
   const ARROW = '\u2192';
   const ELLIPSIS = '\u2026';
@@ -1551,8 +1392,12 @@
     const navigator = new LayerNavigator(svg, layers, initialLayer, rootLevel, animator, fader);
     const panel = new DetailPanel(svg);
     const dimmer = new UnrelatedGroupDimmer(svg);
-    const descriptionPanel = new DescriptionPanel(svg, deepestLayer, animator);
+    const descriptionPanel = new DescriptionPanel(svg, deepestLayer);
     const highlighter = new TargetHighlighter();
+    const gestures = new ViewGestures(svg, animator, navigator);
+    gestures.bind();
+    const headingPins = new HeadingPins(svg);
+    headingPins.bind();
     navigator.addNavigationListener((focusedLevel) => {
       panel.hide();
       dimmer.clear();
@@ -1750,20 +1595,23 @@
       return `${view.x} ${view.y} ${view.width} ${view.height}`;
     },
 
-    // width = min(max(w, h·A·f) / f, canvas width), height = width / A, A the canvas aspect; the view centred in the left f of the width, then clamped into the canvas
-    fittedInside(view, canvas, uncoveredFraction) {
-      const canvasAspect = canvas.width / canvas.height;
-      const uncoveredAspect = canvasAspect * uncoveredFraction;
-      const uncoveredWidth = Math.max(view.width, view.height * uncoveredAspect);
-      const width = Math.min(uncoveredWidth / uncoveredFraction, canvas.width);
-      const height = width / canvasAspect;
-      const centredX = view.x + (view.width - width * uncoveredFraction) / 2;
-      const centredY = view.y + (view.height - height) / 2;
-      const rightmostX = canvas.x + canvas.width - width;
-      const lowestY = canvas.y + canvas.height - height;
-      const x = Math.max(canvas.x, Math.min(centredX, rightmostX));
-      const y = Math.max(canvas.y, Math.min(centredY, lowestY));
+    // width = max(w, h·A), height = width / A, A the canvas aspect; the view stays centred on what it frames, the ground reaching past every side
+    fittedToAspect(view, aspect) {
+      const width = Math.max(view.width, view.height * aspect);
+      const height = width / aspect;
+      const x = view.x + (view.width - width) / 2;
+      const y = view.y + (view.height - height) / 2;
       return { x, y, width, height };
+    },
+
+    // views match when every edge lies within a thousandth of the width: fitting and rounding never move a view further
+    isNear(view, other) {
+      const tolerance = view.width * VIEW_MATCH_TOLERANCE;
+      const isXNear = Math.abs(view.x - other.x) <= tolerance;
+      const isYNear = Math.abs(view.y - other.y) <= tolerance;
+      const isWidthNear = Math.abs(view.width - other.width) <= tolerance;
+      const isHeightNear = Math.abs(view.height - other.height) <= tolerance;
+      return isXNear && isYNear && isWidthNear && isHeightNear;
     },
 
     interpolate(start, target, fraction) {
@@ -1782,15 +1630,13 @@
     },
   };
 
-  /** Tweens or jumps the root viewBox to a target view fitted to the canvas left of its covered right edge, so no letterbox ever falls outside the canvas; tweens jump under reduced motion. */
+  /** Tweens or jumps the root viewBox to a target view fitted to the canvas aspect, so changing view never changes the document's shape; tweens jump under reduced motion. */
   class ViewBoxAnimator {
     constructor(svg) {
       this.svg = svg;
       this.frameRequest = 0;
       this.canvasView = this.currentView();
-      this.requestedView = this.canvasView;
-      this.coveredWidthPx = 0;
-      this.fittedUncoveredFraction = 1;
+      this.canvasAspect = this.canvasView.width / this.canvasView.height;
     }
 
     tweenTo(requestedView, startView = this.currentView()) {
@@ -1800,7 +1646,7 @@
         return;
       }
       cancelAnimationFrame(this.frameRequest);
-      const targetView = this.retarget(requestedView);
+      const targetView = View.fittedToAspect(requestedView, this.canvasAspect);
       this.show(startView);
       let startTime = null;
       const step = (now) => {
@@ -1819,35 +1665,8 @@
 
     jumpTo(requestedView) {
       cancelAnimationFrame(this.frameRequest);
-      const targetView = this.retarget(requestedView);
+      const targetView = View.fittedToAspect(requestedView, this.canvasAspect);
       this.show(targetView);
-    }
-
-    /** Keeps the requested view clear of the right `coveredWidthPx` screen pixels, tweening to its new fit when the uncovered fraction changed. */
-    coverRightEdge(coveredWidthPx) {
-      this.coveredWidthPx = coveredWidthPx;
-      const uncoveredFraction = this.uncoveredFraction();
-      const isFitUnchanged = uncoveredFraction === this.fittedUncoveredFraction;
-      if (isFitUnchanged) {
-        return;
-      }
-      this.tweenTo(this.requestedView);
-    }
-
-    /** Records `requestedView` as the view to keep framed and returns its fit for the current cover. */
-    retarget(requestedView) {
-      const uncoveredFraction = this.uncoveredFraction();
-      this.requestedView = requestedView;
-      this.fittedUncoveredFraction = uncoveredFraction;
-      return View.fittedInside(requestedView, this.canvasView, uncoveredFraction);
-    }
-
-    // f = (client width − covered width) / client width, or 1 when that leaves less than MIN_UNCOVERED_FRACTION of the width
-    uncoveredFraction() {
-      const clientWidth = this.svg.getBoundingClientRect().width;
-      const uncoveredFraction = (clientWidth - this.coveredWidthPx) / clientWidth;
-      const isUncoveredPartWide = uncoveredFraction >= MIN_UNCOVERED_FRACTION;
-      return isUncoveredPartWide ? uncoveredFraction : 1;
     }
 
     currentView() {
@@ -1858,6 +1677,237 @@
     show(view) {
       const viewBoxText = View.format(view);
       this.svg.setAttribute('viewBox', viewBoxText);
+    }
+  }
+
+  /** Lets the reader look around the shown view: dragging pans it, pinching or Ctrl/⌘ + scrolling zooms it around the pointer; a one-finger touch keeps scrolling the page. */
+  class ViewGestures {
+    constructor(svg, animator, navigator) {
+      this.svg = svg;
+      this.animator = animator;
+      this.navigator = navigator;
+      this.pointerPoints = new Map();
+      this.dragOrigin = null;
+      this.isDragging = false;
+      this.isClickSwallowed = false;
+      this.safariPinchScale = 1;
+    }
+
+    bind() {
+      this.svg.addEventListener('pointerdown', (event) => this.startPointer(event));
+      this.svg.addEventListener('pointermove', (event) => this.movePointer(event));
+      this.svg.addEventListener('pointerup', (event) => this.endPointer(event));
+      this.svg.addEventListener('pointercancel', (event) => this.endPointer(event));
+      // capture, so the click a drag ends with never reaches navigation
+      this.svg.addEventListener('click', (event) => this.swallowClickOfDrag(event), true);
+      this.svg.addEventListener('wheel', (event) => this.zoomOnModifiedWheel(event), { passive: false });
+      // Safari reports trackpad pinches as gesture events, not as Ctrl + wheel
+      this.svg.addEventListener('gesturestart', (event) => this.startSafariPinch(event));
+      this.svg.addEventListener('gesturechange', (event) => this.zoomOnSafariPinch(event));
+    }
+
+    startPointer(event) {
+      const isOtherMouseButton = event.pointerType === 'mouse' && event.button !== 0;
+      if (isOtherMouseButton) return;
+      const clientPoint = { x: event.clientX, y: event.clientY };
+      this.pointerPoints.set(event.pointerId, clientPoint);
+      this.dragOrigin = clientPoint;
+    }
+
+    movePointer(event) {
+      const previousPoint = this.pointerPoints.get(event.pointerId);
+      if (previousPoint === undefined) return;
+      const clientPoint = { x: event.clientX, y: event.clientY };
+      const isPinch = this.pointerPoints.size === 2;
+      if (isPinch) {
+        this.pinch(event.pointerId, clientPoint);
+        return;
+      }
+      const isOneFingerTouch = event.pointerType === 'touch';
+      if (isOneFingerTouch) return;
+      const isDragStarting = !this.isDragging;
+      const dragDistance = distanceBetween(clientPoint, this.dragOrigin);
+      const isStillAClick = isDragStarting && dragDistance < DRAG_THRESHOLD_PX;
+      if (isStillAClick) return;
+      if (isDragStarting) this.startDrag(event.pointerId);
+      this.pointerPoints.set(event.pointerId, clientPoint);
+      const pannedX = clientPoint.x - previousPoint.x;
+      const pannedY = clientPoint.y - previousPoint.y;
+      this.panBy(pannedX, pannedY);
+    }
+
+    // capturing only once the pointer moved keeps a plain click aimed at the group under it
+    startDrag(pointerId) {
+      this.isDragging = true;
+      this.svg.setPointerCapture(pointerId);
+      this.svg.setAttribute(PANNING, '');
+    }
+
+    pinch(pointerId, clientPoint) {
+      const [firstBefore, secondBefore] = this.pointerPoints.values();
+      const midpointBefore = midpointOf(firstBefore, secondBefore);
+      const spanBefore = distanceBetween(firstBefore, secondBefore);
+      this.pointerPoints.set(pointerId, clientPoint);
+      const [firstAfter, secondAfter] = this.pointerPoints.values();
+      const midpointAfter = midpointOf(firstAfter, secondAfter);
+      const spanAfter = distanceBetween(firstAfter, secondAfter);
+      this.isDragging = true;
+      if (spanAfter === 0) return;
+      const zoomFactor = spanBefore / spanAfter;
+      this.zoomAround(midpointAfter, zoomFactor);
+      const pannedX = midpointAfter.x - midpointBefore.x;
+      const pannedY = midpointAfter.y - midpointBefore.y;
+      this.panBy(pannedX, pannedY);
+    }
+
+    endPointer(event) {
+      this.pointerPoints.delete(event.pointerId);
+      const isGestureOngoing = this.pointerPoints.size > 0;
+      if (isGestureOngoing) return;
+      const wasDragging = this.isDragging;
+      this.isDragging = false;
+      this.svg.removeAttribute(PANNING);
+      if (wasDragging) {
+        // the click a drag ends with follows pointerup in the same task
+        this.isClickSwallowed = true;
+        setTimeout(() => { this.isClickSwallowed = false; }, 0);
+      }
+    }
+
+    swallowClickOfDrag(event) {
+      const isClickOfDrag = this.isClickSwallowed;
+      if (isClickOfDrag) {
+        event.stopImmediatePropagation();
+        this.isClickSwallowed = false;
+      }
+    }
+
+    // factor = e^(k · Δy): equal scroll distances zoom by equal ratios
+    zoomOnModifiedWheel(event) {
+      const isPageScroll = !event.ctrlKey && !event.metaKey;
+      if (isPageScroll) return;
+      event.preventDefault();
+      const pixelsPerDeltaUnit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? WHEEL_LINE_PX : 1;
+      const wheelPixels = event.deltaY * pixelsPerDeltaUnit;
+      const zoomFactor = Math.exp(wheelPixels * ZOOM_PER_WHEEL_PIXEL);
+      const clientPoint = { x: event.clientX, y: event.clientY };
+      this.zoomAround(clientPoint, zoomFactor);
+    }
+
+    startSafariPinch(event) {
+      event.preventDefault();
+      this.safariPinchScale = 1;
+    }
+
+    zoomOnSafariPinch(event) {
+      event.preventDefault();
+      const zoomFactor = this.safariPinchScale / event.scale;
+      this.safariPinchScale = event.scale;
+      const clientPoint = { x: event.clientX, y: event.clientY };
+      this.zoomAround(clientPoint, zoomFactor);
+    }
+
+    panBy(pannedX, pannedY) {
+      const view = this.animator.currentView();
+      const screenMatrix = this.svg.getScreenCTM();
+      const userUnitsPerPixel = 1 / screenMatrix.a;
+      const pannedView = {
+        ...view,
+        x: view.x - pannedX * userUnitsPerPixel,
+        y: view.y - pannedY * userUnitsPerPixel,
+      };
+      this.animator.jumpTo(pannedView);
+    }
+
+    /** Zooms in around the pointer, and out toward the focused level's view, so zooming back out lands on it; the width stays within [MIN_VIEW_WIDTH, MAX_ZOOM_OUT_CANVASES · canvas width]. */
+    zoomAround(clientPoint, zoomFactor) {
+      const view = this.animator.currentView();
+      const canvasWidth = this.animator.canvasView.width;
+      const widestView = MAX_ZOOM_OUT_CANVASES * canvasWidth;
+      const requestedWidth = view.width * zoomFactor;
+      const atLeastMinWidth = Math.max(MIN_VIEW_WIDTH, requestedWidth);
+      const zoomedWidth = Math.min(widestView, atLeastMinWidth);
+      const appliedFactor = zoomedWidth / view.width;
+      const isZoomingOut = appliedFactor > 1;
+      const zoomedView = isZoomingOut
+        ? this.zoomedOutTowardHome(view, appliedFactor)
+        : this.zoomedInAround(clientPoint, view, appliedFactor);
+      this.animator.jumpTo(zoomedView);
+    }
+
+    // the point under the pointer stays put: x' = p − (p − x) · f
+    zoomedInAround(clientPoint, view, appliedFactor) {
+      const userPoint = this.userPointAt(clientPoint);
+      return {
+        x: userPoint.x - (userPoint.x - view.x) * appliedFactor,
+        y: userPoint.y - (userPoint.y - view.y) * appliedFactor,
+        width: view.width * appliedFactor,
+        height: view.height * appliedFactor,
+      };
+    }
+
+    // c' = c + (h − c) · min(1, (w' − w) / (H − w)), c the view's centre, h and H the home view's centre and width: the centre reaches home as the width does
+    zoomedOutTowardHome(view, appliedFactor) {
+      const focusedView = this.navigator.focusedView();
+      const homeView = View.fittedToAspect(focusedView, this.animator.canvasAspect);
+      const zoomedWidth = view.width * appliedFactor;
+      const zoomedHeight = view.height * appliedFactor;
+      const widthLeftToHome = homeView.width - view.width;
+      const widthGained = zoomedWidth - view.width;
+      const isAtOrPastHome = widthLeftToHome <= 0;
+      const homeward = isAtOrPastHome ? 1 : Math.min(1, widthGained / widthLeftToHome);
+      const centre = centreOf(view);
+      const homeCentre = centreOf(homeView);
+      const zoomedCentreX = centre.x + (homeCentre.x - centre.x) * homeward;
+      const zoomedCentreY = centre.y + (homeCentre.y - centre.y) * homeward;
+      return {
+        x: zoomedCentreX - zoomedWidth / 2,
+        y: zoomedCentreY - zoomedHeight / 2,
+        width: zoomedWidth,
+        height: zoomedHeight,
+      };
+    }
+
+    userPointAt(clientPoint) {
+      const screenPoint = new DOMPoint(clientPoint.x, clientPoint.y);
+      const screenMatrix = this.svg.getScreenCTM();
+      const userMatrix = screenMatrix.inverse();
+      return screenPoint.matrixTransform(userMatrix);
+    }
+  }
+
+  /** Pins every layer's heading inside the view's top-left corner at a constant on-screen size, wherever the view moves; without script it stays where rendered. */
+  class HeadingPins {
+    constructor(svg) {
+      this.svg = svg;
+      this.headings = Array.from(svg.querySelectorAll(HEADING_SELECTOR));
+    }
+
+    bind() {
+      const viewBoxObserver = new MutationObserver(() => this.pin());
+      viewBoxObserver.observe(this.svg, { attributes: true, attributeFilter: ['viewBox'] });
+      const resizeObserver = new ResizeObserver(() => this.pin());
+      resizeObserver.observe(this.svg);
+      this.pin();
+    }
+
+    // s = k·u and t = corner + m·u − s·b, with u user units per pixel and b the heading's own top-left, so it sits m pixels inside the top-left corner at k times its size
+    pin() {
+      const screenMatrix = this.svg.getScreenCTM();
+      if (screenMatrix === null) return;
+      const screenToUserMatrix = screenMatrix.inverse();
+      const svgBounds = this.svg.getBoundingClientRect();
+      const clientCorner = new DOMPoint(svgBounds.left, svgBounds.top);
+      const userCorner = clientCorner.matrixTransform(screenToUserMatrix);
+      const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
+      const scale = HEADING_SCREEN_SCALE * userUnitsPerPixel;
+      const margin = HEADING_VIEW_MARGIN_PX * userUnitsPerPixel;
+      this.headings.forEach((heading) => {
+        const headingBounds = heading.getBBox();
+        const x = userCorner.x + margin - scale * headingBounds.x;
+        const y = userCorner.y + margin - scale * headingBounds.y;
+        heading.setAttribute('transform', `translate(${x} ${y}) scale(${scale})`);
+      });
     }
   }
 
@@ -2032,22 +2082,44 @@
       return Contract.levelAt(this.shownLayer, ROOT_LEVEL_PATH);
     }
 
-    /** Undoes one step: closes the deepest open containers while the shown layer is deeper than the focused level, else focuses its parent. */
+    /** Animates back to the focused level's own view when the reader zoomed or panned away from it; returns whether it did. */
+    returnToFocusedView() {
+      const currentView = this.animator.currentView();
+      const focusedView = this.focusedView();
+      const fittedFocusedView = View.fittedToAspect(focusedView, this.animator.canvasAspect);
+      const isAwayFromFocusedView = !View.isNear(currentView, fittedFocusedView);
+      if (isAwayFromFocusedView) {
+        this.animator.tweenTo(focusedView);
+      }
+      return isAwayFromFocusedView;
+    }
+
+    /** Steps out once: focuses the focused level's parent, keeping the open containers open, so every step widens the view; at the root, closes the deepest open containers; any navigation discards a pan or zoom. */
     exitOneStep() {
-      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
-      const focusedDepth = Contract.depthOf(this.focusedLevel);
-      const isLayerDeeperThanFocus = shownLayerIndex > focusedDepth;
-      if (isLayerDeeperThanFocus) {
-        const shallowerLayer = this.layers[shownLayerIndex - 1];
-        const focusedPath = this.focusedLevel.getAttribute(LEVEL);
-        this.showLayer(shallowerLayer, focusedPath, this.focusedLevel);
-        return;
-      }
       const parentLevel = Contract.enclosingLevelOf(this.focusedLevel);
-      if (parentLevel === null) {
+      if (parentLevel !== null) {
+        this.focus(parentLevel);
         return;
       }
-      this.focus(parentLevel);
+      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
+      const isOnFirstLayer = shownLayerIndex === 0;
+      if (isOnFirstLayer) {
+        return;
+      }
+      const shallowerLayer = this.layers[shownLayerIndex - 1];
+      const focusedPath = this.focusedLevel.getAttribute(LEVEL);
+      this.showLayer(shallowerLayer, focusedPath, this.focusedLevel);
+    }
+
+    /** Animates back to the focused level's own centred view, undoing any pan or zoom; the shown layer and the focused level stay. */
+    recenterFocusedLevel() {
+      const focusedView = this.focusedView();
+      this.animator.tweenTo(focusedView);
+    }
+
+    /** Returns the focused level's own view, as its `data-svugy-view` frames it. */
+    focusedView() {
+      return this.viewOf(this.focusedLevel);
     }
 
     focus(level) {
@@ -2407,12 +2479,11 @@
     },
   };
 
-  /** Shows the author's description of the focused level, or of the last clicked group or heading, in a panel pinned top-right at a constant on-screen width that the view is framed beside; nothing without a description. */
+  /** Shows the author's description of the focused level, or of the last clicked group or heading, in a panel floating top-right at a constant on-screen width; nothing without a description. */
   class DescriptionPanel {
-    constructor(svg, deepestLayer, animator) {
+    constructor(svg, deepestLayer) {
       this.svg = svg;
       this.deepestLayer = deepestLayer;
-      this.animator = animator;
       this.body = createXhtmlElement('aside', { class: 'svugy-description', 'aria-label': 'description' });
       this.frame = createSvgElement('foreignObject', { class: 'svugy-description-frame' });
       this.frame.appendChild(this.body);
@@ -2510,7 +2581,6 @@
       const isContentless = content.length === 0;
       if (isContentless) {
         this.panel.remove();
-        this.animator.coverRightEdge(0);
         return;
       }
       const isDetached = !this.panel.isConnected;
@@ -2521,7 +2591,7 @@
       this.body.scrollTop = 0;
     }
 
-    /** Sizes and places the shown panel, then keeps the view clear of the screen width it covers. */
+    /** Sizes and places the shown panel. */
     layOut() {
       const isDetached = !this.panel.isConnected;
       if (isDetached) {
@@ -2529,8 +2599,6 @@
       }
       this.fit();
       this.place();
-      const coveredWidth = this.width + 2 * DESCRIPTION_VIEW_MARGIN_PX;
-      this.animator.coverRightEdge(coveredWidth);
     }
 
     // w = min(W, client width − 2m), h = min(content height, client height − 2m): the panel never leaves the viewport
@@ -2984,6 +3052,7 @@
       descriptionPanel.addTargetLinkListener((target) => {
         Interactions.followTargetLink(target, navigator, panel, descriptionPanel, highlighter);
       });
+      let pendingStepOut = 0;
       svg.addEventListener('click', (event) => {
         const heading = Interactions.headingAt(event.target);
         if (heading !== null) {
@@ -2992,11 +3061,20 @@
         }
         const group = Interactions.groupAt(event.target);
         const clientPoint = { x: event.clientX, y: event.clientY };
+        // a click on empty canvas steps out once no second click makes it a double click, which only recentres
         if (group === null) {
-          Interactions.exitOneStep(navigator, panel, descriptionPanel);
+          clearTimeout(pendingStepOut);
+          const isSecondClick = event.detail > 1;
+          if (isSecondClick) return;
+          pendingStepOut = setTimeout(() => Interactions.exitOneStep(navigator, panel, descriptionPanel), DOUBLE_CLICK_MS);
           return;
         }
         Interactions.activate(group, clientPoint, navigator, panel, descriptionPanel);
+      });
+      svg.addEventListener('dblclick', () => {
+        clearTimeout(pendingStepOut);
+        panel.hide();
+        navigator.recenterFocusedLevel();
       });
       svg.addEventListener('keydown', (event) => {
         const isEscape = event.key === 'Escape';
@@ -3091,10 +3169,13 @@
       highlighter.highlight(shownGroups);
     },
 
+    // first bring the focused level back home, its own description and its own view; only a level already home steps out
     exitOneStep(navigator, panel, descriptionPanel) {
       panel.hide();
       const hasLeftClick = descriptionPanel.stepBackFromClick();
-      if (hasLeftClick) {
+      const hasReturnedToFocusedView = navigator.returnToFocusedView();
+      const wasAwayFromHome = hasLeftClick || hasReturnedToFocusedView;
+      if (wasAwayFromHome) {
         return;
       }
       navigator.exitOneStep();
@@ -3111,6 +3192,18 @@
     },
 
   };
+
+  function distanceBetween(firstPoint, secondPoint) {
+    return Math.hypot(secondPoint.x - firstPoint.x, secondPoint.y - firstPoint.y);
+  }
+
+  function centreOf(view) {
+    return { x: view.x + view.width / 2, y: view.y + view.height / 2 };
+  }
+
+  function midpointOf(firstPoint, secondPoint) {
+    return { x: (firstPoint.x + secondPoint.x) / 2, y: (firstPoint.y + secondPoint.y) / 2 };
+  }
 
   function clientCenterOf(node) {
     const bounds = node.getBoundingClientRect();

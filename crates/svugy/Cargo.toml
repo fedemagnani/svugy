@@ -7,6 +7,8 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+# TODO: temporary until the compound pieces are ported into svugy-dagre.
+dagre-dgl-rs = "=0.1.1"
 svugy-model.workspace = true
 ttf-parser.workspace = true
 svugy-dagre.workspace = true

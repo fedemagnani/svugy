@@ -3,9 +3,34 @@
 use std::iter;
 use std::ops::RangeInclusive;
 
-use kurbo::{Line, Point, Rect};
+use kurbo::{Affine, Line, Point, Rect};
 
 use super::projection::IsometricProjection;
+
+/// Describes one ground cell and its projection, so a renderer can tile the ground without end.
+pub(crate) struct GroundPattern {
+    /// Side of one square cell, in plan units.
+    pub(crate) cell: f64,
+    /// Maps plan (x, y) on the ground onto the page.
+    pub(crate) plan_to_page: Affine,
+}
+
+impl GroundPattern {
+    /// Describe the grid's own cell on the ground plane, as `GroundGrid` rules it at the example's spacing.
+    pub(crate) fn projected() -> Self {
+        let plan_to_page = IsometricProjection::horizontal_plane_at(0.0);
+        Self {
+            cell: GroundGrid::EXAMPLE_CELL,
+            plan_to_page,
+        }
+    }
+
+    /// Return the plan-space stroke width w = page_width / det(A) that draws `page_width`-thick lines, both ground axes projecting to unit length.
+    pub(crate) fn stroke_width_for(&self, page_width: f64) -> f64 {
+        let determinant = self.plan_to_page.determinant();
+        page_width / determinant
+    }
+}
 
 /// Rules the ground with lines of constant plan x and of constant plan y, one cell apart and one cell past the level's boundary.
 pub(super) struct GroundGrid {

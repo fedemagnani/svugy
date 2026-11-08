@@ -22,7 +22,7 @@
   const unmountedContainers = document.querySelectorAll('.svugy-live:not([data-svugy-mounted])');
   unmountedContainers.forEach(mountLiveEditor);
 
-  // Mount one editor: its first `textarea[data-svugy-language]` is shown, and any further one turns into a switchable draft.
+  // Mount one editor: its first `textarea[data-svugy-language]` is shown, any further one turns into a switchable draft, and data-svugy-curtain lays the source over the diagram as a curtain.
   function mountLiveEditor(container, editorIndex) {
     container.dataset.svugyMounted = '';
     const sources = container.querySelectorAll('textarea[data-svugy-language]');
@@ -76,6 +76,12 @@
         editorParts.unshift(languageSwitch);
       }
       container.replaceChildren(...editorParts);
+      const hasCurtain = container.hasAttribute('data-svugy-curtain');
+      if (hasCurtain) {
+        const curtain = buildCurtain(playground);
+        editor.after(curtain);
+        announceCurtain(playground, curtain);
+      }
       return highlightCode;
     }
 
@@ -157,26 +163,40 @@
       const blob = new Blob([svg], { type: 'image/svg+xml' });
       const nextUrl = URL.createObjectURL(blob);
       const next = shownPreview.cloneNode(false);
-      next.data = nextUrl;
+      const shownLevelLink = levelLinkOf(shownPreview);
+      next.data = `${nextUrl}${shownLevelLink}`;
+      next.dataset.blobUrl = nextUrl;
       next.style.visibility = 'hidden';
       discardLoadingPreview();
       loadingPreview = next;
       next.addEventListener('load', () => {
         next.style.visibility = '';
-        const replacedUrl = shownPreview.data;
+        const replacedBlobUrl = shownPreview.dataset.blobUrl;
         shownPreview.remove();
-        if (replacedUrl.startsWith('blob:')) URL.revokeObjectURL(replacedUrl);
+        if (replacedBlobUrl) URL.revokeObjectURL(replacedBlobUrl);
         shownPreview = next;
         loadingPreview = null;
       }, { once: true });
       shownPreview.after(next);
     }
 
+    // The level link reopening the reader's focused level and shown layer; the root's frames the first layer, not the whole canvas.
+    function levelLinkOf(preview) {
+      const enteredLevel = preview.contentDocument?.querySelector('[data-svugy-entered]');
+      if (!enteredLevel) return '#svugy=';
+      const levelPath = enteredLevel.getAttribute('data-svugy-level');
+      const encodedLevelPath = encodeURIComponent(levelPath);
+      const shownLayer = enteredLevel.closest('[data-svugy-layer]');
+      if (!shownLayer) return `#svugy=${encodedLevelPath}`;
+      const layerNumber = shownLayer.getAttribute('data-svugy-layer');
+      return `#svugy=${encodedLevelPath}&layer=${layerNumber}`;
+    }
+
     function discardLoadingPreview() {
       if (!loadingPreview) return;
-      const discardedUrl = loadingPreview.data;
+      const discardedBlobUrl = loadingPreview.dataset.blobUrl;
       loadingPreview.remove();
-      URL.revokeObjectURL(discardedUrl);
+      URL.revokeObjectURL(discardedBlobUrl);
       loadingPreview = null;
     }
 
@@ -211,6 +231,62 @@
       status.textContent = text;
       diagnosticsList.replaceChildren(status);
     }
+  }
+
+  // Build the handle that moves the curtain between source and diagram, from all diagram (0) to all source (100).
+  function buildCurtain(playground) {
+    const curtain = document.createElement('div');
+    curtain.className = 'svugy-curtain';
+    curtain.tabIndex = 0;
+    curtain.setAttribute('role', 'separator');
+    curtain.setAttribute('aria-orientation', 'vertical');
+    curtain.setAttribute('aria-label', 'Source width');
+    curtain.setAttribute('aria-valuemin', '0');
+    curtain.setAttribute('aria-valuemax', '100');
+    curtain.addEventListener('pointerdown', (event) => {
+      curtain.setPointerCapture(event.pointerId);
+      playground.dataset.svugyCurtainMoving = '';
+    });
+    curtain.addEventListener('pointermove', (event) => {
+      const isDragged = curtain.hasPointerCapture(event.pointerId);
+      if (!isDragged) return;
+      const bounds = playground.getBoundingClientRect();
+      const sourcePercent = ((event.clientX - bounds.left) / bounds.width) * 100;
+      moveCurtain(playground, curtain, sourcePercent);
+    });
+    curtain.addEventListener('lostpointercapture', () => {
+      delete playground.dataset.svugyCurtainMoving;
+    });
+    curtain.addEventListener('keydown', (event) => {
+      const shownPercent = sourcePercentOf(playground);
+      const keyedPercents = { ArrowLeft: shownPercent - 5, ArrowRight: shownPercent + 5, Home: 0, End: 100 };
+      const keyedPercent = keyedPercents[event.key];
+      if (keyedPercent === undefined) return;
+      event.preventDefault();
+      moveCurtain(playground, curtain, keyedPercent);
+    });
+    curtain.addEventListener('dblclick', () => {
+      playground.style.removeProperty('--svugy-curtain');
+      announceCurtain(playground, curtain);
+    });
+    return curtain;
+  }
+
+  function moveCurtain(playground, curtain, sourcePercent) {
+    const clampedPercent = Math.min(100, Math.max(0, sourcePercent));
+    playground.style.setProperty('--svugy-curtain', `${clampedPercent}%`);
+    announceCurtain(playground, curtain);
+  }
+
+  function announceCurtain(playground, curtain) {
+    const shownPercent = sourcePercentOf(playground);
+    curtain.setAttribute('aria-valuenow', String(Math.round(shownPercent)));
+  }
+
+  function sourcePercentOf(playground) {
+    const playgroundStyle = getComputedStyle(playground);
+    const curtainWidth = playgroundStyle.getPropertyValue('--svugy-curtain');
+    return parseFloat(curtainWidth);
   }
 
   function highlightedFragment(text, tokenPattern) {

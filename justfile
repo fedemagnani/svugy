@@ -10,6 +10,29 @@ default:
 docs: figures playground
     mdbook build docs --open
 
+# Assemble the svugy.dev site into _site: the landing page with the book's live editor, each committed example's .md and .svg under models/, the book under docs/.
+site: figures playground
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mdbook build docs
+    rm -rf _site
+    mkdir -p _site/models
+    cp -R site/. _site/
+    cp -R docs/book _site/docs
+    # mdBook renames its CSS with a content hash; its scripts keep their names, so the page loads those from docs/
+    cp docs/theme/playground.css _site/
+    for source in examples/*/*.md; do
+        cp "$source" "${source%.md}.svg" _site/models/
+    done
+    # the skill the latest release publishes, kept only if our release workflow built it from a commit merged to main
+    gh release download --repo fedemagnani/svugy --pattern SKILL.md --pattern reference.md --dir _site/skill
+    for skill_file in _site/skill/SKILL.md _site/skill/reference.md; do
+        source_commit="$(gh attestation verify "$skill_file" --repo fedemagnani/svugy \
+            --signer-workflow fedemagnani/svugy/.github/workflows/svugy-cli-release.yml \
+            --format json --jq '.[0].verificationResult.signature.certificate.sourceRepositoryDigest')"
+        git merge-base --is-ancestor "$source_commit" origin/main
+    done
+
 # Render every docs/diagrams/*.md, the web-app example in Markdown, d2 and Rust, and the golden examples/svugy/svugy.md as interactive SVGs.
 figures:
     #!/usr/bin/env bash
