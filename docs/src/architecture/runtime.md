@@ -12,7 +12,8 @@ The renderer and the runtime share only the attributes of the [runtime contract]
 - Click a closed container: show the next layer, opening every container at that depth.
 - Click an open container's slab: zoom into it.
 - Click a stub: jump to the level of the edge's other end.
-- Escape or a click on empty canvas: undo one step.
+- Escape or a click on empty canvas: undo one step. A double click anywhere recentres the current view.
+- Drag to pan; pinch or Ctrl/⌘ + scroll to zoom. The ground never ends; any navigation brings the view back to its level.
 - Zooms and layer crossfades take 450 ms; a layer change keeps the clicked element where it was on screen.
 
 **Description panel** shows, top right, what the author wrote about the focused level, rendered as Markdown, and nothing else.

@@ -12,6 +12,7 @@ use crate::layout::{LevelPlacement, LevelPlan, LevelPlans};
 use crate::metrics::{LabelRole, TextAnchor, TextMeasure, TextSize, TextSpec};
 
 use self::ground::GroundGrid;
+pub(crate) use self::ground::GroundPattern;
 use self::level::LevelProjector;
 use self::projection::IsometricProjection;
 

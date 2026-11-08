@@ -20,6 +20,7 @@
   const HEADING = 'data-svugy-heading';
   const ENTERED = 'data-svugy-entered';
   const DIMMED = 'data-svugy-dimmed';
+  const PANNING = 'data-svugy-panning';
 
   const LAYER_SELECTOR = `[${LAYER}]`;
   const LEVEL_SELECTOR = `[${LEVEL}]`;
@@ -77,6 +78,15 @@
 
   const HIGHLIGHTED_CLASS = 'svugy-highlighted';
   const HIGHLIGHT_DURATION_MS = 1200;
+
+  const DRAG_THRESHOLD_PX = 4;
+  const ZOOM_PER_WHEEL_PIXEL = 0.002;
+  const WHEEL_LINE_PX = 16;
+  const MIN_VIEW_WIDTH = 80;
+  const MAX_ZOOM_OUT_CANVASES = 2;
+  const DOUBLE_CLICK_MS = 300;
+  const HEADING_VIEW_MARGIN_PX = 20;
+  const HEADING_SCREEN_SCALE = 1.6;
 
   const ARROW = '\u2192';
   const ELLIPSIS = '\u2026';
@@ -138,6 +148,10 @@
     const dimmer = new UnrelatedGroupDimmer(svg);
     const descriptionPanel = new DescriptionPanel(svg, deepestLayer);
     const highlighter = new TargetHighlighter();
+    const gestures = new ViewGestures(svg, animator, navigator);
+    gestures.bind();
+    const headingPins = new HeadingPins(svg);
+    headingPins.bind();
     navigator.addNavigationListener((focusedLevel) => {
       panel.hide();
       dimmer.clear();
@@ -335,18 +349,12 @@
       return `${view.x} ${view.y} ${view.width} ${view.height}`;
     },
 
-    // width = min(max(w, h·A), canvas width), height = width / A, A the canvas aspect; the view centred, then clamped into the canvas
-    fittedInside(view, canvas) {
-      const canvasAspect = canvas.width / canvas.height;
-      const aspectWidth = Math.max(view.width, view.height * canvasAspect);
-      const width = Math.min(aspectWidth, canvas.width);
-      const height = width / canvasAspect;
-      const centredX = view.x + (view.width - width) / 2;
-      const centredY = view.y + (view.height - height) / 2;
-      const rightmostX = canvas.x + canvas.width - width;
-      const lowestY = canvas.y + canvas.height - height;
-      const x = Math.max(canvas.x, Math.min(centredX, rightmostX));
-      const y = Math.max(canvas.y, Math.min(centredY, lowestY));
+    // width = max(w, h·A), height = width / A, A the canvas aspect; the view stays centred on what it frames, the ground reaching past every side
+    fittedToAspect(view, aspect) {
+      const width = Math.max(view.width, view.height * aspect);
+      const height = width / aspect;
+      const x = view.x + (view.width - width) / 2;
+      const y = view.y + (view.height - height) / 2;
       return { x, y, width, height };
     },
 
@@ -366,12 +374,13 @@
     },
   };
 
-  /** Tweens or jumps the root viewBox to a target view fitted to the canvas, so no letterbox ever falls outside the canvas; tweens jump under reduced motion. */
+  /** Tweens or jumps the root viewBox to a target view fitted to the canvas aspect, so changing view never changes the document's shape; tweens jump under reduced motion. */
   class ViewBoxAnimator {
     constructor(svg) {
       this.svg = svg;
       this.frameRequest = 0;
       this.canvasView = this.currentView();
+      this.canvasAspect = this.canvasView.width / this.canvasView.height;
     }
 
     tweenTo(requestedView, startView = this.currentView()) {
@@ -381,7 +390,7 @@
         return;
       }
       cancelAnimationFrame(this.frameRequest);
-      const targetView = View.fittedInside(requestedView, this.canvasView);
+      const targetView = View.fittedToAspect(requestedView, this.canvasAspect);
       this.show(startView);
       let startTime = null;
       const step = (now) => {
@@ -400,7 +409,7 @@
 
     jumpTo(requestedView) {
       cancelAnimationFrame(this.frameRequest);
-      const targetView = View.fittedInside(requestedView, this.canvasView);
+      const targetView = View.fittedToAspect(requestedView, this.canvasAspect);
       this.show(targetView);
     }
 
@@ -412,6 +421,237 @@
     show(view) {
       const viewBoxText = View.format(view);
       this.svg.setAttribute('viewBox', viewBoxText);
+    }
+  }
+
+  /** Lets the reader look around the shown view: dragging pans it, pinching or Ctrl/⌘ + scrolling zooms it around the pointer; a one-finger touch keeps scrolling the page. */
+  class ViewGestures {
+    constructor(svg, animator, navigator) {
+      this.svg = svg;
+      this.animator = animator;
+      this.navigator = navigator;
+      this.pointerPoints = new Map();
+      this.dragOrigin = null;
+      this.isDragging = false;
+      this.isClickSwallowed = false;
+      this.safariPinchScale = 1;
+    }
+
+    bind() {
+      this.svg.addEventListener('pointerdown', (event) => this.startPointer(event));
+      this.svg.addEventListener('pointermove', (event) => this.movePointer(event));
+      this.svg.addEventListener('pointerup', (event) => this.endPointer(event));
+      this.svg.addEventListener('pointercancel', (event) => this.endPointer(event));
+      // capture, so the click a drag ends with never reaches navigation
+      this.svg.addEventListener('click', (event) => this.swallowClickOfDrag(event), true);
+      this.svg.addEventListener('wheel', (event) => this.zoomOnModifiedWheel(event), { passive: false });
+      // Safari reports trackpad pinches as gesture events, not as Ctrl + wheel
+      this.svg.addEventListener('gesturestart', (event) => this.startSafariPinch(event));
+      this.svg.addEventListener('gesturechange', (event) => this.zoomOnSafariPinch(event));
+    }
+
+    startPointer(event) {
+      const isOtherMouseButton = event.pointerType === 'mouse' && event.button !== 0;
+      if (isOtherMouseButton) return;
+      const clientPoint = { x: event.clientX, y: event.clientY };
+      this.pointerPoints.set(event.pointerId, clientPoint);
+      this.dragOrigin = clientPoint;
+    }
+
+    movePointer(event) {
+      const previousPoint = this.pointerPoints.get(event.pointerId);
+      if (previousPoint === undefined) return;
+      const clientPoint = { x: event.clientX, y: event.clientY };
+      const isPinch = this.pointerPoints.size === 2;
+      if (isPinch) {
+        this.pinch(event.pointerId, clientPoint);
+        return;
+      }
+      const isOneFingerTouch = event.pointerType === 'touch';
+      if (isOneFingerTouch) return;
+      const isDragStarting = !this.isDragging;
+      const dragDistance = distanceBetween(clientPoint, this.dragOrigin);
+      const isStillAClick = isDragStarting && dragDistance < DRAG_THRESHOLD_PX;
+      if (isStillAClick) return;
+      if (isDragStarting) this.startDrag(event.pointerId);
+      this.pointerPoints.set(event.pointerId, clientPoint);
+      const pannedX = clientPoint.x - previousPoint.x;
+      const pannedY = clientPoint.y - previousPoint.y;
+      this.panBy(pannedX, pannedY);
+    }
+
+    // capturing only once the pointer moved keeps a plain click aimed at the group under it
+    startDrag(pointerId) {
+      this.isDragging = true;
+      this.svg.setPointerCapture(pointerId);
+      this.svg.setAttribute(PANNING, '');
+    }
+
+    pinch(pointerId, clientPoint) {
+      const [firstBefore, secondBefore] = this.pointerPoints.values();
+      const midpointBefore = midpointOf(firstBefore, secondBefore);
+      const spanBefore = distanceBetween(firstBefore, secondBefore);
+      this.pointerPoints.set(pointerId, clientPoint);
+      const [firstAfter, secondAfter] = this.pointerPoints.values();
+      const midpointAfter = midpointOf(firstAfter, secondAfter);
+      const spanAfter = distanceBetween(firstAfter, secondAfter);
+      this.isDragging = true;
+      if (spanAfter === 0) return;
+      const zoomFactor = spanBefore / spanAfter;
+      this.zoomAround(midpointAfter, zoomFactor);
+      const pannedX = midpointAfter.x - midpointBefore.x;
+      const pannedY = midpointAfter.y - midpointBefore.y;
+      this.panBy(pannedX, pannedY);
+    }
+
+    endPointer(event) {
+      this.pointerPoints.delete(event.pointerId);
+      const isGestureOngoing = this.pointerPoints.size > 0;
+      if (isGestureOngoing) return;
+      const wasDragging = this.isDragging;
+      this.isDragging = false;
+      this.svg.removeAttribute(PANNING);
+      if (wasDragging) {
+        // the click a drag ends with follows pointerup in the same task
+        this.isClickSwallowed = true;
+        setTimeout(() => { this.isClickSwallowed = false; }, 0);
+      }
+    }
+
+    swallowClickOfDrag(event) {
+      const isClickOfDrag = this.isClickSwallowed;
+      if (isClickOfDrag) {
+        event.stopImmediatePropagation();
+        this.isClickSwallowed = false;
+      }
+    }
+
+    // factor = e^(k · Δy): equal scroll distances zoom by equal ratios
+    zoomOnModifiedWheel(event) {
+      const isPageScroll = !event.ctrlKey && !event.metaKey;
+      if (isPageScroll) return;
+      event.preventDefault();
+      const pixelsPerDeltaUnit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? WHEEL_LINE_PX : 1;
+      const wheelPixels = event.deltaY * pixelsPerDeltaUnit;
+      const zoomFactor = Math.exp(wheelPixels * ZOOM_PER_WHEEL_PIXEL);
+      const clientPoint = { x: event.clientX, y: event.clientY };
+      this.zoomAround(clientPoint, zoomFactor);
+    }
+
+    startSafariPinch(event) {
+      event.preventDefault();
+      this.safariPinchScale = 1;
+    }
+
+    zoomOnSafariPinch(event) {
+      event.preventDefault();
+      const zoomFactor = this.safariPinchScale / event.scale;
+      this.safariPinchScale = event.scale;
+      const clientPoint = { x: event.clientX, y: event.clientY };
+      this.zoomAround(clientPoint, zoomFactor);
+    }
+
+    panBy(pannedX, pannedY) {
+      const view = this.animator.currentView();
+      const screenMatrix = this.svg.getScreenCTM();
+      const userUnitsPerPixel = 1 / screenMatrix.a;
+      const pannedView = {
+        ...view,
+        x: view.x - pannedX * userUnitsPerPixel,
+        y: view.y - pannedY * userUnitsPerPixel,
+      };
+      this.animator.jumpTo(pannedView);
+    }
+
+    /** Zooms in around the pointer, and out toward the focused level's view, so zooming back out lands on it; the width stays within [MIN_VIEW_WIDTH, MAX_ZOOM_OUT_CANVASES · canvas width]. */
+    zoomAround(clientPoint, zoomFactor) {
+      const view = this.animator.currentView();
+      const canvasWidth = this.animator.canvasView.width;
+      const widestView = MAX_ZOOM_OUT_CANVASES * canvasWidth;
+      const requestedWidth = view.width * zoomFactor;
+      const atLeastMinWidth = Math.max(MIN_VIEW_WIDTH, requestedWidth);
+      const zoomedWidth = Math.min(widestView, atLeastMinWidth);
+      const appliedFactor = zoomedWidth / view.width;
+      const isZoomingOut = appliedFactor > 1;
+      const zoomedView = isZoomingOut
+        ? this.zoomedOutTowardHome(view, appliedFactor)
+        : this.zoomedInAround(clientPoint, view, appliedFactor);
+      this.animator.jumpTo(zoomedView);
+    }
+
+    // the point under the pointer stays put: x' = p − (p − x) · f
+    zoomedInAround(clientPoint, view, appliedFactor) {
+      const userPoint = this.userPointAt(clientPoint);
+      return {
+        x: userPoint.x - (userPoint.x - view.x) * appliedFactor,
+        y: userPoint.y - (userPoint.y - view.y) * appliedFactor,
+        width: view.width * appliedFactor,
+        height: view.height * appliedFactor,
+      };
+    }
+
+    // c' = c + (h − c) · min(1, (w' − w) / (H − w)), c the view's centre, h and H the home view's centre and width: the centre reaches home as the width does
+    zoomedOutTowardHome(view, appliedFactor) {
+      const focusedView = this.navigator.focusedView();
+      const homeView = View.fittedToAspect(focusedView, this.animator.canvasAspect);
+      const zoomedWidth = view.width * appliedFactor;
+      const zoomedHeight = view.height * appliedFactor;
+      const widthLeftToHome = homeView.width - view.width;
+      const widthGained = zoomedWidth - view.width;
+      const isAtOrPastHome = widthLeftToHome <= 0;
+      const homeward = isAtOrPastHome ? 1 : Math.min(1, widthGained / widthLeftToHome);
+      const centre = centreOf(view);
+      const homeCentre = centreOf(homeView);
+      const zoomedCentreX = centre.x + (homeCentre.x - centre.x) * homeward;
+      const zoomedCentreY = centre.y + (homeCentre.y - centre.y) * homeward;
+      return {
+        x: zoomedCentreX - zoomedWidth / 2,
+        y: zoomedCentreY - zoomedHeight / 2,
+        width: zoomedWidth,
+        height: zoomedHeight,
+      };
+    }
+
+    userPointAt(clientPoint) {
+      const screenPoint = new DOMPoint(clientPoint.x, clientPoint.y);
+      const screenMatrix = this.svg.getScreenCTM();
+      const userMatrix = screenMatrix.inverse();
+      return screenPoint.matrixTransform(userMatrix);
+    }
+  }
+
+  /** Pins every layer's heading inside the view's top-left corner at a constant on-screen size, wherever the view moves; without script it stays where rendered. */
+  class HeadingPins {
+    constructor(svg) {
+      this.svg = svg;
+      this.headings = Array.from(svg.querySelectorAll(HEADING_SELECTOR));
+    }
+
+    bind() {
+      const viewBoxObserver = new MutationObserver(() => this.pin());
+      viewBoxObserver.observe(this.svg, { attributes: true, attributeFilter: ['viewBox'] });
+      const resizeObserver = new ResizeObserver(() => this.pin());
+      resizeObserver.observe(this.svg);
+      this.pin();
+    }
+
+    // s = k·u and t = corner + m·u − s·b, with u user units per pixel and b the heading's own top-left, so it sits m pixels inside the top-left corner at k times its size
+    pin() {
+      const screenMatrix = this.svg.getScreenCTM();
+      if (screenMatrix === null) return;
+      const screenToUserMatrix = screenMatrix.inverse();
+      const svgBounds = this.svg.getBoundingClientRect();
+      const clientCorner = new DOMPoint(svgBounds.left, svgBounds.top);
+      const userCorner = clientCorner.matrixTransform(screenToUserMatrix);
+      const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
+      const scale = HEADING_SCREEN_SCALE * userUnitsPerPixel;
+      const margin = HEADING_VIEW_MARGIN_PX * userUnitsPerPixel;
+      this.headings.forEach((heading) => {
+        const headingBounds = heading.getBBox();
+        const x = userCorner.x + margin - scale * headingBounds.x;
+        const y = userCorner.y + margin - scale * headingBounds.y;
+        heading.setAttribute('transform', `translate(${x} ${y}) scale(${scale})`);
+      });
     }
   }
 
@@ -586,7 +826,7 @@
       return Contract.levelAt(this.shownLayer, ROOT_LEVEL_PATH);
     }
 
-    /** Undoes one step: closes the deepest open containers while the shown layer is deeper than the focused level, else focuses its parent. */
+    /** Undoes one step: closes the deepest open containers while the shown layer is deeper than the focused level, else focuses its parent; any navigation discards a pan or zoom. */
     exitOneStep() {
       const shownLayerIndex = this.layers.indexOf(this.shownLayer);
       const focusedDepth = Contract.depthOf(this.focusedLevel);
@@ -602,6 +842,17 @@
         return;
       }
       this.focus(parentLevel);
+    }
+
+    /** Animates back to the focused level's own centred view, undoing any pan or zoom; the shown layer and the focused level stay. */
+    recenterFocusedLevel() {
+      const focusedView = this.focusedView();
+      this.animator.tweenTo(focusedView);
+    }
+
+    /** Returns the focused level's own view, as its `data-svugy-view` frames it. */
+    focusedView() {
+      return this.viewOf(this.focusedLevel);
     }
 
     focus(level) {
@@ -1534,6 +1785,7 @@
       descriptionPanel.addTargetLinkListener((target) => {
         Interactions.followTargetLink(target, navigator, panel, descriptionPanel, highlighter);
       });
+      let pendingStepOut = 0;
       svg.addEventListener('click', (event) => {
         const heading = Interactions.headingAt(event.target);
         if (heading !== null) {
@@ -1542,11 +1794,20 @@
         }
         const group = Interactions.groupAt(event.target);
         const clientPoint = { x: event.clientX, y: event.clientY };
+        // a click on empty canvas steps out once no second click makes it a double click, which only recentres
         if (group === null) {
-          Interactions.exitOneStep(navigator, panel, descriptionPanel);
+          clearTimeout(pendingStepOut);
+          const isSecondClick = event.detail > 1;
+          if (isSecondClick) return;
+          pendingStepOut = setTimeout(() => Interactions.exitOneStep(navigator, panel, descriptionPanel), DOUBLE_CLICK_MS);
           return;
         }
         Interactions.activate(group, clientPoint, navigator, panel, descriptionPanel);
+      });
+      svg.addEventListener('dblclick', () => {
+        clearTimeout(pendingStepOut);
+        panel.hide();
+        navigator.recenterFocusedLevel();
       });
       svg.addEventListener('keydown', (event) => {
         const isEscape = event.key === 'Escape';
@@ -1661,6 +1922,18 @@
     },
 
   };
+
+  function distanceBetween(firstPoint, secondPoint) {
+    return Math.hypot(secondPoint.x - firstPoint.x, secondPoint.y - firstPoint.y);
+  }
+
+  function centreOf(view) {
+    return { x: view.x + view.width / 2, y: view.y + view.height / 2 };
+  }
+
+  function midpointOf(firstPoint, secondPoint) {
+    return { x: (firstPoint.x + secondPoint.x) / 2, y: (firstPoint.y + secondPoint.y) / 2 };
+  }
 
   function clientCenterOf(node) {
     const bounds = node.getBoundingClientRect();

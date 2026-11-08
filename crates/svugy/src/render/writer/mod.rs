@@ -275,6 +275,12 @@ impl Attributes {
         self.with_value("transform", matrix)
     }
 
+    /// Map a pattern's tile space onto the user space by `affine`.
+    pub(crate) fn with_pattern_transform(self, affine: Affine) -> Self {
+        let matrix = Matrix(affine).to_string();
+        self.with_value("patternTransform", matrix)
+    }
+
     /// Dash the element's stroke by `dash_array`, written only when the stroke is dashed.
     pub(crate) fn with_dash_array(self, dash_array: Option<impl fmt::Display>) -> Self {
         let Some(dash_array) = dash_array else {
