@@ -12,7 +12,7 @@ description: Draw architecture diagrams as interactive isometric SVGs by writing
 3. Once per diagram, run `svugy view NAME.md` in the background: the user's browser shows it and reloads on every later save. Don't rerun it after edits.
 4. For the final file: `svugy render NAME.md -o NAME.svg`.
 
-No `svugy` on `PATH`: ask the user to run `curl -fsSL https://svugy.dev/install.sh | sh`, on Windows `irm https://svugy.dev/install.ps1 | iex`, or with a Rust toolchain `cargo install svugy-cli`.
+Starting from a `.d2` or `.json` file: `svugy import IN.d2 -o NAME.md` first. If the input holds something Markdown can't say, it lists every such part and writes nothing. Imported items spell every property out; factor repeated sets into frontmatter styles if the user will keep editing.
 
 ## Example
 
@@ -95,4 +95,11 @@ Checkout turns a cart into a charged card.
 - Indent a comment like the item after it; a shallower one breaks nesting.
 - Add `position=X,Y` only when the user asks for a fixed layout.
 
-Legends, every diagnostic and importing d2 or JSON: [reference.md](reference.md).
+## References
+
+Read one only when its case applies:
+
+- [references/syntax.md](references/syntax.md): a case the example and rules above don't settle: IDs, paths, REF resolution, descriptions, description links, quoting.
+- [references/legend.md](references/legend.md): the user wants a legend.
+- [references/troubleshoot.md](references/troubleshoot.md): `validate` fails and its message doesn't say how to fix it, or you need its JSON fields or exit codes.
+- [references/install.md](references/install.md): `svugy` is not on `PATH`. Install only once the user agrees.

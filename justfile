@@ -10,7 +10,7 @@ default:
 docs: figures playground
     mdbook build docs --open
 
-# Assemble the svugy.dev site into _site: the landing page with the book's live editor, each committed example's .md and .svg under models/, the book under docs/.
+# Assemble the svugy.dev site into _site: the landing page with the book's live editor, each committed example's .md and .svg under models/, the book under docs/, the released installation prompt as install.md.
 site: figures playground
     #!/usr/bin/env bash
     set -euo pipefail
@@ -24,14 +24,12 @@ site: figures playground
     for source in examples/*/*.md; do
         cp "$source" "${source%.md}.svg" _site/models/
     done
-    # the skill the latest release publishes, kept only if our release workflow built it from a commit merged to main
-    gh release download --repo fedemagnani/svugy --pattern SKILL.md --pattern reference.md --dir _site/skill
-    for skill_file in _site/skill/SKILL.md _site/skill/reference.md; do
-        source_commit="$(gh attestation verify "$skill_file" --repo fedemagnani/svugy \
-            --signer-workflow fedemagnani/svugy/.github/workflows/svugy-cli-release.yml \
-            --format json --jq '.[0].verificationResult.signature.certificate.sourceRepositoryDigest')"
-        git merge-base --is-ancestor "$source_commit" origin/main
-    done
+    # the installation prompt the latest release publishes, kept only if our release workflow built it from a commit merged to main
+    gh release download --repo fedemagnani/svugy --pattern install.md --output _site/install.md
+    source_commit="$(gh attestation verify _site/install.md --repo fedemagnani/svugy \
+        --signer-workflow fedemagnani/svugy/.github/workflows/svugy-cli-release.yml \
+        --format json --jq '.[0].verificationResult.signature.certificate.sourceRepositoryDigest')"
+    git merge-base --is-ancestor "$source_commit" origin/main
 
 # Build the site, then serve _site at http://127.0.0.1:<port> until Ctrl-C; rerun `just site` in another shell to rebuild.
 serve-site port="8000": site

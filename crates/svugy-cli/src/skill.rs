@@ -12,15 +12,26 @@ use crate::output::OutputTarget;
 
 /// Embed the skill's entry file, the one an agent reads first.
 const SKILL_MARKDOWN: &str = include_str!("../skill/SKILL.md");
-/// Embed the skill's reference, read only when the entry file points to it.
-const REFERENCE_MARKDOWN: &str = include_str!("../skill/reference.md");
-/// List the skill's files by name, each with its embedded contents.
-const SKILL_FILES: [(&str, &str); 2] = [
+/// Embed the syntax the entry file's example leaves out.
+const SYNTAX_MARKDOWN: &str = include_str!("../skill/references/syntax.md");
+/// Embed how to write a legend.
+const LEGEND_MARKDOWN: &str = include_str!("../skill/references/legend.md");
+/// Embed the validate report's fields, exit codes and fixes its messages don't give.
+const TROUBLESHOOT_MARKDOWN: &str = include_str!("../skill/references/troubleshoot.md");
+/// Embed the installation steps, read when `svugy` is missing from `PATH`.
+const INSTALL_MARKDOWN: &str = include_str!("../skill/references/install.md");
+/// List the skill's files by path inside the skill directory, each with its embedded contents; the entry file reads a reference only when its case applies.
+const SKILL_FILES: [(&str, &str); 5] = [
     ("SKILL.md", SKILL_MARKDOWN),
-    ("reference.md", REFERENCE_MARKDOWN),
+    ("references/syntax.md", SYNTAX_MARKDOWN),
+    ("references/legend.md", LEGEND_MARKDOWN),
+    ("references/troubleshoot.md", TROUBLESHOOT_MARKDOWN),
+    ("references/install.md", INSTALL_MARKDOWN),
 ];
 /// Name the directory, under a project or the home directory, where Claude looks for the svugy skill.
 const SKILL_DIRECTORY: &str = ".claude/skills/svugy";
+/// Name the directory, inside the skill directory, holding the files the entry file links.
+const REFERENCES_DIRECTORY: &str = "references";
 
 /// Print the skill's entry file, or install the skill when `install` is given.
 #[derive(Args)]
@@ -55,14 +66,15 @@ impl SkillCommand {
 }
 
 impl InstallSkill {
-    /// Write every skill file into the skill directory, creating it, then print where they went.
+    /// Write every skill file into the skill directory, creating it and its references directory, then print where they went.
     fn run(self) -> Result<(), Failure> {
         let installation_root = self.installation_root()?;
         let skill_directory = installation_root.join(SKILL_DIRECTORY);
-        let skill_directory_path = skill_directory.display();
-        fs::create_dir_all(&skill_directory)
+        let references_directory = skill_directory.join(REFERENCES_DIRECTORY);
+        let references_directory_path = references_directory.display();
+        fs::create_dir_all(&references_directory)
             .into_diagnostic()
-            .wrap_err_with(|| format!("cannot create {skill_directory_path}"))
+            .wrap_err_with(|| format!("cannot create {references_directory_path}"))
             .map_err(Failure::Io)?;
         let mut written_paths = String::new();
         for (file_name, contents) in SKILL_FILES {

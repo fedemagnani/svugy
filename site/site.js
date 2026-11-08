@@ -34,17 +34,15 @@
   }
 
   // Fetched ahead of the click: Safari only lets a click write the clipboard if nothing is awaited first.
-  /** Copies the published skill as a prompt, its relative reference link made absolute so it still resolves once pasted. */
-  async function bindSkillCopyButton(button) {
+  /** Copies the published installation prompt, which tells an agent how to install svugy and its skill. */
+  async function bindInstallPromptCopyButton(button) {
     prependCopyIcons(button);
-    const response = await fetch('skill/SKILL.md');
+    const response = await fetch('install.md');
     if (!response.ok) return;
-    const skillMarkdown = await response.text();
-    const referenceUrl = new URL('skill/reference.md', document.baseURI);
-    const skillPrompt = skillMarkdown.replace('](reference.md)', `](${referenceUrl.href})`);
+    const installPrompt = await response.text();
     button.disabled = false;
     button.addEventListener('click', async () => {
-      await navigator.clipboard.writeText(skillPrompt);
+      await navigator.clipboard.writeText(installPrompt);
       showCopied(button);
     });
   }
@@ -83,8 +81,8 @@
   const installRoot = document.querySelector('[data-tabs]');
   bindInstallTabs(installRoot);
   bindCommandCopyButtons();
-  const skillCopyButton = document.querySelector('[data-copy-skill]');
-  bindSkillCopyButton(skillCopyButton);
+  const installPromptCopyButton = document.querySelector('[data-copy-install-prompt]');
+  bindInstallPromptCopyButton(installPromptCopyButton);
   const source = document.querySelector('.svugy-live textarea');
   const examplePicker = document.querySelector('[data-example-picker]');
   examplePicker.addEventListener('change', () => loadExampleIntoEditor(examplePicker.value, source));
