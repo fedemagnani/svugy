@@ -138,6 +138,22 @@ main, main:has(.svugy-playground) {
   text-align: center;
 }
 .hero h1 { font-size: clamp(28px, 3.4vw, 40px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 28px; }
+/* a bar cursor, solid while typing, blinking while the title rests */
+.typed-title::after {
+  content: "";
+  display: inline-block;
+  width: max(2px, 0.07em);
+  height: 1em;
+  margin-left: 0.06em;
+  vertical-align: -0.12em;
+  background: currentColor;
+  animation: cursor-blink 1s step-end infinite;
+}
+.typed-title[data-typing]::after { animation: none; }
+@keyframes cursor-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .typed-title::after { display: none; }
+}
 
 /* the OS switch sits right on the command */
 .install { display: flex; flex-direction: column; align-items: center; gap: 6px; width: min(100%, 620px); }
