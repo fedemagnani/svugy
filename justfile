@@ -33,6 +33,11 @@ site: figures playground
         git merge-base --is-ancestor "$source_commit" origin/main
     done
 
+# Build the site, then serve _site at http://127.0.0.1:<port> until Ctrl-C; rerun `just site` in another shell to rebuild.
+serve-site port="8000": site
+    @echo "svugy.dev preview: http://127.0.0.1:{{port}}"
+    python3 -m http.server {{port}} --bind 127.0.0.1 --directory _site
+
 # Render every docs/diagrams/*.md, the web-app example in Markdown, d2 and Rust, and the golden examples/svugy/svugy.md as interactive SVGs.
 figures:
     #!/usr/bin/env bash
