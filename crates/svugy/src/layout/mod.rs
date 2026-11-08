@@ -9,12 +9,13 @@ use std::collections::BTreeMap;
 use std::iter;
 
 use kurbo::{Line, Point, Rect, Size, Vec2};
+use svugy_model::disclose::DisclosedModel;
 use svugy_model::model::{EdgeId, Model};
 use svugy_model::path::ElementPath;
 
 use crate::metrics::TextMeasure;
 use edge_levels::{HomedEdges, LeavingEdges};
-use place::{CompoundRegions, SiblingGraph};
+use place::{CompoundRegions, RankedPlacement, RearrangedFromSeed, SiblingGraph};
 pub(crate) use route::Route;
 pub(crate) use stub::Stub;
 
@@ -41,12 +42,49 @@ impl<L> Levels<L> {
 }
 
 impl LevelPlans {
-    /// Lay out every level: place them bottom-up, anchor every level's routes, side every container's stubs where those routes leave it, then plan each level with all three.
+    /// Lay out every level, ranking each ranked level and the ranked containers absorbed in it with one compound dagre layout.
     pub(crate) fn lay_out(model: &Model, measure: &impl TextMeasure) -> Self {
+        let compound_regions = CompoundRegions::of(model);
+        Self::lay_out_ranking_by(model, &compound_regions, measure)
+    }
+
+    /// Lay out every layer, ranking the deepest one afresh and rearranging every shallower one from it, so each layer keeps the deepest arrangement.
+    pub(crate) fn lay_out_layers(
+        layers: &[DisclosedModel],
+        measure: &impl TextMeasure,
+    ) -> Vec<Self> {
+        let Some((deepest_layer, shallower_layers)) = layers.split_last() else {
+            return Vec::new();
+        };
+        let deepest_model = deepest_layer.model();
+        let deepest_plans = Self::lay_out(deepest_model, measure);
+        let rearranged_from_seed = RearrangedFromSeed::new(&deepest_plans);
+        let mut layer_plans: Vec<Self> = shallower_layers
+            .iter()
+            .map(|layer| {
+                let layer_model = layer.model();
+                Self::lay_out_ranking_by(layer_model, &rearranged_from_seed, measure)
+            })
+            .collect();
+        layer_plans.push(deepest_plans);
+        layer_plans
+    }
+
+    /// Lay out every level: place them bottom-up with `ranked_placement` for the ranked ones, anchor every level's routes, side every container's stubs where those routes leave it, then plan each level with all three.
+    fn lay_out_ranking_by(
+        model: &Model,
+        ranked_placement: &impl RankedPlacement,
+        measure: &impl TextMeasure,
+    ) -> Self {
         let homed_edges = HomedEdges::of(model);
         let leaving_edges = LeavingEdges::of(model);
-        let placed_levels =
-            PlacedLevels::place_bottom_up(model, &homed_edges, &leaving_edges, measure);
+        let placed_levels = PlacedLevels::place_bottom_up(
+            model,
+            ranked_placement,
+            &homed_edges,
+            &leaving_edges,
+            measure,
+        );
         let mut level_routes = placed_levels.anchor_homed_routes(&homed_edges);
         let mut level_stubs =
             placed_levels.side_stubs_at_home_route_crossings(&leaving_edges, &level_routes);
@@ -65,9 +103,10 @@ impl LevelPlans {
 }
 
 impl PlacedLevels {
-    /// Place every level after the levels nested in it, so each container's extent is known before its parent places it.
+    /// Place every level after the levels nested in it, so each container's extent is known before its parent places it: ranked levels by `ranked_placement`, the rest packed or layered by their hint.
     fn place_bottom_up(
         model: &Model,
+        ranked_placement: &impl RankedPlacement,
         homed_edges: &HomedEdges,
         leaving_edges: &LeavingEdges,
         measure: &impl TextMeasure,
@@ -81,22 +120,17 @@ impl PlacedLevels {
         let levels_innermost_first = containers.rev().chain(root_level);
         let no_levels_yet = BTreeMap::new();
         let mut placed_levels = Self::new(no_levels_yet);
-        let compound_regions = CompoundRegions::of(model);
         for level in levels_innermost_first {
-            let is_absorbed = compound_regions.is_absorbed(level);
-            if is_absorbed {
-                continue;
-            }
-            let is_region_root = compound_regions.is_region_root(model, level);
-            if is_region_root {
-                let region_placed = compound_regions.place_region(
+            let is_ranked = CompoundRegions::is_ranked(model, level);
+            if is_ranked {
+                let ranked_levels = ranked_placement.place_ranked_level(
                     model,
                     level,
                     leaving_edges,
                     &placed_levels,
                     measure,
                 );
-                placed_levels.by_level.extend(region_placed);
+                placed_levels.by_level.extend(ranked_levels);
                 continue;
             }
             let joined_pairs = homed_edges.lifted_pairs_in(level);

@@ -11,16 +11,16 @@ use crate::render::{Interactive, InteractiveRenderer, LayerScene};
 pub struct InteractiveSvg;
 
 impl RenderSvg for InteractiveSvg {
-    /// Disclose `model` layer by layer, lay out and project every layer in the bundled font, then write them all as the interactive document.
+    /// Disclose `model` layer by layer, lay out every layer consistently with the deepest one, project each in the bundled font, then write them all as the interactive document.
     fn render(model: &Model) -> String {
         let font = BundledFont::new();
         let layers = DisclosedModel::every_layer_of(model);
+        let layer_plans = LevelPlans::lay_out_layers(&layers, &font);
         let layer_scenes: Vec<LayerScene> = layers
             .iter()
-            .map(|layer| {
-                let layer_model = layer.model();
-                let plans = LevelPlans::lay_out(layer_model, &font);
-                let scene = Scene::project_disclosed(layer, &plans, &font);
+            .zip(&layer_plans)
+            .map(|(layer, plans)| {
+                let scene = Scene::project_disclosed(layer, plans, &font);
                 LayerScene::new(layer, scene)
             })
             .collect();

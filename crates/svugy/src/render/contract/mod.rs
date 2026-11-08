@@ -4,7 +4,7 @@ mod annotation;
 
 pub(crate) use annotation::{ContractAnnotator, DiagramDetails};
 
-/// Names every attribute the runtime reads from a rendered document, spelled once for both sides; docs/src/architecture/runtime-contract.md gives their meaning.
+/// Names every attribute the runtime reads from a rendered document, spelled once for both sides; crates/svugy/runtime/CONTRACT.md gives their meaning.
 pub(crate) struct RuntimeContract;
 
 impl RuntimeContract {

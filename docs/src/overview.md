@@ -1,13 +1,12 @@
-# Overview
+# svugy
 
-svugy renders a diagram written in Markdown as an isometric SVG you can click into.
+Write a diagram in Markdown; svugy renders it as one isometric SVG you can click into.
 
-- **Input:** a `.md` file with a nested list of components and a list of edges. Any Markdown preview shows it as an outline; it diffs like code.
-- **Output:** one `.svg` file with its CSS and JavaScript inside. Open it in a browser; nothing to install or serve.
-- **Errors:** `svugy validate` reports every problem in one run, with line and column; `--format json` for scripts and agents.
-- **d2:** `svugy render` also reads `.d2` files, and `svugy import` converts them to Markdown.
+- **Input:** a `.md` file: a nested list of components and a list of edges. It diffs like code, and any Markdown preview shows it as an outline.
+- **Output:** one self-contained `.svg`. Open it in a browser; nothing to install or serve.
+- **Errors:** `svugy validate` reports every problem in one run, with line and column.
 
-The editor below runs svugy compiled to wasm.
+Edit the diagram below: svugy, compiled to wasm, re-renders it as you type.
 
 <div class="svugy-live">
 

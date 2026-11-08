@@ -1,4 +1,4 @@
-<svg data-svugy-contract="2" height="1045.975" viewBox="-445.754 -89.743 1546.626 1045.975" width="1546.626" xmlns="http://www.w3.org/2000/svg">
+<svg data-svugy-contract="2" height="1011.271" viewBox="-445.754 -55.038 1546.626 1011.271" width="1546.626" xmlns="http://www.w3.org/2000/svg">
 <style>/*<![CDATA[*/[data-svugy-contract]{--svugy-canvas:#0a0b10;--svugy-grid-line:#151722;--svugy-face-outline:#0a0b10;--svugy-text:#e6e8ee;--svugy-text-muted:#8b93a5;--svugy-external-outline:#5b6170;--svugy-neutral-top:#3a3f4b;--svugy-neutral-left:#2b2f39;--svugy-neutral-right:#22252d;--svugy-neutral-ink:#e6e8ee;--svugy-container-blue-top:#1b2436;--svugy-container-blue-left:#131a28;--svugy-container-blue-right:#0d131f;--svugy-container-blue-ink:#8aa0c8;font-family:Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif}
 @media (prefers-color-scheme: light){
 [data-svugy-contract]{--svugy-canvas:#f6f8ff;--svugy-grid-line:#e1e4f4;--svugy-face-outline:#f6f8ff;--svugy-text:#14161a;--svugy-text-muted:#535a6a;--svugy-external-outline:#858b9b;--svugy-neutral-top:#acb2c0;--svugy-neutral-left:#868b96;--svugy-neutral-right:#6d717b;--svugy-neutral-ink:#14161a;--svugy-container-blue-top:#c8d4ed;--svugy-container-blue-left:#9da6ba;--svugy-container-blue-right:#808898;--svugy-container-blue-ink:#3c4f72}
@@ -94,170 +94,56 @@
 <path d="M0,0 L60,0 L60,60 L0,60 Z" fill="none" stroke="var(--svugy-grid-line)" stroke-width="1.155"/>
 </pattern>
 </defs>
-<rect fill="var(--svugy-canvas)" height="1045.975" rx="14" width="1546.626" x="-445.754" y="-89.743"/>
+<rect fill="var(--svugy-canvas)" height="1011.271" rx="14" width="1546.626" x="-445.754" y="-55.038"/>
 <rect fill="url(#ground-grid)" height="2000000" width="2000000" x="-1000000" y="-1000000"/>
 <g data-svugy-layer="0">
 <g data-svugy-heading="">
-<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="175.894" x="-57.158" y="-49.274">A Kubernetes cluster</text>
-<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="208.623" x="-57.158" y="-31.274">click a namespace, then a deployment</text>
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="175.894" x="-142.028" y="-14.569">A Kubernetes cluster</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="208.623" x="-142.028" y="3.431">click a namespace, then a deployment</text>
 </g>
-<g data-svugy-level="" data-svugy-view="-81.158 -89.743 302.808 283.356">
+<g data-svugy-level="" data-svugy-view="-166.028 -55.038 316.98 223.061">
 <g data-svugy-closed="" data-svugy-element="cluster">
 <title>Cluster</title>
 <desc data-svugy-details="">{"kind":"element","path":"cluster","label":"Cluster","caption":"prod · eu-west-1"}</desc>
-<path d="M72.038,130.091 L140.493,169.614 L140.493,165.114 L72.038,125.591 Z M197.651,136.614 L140.493,169.614 L140.493,165.114 L197.651,132.114 Z M129.195,92.591 L197.651,132.114 L140.493,165.114 L72.038,125.591 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
-<path d="M72.038,125.591 L140.493,165.114 L140.493,142.614 L72.038,103.091 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M197.651,132.114 L140.493,165.114 L140.493,142.614 L197.651,109.614 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M129.195,70.091 L197.651,109.614 L140.493,142.614 L72.038,103.091 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="42.75" transform="matrix(0.866 0.5 -0.866 0.5 134.844 106.352)" x="0" y="-2">Cluster</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="67.045" transform="matrix(0.866 0.5 -0.866 0.5 134.844 106.352)" x="0" y="11">prod · eu-west-1</text>
+<path d="M-142.028,104.5 L-73.573,144.023 L-73.573,139.523 L-142.028,100 Z M-16.415,111.023 L-73.573,144.023 L-73.573,139.523 L-16.415,106.523 Z M-84.87,67 L-16.415,106.523 L-73.573,139.523 L-142.028,100 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M-142.028,100 L-73.573,139.523 L-73.573,117.023 L-142.028,77.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-16.415,106.523 L-73.573,139.523 L-73.573,117.023 L-16.415,84.023 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-84.87,44.5 L-16.415,84.023 L-73.573,117.023 L-142.028,77.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="42.75" transform="matrix(0.866 0.5 -0.866 0.5 -79.222 80.761)" x="0" y="-2">Cluster</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="67.045" transform="matrix(0.866 0.5 -0.866 0.5 -79.222 80.761)" x="0" y="11">prod · eu-west-1</text>
 </g>
 <g data-svugy-element="users">
 <title>Users</title>
 <desc data-svugy-details="">{"kind":"element","path":"users","label":"Users","caption":"browsers · apps"}</desc>
-<path d="M-57.158,51 L9.684,89.591 L9.684,67.091 L-57.158,28.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M66.841,56.591 L9.684,89.591 L9.684,67.091 L66.841,34.091 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M0,-4.5 L66.841,34.091 L9.684,67.091 L-57.158,28.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="34.26" transform="matrix(0.866 0.5 -0.866 0.5 4.842 31.295)" x="0" y="-2">Users</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="65.182" transform="matrix(0.866 0.5 -0.866 0.5 4.842 31.295)" x="0" y="11">browsers · apps</text>
+<path d="M2.952,85.705 L69.794,124.295 L69.794,101.795 L2.952,63.205 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M126.951,91.295 L69.794,124.295 L69.794,101.795 L126.951,68.795 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M60.11,30.205 L126.951,68.795 L69.794,101.795 L2.952,63.205 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="34.26" transform="matrix(0.866 0.5 -0.866 0.5 64.952 66)" x="0" y="-2">Users</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="65.182" transform="matrix(0.866 0.5 -0.866 0.5 64.952 66)" x="0" y="11">browsers · apps</text>
 </g>
 <g data-svugy-edge="(users -&gt; cluster)[0]" data-svugy-from="users" data-svugy-to="cluster">
 <title>HTTPS</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"users","to":"cluster","label":"HTTPS","edges":[{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}]}</desc>
-<path d="M38.263,50.591 Q69.25,0.099 100.238,85.542" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M36.373,82.5 Q-6.81,3.739 -49.993,63.357" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="envelope" fill="var(--svugy-text-muted)" height="10" href="#traveler-envelope" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M38.263,50.591 Q69.44,-0.209 100.616,86.591" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M36.373,82.5 Q-7.135,3.147 -50.643,64.261" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(users -&gt; cluster)[0]" data-svugy-from="users" data-svugy-to="cluster">
 <title>HTTPS</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"users","to":"cluster","label":"HTTPS","edges":[{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}]}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="55.048" x="41.916" y="26.339"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="35.048" x="69.44" y="38.011">HTTPS</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="55.048" x="-34.659" y="30.411"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="35.048" x="-7.135" y="42.083">HTTPS</text>
 </g>
 <g data-svugy-overlay=""/>
 </g>
 </g>
 <g data-svugy-layer="1">
 <g data-svugy-heading="">
-<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="175.894" x="-104.632" y="-31.274">A Kubernetes cluster</text>
-<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="208.623" x="-104.632" y="-13.274">click a namespace, then a deployment</text>
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="175.894" x="-289.252" y="-14.569">A Kubernetes cluster</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="208.623" x="-289.252" y="3.431">click a namespace, then a deployment</text>
 </g>
-<g data-svugy-level="" data-svugy-view="-128.632 -71.743 654.894 529.724">
-<g data-svugy-element="users">
-<title>Users</title>
-<desc data-svugy-details="">{"kind":"element","path":"users","label":"Users","caption":"browsers · apps"}</desc>
-<path d="M-88.335,69 L-21.493,107.591 L-21.493,85.091 L-88.335,46.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M35.665,74.591 L-21.493,107.591 L-21.493,85.091 L35.665,52.091 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-31.177,13.5 L35.665,52.091 L-21.493,85.091 L-88.335,46.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="34.26" transform="matrix(0.866 0.5 -0.866 0.5 -26.335 49.295)" x="0" y="-2">Users</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="65.182" transform="matrix(0.866 0.5 -0.866 0.5 -26.335 49.295)" x="0" y="11">browsers · apps</text>
-</g>
-<g data-svugy-element="cluster">
-<title>Cluster</title>
-<desc data-svugy-details="">{"kind":"element","path":"cluster","label":"Cluster","caption":"prod · eu-west-1"}</desc>
-<path d="M-104.632,209.591 L284.024,433.982 L284.024,423.482 L-104.632,199.091 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M502.263,307.982 L284.024,433.982 L284.024,423.482 L502.263,297.482 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M113.607,73.091 L502.263,297.482 L284.024,423.482 L-104.632,199.091 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<g data-svugy-level="cluster" data-svugy-view="-66.278 72.013 530.187 286.968" transform="matrix(1 0 0 1 113.607 73.091)">
-<g data-svugy-closed="" data-svugy-element="cluster.data">
-<title>data</title>
-<desc data-svugy-details="">{"kind":"element","path":"cluster.data","label":"data","caption":"namespace"}</desc>
-<path d="M206.791,225.891 L269.144,261.891 L269.144,257.391 L206.791,221.391 Z M326.302,228.891 L269.144,261.891 L269.144,257.391 L326.302,224.391 Z M263.948,188.391 L326.302,224.391 L269.144,257.391 L206.791,221.391 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
-<path d="M206.791,221.391 L269.144,257.391 L269.144,234.891 L206.791,198.891 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M326.302,224.391 L269.144,257.391 L269.144,234.891 L326.302,201.891 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M263.948,165.891 L326.302,201.891 L269.144,234.891 L206.791,198.891 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="25.893" transform="matrix(0.866 0.5 -0.866 0.5 266.546 200.391)" x="0" y="-2">data</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="47.041" transform="matrix(0.866 0.5 -0.866 0.5 266.546 200.391)" x="0" y="11">namespace</text>
-</g>
-<g data-svugy-element="cluster.ingress">
-<title>Ingress</title>
-<desc data-svugy-details="">{"kind":"element","path":"cluster.ingress","label":"Ingress","caption":"TLS · routing"}</desc>
-<path d="M-49.891,73.195 L12.463,109.195 L12.463,98.695 L-49.891,62.695 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M69.62,76.195 L12.463,109.195 L12.463,98.695 L69.62,65.695 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M7.266,29.695 L69.62,65.695 L12.463,98.695 L-49.891,62.695 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="43.898" transform="matrix(0.866 0.5 -0.866 0.5 9.865 64.195)" x="0" y="-2">Ingress</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="51.905" transform="matrix(0.866 0.5 -0.866 0.5 9.865 64.195)" x="0" y="11">TLS · routing</text>
-</g>
-<g data-svugy-closed="" data-svugy-element="cluster.observability">
-<title>observability</title>
-<desc data-svugy-details="">{"kind":"element","path":"cluster.observability","label":"observability","caption":"namespace"}</desc>
-<path d="M-155.885,130.5 L-78.998,174.891 L-78.998,170.391 L-155.885,126 Z M-21.84,141.891 L-78.998,174.891 L-78.998,170.391 L-21.84,137.391 Z M-98.727,93 L-21.84,137.391 L-78.998,170.391 L-155.885,126 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
-<path d="M-155.885,126 L-78.998,170.391 L-78.998,147.891 L-155.885,103.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-21.84,137.391 L-78.998,170.391 L-78.998,147.891 L-21.84,114.891 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-98.727,70.5 L-21.84,114.891 L-78.998,147.891 L-155.885,103.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="76.781" transform="matrix(0.866 0.5 -0.866 0.5 -88.862 109.195)" x="0" y="-2">observability</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="47.041" transform="matrix(0.866 0.5 -0.866 0.5 -88.862 109.195)" x="0" y="11">namespace</text>
-</g>
-<g data-svugy-closed="" data-svugy-element="cluster.shop">
-<title>shop</title>
-<desc data-svugy-details="">{"kind":"element","path":"cluster.shop","label":"shop","caption":"namespace","description":"The stateless services. Each deployment scales its pods on CPU."}</desc>
-<path d="M82.083,153.891 L144.437,189.891 L144.437,185.391 L82.083,149.391 Z M201.594,156.891 L144.437,189.891 L144.437,185.391 L201.594,152.391 Z M139.241,116.391 L201.594,152.391 L144.437,185.391 L82.083,149.391 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
-<path d="M82.083,149.391 L144.437,185.391 L144.437,162.891 L82.083,126.891 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M201.594,152.391 L144.437,185.391 L144.437,162.891 L201.594,129.891 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M139.241,93.891 L201.594,129.891 L144.437,162.891 L82.083,126.891 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="29.115" transform="matrix(0.866 0.5 -0.866 0.5 141.839 128.391)" x="0" y="-2">shop</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="47.041" transform="matrix(0.866 0.5 -0.866 0.5 141.839 128.391)" x="0" y="11">namespace</text>
-</g>
-<g data-svugy-edge="(cluster.ingress -&gt; cluster.shop)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop">
-<title>Ingress → shop</title>
-<desc data-svugy-details="">{"kind":"lifted","from":"cluster.ingress","to":"cluster.shop","edges":[{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.api)[0]","from":"cluster.ingress","to":"cluster.shop.api","label":"routes /api"},{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.web)[0]","from":"cluster.ingress","to":"cluster.shop.web","label":"routes /"}]}</desc>
-<path d="M41.041,82.195 Q80.401,9.482 119.76,103.86" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M41.041,82.195 Q80.615,9.087 120.188,104.891" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-edge="(cluster.observability -&gt; cluster.shop)[0]" data-svugy-from="cluster.observability" data-svugy-to="cluster.shop">
-<title>observability → shop</title>
-<desc data-svugy-details="">{"kind":"lifted","from":"cluster.observability","to":"cluster.shop","edges":[{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"},{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}]}</desc>
-<path d="M-50.419,131.391 Q24.98,33.862 100.378,115.07" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M-50.419,131.391 Q25.358,33.373 101.136,115.891" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-edge="(cluster.shop -&gt; cluster.data)[0]" data-svugy-from="cluster.shop" data-svugy-to="cluster.data">
-<title>shop → data</title>
-<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop","to":"cluster.data","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"},{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}]}</desc>
-<path d="M173.016,146.391 Q204.003,95.899 234.991,181.342" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M173.016,146.391 Q204.193,95.591 235.369,182.391" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-overlay="">
-<g data-svugy-goto="" data-svugy-stub="users">
-<title>to Users</title>
-<desc data-svugy-details="">{"kind":"stub","target":"users","edges":[{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -51.656 39.176)" width="49.311" x="-24.655" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="29.311" transform="matrix(0.866 -0.5 0.866 0.5 -51.656 39.176)" x="0" y="3.82">Users</text>
-</g>
-</g>
-</g>
-<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="33.313" transform="matrix(0.866 0.5 0 1 -104.632 199.091)" x="9" y="21.5">Cluster</text>
-<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="67.045" transform="matrix(0.866 0.5 0 1 -104.632 199.091)" x="9" y="34.5">prod · eu-west-1</text>
-</g>
-<g data-svugy-edge="(users -&gt; cluster.ingress)[0]" data-svugy-from="users" data-svugy-to="cluster.ingress">
-<title>HTTPS</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}</desc>
-<path d="M7.086,68.591 Q49.482,13.354 91.878,118.251" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="envelope" fill="var(--svugy-text-muted)" height="10" href="#traveler-envelope" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M7.086,68.591 Q49.69,13.082 92.295,119.286" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-edge="(users -&gt; cluster.ingress)[0]" data-svugy-from="users" data-svugy-to="cluster.ingress">
-<title>HTTPS</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="55.048" x="22.166" y="45.658"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="35.048" x="49.69" y="57.33">HTTPS</text>
-</g>
-<g data-svugy-overlay=""/>
-</g>
-</g>
-<g data-svugy-layer="2">
-<g data-svugy-heading="">
-<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="175.894" x="-367.195" y="-14.569">A Kubernetes cluster</text>
-<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="208.623" x="-367.195" y="3.431">click a namespace, then a deployment</text>
-</g>
-<g data-svugy-level="" data-svugy-view="-391.195 -55.038 1149.121 781.771">
+<g data-svugy-level="" data-svugy-view="-313.252 -55.038 856.796 612.997">
 <g data-svugy-element="users">
 <title>Users</title>
 <desc data-svugy-details="">{"kind":"element","path":"users","label":"Users","caption":"browsers · apps"}</desc>
@@ -270,10 +156,124 @@
 <g data-svugy-element="cluster">
 <title>Cluster</title>
 <desc data-svugy-details="">{"kind":"element","path":"cluster","label":"Cluster","caption":"prod · eu-west-1"}</desc>
-<path d="M-367.195,230 L451.602,702.732 L451.602,692.232 L-367.195,219.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M733.926,539.732 L451.602,702.732 L451.602,692.232 L733.926,529.232 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-84.87,56.5 L733.926,529.232 L451.602,692.232 L-367.195,219.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<g data-svugy-level="cluster" data-svugy-view="-313.252 107 947.337 550.732" transform="matrix(1 0 0 1 -84.87 56.5)">
+<path d="M-289.252,185 L315.161,533.959 L315.161,523.459 L-289.252,174.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M519.543,415.959 L315.161,533.959 L315.161,523.459 L519.543,405.459 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-84.87,56.5 L519.543,405.459 L315.161,523.459 L-289.252,174.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster" data-svugy-view="-250.899 95 678.395 402.959" transform="matrix(1 0 0 1 -84.87 56.5)">
+<g data-svugy-element="cluster.ingress">
+<title>Ingress</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.ingress","label":"Ingress","caption":"TLS · routing"}</desc>
+<path d="M121.464,172.127 L183.817,208.127 L183.817,197.627 L121.464,161.627 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M240.975,175.127 L183.817,208.127 L183.817,197.627 L240.975,164.627 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M178.621,128.627 L240.975,164.627 L183.817,197.627 L121.464,161.627 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="43.898" transform="matrix(0.866 0.5 -0.866 0.5 181.219 163.127)" x="0" y="-2">Ingress</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="51.905" transform="matrix(0.866 0.5 -0.866 0.5 181.219 163.127)" x="0" y="11">TLS · routing</text>
+</g>
+<g data-svugy-closed="" data-svugy-element="cluster.observability">
+<title>observability</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.observability","label":"observability","caption":"namespace"}</desc>
+<path d="M-142.028,122.5 L-65.141,166.891 L-65.141,162.391 L-142.028,118 Z M-7.984,133.891 L-65.141,166.891 L-65.141,162.391 L-7.984,129.391 Z M-84.87,85 L-7.984,129.391 L-65.141,162.391 L-142.028,118 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M-142.028,118 L-65.141,162.391 L-65.141,139.891 L-142.028,95.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-7.984,129.391 L-65.141,162.391 L-65.141,139.891 L-7.984,106.891 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-84.87,62.5 L-7.984,106.891 L-65.141,139.891 L-142.028,95.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="76.781" transform="matrix(0.866 0.5 -0.866 0.5 -75.006 101.195)" x="0" y="-2">observability</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="47.041" transform="matrix(0.866 0.5 -0.866 0.5 -75.006 101.195)" x="0" y="11">namespace</text>
+</g>
+<g data-svugy-closed="" data-svugy-element="cluster.shop">
+<title>shop</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop","label":"shop","caption":"namespace","description":"The stateless services. Each deployment scales its pods on CPU."}</desc>
+<path d="M267.53,277.959 L329.884,313.959 L329.884,309.459 L267.53,273.459 Z M387.042,280.959 L329.884,313.959 L329.884,309.459 L387.042,276.459 Z M324.688,240.459 L387.042,276.459 L329.884,309.459 L267.53,273.459 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M267.53,273.459 L329.884,309.459 L329.884,286.959 L267.53,250.959 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M387.042,276.459 L329.884,309.459 L329.884,286.959 L387.042,253.959 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M324.688,217.959 L387.042,253.959 L329.884,286.959 L267.53,250.959 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="29.115" transform="matrix(0.866 0.5 -0.866 0.5 327.286 252.459)" x="0" y="-2">shop</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="47.041" transform="matrix(0.866 0.5 -0.866 0.5 327.286 252.459)" x="0" y="11">namespace</text>
+</g>
+<g data-svugy-closed="" data-svugy-element="cluster.data">
+<title>data</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.data","label":"data","caption":"namespace"}</desc>
+<path d="M368.855,381.459 L431.209,417.459 L431.209,412.959 L368.855,376.959 Z M488.367,384.459 L431.209,417.459 L431.209,412.959 L488.367,379.959 Z M426.013,343.959 L488.367,379.959 L431.209,412.959 L368.855,376.959 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M368.855,376.959 L431.209,412.959 L431.209,390.459 L368.855,354.459 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M488.367,379.959 L431.209,412.959 L431.209,390.459 L488.367,357.459 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M426.013,321.459 L488.367,357.459 L431.209,390.459 L368.855,354.459 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="25.893" transform="matrix(0.866 0.5 -0.866 0.5 428.611 355.959)" x="0" y="-2">data</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="47.041" transform="matrix(0.866 0.5 -0.866 0.5 428.611 355.959)" x="0" y="11">namespace</text>
+</g>
+<g data-svugy-edge="(cluster.ingress -&gt; cluster.shop)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop">
+<title>Ingress → shop</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.ingress","to":"cluster.shop","edges":[{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.api)[0]","from":"cluster.ingress","to":"cluster.shop.api","label":"routes /api"},{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.web)[0]","from":"cluster.ingress","to":"cluster.shop.web","label":"routes /"}]}</desc>
+<path d="M212.396,181.127 Q258.815,107.831 305.234,227.917" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M212.396,181.127 Q259.016,107.514 305.635,228.959" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.observability -&gt; cluster.shop)[0]" data-svugy-from="cluster.observability" data-svugy-to="cluster.shop">
+<title>observability → shop</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.observability","to":"cluster.shop","edges":[{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"},{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}]}</desc>
+<path d="M-36.563,123.391 Q124.681,17.445 285.925,239.053" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M-36.563,123.391 Q125.01,17.229 286.583,239.959" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cluster.shop -&gt; cluster.data)[0]" data-svugy-from="cluster.shop" data-svugy-to="cluster.data">
+<title>shop → data</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop","to":"cluster.data","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"},{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}]}</desc>
+<path d="M358.463,270.459 Q377.854,224.184 397.245,336.858" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M358.463,270.459 Q377.948,223.959 397.434,337.959" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="" data-svugy-stub="users">
+<title>to Users</title>
+<desc data-svugy-details="">{"kind":"stub","target":"users","edges":[{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}]}</desc>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 159.039 101.173)" width="49.311" x="-24.655" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="29.311" transform="matrix(0.866 0.5 -0.866 0.5 159.039 101.173)" x="0" y="3.82">Users</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="33.313" transform="matrix(0.866 0.5 0 1 -289.252 174.5)" x="9" y="21.5">Cluster</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="67.045" transform="matrix(0.866 0.5 0 1 -289.252 174.5)" x="9" y="34.5">prod · eu-west-1</text>
+</g>
+<g data-svugy-edge="(users -&gt; cluster.ingress)[0]" data-svugy-from="users" data-svugy-to="cluster.ingress">
+<title>HTTPS</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}</desc>
+<path d="M98.373,85.295 Q81.828,36.27 65.284,200.515" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="envelope" fill="var(--svugy-text-muted)" height="10" href="#traveler-envelope" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M98.373,85.295 Q81.772,36.104 65.172,201.627" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(users -&gt; cluster.ingress)[0]" data-svugy-from="users" data-svugy-to="cluster.ingress">
+<title>HTTPS</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(users -&gt; cluster.ingress)[0]","from":"users","to":"cluster.ingress","label":"HTTPS"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="55.048" x="51.195" y="94.446"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="35.048" x="78.719" y="106.118">HTTPS</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+</g>
+<g data-svugy-layer="2">
+<g data-svugy-heading="">
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="175.894" x="-359.401" y="-14.569">A Kubernetes cluster</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="208.623" x="-359.401" y="3.431">click a namespace, then a deployment</text>
+</g>
+<g data-svugy-level="" data-svugy-view="-383.401 -55.038 1141.327 777.271">
+<g data-svugy-element="users">
+<title>Users</title>
+<desc data-svugy-details="">{"kind":"element","path":"users","label":"Users","caption":"browsers · apps"}</desc>
+<path d="M2.952,85.705 L69.794,124.295 L69.794,101.795 L2.952,63.205 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M126.951,91.295 L69.794,124.295 L69.794,101.795 L126.951,68.795 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M60.11,30.205 L126.951,68.795 L69.794,101.795 L2.952,63.205 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="34.26" transform="matrix(0.866 0.5 -0.866 0.5 64.952 66)" x="0" y="-2">Users</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="65.182" transform="matrix(0.866 0.5 -0.866 0.5 64.952 66)" x="0" y="11">browsers · apps</text>
+</g>
+<g data-svugy-element="cluster">
+<title>Cluster</title>
+<desc data-svugy-details="">{"kind":"element","path":"cluster","label":"Cluster","caption":"prod · eu-west-1"}</desc>
+<path d="M-359.401,225.5 L459.396,698.232 L459.396,687.732 L-359.401,215 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M733.926,539.732 L459.396,698.232 L459.396,687.732 L733.926,529.232 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-84.87,56.5 L733.926,529.232 L459.396,687.732 L-359.401,215 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster" data-svugy-view="-313.252 107 955.131 546.232" transform="matrix(1 0 0 1 -84.87 56.5)">
 <g data-svugy-element="cluster.ingress">
 <title>Ingress</title>
 <desc data-svugy-details="">{"kind":"element","path":"cluster.ingress","label":"Ingress","caption":"TLS · routing"}</desc>
@@ -289,7 +289,7 @@
 <path d="M-204.382,154 L72.674,313.959 L72.674,303.459 L-204.382,143.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M192.186,244.959 L72.674,313.959 L72.674,303.459 L192.186,234.459 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M-84.87,74.5 L192.186,234.459 L72.674,303.459 L-204.382,143.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<g data-svugy-level="cluster.observability" data-svugy-view="-250.899 120.5 356.709 249.3" transform="matrix(1 0 0 1 -84.87 74.5)">
+<g data-svugy-level="cluster.observability" data-svugy-view="-250.899 120.5 358.658 248.175" transform="matrix(1 0 0 1 -84.87 74.5)">
 <g data-svugy-element="cluster.observability.grafana">
 <title>Grafana</title>
 <desc data-svugy-details="">{"kind":"element","path":"cluster.observability.grafana","label":"Grafana","caption":"dashboards"}</desc>
@@ -326,14 +326,14 @@
 <g data-svugy-goto="cluster.shop.api" data-svugy-stub="cluster.shop.api">
 <title>to api</title>
 <desc data-svugy-details="">{"kind":"stub","target":"cluster.shop.api","edges":[{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 229.553 178.032)" width="35.099" x="-17.549" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="15.099" transform="matrix(0.866 -0.5 0.866 0.5 229.553 178.032)" x="0" y="3.82">api</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 231.501 176.907)" width="35.099" x="-17.549" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="15.099" transform="matrix(0.866 -0.5 0.866 0.5 231.501 176.907)" x="0" y="3.82">api</text>
 </g>
 <g data-svugy-goto="cluster.shop.web" data-svugy-stub="cluster.shop.web">
 <title>to web</title>
 <desc data-svugy-details="">{"kind":"stub","target":"cluster.shop.web","edges":[{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 190.582 200.532)" width="41.364" x="-20.682" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="21.364" transform="matrix(0.866 -0.5 0.866 0.5 190.582 200.532)" x="0" y="3.82">web</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 192.53 199.407)" width="41.364" x="-20.682" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="21.364" transform="matrix(0.866 -0.5 0.866 0.5 192.53 199.407)" x="0" y="3.82">web</text>
 </g>
 </g>
 </g>
@@ -343,10 +343,10 @@
 <g data-svugy-element="cluster.shop">
 <title>shop</title>
 <desc data-svugy-details="">{"kind":"element","path":"cluster.shop","label":"shop","caption":"namespace","description":"The stateless services. Each deployment scales its pods on CPU."}</desc>
-<path d="M119.44,358.959 L244.147,430.959 L244.147,420.459 L119.44,348.459 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M441.601,316.959 L244.147,430.959 L244.147,420.459 L441.601,306.459 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M316.894,234.459 L441.601,306.459 L244.147,420.459 L119.44,348.459 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<g data-svugy-level="cluster.shop" data-svugy-view="52.285 275.357 288.959 194.101" transform="matrix(1 0 0 1 316.894 234.459)">
+<path d="M127.234,354.459 L251.942,426.459 L251.942,415.959 L127.234,343.959 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M449.395,312.459 L251.942,426.459 L251.942,415.959 L449.395,301.959 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M324.688,229.959 L449.395,301.959 L251.942,415.959 L127.234,343.959 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster.shop" data-svugy-view="63.327 271.94 285.711 193.019" transform="matrix(1 0 0 1 324.688 229.959)">
 <g data-svugy-closed="" data-svugy-element="cluster.shop.api">
 <title>api</title>
 <desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment"}</desc>
@@ -397,27 +397,27 @@
 <g data-svugy-goto="cluster" data-svugy-stub="cluster.ingress">
 <title>to Ingress</title>
 <desc data-svugy-details="">{"kind":"stub","target":"cluster.ingress","edges":[{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.api)[0]","from":"cluster.ingress","to":"cluster.shop.api","label":"routes /api"},{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.web)[0]","from":"cluster.ingress","to":"cluster.shop.web","label":"routes /"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -29.926 26.63)" width="57.222" x="-28.611" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="37.222" transform="matrix(0.866 -0.5 0.866 0.5 -29.926 26.63)" x="0" y="3.82">Ingress</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -31.801 27.713)" width="57.222" x="-28.611" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="37.222" transform="matrix(0.866 -0.5 0.866 0.5 -31.801 27.713)" x="0" y="3.82">Ingress</text>
 </g>
 <g data-svugy-goto="cluster.observability" data-svugy-stub="cluster.observability.prometheus">
 <title>to Prometheus</title>
 <desc data-svugy-details="">{"kind":"stub","target":"cluster.observability.prometheus","edges":[{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"},{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -114.01 75.176)" width="80.662" x="-40.331" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="60.662" transform="matrix(0.866 -0.5 0.866 0.5 -114.01 75.176)" x="0" y="3.82">Prometheus</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -110.763 73.301)" width="80.662" x="-40.331" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="60.662" transform="matrix(0.866 -0.5 0.866 0.5 -110.763 73.301)" x="0" y="3.82">Prometheus</text>
 </g>
 </g>
 </g>
-<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="22.451" transform="matrix(0.866 0.5 0 1 119.44 348.459)" x="9" y="21.5">shop</text>
-<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="47.041" transform="matrix(0.866 0.5 0 1 119.44 348.459)" x="9" y="34.5">namespace</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="22.451" transform="matrix(0.866 0.5 0 1 127.234 343.959)" x="9" y="21.5">shop</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="47.041" transform="matrix(0.866 0.5 0 1 127.234 343.959)" x="9" y="34.5">namespace</text>
 </g>
 <g data-svugy-element="cluster.data">
 <title>data</title>
 <desc data-svugy-details="">{"kind":"element","path":"cluster.data","label":"data","caption":"namespace"}</desc>
-<path d="M361.061,453.459 L575.443,577.232 L575.443,566.732 L361.061,442.959 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M694.955,508.232 L575.443,577.232 L575.443,566.732 L694.955,497.732 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M480.572,373.959 L694.955,497.732 L575.443,566.732 L361.061,442.959 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<g data-svugy-level="cluster.data" data-svugy-view="264.202 419.959 289.261 180.732" transform="matrix(1 0 0 1 480.572 373.959)">
+<path d="M368.855,448.959 L583.238,572.732 L583.238,562.232 L368.855,438.459 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M702.749,503.732 L583.238,572.732 L583.238,562.232 L702.749,493.232 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M488.367,369.459 L702.749,493.232 L583.238,562.232 L368.855,438.459 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="cluster.data" data-svugy-view="271.997 415.459 289.261 180.732" transform="matrix(1 0 0 1 488.367 369.459)">
 <g data-svugy-closed="" data-svugy-element="cluster.data.postgres">
 <title>Postgres</title>
 <desc data-svugy-details="">{"kind":"element","path":"cluster.data.postgres","label":"Postgres","caption":"StatefulSet"}</desc>
@@ -445,92 +445,92 @@
 </g>
 </g>
 </g>
-<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="20.029" transform="matrix(0.866 0.5 0 1 361.061 442.959)" x="9" y="21.5">data</text>
-<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="47.041" transform="matrix(0.866 0.5 0 1 361.061 442.959)" x="9" y="34.5">namespace</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="20.029" transform="matrix(0.866 0.5 0 1 368.855 438.459)" x="9" y="21.5">data</text>
+<text fill="var(--svugy-container-blue-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="47.041" transform="matrix(0.866 0.5 0 1 368.855 438.459)" x="9" y="34.5">namespace</text>
 </g>
 <g data-svugy-edge="(cluster.ingress -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop.api">
 <title>routes /api</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.api)[0]","from":"cluster.ingress","to":"cluster.shop.api","label":"routes /api"}</desc>
-<path d="M221.922,175.627 Q259.759,90.271 297.595,257.868" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M221.922,175.627 Q263.641,89.319 305.36,253.375" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M221.922,175.627 Q259.882,89.994 297.841,258.959" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M221.922,175.627 Q263.779,89.035 305.635,254.459" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(cluster.ingress -&gt; cluster.shop.web)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop.web">
 <title>routes /</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.web)[0]","from":"cluster.ingress","to":"cluster.shop.web","label":"routes /"}</desc>
-<path d="M202.87,186.627 Q211.361,103.729 219.851,302.842" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M202.87,186.627 Q215.246,103.797 227.622,298.343" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M202.87,186.627 Q211.384,103.497 219.899,303.959" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M202.87,186.627 Q215.281,103.56 227.693,299.459" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(cluster.observability.prometheus -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.observability.prometheus" data-svugy-to="cluster.shop.api">
 <title>scrapes</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"}</desc>
-<path d="M110.779,222.959 Q194.471,145.774 278.162,269.033" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<path d="M110.779,222.959 Q198.356,142.261 285.933,264.549" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M110.779,222.959 Q194.784,145.485 278.788,269.959" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M110.779,222.959 Q198.681,141.961 286.583,265.459" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(cluster.observability.prometheus -&gt; cluster.shop.web)[0]" data-svugy-from="cluster.observability.prometheus" data-svugy-to="cluster.shop.web">
 <title>scrapes</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}</desc>
-<path d="M91.727,233.959 Q146.081,176.627 200.436,313.919" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<path d="M91.727,233.959 Q149.962,174.721 208.198,309.432" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M91.727,233.959 Q146.287,176.41 200.846,314.959" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M91.727,233.959 Q150.184,174.496 208.64,310.459" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres)[0]" data-svugy-from="cluster.shop.api" data-svugy-to="cluster.data.postgres">
 <title>writes</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
-<path d="M360.195,294.959 Q405.942,241.075 451.69,402.883" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M367.989,290.459 Q413.737,236.575 459.484,398.383" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="document" fill="var(--svugy-text-muted)" height="10" href="#traveler-document" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M360.195,294.959 Q406.094,240.896 451.993,403.959" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M367.989,290.459 Q413.888,236.396 459.788,399.459" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.redis)[0]" data-svugy-from="cluster.shop.api" data-svugy-to="cluster.data.redis">
 <title>reads sessions</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}</desc>
-<path d="M341.142,305.959 Q437.91,230.543 534.678,447.936" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M348.936,301.459 Q445.704,226.043 542.472,443.436" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="key" fill="var(--svugy-text-muted)" height="10" href="#traveler-key" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M341.142,305.959 Q438.137,230.366 535.132,448.959" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M348.936,301.459 Q445.931,225.866 542.926,444.459" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(cluster.ingress -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop.api">
 <title>routes /api</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.api)[0]","from":"cluster.ingress","to":"cluster.shop.api","label":"routes /api"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="73.895" x="222.934" y="145.791"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="53.895" x="259.882" y="157.463">routes /api</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="73.895" x="226.832" y="144.186"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="53.895" x="263.779" y="155.858">routes /api</text>
 </g>
 <g data-svugy-edge="(cluster.ingress -&gt; cluster.shop.web)[0]" data-svugy-from="cluster.ingress" data-svugy-to="cluster.shop.web">
 <title>routes /</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(cluster.ingress -&gt; cluster.shop.web)[0]","from":"cluster.ingress","to":"cluster.shop.web","label":"routes /"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="58.796" x="184.144" y="185.961"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="38.796" x="213.542" y="197.633">routes /</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="58.796" x="189.1" y="184.75"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="38.796" x="218.497" y="196.422">routes /</text>
 </g>
 <g data-svugy-edge="(cluster.observability.prometheus -&gt; cluster.shop.api)[0]" data-svugy-from="cluster.observability.prometheus" data-svugy-to="cluster.shop.api">
 <title>scrapes</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.api)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.api","label":"scrapes"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="60.052" x="197.114" y="204.661"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="40.052" x="227.14" y="216.333">scrapes</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="60.052" x="206.585" y="203.921"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="40.052" x="236.611" y="215.593">scrapes</text>
 </g>
 <g data-svugy-edge="(cluster.observability.prometheus -&gt; cluster.shop.web)[0]" data-svugy-from="cluster.observability.prometheus" data-svugy-to="cluster.shop.web">
 <title>scrapes</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(cluster.observability.prometheus -&gt; cluster.shop.web)[0]","from":"cluster.observability.prometheus","to":"cluster.shop.web","label":"scrapes"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="60.052" x="116.261" y="217.582"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="40.052" x="146.287" y="229.254">scrapes</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="60.052" x="120.158" y="215.5"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="40.052" x="150.184" y="227.172">scrapes</text>
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres)[0]" data-svugy-from="cluster.shop.api" data-svugy-to="cluster.data.postgres">
 <title>writes</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="50.808" x="380.69" y="287.325"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="30.808" x="406.094" y="298.997">writes</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="50.808" x="388.484" y="282.825"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="30.808" x="413.888" y="294.497">writes</text>
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.redis)[0]" data-svugy-from="cluster.shop.api" data-svugy-to="cluster.data.redis">
 <title>reads sessions</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="95.228" x="404.501" y="307.891"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="75.228" x="452.115" y="319.563">reads sessions</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="95.228" x="412.295" y="303.391"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="75.228" x="459.909" y="315.063">reads sessions</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="" data-svugy-stub="users">
@@ -541,8 +541,8 @@
 </g>
 </g>
 </g>
-<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="33.313" transform="matrix(0.866 0.5 0 1 -367.195 219.5)" x="9" y="21.5">Cluster</text>
-<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="67.045" transform="matrix(0.866 0.5 0 1 -367.195 219.5)" x="9" y="34.5">prod · eu-west-1</text>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="33.313" transform="matrix(0.866 0.5 0 1 -359.401 215)" x="9" y="21.5">Cluster</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="67.045" transform="matrix(0.866 0.5 0 1 -359.401 215)" x="9" y="34.5">prod · eu-west-1</text>
 </g>
 <g data-svugy-edge="(users -&gt; cluster.ingress)[0]" data-svugy-from="users" data-svugy-to="cluster.ingress">
 <title>HTTPS</title>

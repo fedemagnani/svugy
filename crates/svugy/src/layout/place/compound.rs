@@ -7,8 +7,8 @@ use kurbo::{Point, Rect, Size};
 use svugy_model::model::{Element, Model, PlacementHint};
 use svugy_model::path::ElementPath;
 
-use super::SiblingGraph;
 use super::footprints::Footprints;
+use super::{RankedPlacement, SiblingGraph};
 use crate::layout::edge_levels::LeavingEdges;
 use crate::layout::{PlacedLevel, PlacedLevels};
 use crate::metrics::{LabelBlock, LabelRole, TextMeasure};
@@ -48,20 +48,8 @@ impl CompoundRegions {
         Self { absorbed }
     }
 
-    /// Tell whether `level` is placed inside its parent's compound layout.
-    pub(in crate::layout) fn is_absorbed(&self, level: &ElementPath) -> bool {
-        self.absorbed.contains(level)
-    }
-
-    /// Tell whether `level` roots a compound layout: ranked, and not absorbed into its parent's.
-    pub(in crate::layout) fn is_region_root(&self, model: &Model, level: &ElementPath) -> bool {
-        let is_ranked = Self::is_ranked(model, level);
-        let is_absorbed = self.is_absorbed(level);
-        is_ranked && !is_absorbed
-    }
-
     /// Tell whether `level` places its children in dagre ranks: layered by request, or by default when edges join its children, with no child pinned.
-    fn is_ranked(model: &Model, level: &ElementPath) -> bool {
+    pub(in crate::layout) fn is_ranked(model: &Model, level: &ElementPath) -> bool {
         let level_element = model.element(level);
         let hint = level_element.and_then(Element::child_placement);
         let is_layered_by_request = hint == Some(PlacementHint::Layered);
@@ -75,9 +63,34 @@ impl CompoundRegions {
         let is_layered = is_layered_by_request || is_layered_by_default;
         is_layered && !has_pinned_child
     }
+}
+
+impl RankedPlacement for CompoundRegions {
+    /// Place a region root with its absorbed containers in one compound layout; an absorbed level yields nothing, its region root places it.
+    fn place_ranked_level(
+        &self,
+        model: &Model,
+        level: &ElementPath,
+        leaving_edges: &LeavingEdges,
+        interiors: &PlacedLevels,
+        measure: &impl TextMeasure,
+    ) -> Vec<(ElementPath, PlacedLevel)> {
+        let is_absorbed = self.is_absorbed(level);
+        if is_absorbed {
+            return Vec::new();
+        }
+        self.place_region(model, level, leaving_edges, interiors, measure)
+    }
+}
+
+impl CompoundRegions {
+    /// Tell whether `level` is placed inside its parent's compound layout.
+    fn is_absorbed(&self, level: &ElementPath) -> bool {
+        self.absorbed.contains(level)
+    }
 
     /// Place `region_root` and its absorbed containers in one compound layout, returning each of their levels.
-    pub(in crate::layout) fn place_region(
+    fn place_region(
         &self,
         model: &Model,
         region_root: &ElementPath,

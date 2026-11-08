@@ -1,5 +1,6 @@
 //! Place one level's children as footprints: pinned ones where the author put them, free ones automatically around them.
 
+mod compact;
 mod compound;
 mod footprints;
 mod layered;
@@ -11,8 +12,10 @@ use kurbo::{Point, Rect, Size};
 use svugy_model::model::{Element, Model, PlacementHint};
 use svugy_model::path::ElementPath;
 
-use super::{PlacedLevel, PlacedLevels};
+use super::edge_levels::LeavingEdges;
+use super::{LevelPlacement, LevelPlans, PlacedLevel, PlacedLevels};
 use crate::metrics::{LabelBlock, LabelRole, TextMeasure};
+use compact::SeedArrangement;
 pub(super) use compound::CompoundRegions;
 use footprints::Footprints;
 use layered::Layered;
@@ -31,6 +34,61 @@ pub(super) trait LevelLayout {
     fn place_footprints(&self, siblings: &SiblingGraph) -> BTreeMap<ElementPath, Rect>;
 }
 
+/// Places a ranked level once the levels nested in it are placed, returning every level it fixes.
+pub(super) trait RankedPlacement {
+    /// Place the ranked `level`, sizing its container children by their placed `interiors`.
+    fn place_ranked_level(
+        &self,
+        model: &Model,
+        level: &ElementPath,
+        leaving_edges: &LeavingEdges,
+        interiors: &PlacedLevels,
+        measure: &impl TextMeasure,
+    ) -> Vec<(ElementPath, PlacedLevel)>;
+}
+
+/// Places each ranked level rearranged from the seed's footprints of it, so a shallower layer keeps the deepest layer's arrangement.
+pub(super) struct RearrangedFromSeed<'s> {
+    seed: &'s LevelPlans,
+}
+
+impl<'s> RearrangedFromSeed<'s> {
+    /// Rearrange from `seed`, the deepest layer's plans.
+    pub(super) fn new(seed: &'s LevelPlans) -> Self {
+        Self { seed }
+    }
+}
+
+impl RankedPlacement for RearrangedFromSeed<'_> {
+    /// Rearrange the seed's footprints of `level` to its children's sizes in this layer, fixing that level alone.
+    fn place_ranked_level(
+        &self,
+        model: &Model,
+        level: &ElementPath,
+        leaving_edges: &LeavingEdges,
+        interiors: &PlacedLevels,
+        measure: &impl TextMeasure,
+    ) -> Vec<(ElementPath, PlacedLevel)> {
+        let sizes = SiblingGraph::measured_sizes_of_children(model, level, interiors, measure);
+        let seed_plan = self
+            .seed
+            .level(level)
+            .expect("a level ranked in a shallower layer is placed in the deepest one");
+        let seed_level = seed_plan.placed();
+        let is_left_by_edges = leaving_edges.is_left_by_edges(level);
+        let placed_level = PlacedLevel::place_children_from_seed(
+            model,
+            level,
+            &sizes,
+            seed_level,
+            is_left_by_edges,
+            measure,
+        );
+        let level_key = level.clone();
+        vec![(level_key, placed_level)]
+    }
+}
+
 /// Holds the footprint size of every child of one level and the pairs of children an edge joins, directly or lifted.
 pub(super) struct SiblingGraph {
     sizes: BTreeMap<ElementPath, Size>,
@@ -46,7 +104,21 @@ impl SiblingGraph {
         interiors: &PlacedLevels,
         measure: &impl TextMeasure,
     ) -> Self {
-        let sizes = model
+        let sizes = Self::measured_sizes_of_children(model, parent, interiors, measure);
+        Self {
+            sizes,
+            joined_pairs,
+        }
+    }
+
+    /// Size every child of `parent`: a container by its own level's extent, a leaf by its labels.
+    fn measured_sizes_of_children(
+        model: &Model,
+        parent: &ElementPath,
+        interiors: &PlacedLevels,
+        measure: &impl TextMeasure,
+    ) -> BTreeMap<ElementPath, Size> {
+        model
             .children(parent)
             .map(|(path, element)| {
                 let interior = interiors.level(path);
@@ -57,11 +129,7 @@ impl SiblingGraph {
                 let path_key = path.clone();
                 (path_key, size)
             })
-            .collect();
-        Self {
-            sizes,
-            joined_pairs,
-        }
+            .collect()
     }
 
     /// Size a footprint to fit the room its title over its caption needs on its top face, never below the smallest block.
@@ -92,6 +160,31 @@ impl PlacedLevel {
             free_footprints.shifted_clear_of_pinned(&pinned_footprints, inset);
         let footprints = pinned_footprints.merged_with(cleared_free_footprints);
         let inset_footprints = footprints.shifted_inside_inset(inset);
+        let extent = Self::extent_fitting_footprints_and_tag(
+            &inset_footprints,
+            inset,
+            parent_element,
+            measure,
+        );
+        let footprints_by_path = inset_footprints.into_by_path();
+        Self::new(extent, footprints_by_path)
+    }
+
+    /// Rearrange `seed`'s footprints of the ranked `parent`'s children to their `sizes`, inside a margin with stub room when edges leave it, in a level sized to fit them and its hanging tag.
+    fn place_children_from_seed(
+        model: &Model,
+        parent: &ElementPath,
+        sizes: &BTreeMap<ElementPath, Size>,
+        seed: &PlacedLevel,
+        is_left_by_edges: bool,
+        measure: &impl TextMeasure,
+    ) -> Self {
+        let inset = Self::inset_inside_boundary(is_left_by_edges);
+        let seed_arrangement = SeedArrangement::new(&seed.footprints);
+        let rearranged_by_path = seed_arrangement.rearranged(sizes);
+        let rearranged_footprints = Footprints::new(rearranged_by_path);
+        let inset_footprints = rearranged_footprints.shifted_inside_inset(inset);
+        let parent_element = model.element(parent);
         let extent = Self::extent_fitting_footprints_and_tag(
             &inset_footprints,
             inset,
