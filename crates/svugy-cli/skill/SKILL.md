@@ -12,7 +12,7 @@ description: Draw architecture diagrams as interactive isometric SVGs by writing
 3. Once per diagram, run `svugy view NAME.md` in the background: the user's browser shows it and reloads on every later save. Don't rerun it after edits.
 4. For the final file: `svugy render NAME.md -o NAME.svg`.
 
-No `svugy` on `PATH`: ask the user to run `cargo install --git https://github.com/fedemagnani/svugy svugy-cli`.
+No `svugy` on `PATH`: ask the user to run `curl -fsSL https://svugy.dev/install.sh | sh`, on Windows `irm https://svugy.dev/install.ps1 | iex`, or with a Rust toolchain `cargo install svugy-cli`.
 
 ## Example
 

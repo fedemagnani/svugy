@@ -1,5 +1,7 @@
 # svugy
 
+[![crates.io](https://img.shields.io/crates/v/svugy-cli.svg)](https://crates.io/crates/svugy-cli)
+
 Write a diagram in Markdown; svugy renders it as an isometric SVG you can click into.
 
 ![svugy's own architecture, rendered by svugy from examples/svugy/svugy.d2 with --profile static](docs/svugy.svg)
@@ -31,11 +33,12 @@ styles:
 ## Quickstart
 
 ```sh
-cargo install --git https://github.com/fedemagnani/svugy svugy-cli
+curl -fsSL https://svugy.dev/install.sh | sh
 svugy example -o webapp.md
 svugy render webapp.md -o webapp.svg --open
 ```
 
+- Windows: `irm https://svugy.dev/install.ps1 | iex`. With a Rust toolchain: `cargo install svugy-cli`.
 - `svugy view my.md` shows the diagram in your browser and reloads it on every save, keeping the focused level.
 - `svugy validate my.md` reports every problem in one run, with line and column; `--format json` for scripts and agents.
 - `svugy render my.md --profile static -o my.svg` writes an SVG without script, for `<img>` tags, READMEs and design tools.
