@@ -51,7 +51,10 @@ jobs:
   release-pr:
     name: Release-plz PR
     runs-on: ubuntu-latest
-    environment: release-pr
+    # only reads the App secrets: the main-only branch policy still applies, but no deployment is recorded
+    environment:
+      name: release-pr
+      deployment: false
     if: ${{ github.repository_owner == 'fedemagnani' }}
     permissions:
       contents: write
