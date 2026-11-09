@@ -1,4 +1,4 @@
-<svg data-svugy-contract="2" height="649.731" viewBox="-221.422 -14.743 856.816 649.731" width="856.816" xmlns="http://www.w3.org/2000/svg">
+<svg data-svugy-contract="2" height="667.732" viewBox="-221.422 -32.743 856.816 667.732" width="856.816" xmlns="http://www.w3.org/2000/svg">
 <style>/*<![CDATA[*/[data-svugy-contract]{--svugy-canvas:#0a0b10;--svugy-grid-line:#151722;--svugy-face-outline:#0a0b10;--svugy-text:#e6e8ee;--svugy-text-muted:#8b93a5;--svugy-external-outline:#5b6170;--svugy-neutral-top:#3a3f4b;--svugy-neutral-left:#2b2f39;--svugy-neutral-right:#22252d;--svugy-neutral-ink:#e6e8ee;--svugy-container-blue-top:#1b2436;--svugy-container-blue-left:#131a28;--svugy-container-blue-right:#0d131f;--svugy-container-blue-ink:#8aa0c8;font-family:Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif}
 @media (prefers-color-scheme: light){
 [data-svugy-contract]{--svugy-canvas:#f6f8ff;--svugy-grid-line:#e1e4f4;--svugy-face-outline:#f6f8ff;--svugy-text:#14161a;--svugy-text-muted:#535a6a;--svugy-external-outline:#858b9b;--svugy-neutral-top:#acb2c0;--svugy-neutral-left:#868b96;--svugy-neutral-right:#6d717b;--svugy-neutral-ink:#14161a;--svugy-container-blue-top:#c8d4ed;--svugy-container-blue-left:#9da6ba;--svugy-container-blue-right:#808898;--svugy-container-blue-ink:#3c4f72}
@@ -100,107 +100,107 @@
 <path d="M0,0 L60,0 L60,60 L0,60 Z" fill="none" stroke="var(--svugy-grid-line)" stroke-width="1.155"/>
 </pattern>
 </defs>
-<rect fill="var(--svugy-canvas)" height="649.731" rx="14" width="856.816" x="-221.422" y="-14.743"/>
+<rect fill="var(--svugy-canvas)" height="667.732" rx="14" width="856.816" x="-221.422" y="-32.743"/>
 <rect fill="url(#ground-grid)" height="2000000" width="2000000" x="-1000000" y="-1000000"/>
 <g data-svugy-layer="0">
 <g data-svugy-heading="">
-<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="141.852" x="-187.061" y="25.726">How svugy ships</text>
-<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="159.141" x="-187.061" y="43.726">from a merged PR to curl | sh</text>
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="141.852" x="-166.865" y="7.726">How svugy ships</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="159.141" x="-166.865" y="25.726">from a merged PR to curl | sh</text>
 </g>
-<g data-svugy-level="" data-svugy-view="-211.061 -14.743 742.361 549.722">
+<g data-svugy-level="" data-svugy-view="-190.865 -32.743 446.508 379.809">
 <g data-svugy-element="cratesio">
 <title>crates.io</title>
 <desc data-svugy-details="">{"kind":"element","path":"cratesio","label":"crates.io","caption":"5 crates"}</desc>
-<path d="M422.713,291.852 L422.713,317.352 C422.713,330.787 441.648,342.627 465.006,343.798 C488.364,344.968 507.3,335.026 507.3,321.591 L507.3,296.091 C507.3,309.526 488.364,319.468 465.006,318.298 C441.648,317.127 422.713,305.287 422.713,291.852 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M507.3,296.091 C507.3,309.526 488.364,319.468 465.006,318.298 C441.648,317.127 422.713,305.287 422.713,291.852 C422.713,278.417 441.648,268.475 465.006,269.645 C488.364,270.816 507.3,282.656 507.3,296.091 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="51.797" transform="matrix(1 0 0 1 465.006 293.972)" x="0" y="4">crates.io</text>
-<text fill="#1a1b1e" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="32.875" transform="matrix(1 0 0 1 465.006 293.972)" x="0" y="17">5 crates</text>
-</g>
-<g data-svugy-closed="" data-svugy-element="github">
-<title>GitHub</title>
-<desc data-svugy-details="">{"kind":"element","path":"github","label":"GitHub","caption":"fedemagnani/svugy","description":"[release-plz](#github.releaseplz) proposes and publishes versions; [dist](#github.dist) builds and hosts the binaries. Both run as GitHub Actions."}</desc>
-<path d="M-32.918,183.495 L47.776,230.083 L47.776,225.583 L-32.918,178.995 Z M104.934,197.083 L47.776,230.083 L47.776,225.583 L104.934,192.583 Z M24.24,145.995 L104.934,192.583 L47.776,225.583 L-32.918,178.995 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
-<path d="M-32.918,178.995 L47.776,225.583 L47.776,203.083 L-32.918,156.495 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M104.934,192.583 L47.776,225.583 L47.776,203.083 L104.934,170.083 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M24.24,123.495 L104.934,170.083 L47.776,203.083 L-32.918,156.495 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="40.652" transform="matrix(0.866 0.5 -0.866 0.5 36.008 163.289)" x="0" y="-2">GitHub</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="81.177" transform="matrix(0.866 0.5 -0.866 0.5 36.008 163.289)" x="0" y="11">fedemagnani/svugy</text>
+<path d="M147.056,132.702 L147.056,158.202 C147.056,171.637 165.991,183.477 189.349,184.647 C212.708,185.817 231.643,175.875 231.643,162.44 L231.643,136.94 C231.643,150.375 212.708,160.317 189.349,159.147 C165.991,157.977 147.056,146.137 147.056,132.702 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M231.643,136.94 C231.643,150.375 212.708,160.317 189.349,159.147 C165.991,157.977 147.056,146.137 147.056,132.702 C147.056,119.267 165.991,109.324 189.349,110.495 C212.708,111.665 231.643,123.505 231.643,136.94 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="51.797" transform="matrix(1 0 0 1 189.349 134.821)" x="0" y="4">crates.io</text>
+<text fill="#1a1b1e" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="32.875" transform="matrix(1 0 0 1 189.349 134.821)" x="0" y="17">5 crates</text>
 </g>
 <g data-svugy-element="maintainer">
 <title>Maintainer</title>
 <desc data-svugy-details="">{"kind":"element","path":"maintainer","label":"Maintainer","caption":"merges · approves"}</desc>
-<path d="M-187.061,126 L-110.86,169.995 L-110.86,147.495 L-187.061,103.5 Z" fill="#7734c9" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-53.703,136.995 L-110.86,169.995 L-110.86,147.495 L-53.703,114.495 Z" fill="#6129a4" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-129.904,70.5 L-53.703,114.495 L-110.86,147.495 L-187.061,103.5 Z" fill="#9945ff" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="62.988" transform="matrix(0.866 0.5 -0.866 0.5 -120.382 108.997)" x="0" y="-2">Maintainer</text>
-<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="75.99" transform="matrix(0.866 0.5 -0.866 0.5 -120.382 108.997)" x="0" y="11">merges · approves</text>
+<path d="M-155.884,108 L-79.683,151.994 L-79.683,129.494 L-155.884,85.5 Z" fill="#7734c9" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-22.525,118.994 L-79.683,151.994 L-79.683,129.494 L-22.525,96.494 Z" fill="#6129a4" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-98.726,52.5 L-22.525,96.494 L-79.683,129.494 L-155.884,85.5 Z" fill="#9945ff" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="62.988" transform="matrix(0.866 0.5 -0.866 0.5 -89.204 90.997)" x="0" y="-2">Maintainer</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="75.99" transform="matrix(0.866 0.5 -0.866 0.5 -89.204 90.997)" x="0" y="11">merges · approves</text>
 </g>
-<g data-svugy-element="site">
-<title>svugy.dev</title>
-<desc data-svugy-details="">{"kind":"element","path":"site","label":"svugy.dev","caption":"Cloudflare redirects"}</desc>
-<path d="M133.319,462.578 L133.319,473.078 C133.319,487.938 155.42,504.19 182.682,509.378 C209.944,514.566 232.045,506.726 232.045,491.865 L232.045,481.365 C232.045,496.226 209.944,504.066 182.682,498.878 C155.42,493.69 133.319,477.438 133.319,462.578 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M232.045,481.365 C232.045,496.226 209.944,504.066 182.682,498.878 C155.42,493.69 133.319,477.438 133.319,462.578 C133.319,447.717 155.42,439.877 182.682,445.065 C209.944,450.253 232.045,466.505 232.045,481.365 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="62.109" transform="matrix(0.866 0.5 -0.866 0.5 182.682 471.972)" x="0" y="-2">svugy.dev</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="80.949" transform="matrix(0.866 0.5 -0.866 0.5 182.682 471.972)" x="0" y="11">Cloudflare redirects</text>
+<g data-svugy-closed="" data-svugy-element="github">
+<title>GitHub</title>
+<desc data-svugy-details="">{"kind":"element","path":"github","label":"GitHub","caption":"fedemagnani/svugy","description":"[release-plz](#github.releaseplz) proposes and publishes versions; [dist](#github.dist) builds and hosts the binaries. Both run as GitHub Actions."}</desc>
+<path d="M-26.667,187.104 L54.027,233.693 L54.027,229.193 L-26.667,182.604 Z M111.185,200.693 L54.027,233.693 L54.027,229.193 L111.185,196.193 Z M30.491,149.604 L111.185,196.193 L54.027,229.193 L-26.667,182.604 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M-26.667,182.604 L54.027,229.193 L54.027,206.693 L-26.667,160.104 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M111.185,196.193 L54.027,229.193 L54.027,206.693 L111.185,173.693 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M30.491,127.104 L111.185,173.693 L54.027,206.693 L-26.667,160.104 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="40.652" transform="matrix(0.866 0.5 -0.866 0.5 42.259 166.898)" x="0" y="-2">GitHub</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="81.177" transform="matrix(0.866 0.5 -0.866 0.5 42.259 166.898)" x="0" y="11">fedemagnani/svugy</text>
 </g>
 <g data-svugy-element="terminal">
 <title>Your terminal</title>
 <desc data-svugy-details="">{"kind":"element","path":"terminal","label":"Your terminal","caption":"curl … | sh"}</desc>
-<path d="M-36.341,389.018 L43.032,434.845 L43.032,412.345 L-36.341,366.518 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
-<path d="M100.19,401.845 L43.032,434.845 L43.032,412.345 L100.19,379.345 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
-<path d="M20.817,333.518 L100.19,379.345 L43.032,412.345 L-36.341,366.518 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
-<text fill="var(--svugy-text-muted)" font-size="12" font-weight="650" text-anchor="middle" textLength="79.652" transform="matrix(0.866 0.5 -0.866 0.5 31.924 372.932)" x="0" y="-2">Your terminal</text>
-<text fill="var(--svugy-text-muted)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="42.612" transform="matrix(0.866 0.5 -0.866 0.5 31.924 372.932)" x="0" y="11">curl … | sh</text>
+<path d="M-166.865,220.329 L-87.491,266.155 L-87.491,243.655 L-166.865,197.829 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
+<path d="M-30.334,233.155 L-87.491,266.155 L-87.491,243.655 L-30.334,210.655 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
+<path d="M-109.707,164.829 L-30.334,210.655 L-87.491,243.655 L-166.865,197.829 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
+<text fill="var(--svugy-text-muted)" font-size="12" font-weight="650" text-anchor="middle" textLength="79.652" transform="matrix(0.866 0.5 -0.866 0.5 -98.599 204.242)" x="0" y="-2">Your terminal</text>
+<text fill="var(--svugy-text-muted)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="42.612" transform="matrix(0.866 0.5 -0.866 0.5 -98.599 204.242)" x="0" y="11">curl … | sh</text>
+</g>
+<g data-svugy-element="site">
+<title>svugy.dev</title>
+<desc data-svugy-details="">{"kind":"element","path":"site","label":"svugy.dev","caption":"Cloudflare redirects"}</desc>
+<path d="M-22.415,274.664 L-22.415,285.164 C-22.415,300.025 -0.315,316.277 26.948,321.465 C54.21,326.653 76.31,318.812 76.31,303.952 L76.31,293.452 C76.31,308.312 54.21,316.153 26.948,310.965 C-0.315,305.777 -22.415,289.525 -22.415,274.664 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M76.31,293.452 C76.31,308.312 54.21,316.153 26.948,310.965 C-0.315,305.777 -22.415,289.525 -22.415,274.664 C-22.415,259.804 -0.315,251.963 26.948,257.151 C54.21,262.34 76.31,278.592 76.31,293.452 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="62.109" transform="matrix(0.866 0.5 -0.866 0.5 26.948 284.058)" x="0" y="-2">svugy.dev</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="80.949" transform="matrix(0.866 0.5 -0.866 0.5 26.948 284.058)" x="0" y="11">Cloudflare redirects</text>
 </g>
 <g data-svugy-edge="(github -&gt; cratesio)[0]" data-svugy-from="github" data-svugy-to="cratesio">
 <title>publishes the crates</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"github","to":"cratesio","label":"publishes the crates","edges":[{"kind":"edge","edge":"(github.releaseplz -&gt; cratesio)[0]","from":"github.releaseplz","to":"cratesio","label":"publishes the crates"}]}</desc>
-<path d="M85.881,181.083 Q259.505,59.36 433.129,275.099" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M70.838,150.398 Q115.51,78.875 160.183,150.374" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="parcel" fill="var(--svugy-text-muted)" height="10" href="#traveler-parcel" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M85.881,181.083 Q259.855,59.115 433.829,275.972" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M70.838,150.398 Q115.804,78.404 160.771,151.321" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(maintainer -&gt; github)[0]" data-svugy-from="maintainer" data-svugy-to="github">
 <title>Maintainer → GitHub</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"maintainer","to":"github","edges":[{"kind":"edge","edge":"(maintainer -&gt; github.approval)[0]","from":"maintainer","to":"github.approval","label":"approves the release"},{"kind":"edge","edge":"(maintainer -&gt; github.ci)[0]","from":"maintainer","to":"github.ci","label":"merges a change"}]}</desc>
-<path d="M-82.282,130.995 Q-43.581,69.962 -4.881,139.021" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M-51.104,112.994 Q-24.772,64.139 1.559,142.547" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="#9945ff" height="10" href="#traveler-dot" stroke="#9945ff" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M-82.282,130.995 Q-43.31,69.535 -4.339,139.995" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M-51.104,112.994 Q-24.596,63.812 1.912,143.604" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(site -&gt; github)[0]" data-svugy-from="site" data-svugy-to="github">
 <title>302 to the latest installer</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"site","to":"github","label":"302 to the latest installer","edges":[{"kind":"edge","edge":"(site -&gt; github.releases)[0]","from":"site","to":"github.releases","label":"302 to the latest installer","description":"`releases/latest/download/svugy-cli-installer.sh` always names the newest release's installer."}]}</desc>
-<path d="M151.96,443.234 Q109.703,129.834 67.445,191.168" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M55.526,267.558 Q34.809,131.78 14.092,182.375" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M151.96,443.234 Q109.394,127.547 66.829,192.083" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M55.526,267.558 Q34.603,130.431 13.68,183.398" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(terminal -&gt; site)[0]" data-svugy-from="terminal" data-svugy-to="site">
 <title>GET /install.sh</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(terminal -&gt; site)[0]","from":"terminal","to":"site","label":"GET /install.sh"}</desc>
-<path d="M71.611,395.845 Q102.114,340.297 132.617,453.156" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M-58.913,227.155 Q-36.247,173.032 -13.581,259.742" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M71.611,395.845 Q102.259,340.033 132.908,454.234" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M-58.913,227.155 Q-36.107,172.697 -13.301,260.821" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(github -&gt; cratesio)[0]" data-svugy-from="github" data-svugy-to="cratesio">
 <title>publishes the crates</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"github","to":"cratesio","label":"publishes the crates","edges":[{"kind":"edge","edge":"(github.releaseplz -&gt; cratesio)[0]","from":"github.releaseplz","to":"cratesio","label":"publishes the crates"}]}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="121.519" x="199.096" y="135.969"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="101.519" x="259.855" y="147.641">publishes the crates</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="121.519" x="55.045" y="106.78"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="101.519" x="115.804" y="118.451">publishes the crates</text>
 </g>
 <g data-svugy-edge="(site -&gt; github)[0]" data-svugy-from="site" data-svugy-to="github">
 <title>302 to the latest installer</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"site","to":"github","label":"302 to the latest installer","edges":[{"kind":"edge","edge":"(site -&gt; github.releases)[0]","from":"site","to":"github.releases","label":"302 to the latest installer","description":"`releases/latest/download/svugy-cli-installer.sh` always names the newest release's installer."}]}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="144.252" x="37.269" y="214.751"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="124.252" x="109.394" y="226.423">302 to the latest installer</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="144.252" x="-27.646" y="200.554"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="124.252" x="44.48" y="212.226">302 to the latest installer</text>
 </g>
 <g data-svugy-edge="(terminal -&gt; site)[0]" data-svugy-from="terminal" data-svugy-to="site">
 <title>GET /install.sh</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(terminal -&gt; site)[0]","from":"terminal","to":"site","label":"GET /install.sh"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="92.316" x="69.847" y="396.327"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="72.316" x="116.005" y="407.999">GET /install.sh</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="92.316" x="-66.549" y="229.016"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="72.316" x="-20.391" y="240.688">GET /install.sh</text>
 </g>
 <g data-svugy-overlay=""/>
 </g>

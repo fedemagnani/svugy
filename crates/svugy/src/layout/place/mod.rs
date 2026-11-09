@@ -14,7 +14,7 @@ use kurbo::{Point, Rect, Size};
 use svugy_model::model::{Element, Model, PlacementHint};
 use svugy_model::path::ElementPath;
 
-use super::edge_levels::LeavingEdges;
+use super::edge_levels::{HomedEdges, LeavingEdges};
 use super::{LevelPlacement, LevelPlans, PlacedLevel, PlacedLevels};
 use crate::metrics::{LabelBlock, LabelRole, TextMeasure};
 use compact::SeedArrangement;
@@ -81,10 +81,13 @@ impl RankedPlacement for RearrangedFromSeed<'_> {
             .expect("a level ranked in a shallower layer is placed in the deepest one");
         let seed_level = seed_plan.placed();
         let is_left_by_edges = leaving_edges.is_left_by_edges(level);
+        let homed_edges = HomedEdges::of(model);
+        let joined_pairs = homed_edges.lifted_pairs_in(level);
         let placed_level = PlacedLevel::place_children_from_seed(
             model,
             level,
             &sizes,
+            &joined_pairs,
             seed_level,
             is_left_by_edges,
             measure,
@@ -207,20 +210,21 @@ impl PlacedLevel {
         Self::new(extent, footprints_by_path)
     }
 
-    /// Rearrange `seed`'s footprints of the ranked `parent`'s children to their `sizes`, inside a margin with stub room when edges leave it, in a level sized to fit them and its hanging tag.
+    /// Rearrange `seed`'s footprints of the ranked `parent`'s children to their `sizes`, shortening the `joined_pairs` between them, inside a margin with stub room when edges leave it, in a level sized to fit them and its hanging tag.
     fn place_children_from_seed(
         model: &Model,
         parent: &ElementPath,
         sizes: &BTreeMap<ElementPath, Size>,
+        joined_pairs: &BTreeSet<(ElementPath, ElementPath)>,
         seed: &PlacedLevel,
         is_left_by_edges: bool,
         measure: &impl TextMeasure,
     ) -> Self {
         let inset = Self::inset_inside_boundary(is_left_by_edges);
         let seed_arrangement = SeedArrangement::new(&seed.footprints);
-        let rearranged_by_path = seed_arrangement.rearranged(sizes);
+        let rearranged_by_path = seed_arrangement.rearranged(sizes, joined_pairs);
         let rearranged_footprints = Footprints::new(rearranged_by_path);
-        let inset_footprints = rearranged_footprints.shifted_inside_inset(inset);
+        let inset_footprints = rearranged_footprints.shifted_onto_inset(inset);
         let parent_element = model.element(parent);
         let extent = Self::extent_fitting_footprints_and_tag(
             &inset_footprints,
