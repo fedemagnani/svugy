@@ -252,7 +252,7 @@
 <path d="M-13.883,242.985 L123.489,322.297 L123.489,311.797 L-13.883,232.485 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M320.943,208.297 L123.489,322.297 L123.489,311.797 L320.943,197.797 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M183.571,118.485 L320.943,197.797 L123.489,311.797 L-13.883,232.485 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<g data-svugy-level="broker" data-svugy-view="-7.043 112.648 333.958 197.363" transform="matrix(1 0 0 1 183.571 118.485)">
+<g data-svugy-level="broker" data-svugy-view="-7.043 112.648 303.676 190.284" transform="matrix(1 0 0 1 183.571 118.485)">
 <g data-svugy-edge="(broker.captured -&gt; consumers.analytics)[0]" data-svugy-from="broker.captured" data-svugy-to="consumers.analytics">
 <title>(broker.captured -&gt; consumers.analytics)[0]</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(broker.captured -&gt; consumers.analytics)[0]","from":"broker.captured","to":"consumers.analytics"}</desc>
@@ -301,14 +301,14 @@
 <g data-svugy-goto="consumers" data-svugy-stub="consumers.fulfillment">
 <title>to Fulfillment</title>
 <desc data-svugy-details="">{"kind":"stub","target":"consumers.fulfillment","edges":[{"kind":"edge","edge":"(broker.captured -&gt; consumers.fulfillment)[0]","from":"broker.captured","to":"consumers.fulfillment","label":"consumes","description":"Fulfillment waits for both events before it ships."},{"kind":"edge","edge":"(broker.orders -&gt; consumers.fulfillment)[0]","from":"broker.orders","to":"consumers.fulfillment","label":"consumes"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 81.17 102.408)" width="72.454" x="-36.227" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="52.454" transform="matrix(0.866 -0.5 0.866 0.5 81.17 102.408)" x="0" y="3.82">Fulfillment</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 18.816 138.408)" width="72.454" x="-36.227" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="52.454" transform="matrix(0.866 -0.5 0.866 0.5 18.816 138.408)" x="0" y="3.82">Fulfillment</text>
 </g>
 <g data-svugy-goto="consumers" data-svugy-stub="consumers.notify">
 <title>to Notifications</title>
 <desc data-svugy-details="">{"kind":"stub","target":"consumers.notify","edges":[{"kind":"edge","edge":"(broker.orders -&gt; consumers.notify)[0]","from":"broker.orders","to":"consumers.notify","label":"consumes"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 11.421 142.678)" width="83.687" x="-41.844" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="63.687" transform="matrix(0.866 -0.5 0.866 0.5 11.421 142.678)" x="0" y="3.82">Notifications</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 46.024 122.7)" width="83.687" x="-41.844" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="63.687" transform="matrix(0.866 -0.5 0.866 0.5 46.024 122.7)" x="0" y="3.82">Notifications</text>
 </g>
 <g data-svugy-goto="producers" data-svugy-stub="producers.checkout">
 <title>to Checkout</title>
@@ -333,90 +333,90 @@
 <path d="M112.231,400.797 L255.847,483.713 L255.847,473.213 L112.231,390.297 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M531.243,324.713 L255.847,483.713 L255.847,473.213 L531.243,314.213 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M387.627,231.297 L531.243,314.213 L255.847,473.213 L112.231,390.297 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<g data-svugy-level="consumers" data-svugy-view="147.029 218.637 354.767 276.624" transform="matrix(1 0 0 1 387.627 231.297)">
+<g data-svugy-level="consumers" data-svugy-view="150.585 218.417 363.258 242.796" transform="matrix(1 0 0 1 387.627 231.297)">
 <g data-svugy-edge="(broker.captured -&gt; consumers.analytics)[0]" data-svugy-from="broker.captured" data-svugy-to="consumers.analytics">
 <title>(broker.captured -&gt; consumers.analytics)[0]</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(broker.captured -&gt; consumers.analytics)[0]","from":"broker.captured","to":"consumers.analytics"}</desc>
-<path d="M-125.435,72.42 L-109.847,81.42 L-122.11,88.5 L-107.491,96.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M-125.435,72.42 L-109.847,81.42 L-44.167,43.5 L-29.549,51.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
 </g>
 <g data-svugy-edge="(broker.captured -&gt; consumers.fulfillment)[0]" data-svugy-from="broker.captured" data-svugy-to="consumers.fulfillment">
 <title>consumes</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(broker.captured -&gt; consumers.fulfillment)[0]","from":"broker.captured","to":"consumers.fulfillment","label":"consumes","description":"Fulfillment waits for both events before it ships."}</desc>
-<path d="M-125.435,72.42 L-109.847,81.42 L-44.167,43.5 L-29.549,51.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M-125.435,72.42 L-109.847,81.42 L-200.052,133.5 L-185.433,141.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
 </g>
 <g data-svugy-edge="(broker.orders -&gt; consumers.analytics)[0]" data-svugy-from="broker.orders" data-svugy-to="consumers.analytics">
 <title>(broker.orders -&gt; consumers.analytics)[0]</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(broker.orders -&gt; consumers.analytics)[0]","from":"broker.orders","to":"consumers.analytics"}</desc>
-<path d="M-125.435,72.42 L-109.847,81.42 L-122.11,88.5 L-107.491,96.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M-125.435,72.42 L-109.847,81.42 L-44.167,43.5 L-29.549,51.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
 </g>
 <g data-svugy-edge="(broker.orders -&gt; consumers.fulfillment)[0]" data-svugy-from="broker.orders" data-svugy-to="consumers.fulfillment">
 <title>consumes</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(broker.orders -&gt; consumers.fulfillment)[0]","from":"broker.orders","to":"consumers.fulfillment","label":"consumes"}</desc>
-<path d="M-125.435,72.42 L-109.847,81.42 L-44.167,43.5 L-29.549,51.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
-</g>
-<g data-svugy-element="consumers.fulfillment">
-<title>Fulfillment</title>
-<desc data-svugy-details="">{"kind":"element","path":"consumers.fulfillment","label":"Fulfillment","caption":"picks · packs · ships"}</desc>
-<path d="M-57.158,69 L24.104,115.917 L24.104,93.417 L-57.158,46.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M81.262,82.917 L24.104,115.917 L24.104,93.417 L81.262,60.417 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M0,13.5 L81.262,60.417 L24.104,93.417 L-57.158,46.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="62.262" transform="matrix(0.866 0.5 -0.866 0.5 12.052 53.458)" x="0" y="-2">Fulfillment</text>
-<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="81.833" transform="matrix(0.866 0.5 -0.866 0.5 12.052 53.458)" x="0" y="11">picks · packs · ships</text>
+<path d="M-125.435,72.42 L-109.847,81.42 L-200.052,133.5 L-185.433,141.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
 </g>
 <g data-svugy-element="consumers.analytics">
 <title>Analytics</title>
 <desc data-svugy-details="">{"kind":"element","path":"consumers.analytics","label":"Analytics","caption":"hourly loader"}</desc>
-<path d="M-135.1,114 L-72.746,150 L-72.746,127.5 L-135.1,91.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-15.588,117 L-72.746,150 L-72.746,127.5 L-15.588,94.5 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-77.942,58.5 L-15.588,94.5 L-72.746,127.5 L-135.1,91.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="55.301" transform="matrix(0.866 0.5 -0.866 0.5 -75.344 93)" x="0" y="-2">Analytics</text>
-<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="53.582" transform="matrix(0.866 0.5 -0.866 0.5 -75.344 93)" x="0" y="11">hourly loader</text>
+<path d="M-57.158,69 L5.196,105 L5.196,82.5 L-57.158,46.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M62.354,72 L5.196,105 L5.196,82.5 L62.354,49.5 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M0,13.5 L62.354,49.5 L5.196,82.5 L-57.158,46.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="55.301" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="-2">Analytics</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="53.582" transform="matrix(0.866 0.5 -0.866 0.5 2.598 48)" x="0" y="11">hourly loader</text>
 </g>
 <g data-svugy-element="consumers.notify">
 <title>Notifications</title>
 <desc data-svugy-details="">{"kind":"element","path":"consumers.notify","label":"Notifications","caption":"email · push"}</desc>
-<path d="M-213.042,159 L-137.348,202.702 L-137.348,180.202 L-213.042,136.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-80.19,169.702 L-137.348,202.702 L-137.348,180.202 L-80.19,147.202 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M-155.885,103.5 L-80.19,147.202 L-137.348,180.202 L-213.042,136.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="75.404" transform="matrix(0.866 0.5 -0.866 0.5 -146.616 141.851)" x="0" y="-2">Notifications</text>
-<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="48.821" transform="matrix(0.866 0.5 -0.866 0.5 -146.616 141.851)" x="0" y="11">email · push</text>
+<path d="M-135.1,114 L-59.406,157.702 L-59.406,135.202 L-135.1,91.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-2.248,124.702 L-59.406,157.702 L-59.406,135.202 L-2.248,102.202 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-77.942,58.5 L-2.248,102.202 L-59.406,135.202 L-135.1,91.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="75.404" transform="matrix(0.866 0.5 -0.866 0.5 -68.674 96.851)" x="0" y="-2">Notifications</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="48.821" transform="matrix(0.866 0.5 -0.866 0.5 -68.674 96.851)" x="0" y="11">email · push</text>
+</g>
+<g data-svugy-element="consumers.fulfillment">
+<title>Fulfillment</title>
+<desc data-svugy-details="">{"kind":"element","path":"consumers.fulfillment","label":"Fulfillment","caption":"picks · packs · ships"}</desc>
+<path d="M-213.042,159 L-131.78,205.917 L-131.78,183.417 L-213.042,136.5 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-74.623,172.917 L-131.78,205.917 L-131.78,183.417 L-74.623,150.417 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-155.885,103.5 L-74.623,150.417 L-131.78,183.417 L-213.042,136.5 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="62.262" transform="matrix(0.866 0.5 -0.866 0.5 -143.832 143.458)" x="0" y="-2">Fulfillment</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="81.833" transform="matrix(0.866 0.5 -0.866 0.5 -143.832 143.458)" x="0" y="11">picks · packs · ships</text>
 </g>
 <g data-svugy-edge="(broker.captured -&gt; consumers.fulfillment)[0]" data-svugy-from="broker.captured" data-svugy-to="consumers.fulfillment">
 <title>consumes</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(broker.captured -&gt; consumers.fulfillment)[0]","from":"broker.captured","to":"consumers.fulfillment","label":"consumes","description":"Fulfillment waits for both events before it ships."}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#f0a020" stroke-opacity="0.55" width="71.839" x="-112.926" y="54.608"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="51.839" x="-77.007" y="66.28">consumes</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#f0a020" stroke-opacity="0.55" width="71.839" x="-190.869" y="99.608"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="51.839" x="-154.949" y="111.28">consumes</text>
 </g>
 <g data-svugy-edge="(broker.orders -&gt; consumers.fulfillment)[0]" data-svugy-from="broker.orders" data-svugy-to="consumers.fulfillment">
 <title>consumes</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(broker.orders -&gt; consumers.fulfillment)[0]","from":"broker.orders","to":"consumers.fulfillment","label":"consumes"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#f0a020" stroke-opacity="0.55" width="71.839" x="-112.926" y="54.608"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="51.839" x="-77.007" y="66.28">consumes</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#f0a020" stroke-opacity="0.55" width="71.839" x="-190.869" y="99.608"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="51.839" x="-154.949" y="111.28">consumes</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="broker" data-svugy-stub="broker.captured">
 <title>to payments</title>
 <desc data-svugy-details="">{"kind":"stub","target":"broker.captured","edges":[{"kind":"edge","edge":"(broker.captured -&gt; consumers.analytics)[0]","from":"broker.captured","to":"consumers.analytics"},{"kind":"edge","edge":"(broker.captured -&gt; consumers.fulfillment)[0]","from":"broker.captured","to":"consumers.fulfillment","label":"consumes","description":"Fulfillment waits for both events before it ships."}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -179.69 113.096)" width="69.531" x="-34.766" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="49.531" transform="matrix(0.866 -0.5 0.866 0.5 -179.69 113.096)" x="0" y="3.82">payments</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -101.747 68.096)" width="69.531" x="-34.766" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="49.531" transform="matrix(0.866 -0.5 0.866 0.5 -101.747 68.096)" x="0" y="3.82">payments</text>
 </g>
 <g data-svugy-goto="broker" data-svugy-stub="broker.orders">
 <title>to orders</title>
 <desc data-svugy-details="">{"kind":"stub","target":"broker.orders","edges":[{"kind":"edge","edge":"(broker.orders -&gt; consumers.analytics)[0]","from":"broker.orders","to":"consumers.analytics"},{"kind":"edge","edge":"(broker.orders -&gt; consumers.fulfillment)[0]","from":"broker.orders","to":"consumers.fulfillment","label":"consumes"},{"kind":"edge","edge":"(broker.orders -&gt; consumers.notify)[0]","from":"broker.orders","to":"consumers.notify","label":"consumes"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -33.097 28.461)" width="52.777" x="-26.388" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="32.777" transform="matrix(0.866 -0.5 0.866 0.5 -33.097 28.461)" x="0" y="3.82">orders</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -32.716 28.241)" width="52.777" x="-26.388" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="32.777" transform="matrix(0.866 -0.5 0.866 0.5 -32.716 28.241)" x="0" y="3.82">orders</text>
 </g>
 <g data-svugy-goto="" data-svugy-stub="mail">
 <title>to Email provider</title>
 <desc data-svugy-details="">{"kind":"stub","target":"mail","edges":[{"kind":"edge","edge":"(consumers.notify -&gt; mail)[0]","from":"consumers.notify","to":"mail","label":"sends the confirmation"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -97.96 213.038)" width="92.003" x="-46.001" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="72.003" transform="matrix(0.866 -0.5 0.866 0.5 -97.96 213.038)" x="0" y="3.82">Email provider</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -37.539 178.154)" width="92.003" x="-46.001" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="72.003" transform="matrix(0.866 -0.5 0.866 0.5 -37.539 178.154)" x="0" y="3.82">Email provider</text>
 </g>
 <g data-svugy-goto="" data-svugy-stub="warehouse">
 <title>to Data warehouse</title>
 <desc data-svugy-details="">{"kind":"stub","target":"warehouse","edges":[{"kind":"edge","edge":"(consumers.analytics -&gt; warehouse)[0]","from":"consumers.analytics","to":"warehouse","label":"loads hourly"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 39.388 133.74)" width="101.57" x="-50.785" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="81.57" transform="matrix(0.866 -0.5 0.866 0.5 39.388 133.74)" x="0" y="3.82">Data warehouse</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 51.434 126.785)" width="101.57" x="-50.785" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="81.57" transform="matrix(0.866 -0.5 0.866 0.5 51.434 126.785)" x="0" y="3.82">Data warehouse</text>
 </g>
 </g>
 </g>
@@ -445,7 +445,7 @@
 <desc data-svugy-details="">{"kind":"edge","edge":"(broker.captured -&gt; consumers.analytics)[0]","from":"broker.captured","to":"consumers.analytics"}</desc>
 <path d="M210.487,261.569 Q236.339,213.426 262.192,303.717" data-svugy-flow="" fill="none" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="#f0a020" height="10" href="#traveler-dot" stroke="#f0a020" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M152.068,259.297 L167.657,268.297 L194.898,252.569 L210.487,261.569 Q236.339,213.426 262.192,303.717 L277.78,312.717 L265.518,319.797 L281.106,328.797" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M152.068,259.297 L167.657,268.297 L194.898,252.569 L210.487,261.569 Q236.339,213.426 262.192,303.717 L277.78,312.717 L343.46,274.797 L359.048,283.797" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(broker.captured -&gt; consumers.fulfillment)[0]" data-svugy-from="broker.captured" data-svugy-to="consumers.fulfillment">
@@ -453,7 +453,7 @@
 <desc data-svugy-details="">{"kind":"edge","edge":"(broker.captured -&gt; consumers.fulfillment)[0]","from":"broker.captured","to":"consumers.fulfillment","label":"consumes","description":"Fulfillment waits for both events before it ships."}</desc>
 <path d="M210.487,261.569 Q236.339,213.426 262.192,303.717" data-svugy-flow="" fill="none" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="#f0a020" height="10" href="#traveler-dot" stroke="#f0a020" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M152.068,259.297 L167.657,268.297 L194.898,252.569 L210.487,261.569 Q236.339,213.426 262.192,303.717 L277.78,312.717 L343.46,274.797 L359.048,283.797" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M152.068,259.297 L167.657,268.297 L194.898,252.569 L210.487,261.569 Q236.339,213.426 262.192,303.717 L277.78,312.717 L187.575,364.797 L203.164,373.797" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(broker.orders -&gt; consumers.analytics)[0]" data-svugy-from="broker.orders" data-svugy-to="consumers.analytics">
@@ -461,7 +461,7 @@
 <desc data-svugy-details="">{"kind":"edge","edge":"(broker.orders -&gt; consumers.analytics)[0]","from":"broker.orders","to":"consumers.analytics"}</desc>
 <path d="M210.487,261.569 Q236.339,213.426 262.192,303.717" data-svugy-flow="" fill="none" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="#f0a020" height="10" href="#traveler-dot" stroke="#f0a020" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M217.346,206.985 L239.267,219.641 L188.566,248.913 L210.487,261.569 Q236.339,213.426 262.192,303.717 L277.78,312.717 L265.518,319.797 L281.106,328.797" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M217.346,206.985 L239.267,219.641 L188.566,248.913 L210.487,261.569 Q236.339,213.426 262.192,303.717 L277.78,312.717 L343.46,274.797 L359.048,283.797" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(broker.orders -&gt; consumers.fulfillment)[0]" data-svugy-from="broker.orders" data-svugy-to="consumers.fulfillment">
@@ -469,31 +469,31 @@
 <desc data-svugy-details="">{"kind":"edge","edge":"(broker.orders -&gt; consumers.fulfillment)[0]","from":"broker.orders","to":"consumers.fulfillment","label":"consumes"}</desc>
 <path d="M210.487,261.569 Q236.339,213.426 262.192,303.717" data-svugy-flow="" fill="none" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="#f0a020" height="10" href="#traveler-dot" stroke="#f0a020" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M217.346,206.985 L239.267,219.641 L188.566,248.913 L210.487,261.569 Q236.339,213.426 262.192,303.717 L277.78,312.717 L343.46,274.797 L359.048,283.797" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M217.346,206.985 L239.267,219.641 L188.566,248.913 L210.487,261.569 Q236.339,213.426 262.192,303.717 L277.78,312.717 L187.575,364.797 L203.164,373.797" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(broker.orders -&gt; consumers.notify)[0]" data-svugy-from="broker.orders" data-svugy-to="consumers.notify">
 <title>consumes</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(broker.orders -&gt; consumers.notify)[0]","from":"broker.orders","to":"consumers.notify","label":"consumes"}</desc>
-<path d="M203.056,204.735 Q203.11,136.498 203.163,350.179" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M217.346,196.485 Q249.128,127.618 280.91,305.196" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#f0a020" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="#f0a020" height="10" href="#traveler-dot" stroke="#f0a020" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M203.056,204.735 Q203.11,136.319 203.164,351.297" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M217.346,196.485 Q249.226,127.406 281.106,306.297" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(consumers.analytics -&gt; warehouse)[0]" data-svugy-from="consumers.analytics" data-svugy-to="warehouse">
 <title>loads hourly</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(consumers.analytics -&gt; warehouse)[0]","from":"consumers.analytics","to":"warehouse","label":"loads hourly"}</desc>
-<path d="M343.46,342.297 Q399.465,279.313 455.47,413.681" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M421.402,297.297 Q438.594,245.485 455.785,413.601" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="parcel" fill="#3478f6" height="10" href="#traveler-parcel" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M343.46,342.297 Q399.679,279.072 455.899,414.713" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M421.402,297.297 Q438.65,245.314 455.899,414.713" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(consumers.notify -&gt; mail)[0]" data-svugy-from="consumers.notify" data-svugy-to="mail">
 <title>sends the confirmation</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(consumers.notify -&gt; mail)[0]","from":"consumers.notify","to":"mail","label":"sends the confirmation"}</desc>
-<path d="M278.858,394.999 Q319.609,337.238 360.359,475.663" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M356.8,349.999 Q358.731,297.266 360.662,475.618" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="envelope" fill="#3478f6" height="10" href="#traveler-envelope" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M278.858,394.999 Q319.766,337.015 360.674,476.735" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M356.8,349.999 Q358.737,297.102 360.674,476.735" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(producers.checkout -&gt; broker.orders)[0]" data-svugy-from="producers.checkout" data-svugy-to="broker.orders">
@@ -515,20 +515,20 @@
 <g data-svugy-edge="(broker.orders -&gt; consumers.notify)[0]" data-svugy-from="broker.orders" data-svugy-to="consumers.notify">
 <title>consumes</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(broker.orders -&gt; consumers.notify)[0]","from":"broker.orders","to":"consumers.notify","label":"consumes"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#f0a020" stroke-opacity="0.55" width="71.839" x="167.195" y="205.79"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="51.839" x="203.114" y="217.462">consumes</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#f0a020" stroke-opacity="0.55" width="71.839" x="216.319" y="187.288"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="51.839" x="252.239" y="198.96">consumes</text>
 </g>
 <g data-svugy-edge="(consumers.analytics -&gt; warehouse)[0]" data-svugy-from="consumers.analytics" data-svugy-to="warehouse">
 <title>loads hourly</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(consumers.analytics -&gt; warehouse)[0]","from":"consumers.analytics","to":"warehouse","label":"loads hourly"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="81.616" x="358.871" y="320.936"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="61.616" x="399.679" y="332.608">loads hourly</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="81.616" x="400.978" y="305.308"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="61.616" x="441.786" y="316.98">loads hourly</text>
 </g>
 <g data-svugy-edge="(consumers.notify -&gt; mail)[0]" data-svugy-from="consumers.notify" data-svugy-to="mail">
 <title>sends the confirmation</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(consumers.notify -&gt; mail)[0]","from":"consumers.notify","to":"mail","label":"sends the confirmation"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="135.515" x="266.456" y="399.188"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="115.515" x="334.214" y="410.86">sends the confirmation</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="135.515" x="291.163" y="353.9"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="115.515" x="358.921" y="365.572">sends the confirmation</text>
 </g>
 <g data-svugy-edge="(producers.checkout -&gt; broker.orders)[0]" data-svugy-from="producers.checkout" data-svugy-to="broker.orders">
 <title>publishes</title>

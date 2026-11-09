@@ -11,10 +11,12 @@ use svugy_model::path::ElementPath;
 use crate::layout::{LevelPlacement, LevelPlan, LevelPlans};
 use crate::metrics::{LabelRole, TextAnchor, TextMeasure, TextSize, TextSpec};
 
+use self::connection::PlanCourse;
 use self::ground::GroundGrid;
 pub(crate) use self::ground::GroundPattern;
 use self::level::LevelProjector;
 use self::projection::IsometricProjection;
+pub(crate) use self::score::{QuantizedLength, SceneScore};
 
 mod badge;
 mod connection;
@@ -26,6 +28,7 @@ mod level;
 mod obstruction;
 mod primitive;
 mod projection;
+mod score;
 mod stub;
 
 /// Draws the whole diagram in document space as one scene: the ground grid, the root level's group, the diagram's heading and its legend.
@@ -347,6 +350,8 @@ pub(crate) struct Solid {
     pub(crate) labels: Vec<Label>,
     /// Badges of the edges collapsed onto this solid's top face, in edge order.
     pub(crate) badges: Vec<Badge>,
+    /// Height of the top face above its level's floor, in plan units; `None` for a solid drawn without a plan.
+    plan_height: Option<f64>,
 }
 
 impl Solid {
@@ -359,7 +364,14 @@ impl Solid {
             interior: None,
             labels: Vec::new(),
             badges: Vec::new(),
+            plan_height: None,
         }
+    }
+
+    /// Record that the solid's top face stands `plan_height` above its level's floor.
+    fn with_plan_height(mut self, plan_height: f64) -> Self {
+        self.plan_height = Some(plan_height);
+        self
     }
 
     /// Stack a sheet with `outline` under the solid, marking it as a closed container.
@@ -455,6 +467,8 @@ pub(crate) struct Connection {
     /// Path the animated dot travels, which the static profile drops.
     pub(crate) dot_path: Option<BezPath>,
     pub(crate) label: Option<PlatedLabel>,
+    /// Plan points the port-to-port path projects from, in its level's plan; `None` for a connection drawn without a plan.
+    plan_course: Option<PlanCourse>,
 }
 
 impl Connection {
@@ -469,6 +483,7 @@ impl Connection {
             ends_in_arrowhead: true,
             dot_path: None,
             label: None,
+            plan_course: None,
         }
     }
 
@@ -487,6 +502,12 @@ impl Connection {
     /// Plate `label` on the connection.
     pub(crate) fn with_label(mut self, label: PlatedLabel) -> Self {
         self.label = Some(label);
+        self
+    }
+
+    /// Record the plan points the connection's port-to-port path projects from.
+    fn with_plan_course(mut self, plan_course: PlanCourse) -> Self {
+        self.plan_course = Some(plan_course);
         self
     }
 

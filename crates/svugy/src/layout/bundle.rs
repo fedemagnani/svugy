@@ -3,10 +3,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::iter;
 
-use kurbo::{ParamCurve, Rect, Vec2};
-use svugy_model::model::EdgeId;
+use kurbo::{ParamCurve, Point, Rect, Vec2};
+use svugy_model::model::{EdgeId, Model};
 use svugy_model::path::ElementPath;
 
+use super::arrangements::{Arrangements, GroupId, SlotSide};
 use super::edge_levels::HomedEdges;
 use super::route::TRACE_CLEARANCE;
 use super::trace::OrthogonalTrace;
@@ -40,14 +41,16 @@ struct TracedBranch {
 }
 
 impl PlacedLevels {
-    /// Give every bundle of two or more routes homed in one level, joining the same pair of its children with a container among them, one shared trunk and a flat branch per route on each container's floor.
+    /// Give every bundle of two or more routes homed in one level, joining the same pair of its children with a container among them and not kept unbundled by `arrangements`, one shared trunk and a flat branch per route on each container's floor.
     pub(super) fn bundle_routes_entering_containers(
         &self,
         homed_edges: &HomedEdges,
+        arrangements: &Arrangements,
         level_routes: &mut LevelRoutes,
     ) {
         for level in self.by_level.keys() {
-            let bundled_routes = self.bundled_routes_in(level, homed_edges, level_routes);
+            let bundled_routes =
+                self.bundled_routes_in(level, homed_edges, arrangements, level_routes);
             let home_routes = level_routes
                 .by_level
                 .get_mut(level)
@@ -61,19 +64,48 @@ impl PlacedLevels {
         &self,
         level: &ElementPath,
         homed_edges: &HomedEdges,
+        arrangements: &Arrangements,
         level_routes: &LevelRoutes,
     ) -> Vec<(EdgeId, Route)> {
         let home_routes = &level_routes.by_level[level];
         let mut container_floors = ContainerFloors::new(self, level, level_routes);
-        let bundles = self.bundles_in(level, homed_edges);
+        let bundles = self.bundles_in(level, homed_edges, arrangements);
         bundles
             .iter()
             .flat_map(|bundle| bundle.routes_through_trunk(&mut container_floors, home_routes))
             .collect()
     }
 
-    /// Group the edges homed in `level` by the pair of its children holding their endpoints, split each pair's edges into complete groups, and keep the groups that bundle.
-    fn bundles_in<'a>(&self, level: &ElementPath, homed_edges: &HomedEdges<'a>) -> Vec<Bundle<'a>> {
+    /// Split the edges homed in `level` into complete groups per lifted pair and keep the groups that bundle, skipping those `arrangements` keeps unbundled and slotting the rest on the side it picks.
+    fn bundles_in<'a>(
+        &self,
+        level: &ElementPath,
+        homed_edges: &HomedEdges<'a>,
+        arrangements: &Arrangements,
+    ) -> Vec<Bundle<'a>> {
+        let edges_by_lifted_pair = Self::edges_by_lifted_pair_in(level, homed_edges);
+        let mut bundles = Vec::new();
+        for (lifted_pair, edges) in edges_by_lifted_pair {
+            let complete_groups = Self::complete_groups_of(edges);
+            let pair_bundles = complete_groups.into_iter().filter_map(|group| {
+                let group_id = GroupId::of_group(&group);
+                let is_unbundled = arrangements.is_unbundled(&group_id);
+                if is_unbundled {
+                    return None;
+                }
+                let slot_side = arrangements.slot_side_of(&group_id);
+                self.bundle_of(level, &lifted_pair, group, slot_side)
+            });
+            bundles.extend(pair_bundles);
+        }
+        bundles
+    }
+
+    /// Group the edges homed in `level` by the pair of its children holding their endpoints.
+    fn edges_by_lifted_pair_in<'a>(
+        level: &ElementPath,
+        homed_edges: &HomedEdges<'a>,
+    ) -> BTreeMap<(ElementPath, ElementPath), Vec<&'a EdgeId>> {
         let child_depth = level.depth() + 1;
         let mut edges_by_lifted_pair: BTreeMap<(ElementPath, ElementPath), Vec<&'a EdgeId>> =
             BTreeMap::new();
@@ -86,15 +118,7 @@ impl PlacedLevels {
             let lifted_edges = edges_by_lifted_pair.entry(lifted_pair).or_default();
             lifted_edges.push(edge);
         }
-        let mut bundles = Vec::new();
-        for (lifted_pair, edges) in edges_by_lifted_pair {
-            let complete_groups = Self::complete_groups_of(edges);
-            let pair_bundles = complete_groups
-                .into_iter()
-                .filter_map(|group| self.bundle_of(level, &lifted_pair, group));
-            bundles.extend(pair_bundles);
-        }
-        bundles
+        edges_by_lifted_pair
     }
 
     /// Split `edges` into groups joining every source of a group to every target of it, so a drawn bundle never implies an edge that does not exist: one edge per endpoint pair, a parallel edge keeping its own arc, grouped at whichever end needs fewer groups.
@@ -139,13 +163,40 @@ impl PlacedLevels {
         edges_by_far_endpoints.into_values().collect()
     }
 
-    /// Bundle two or more `edges` of one complete group joining the `lifted_pair` of children of `level` when they enter a container among them, every entered endpoint a direct child of it, slotting it where the ray between both children's centres leaves it.
+    /// Bundle two or more `edges` of one complete group joining the `lifted_pair` of children of `level` when they enter a container among them, every entered endpoint a direct child of it, slotting it on `slot_side`.
     fn bundle_of<'a>(
         &self,
         level: &ElementPath,
         lifted_pair: &(ElementPath, ElementPath),
         edges: Vec<&'a EdgeId>,
+        slot_side: SlotSide,
     ) -> Option<Bundle<'a>> {
+        let entered_children = Self::entered_children_of(lifted_pair, &edges)?;
+        let mut entered_ends = Vec::new();
+        for (end, child, far_child) in entered_children {
+            let child_footprint = self.footprint_in_level(child, level);
+            let far_footprint = self.footprint_in_level(far_child, level);
+            let far_center = far_footprint.center();
+            let slot = slot_side.slot_on(child_footprint, far_center);
+            let container = child.clone();
+            let entered_end = EnteredEnd {
+                end,
+                container,
+                slot,
+            };
+            entered_ends.push(entered_end);
+        }
+        Some(Bundle {
+            edges,
+            entered_ends,
+        })
+    }
+
+    /// Return, for two or more `edges` of one complete group joining `lifted_pair`, each end entering a container with that container and the far child, or `None` when they enter none or one ends below a direct child of the container it enters.
+    fn entered_children_of<'p>(
+        lifted_pair: &'p (ElementPath, ElementPath),
+        edges: &[&EdgeId],
+    ) -> Option<Vec<(EdgeEnd, &'p ElementPath, &'p ElementPath)>> {
         let is_lone_edge = edges.len() < 2;
         if is_lone_edge {
             return None;
@@ -155,7 +206,7 @@ impl PlacedLevels {
             (EdgeEnd::Source, source_child, target_child),
             (EdgeEnd::Target, target_child, source_child),
         ];
-        let mut entered_ends = Vec::new();
+        let mut entered_children = Vec::new();
         for (end, child, far_child) in child_ends {
             let is_leaf_end = edges.iter().all(|edge| end.endpoint_of(edge) == child);
             if is_leaf_end {
@@ -169,27 +220,77 @@ impl PlacedLevels {
             if has_endpoint_below_direct_children {
                 return None;
             }
-            let child_footprint = self.footprint_in_level(child, level);
-            let far_footprint = self.footprint_in_level(far_child, level);
-            let child_center = child_footprint.center();
-            let far_center = far_footprint.center();
-            let slot = Port::leaving(child_footprint, child_center, far_center);
-            let container = child.clone();
-            let entered_end = EnteredEnd {
-                end,
-                container,
-                slot,
-            };
-            entered_ends.push(entered_end);
+            entered_children.push((end, child, far_child));
         }
-        let is_between_leaves = entered_ends.is_empty();
+        let is_between_leaves = entered_children.is_empty();
         if is_between_leaves {
             return None;
         }
-        Some(Bundle {
-            edges,
-            entered_ends,
-        })
+        Some(entered_children)
+    }
+}
+
+impl GroupId {
+    /// List every complete group of `model` that may bundle, in level and edge order: two or more edges entering a container among the children they join, every entered endpoint a direct child of it.
+    pub(crate) fn bundle_candidates_of(model: &Model) -> Vec<Self> {
+        let homed_edges = HomedEdges::of(model);
+        let root = ElementPath::root();
+        let containers = model
+            .elements()
+            .keys()
+            .filter(|path| model.is_container(path));
+        let levels = iter::once(&root).chain(containers);
+        let mut candidates = Vec::new();
+        for level in levels {
+            let edges_by_lifted_pair = PlacedLevels::edges_by_lifted_pair_in(level, &homed_edges);
+            for (lifted_pair, edges) in edges_by_lifted_pair {
+                let complete_groups = PlacedLevels::complete_groups_of(edges);
+                let bundling_groups = complete_groups.iter().filter(|group| {
+                    let entered_children = PlacedLevels::entered_children_of(&lifted_pair, group);
+                    entered_children.is_some()
+                });
+                let group_ids = bundling_groups.map(|group| Self::of_group(group));
+                candidates.extend(group_ids);
+            }
+        }
+        candidates
+    }
+}
+
+impl SlotSide {
+    /// Return the slot on `container_footprint`'s boundary this side names for a trunk running toward `far_center`.
+    fn slot_on(self, container_footprint: Rect, far_center: Point) -> Port {
+        match self {
+            Self::TowardFarChild => {
+                let container_center = container_footprint.center();
+                Port::leaving(container_footprint, container_center, far_center)
+            }
+            Self::TowardPlanEastOrSouth => {
+                Port::on_east_or_south_side_nearest(container_footprint, far_center)
+            }
+        }
+    }
+}
+
+impl Port {
+    /// Return the point nearest `far` on `rect`'s East or South side, `TRACE_CLEARANCE` short of its corners, on the side whose outward normal points more toward `far`.
+    // East when d.x ≥ d.y for d = far − centre(rect); the point clamps far's coordinate along the side to [start + TRACE_CLEARANCE, end − TRACE_CLEARANCE]
+    fn on_east_or_south_side_nearest(rect: Rect, far: Point) -> Self {
+        let rect_center = rect.center();
+        let offset = far - rect_center;
+        let is_east_facing_far_more = offset.x >= offset.y;
+        if is_east_facing_far_more {
+            let clear_y0 = rect.y0 + TRACE_CLEARANCE;
+            let clear_y1 = rect.y1 - TRACE_CLEARANCE;
+            let nearest_y = far.y.clamp(clear_y0, clear_y1);
+            let east_point = Point::new(rect.x1, nearest_y);
+            return Self::new(Side::East, east_point);
+        }
+        let clear_x0 = rect.x0 + TRACE_CLEARANCE;
+        let clear_x1 = rect.x1 - TRACE_CLEARANCE;
+        let nearest_x = far.x.clamp(clear_x0, clear_x1);
+        let south_point = Point::new(nearest_x, rect.y1);
+        Self::new(Side::South, south_point)
     }
 }
 
@@ -389,6 +490,8 @@ impl<'a> ContainerFloors<'a> {
 mod tests {
     use svugy_model::builder::{ElementRef, ModelBuilder};
     use svugy_model::model::{Edge, Element, PlacementHint};
+    use svugy_parse::diagnostic::SourceLanguage;
+    use svugy_parse::markdown::MarkdownLanguage;
 
     use super::*;
     use crate::layout::LevelPlans;
@@ -509,6 +612,42 @@ mod tests {
         );
     }
 
+    #[test]
+    fn every_example_splits_each_lifted_pair_into_as_many_complete_groups_as_its_adjacency_rank() {
+        let example_sources = [
+            ("cluster", include_str!("../../../../examples/cluster/cluster.md")),
+            ("events", include_str!("../../../../examples/events/events.md")),
+            ("release", include_str!("../../../../examples/release/release.md")),
+            ("svugy", include_str!("../../../../examples/svugy/svugy.md")),
+            ("webapp", include_str!("../../../../examples/webapp/webapp.md")),
+        ];
+        for (example_name, example_source) in example_sources {
+            let import = MarkdownLanguage::import(example_source);
+            let import_parts = import.into_admitted_parts();
+            let model = import_parts
+                .model
+                .unwrap_or_else(|| panic!("examples/{example_name} is a valid diagram"));
+            let homed_edges = HomedEdges::of(&model);
+            let home_levels: BTreeSet<ElementPath> = model
+                .arc_edges()
+                .map(|(edge, _attributes)| edge.home_level())
+                .collect();
+            for level in &home_levels {
+                let edges_by_lifted_pair = PlacedLevels::edges_by_lifted_pair_in(level, &homed_edges);
+                for (lifted_pair, edges) in edges_by_lifted_pair {
+                    let adjacency = adjacency_matrix_of(&edges);
+                    let adjacency_rank = rank_by_bareiss(adjacency);
+                    let complete_groups = PlacedLevels::complete_groups_of(edges);
+                    assert_eq!(
+                        complete_groups.len(),
+                        adjacency_rank,
+                        "examples/{example_name} {lifted_pair:?}: the complete groups must number the rank of the source × target adjacency, the lower bound on any biclique partition, so the grouping is a minimum one"
+                    );
+                }
+            }
+        }
+    }
+
     /// Tell whether the branch turns at right angles only, from its slot through its bends to `endpoint_port`.
     fn runs_axis_aligned(branch: &Branch, endpoint_port: Port) -> bool {
         let slot_point = iter::once(branch.slot.point);
@@ -523,5 +662,60 @@ mod tests {
             let is_vertical = leg[0].x == leg[1].x;
             is_horizontal || is_vertical
         })
+    }
+
+    /// Return the 0/1 matrix joining each distinct source of `edges` to each distinct target, parallel edges collapsed.
+    fn adjacency_matrix_of(edges: &[&EdgeId]) -> Vec<Vec<i64>> {
+        let joined_pairs: BTreeSet<(&ElementPath, &ElementPath)> = edges
+            .iter()
+            .map(|edge| {
+                let source = edge.from();
+                let target = edge.to();
+                (source, target)
+            })
+            .collect();
+        let sources: BTreeSet<&ElementPath> = edges.iter().map(|edge| edge.from()).collect();
+        let targets: BTreeSet<&ElementPath> = edges.iter().map(|edge| edge.to()).collect();
+        sources
+            .iter()
+            .map(|&source| {
+                targets
+                    .iter()
+                    .map(|&target| {
+                        let is_joined = joined_pairs.contains(&(source, target));
+                        i64::from(is_joined)
+                    })
+                    .collect()
+            })
+            .collect()
+    }
+
+    /// Return the rank of `matrix` by fraction-free Gaussian elimination, every division exact.
+    // Bareiss step at pivot p over previous pivot p_prev: aᵢⱼ ← (p·aᵢⱼ − aᵢₖ·aₖⱼ) / p_prev
+    fn rank_by_bareiss(mut matrix: Vec<Vec<i64>>) -> usize {
+        let row_count = matrix.len();
+        let column_count = matrix.first().map_or(0, Vec::len);
+        let mut rank = 0;
+        let mut previous_pivot = 1;
+        for pivot_column in 0..column_count {
+            let nonzero_row = (rank..row_count).find(|&row| matrix[row][pivot_column] != 0);
+            let Some(pivot_row) = nonzero_row else {
+                continue;
+            };
+            matrix.swap(rank, pivot_row);
+            let pivot = matrix[rank][pivot_column];
+            for row in rank + 1..row_count {
+                let leading = matrix[row][pivot_column];
+                for column in pivot_column + 1..column_count {
+                    let scaled = pivot * matrix[row][column];
+                    let eliminated = leading * matrix[rank][column];
+                    matrix[row][column] = (scaled - eliminated) / previous_pivot;
+                }
+                matrix[row][pivot_column] = 0;
+            }
+            previous_pivot = pivot;
+            rank += 1;
+        }
+        rank
     }
 }

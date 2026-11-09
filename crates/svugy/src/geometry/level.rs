@@ -85,7 +85,9 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
                 let element = self.model.element(path)?;
                 let primitive = ResolvedPrimitive::of_path(self.model, path)?;
                 let footprint = footprints[path];
-                let drawn_solid = primitive.draw(path, element, footprint, self.measure);
+                let drawn_solid = primitive
+                    .draw(path, element, footprint, self.measure)
+                    .with_plan_height(primitive.height);
                 let sheeted_solid =
                     self.stack_sheet_if_closed(path, footprint, &primitive, drawn_solid);
                 let badge_icons = self.badge_icons_from(path);
@@ -311,8 +313,11 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
     ) -> Connection {
         let stroked_path = shape.path_under_target_arrowhead();
         let dot_path = shape.port_to_port_path();
+        let plan_course = shape.plan_course();
         let connection_edge_id = edge_id.clone();
-        let connection = Connection::new(connection_edge_id, stroked_path).with_dot_path(dot_path);
+        let connection = Connection::new(connection_edge_id, stroked_path)
+            .with_dot_path(dot_path)
+            .with_plan_course(plan_course);
         self.with_label_plated_along(connection, shape, obstructions)
     }
 
@@ -323,12 +328,15 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
         is_reaching_target: bool,
     ) -> Connection {
         let connection_edge_id = edge_id.clone();
+        let plan_course = shape.plan_course();
         if is_reaching_target {
             let stroked_path = shape.path_under_target_arrowhead();
-            return Connection::new(connection_edge_id, stroked_path);
+            return Connection::new(connection_edge_id, stroked_path).with_plan_course(plan_course);
         }
         let whole_path = shape.port_to_port_path();
-        Connection::new(connection_edge_id, whole_path).without_arrowhead()
+        Connection::new(connection_edge_id, whole_path)
+            .with_plan_course(plan_course)
+            .without_arrowhead()
     }
 
     /// Plate the label of `connection`'s edge, if any, where `shape` is least obstructed, recording it among `obstructions`.

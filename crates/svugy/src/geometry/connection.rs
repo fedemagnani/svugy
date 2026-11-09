@@ -24,12 +24,26 @@ pub(super) trait ConnectionShape {
 
     /// Return the position a label plate takes when no other position is offered.
     fn fallback_plate_position(&self) -> Point;
+
+    /// Return the plan points the port-to-port path projects from.
+    fn plan_course(&self) -> PlanCourse;
+}
+
+/// Holds the plan points a connection's port-to-port path projects from, above its level's floor, so the scorer can tell what stands in front of it.
+#[derive(Clone, Debug, PartialEq)]
+pub(super) enum PlanCourse {
+    /// Quadratic arc from its source end through its control point to its target end.
+    Arc([DVec3; 3]),
+    /// Polyline through its corners in flow order.
+    Trace(Vec<DVec3>),
 }
 
 /// Arcs one route over the scene: a quadratic from its projected source port to its projected target port, peaking above their midpoint.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) struct LiftedArc {
     curve: QuadBez,
+    /// Source end, control point and target end in plan, which `curve` projects.
+    plan_control_points: [DVec3; 3],
 }
 
 impl LiftedArc {
@@ -59,7 +73,13 @@ impl LiftedArc {
         let ends_midpoint = source.midpoint(target);
         let control = apex + (apex - ends_midpoint);
         let curve = QuadBez::new(source, control, target);
-        Self { curve }
+        let plan_ends_midpoint = source_end.midpoint(target_end);
+        let plan_control = apex_plan_point + (apex_plan_point - plan_ends_midpoint);
+        let plan_control_points = [source_end, plan_control, target_end];
+        Self {
+            curve,
+            plan_control_points,
+        }
     }
 
     /// Return the path a bundled route's dot travels: from the true source port along `source_branch`, over this arc as the trunk, then along `target_branch` to the true target port.
@@ -144,6 +164,10 @@ impl ConnectionShape for LiftedArc {
     fn fallback_plate_position(&self) -> Point {
         self.curve.eval(Self::APEX_PARAMETER)
     }
+
+    fn plan_course(&self) -> PlanCourse {
+        PlanCourse::Arc(self.plan_control_points)
+    }
 }
 
 /// Traces one polyline flat on a floor: a flat route on its level's, from its source port through its bends to its target port, or a bundled route's branch on its container's.
@@ -151,6 +175,8 @@ impl ConnectionShape for LiftedArc {
 pub(super) struct FlatTrace {
     /// Screen corners in flow order, from where the edge enters the trace to where it leaves; at least two.
     corners: Vec<Point>,
+    /// Plan corners `corners` project, on the floor.
+    plan_corners: Vec<DVec3>,
 }
 
 impl FlatTrace {
@@ -165,11 +191,19 @@ impl FlatTrace {
         plan_corners: impl IntoIterator<Item = Point>,
     ) -> Self {
         let floor = IsometricProjection::horizontal_plane_at(floor_height);
-        let corners = plan_corners
-            .into_iter()
-            .map(|plan_corner| floor * plan_corner)
+        let ground_corners: Vec<Point> = plan_corners.into_iter().collect();
+        let corners = ground_corners
+            .iter()
+            .map(|&ground_corner| floor * ground_corner)
             .collect();
-        Self { corners }
+        let plan_corners = ground_corners
+            .iter()
+            .map(|ground_corner| DVec3::new(ground_corner.x, ground_corner.y, floor_height))
+            .collect();
+        Self {
+            corners,
+            plan_corners,
+        }
     }
 
     /// Return how far along the trace the midpoint of its longest segment lies, the earliest segment winning ties.
@@ -290,6 +324,11 @@ impl ConnectionShape for FlatTrace {
     fn fallback_plate_position(&self) -> Point {
         let distance_to_longest_midpoint = self.distance_to_longest_segment_midpoint();
         self.point_at_distance(distance_to_longest_midpoint)
+    }
+
+    fn plan_course(&self) -> PlanCourse {
+        let plan_corners = self.plan_corners.clone();
+        PlanCourse::Trace(plan_corners)
     }
 }
 

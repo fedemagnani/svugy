@@ -1,29 +1,133 @@
-//! Arrange unhinted containers toward their edges: a column instead of a row when their edges arrive along plan x, and their children ordered by where their neighbours sit.
+//! Hold every arrangement svugy picks on its own: for each container free to arrange a column instead of a row and an order for its children, and for each complete group of edges whether it bundles and where its slots sit.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use svugy_model::model::{Element, Model, PlacementHint};
+use svugy_model::model::{EdgeId, Element, Model, PlacementHint};
 use svugy_model::path::ElementPath;
 
 use super::LevelPlans;
 use super::edge_levels::{HomedEdges, LeavingEdges};
 use super::place::SiblingGraph;
 
-/// Holds what svugy picks for the containers free to arrange, those with no author's hint and no edge among their children: a column instead of a row, and an order for their children.
-pub(super) struct Arrangements {
+/// Holds the decisions a layout follows beyond what the author wrote: for each container free to arrange, those with no author's hint and no edge among their children, a column instead of a row and an order for their children; for each complete group of edges, whether it stays unbundled and which side its slots take.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Arrangements {
     columns: BTreeSet<ElementPath>,
     packing_orders: BTreeMap<ElementPath, Vec<ElementPath>>,
+    unbundled_groups: BTreeSet<GroupId>,
+    slot_sides: BTreeMap<GroupId, SlotSide>,
+}
+
+/// Names a complete group of edges, one sharing a trunk when bundled, by its first edge in edge order: groups partition the edges, so no two share it.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) struct GroupId(pub(crate) EdgeId);
+
+/// Names where a bundle's slot sits on a container's boundary: where the line toward the far child leaves it, or on the container's side toward plan +x or +y nearest that line.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(crate) enum SlotSide {
+    #[default]
+    TowardFarChild,
+    TowardPlanEastOrSouth,
 }
 
 impl Arrangements {
-    /// Arrange nothing: every container packs as authored, unhinted ones in a row, all in source order.
-    pub(super) fn none() -> Self {
+    /// Arrange nothing: every container packs as authored, unhinted ones in a row, all in source order, and every complete group bundles with its slots toward the far child.
+    pub(crate) fn none() -> Self {
         let columns = BTreeSet::new();
         let packing_orders = BTreeMap::new();
+        let unbundled_groups = BTreeSet::new();
+        let slot_sides = BTreeMap::new();
         Self {
             columns,
             packing_orders,
+            unbundled_groups,
+            slot_sides,
         }
+    }
+
+    /// Stack `level`'s children in a column instead of a row.
+    pub(crate) fn with_column(mut self, level: ElementPath) -> Self {
+        self.columns.insert(level);
+        self
+    }
+
+    /// Spread `level`'s children in a row, as an unhinted level packs them by default.
+    pub(crate) fn with_row(mut self, level: &ElementPath) -> Self {
+        self.columns.remove(level);
+        self
+    }
+
+    /// Pack `level`'s children in `packing_order`, a permutation of them.
+    pub(crate) fn with_packing_order(
+        mut self,
+        level: ElementPath,
+        packing_order: Vec<ElementPath>,
+    ) -> Self {
+        self.packing_orders.insert(level, packing_order);
+        self
+    }
+
+    /// Keep the complete group `group` as separate arcs instead of one trunk.
+    pub(crate) fn with_unbundled_group(mut self, group: GroupId) -> Self {
+        self.unbundled_groups.insert(group);
+        self
+    }
+
+    /// Seat the slots of the complete group `group` on `slot_side`.
+    pub(crate) fn with_slot_side(mut self, group: GroupId, slot_side: SlotSide) -> Self {
+        self.slot_sides.insert(group, slot_side);
+        self
+    }
+
+    /// Count the pairs of siblings packed in the opposite order to their source, over every container given a packing order.
+    pub(crate) fn source_order_distance(&self, model: &Model) -> usize {
+        self.packing_orders
+            .iter()
+            .map(|(level, packing_order)| {
+                let source_order = SiblingGraph::source_order_of_children(model, level);
+                let source_rank_by_child: BTreeMap<&ElementPath, usize> = source_order
+                    .iter()
+                    .enumerate()
+                    .map(|(source_rank, child)| (child, source_rank))
+                    .collect();
+                let source_ranks: Vec<usize> = packing_order
+                    .iter()
+                    .map(|child| source_rank_by_child[child])
+                    .collect();
+                let inverted_pairs = source_ranks.iter().enumerate().flat_map(|(index, rank)| {
+                    let later_ranks = &source_ranks[index + 1..];
+                    later_ranks
+                        .iter()
+                        .filter(move |later_rank| *later_rank < rank)
+                });
+                inverted_pairs.count()
+            })
+            .sum()
+    }
+
+    /// Return the containers free to arrange: left by edges, packing two or more children with no author's hint and no edge among them.
+    pub(crate) fn free_containers(model: &Model) -> BTreeSet<ElementPath> {
+        let leaving_edges = LeavingEdges::of(model);
+        Self::free_containers_of(model, &leaving_edges)
+    }
+
+    /// Return the order `level`'s children pack in: the one picked for it, else source order.
+    pub(crate) fn packing_order_of(&self, model: &Model, level: &ElementPath) -> Vec<ElementPath> {
+        let Some(packing_order) = self.packing_orders.get(level) else {
+            return SiblingGraph::source_order_of_children(model, level);
+        };
+        packing_order.clone()
+    }
+
+    /// Tell whether the complete group `group` stays separate arcs.
+    pub(crate) fn is_unbundled(&self, group: &GroupId) -> bool {
+        self.unbundled_groups.contains(group)
+    }
+
+    /// Return the side the slots of the complete group `group` take.
+    pub(crate) fn slot_side_of(&self, group: &GroupId) -> SlotSide {
+        let slot_side = self.slot_sides.get(group).copied();
+        slot_side.unwrap_or_default()
     }
 
     /// Face toward their edges, from a first layout `plans` of `model`, the containers free to arrange whose leaving edges run mostly along plan x, stacking their children in a column.
@@ -34,9 +138,13 @@ impl Arrangements {
             .filter(|container| Self::is_left_mostly_along_x(container, &leaving_edges, plans))
             .collect();
         let packing_orders = BTreeMap::new();
+        let unbundled_groups = BTreeSet::new();
+        let slot_sides = BTreeMap::new();
         Self {
             columns,
             packing_orders,
+            unbundled_groups,
+            slot_sides,
         }
     }
 
@@ -200,5 +308,17 @@ impl Arrangements {
             key.total_cmp(&other_key)
         });
         source_order
+    }
+}
+
+impl GroupId {
+    /// Name the complete group of `edges` by its first edge in edge order.
+    pub(super) fn of_group(edges: &[&EdgeId]) -> Self {
+        let first_edge = edges
+            .iter()
+            .min()
+            .expect("a complete group holds at least one edge");
+        let first_edge_key = (*first_edge).clone();
+        Self(first_edge_key)
     }
 }

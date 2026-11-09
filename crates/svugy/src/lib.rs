@@ -1,5 +1,6 @@
 //! Render a svugy model as an isometric, explorable SVG.
 
+mod arrange;
 mod geometry;
 mod layout;
 mod metrics;

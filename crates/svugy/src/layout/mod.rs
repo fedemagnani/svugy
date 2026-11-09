@@ -1,8 +1,8 @@
 //! Lay out every hierarchy level in plan space: place levels bottom-up, anchor their routes, then side stubs where those routes leave containers.
 
+mod arrangements;
 mod bundle;
 mod edge_levels;
-mod facing;
 mod place;
 mod route;
 mod stub;
@@ -17,9 +17,10 @@ use svugy_model::model::{EdgeId, Model};
 use svugy_model::path::ElementPath;
 
 use crate::metrics::TextMeasure;
+pub(crate) use arrangements::Arrangements;
 use edge_levels::{HomedEdges, LeavingEdges};
-use facing::Arrangements;
 use place::{CompoundRegions, RankedPlacement, RearrangedFromSeed, SiblingGraph};
+pub(crate) use arrangements::{GroupId, SlotSide};
 pub(crate) use route::{Branch, Course, Route};
 pub(crate) use stub::Stub;
 
@@ -47,35 +48,50 @@ impl<L> Levels<L> {
 
 impl LevelPlans {
     /// Lay out every level, ranking each ranked level and the ranked containers absorbed in it with one compound dagre layout, the containers free to arrange faced toward their edges and ordered by their neighbours.
+    #[cfg(test)]
     pub(crate) fn lay_out(model: &Model, measure: &impl TextMeasure) -> Self {
-        let (plans, _arrangements) = Self::lay_out_arranged(model, measure);
+        let (plans, _arrangements) = Self::lay_out_seeded(model, measure);
         plans
     }
 
-    /// Lay out every layer, ranking the deepest one afresh and rearranging every shallower one from it, so each layer keeps the deepest arrangement.
-    pub(crate) fn lay_out_layers(
+    /// Lay out every level of `model` following exactly `arrangements`, nothing picked on the way.
+    pub(crate) fn lay_out_with(
+        model: &Model,
+        arrangements: &Arrangements,
+        measure: &impl TextMeasure,
+    ) -> Self {
+        let compound_regions = CompoundRegions::of(model);
+        Self::lay_out_ranking_by(model, &compound_regions, arrangements, measure)
+    }
+
+    /// Lay out every layer following exactly `arrangements`, the deepest one afresh and every shallower one rearranged from it, so each layer keeps the deepest arrangement.
+    pub(crate) fn lay_out_layers_with(
         layers: &[DisclosedModel],
+        arrangements: &Arrangements,
         measure: &impl TextMeasure,
     ) -> Vec<Self> {
         let Some((deepest_layer, shallower_layers)) = layers.split_last() else {
             return Vec::new();
         };
         let deepest_model = deepest_layer.model();
-        let (deepest_plans, arrangements) = Self::lay_out_arranged(deepest_model, measure);
+        let deepest_plans = Self::lay_out_with(deepest_model, arrangements, measure);
         let rearranged_from_seed = RearrangedFromSeed::new(&deepest_plans);
         let mut layer_plans: Vec<Self> = shallower_layers
             .iter()
             .map(|layer| {
                 let layer_model = layer.model();
-                Self::lay_out_ranking_by(layer_model, &rearranged_from_seed, &arrangements, measure)
+                Self::lay_out_ranking_by(layer_model, &rearranged_from_seed, arrangements, measure)
             })
             .collect();
         layer_plans.push(deepest_plans);
         layer_plans
     }
 
-    /// Lay out every level as authored, again with the containers free to arrange faced toward their edges, and once more with their children ordered by where their neighbours sit, skipping a pass that changes nothing; return the final plans and the arrangements.
-    fn lay_out_arranged(model: &Model, measure: &impl TextMeasure) -> (Self, Arrangements) {
+    /// Lay out every level as authored, again with the containers free to arrange faced toward their edges, and once more with their children ordered by where their neighbours sit, skipping a pass that changes nothing; return the final plans and the arrangements, the seed an arrangement search starts from.
+    pub(crate) fn lay_out_seeded(
+        model: &Model,
+        measure: &impl TextMeasure,
+    ) -> (Self, Arrangements) {
         let compound_regions = CompoundRegions::of(model);
         let authored = Arrangements::none();
         let authored_plans = Self::lay_out_ranking_by(model, &compound_regions, &authored, measure);
@@ -96,7 +112,7 @@ impl LevelPlans {
         (arranged_plans, arrangements)
     }
 
-    /// Lay out every level: place them bottom-up with `ranked_placement` for the ranked ones and `arrangements` picking the unhinted packings, anchor every level's routes, bundle the routes entering containers together, side every container's stubs where those routes leave it, then plan each level with all three.
+    /// Lay out every level: place them bottom-up with `ranked_placement` for the ranked ones and `arrangements` picking the unhinted packings, anchor every level's routes, bundle the routes entering containers together as `arrangements` decides, side every container's stubs where those routes leave it, then plan each level with all three.
     fn lay_out_ranking_by(
         model: &Model,
         ranked_placement: &impl RankedPlacement,
@@ -114,7 +130,11 @@ impl LevelPlans {
             measure,
         );
         let mut level_routes = placed_levels.anchor_homed_routes(&homed_edges);
-        placed_levels.bundle_routes_entering_containers(&homed_edges, &mut level_routes);
+        placed_levels.bundle_routes_entering_containers(
+            &homed_edges,
+            arrangements,
+            &mut level_routes,
+        );
         let mut level_stubs =
             placed_levels.side_stubs_at_home_route_crossings(&leaving_edges, &level_routes);
         let plans_by_level = placed_levels
