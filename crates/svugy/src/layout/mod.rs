@@ -18,13 +18,13 @@ use svugy_model::path::ElementPath;
 
 use crate::metrics::TextMeasure;
 pub(crate) use arrangements::Arrangements;
+pub(crate) use arrangements::{GroupId, RankMove, SlotSide};
 use edge_levels::{HomedEdges, LeavingEdges};
+pub(crate) use place::PlacementCache;
 use place::{
     CompoundRegions, MemoizedPlacement, MovedWithinRanks, RankedPlacement, RearrangedFromSeed,
     SiblingGraph,
 };
-pub(crate) use place::PlacementCache;
-pub(crate) use arrangements::{GroupId, RankMove, SlotSide};
 pub(crate) use route::{Branch, Course, Route};
 pub(crate) use stub::Stub;
 

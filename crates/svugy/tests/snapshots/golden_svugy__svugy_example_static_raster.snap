@@ -1,7 +1,0 @@
----
-source: crates/svugy/tests/golden_svugy.rs
-assertion_line: 109
-expression: png_bytes
-extension: png
-snapshot_kind: binary
----

@@ -56,8 +56,13 @@ impl<P: RankedPlacement> RankedPlacement for MovedWithinRanks<'_, P> {
             if !is_moved_level {
                 continue;
             }
-            let moved_level =
-                placed_level.moved_within_ranks(model, level, rank_moves, is_left_by_edges, measure);
+            let moved_level = placed_level.moved_within_ranks(
+                model,
+                level,
+                rank_moves,
+                is_left_by_edges,
+                measure,
+            );
             *placed_level = moved_level;
         }
         placed_levels
@@ -83,16 +88,18 @@ impl PlacedLevel {
         let inset = Self::inset_inside_boundary(is_left_by_edges);
         let inset_footprints = cleared_footprints.shifted_onto_inset(inset);
         let level_element = model.element(level);
-        let extent =
-            Self::extent_fitting_footprints_and_tag(&inset_footprints, inset, level_element, measure);
+        let extent = Self::extent_fitting_footprints_and_tag(
+            &inset_footprints,
+            inset,
+            level_element,
+            measure,
+        );
         let footprints_by_path = inset_footprints.into_by_path();
         Self::new(extent, footprints_by_path)
     }
 
     /// Push footprints south, in order of their north edges, until none comes within the level margin of another it shares plan x with, each pushed one landing a band gap past the one it cleared.
-    fn cleared_of_overlaps(
-        footprints: BTreeMap<ElementPath, Rect>,
-    ) -> BTreeMap<ElementPath, Rect> {
+    fn cleared_of_overlaps(footprints: BTreeMap<ElementPath, Rect>) -> BTreeMap<ElementPath, Rect> {
         let mut north_first: Vec<(ElementPath, Rect)> = footprints.into_iter().collect();
         north_first.sort_by(|(path, footprint), (other_path, other_footprint)| {
             footprint
@@ -137,7 +144,9 @@ impl RankMove {
         match self {
             Self::ToNorthEnd(child) => Self::move_to_north_end(footprints, child),
             Self::ToSouthEnd(child) => Self::move_to_south_end(footprints, child),
-            Self::SwapWithSouthNeighbour(child) => Self::swap_with_south_neighbour(footprints, child),
+            Self::SwapWithSouthNeighbour(child) => {
+                Self::swap_with_south_neighbour(footprints, child)
+            }
         }
     }
 
@@ -147,7 +156,10 @@ impl RankMove {
             return;
         };
         let band = Self::band_of(footprints, child, footprint);
-        let band_north = band.iter().map(|(_path, sibling)| sibling.y0).reduce(f64::min);
+        let band_north = band
+            .iter()
+            .map(|(_path, sibling)| sibling.y0)
+            .reduce(f64::min);
         let Some(band_north) = band_north else {
             return;
         };
@@ -165,7 +177,10 @@ impl RankMove {
             return;
         };
         let band = Self::band_of(footprints, child, footprint);
-        let band_south = band.iter().map(|(_path, sibling)| sibling.y1).reduce(f64::max);
+        let band_south = band
+            .iter()
+            .map(|(_path, sibling)| sibling.y1)
+            .reduce(f64::max);
         let Some(band_south) = band_south else {
             return;
         };
@@ -179,7 +194,10 @@ impl RankMove {
 
     /// Swap `child` with the nearest sibling south of it sharing its plan x-range, keeping the gap between them and the span they cover.
     // neighbour's north = child's north; child's north = child's north + neighbour's height + gap
-    fn swap_with_south_neighbour(footprints: &mut BTreeMap<ElementPath, Rect>, child: &ElementPath) {
+    fn swap_with_south_neighbour(
+        footprints: &mut BTreeMap<ElementPath, Rect>,
+        child: &ElementPath,
+    ) {
         let Some(&footprint) = footprints.get(child) else {
             return;
         };
@@ -187,12 +205,13 @@ impl RankMove {
         let south_neighbours = band
             .into_iter()
             .filter(|(_path, sibling)| sibling.y0 >= footprint.y1);
-        let nearest_south_neighbour = south_neighbours.min_by(|(path, sibling), (other_path, other_sibling)| {
-            sibling
-                .y0
-                .total_cmp(&other_sibling.y0)
-                .then_with(|| path.cmp(other_path))
-        });
+        let nearest_south_neighbour =
+            south_neighbours.min_by(|(path, sibling), (other_path, other_sibling)| {
+                sibling
+                    .y0
+                    .total_cmp(&other_sibling.y0)
+                    .then_with(|| path.cmp(other_path))
+            });
         let Some((neighbour, neighbour_footprint)) = nearest_south_neighbour else {
             return;
         };

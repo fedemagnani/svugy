@@ -140,8 +140,11 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
             }
             let is_stuck = !is_improved;
             if is_stuck {
-                let paired_moves =
-                    self.paired_moves_of(&best.arrangements, &free_containers, &rank_movable_levels);
+                let paired_moves = self.paired_moves_of(
+                    &best.arrangements,
+                    &free_containers,
+                    &rank_movable_levels,
+                );
                 is_improved = self.keep_best_of(paired_moves, &mut best);
             }
             let is_exhausted = self.layouts_left == 0;
@@ -206,9 +209,7 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
         };
         let mut moves = Vec::new();
         for order in orders {
-            let ordered = current
-                .clone()
-                .with_packing_order(container.clone(), order);
+            let ordered = current.clone().with_packing_order(container.clone(), order);
             let in_row = ordered.clone().with_row(container);
             let in_column = ordered.with_column(container.clone());
             moves.push(in_row);
@@ -238,7 +239,11 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
     }
 
     /// Return `current` with each child of the ranked `level` moved to each end of its rank band and past its south neighbour.
-    fn moves_within_ranks_of(&self, current: &Arrangements, level: &ElementPath) -> Vec<Arrangements> {
+    fn moves_within_ranks_of(
+        &self,
+        current: &Arrangements,
+        level: &ElementPath,
+    ) -> Vec<Arrangements> {
         let mut moves = Vec::new();
         for (child, _element) in self.model.children(level) {
             let rank_moves = [
@@ -330,9 +335,15 @@ mod tests {
     #[test]
     fn the_search_never_returns_a_layout_scoring_worse_than_its_seed() {
         let examples = [
-            ("cluster", include_str!("../../../examples/cluster/cluster.md")),
+            (
+                "cluster",
+                include_str!("../../../examples/cluster/cluster.md"),
+            ),
             ("events", include_str!("../../../examples/events/events.md")),
-            ("release", include_str!("../../../examples/release/release.md")),
+            (
+                "release",
+                include_str!("../../../examples/release/release.md"),
+            ),
             ("svugy", include_str!("../../../examples/svugy/svugy.md")),
             ("webapp", include_str!("../../../examples/webapp/webapp.md")),
         ];
@@ -360,13 +371,15 @@ mod tests {
         plans: &LevelPlans,
     ) -> LayoutScore {
         let scene_score = search.scene_score_of(plans);
-        let source_order_distance = arrangements.source_order_distance(&search.model);
+        let source_order_distance = arrangements.source_order_distance(search.model);
         LayoutScore::new(scene_score, source_order_distance)
     }
 
     fn example_model(markdown: &str) -> Model {
         let import = MarkdownLanguage::import(markdown);
         let import_parts = import.into_admitted_parts();
-        import_parts.model.expect("every example is a valid diagram")
+        import_parts
+            .model
+            .expect("every example is a valid diagram")
     }
 }

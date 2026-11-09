@@ -33,13 +33,15 @@ pub extern "C" fn input_buffer(length: usize) -> *mut u8 {
 /// Render the source in the input buffer, read in the language `language_byte` names (0 Markdown, 1 d2), laid out in its searched arrangement, and return the byte length of the JSON verdict.
 #[unsafe(no_mangle)]
 pub extern "C" fn render(language_byte: u8) -> usize {
-    PLAYGROUND.with_borrow_mut(|playground| playground.render_input::<InteractiveSvg>(language_byte))
+    PLAYGROUND
+        .with_borrow_mut(|playground| playground.render_input::<InteractiveSvg>(language_byte))
 }
 
 /// Render like `render`, laid out in the seed arrangement without searching: a quick draft to show while `render` runs.
 #[unsafe(no_mangle)]
 pub extern "C" fn render_draft(language_byte: u8) -> usize {
-    PLAYGROUND.with_borrow_mut(|playground| playground.render_input::<DraftInteractiveSvg>(language_byte))
+    PLAYGROUND
+        .with_borrow_mut(|playground| playground.render_input::<DraftInteractiveSvg>(language_byte))
 }
 
 /// Return the output pointer: where the JSON verdict of the last render starts.

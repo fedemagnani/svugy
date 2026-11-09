@@ -59,9 +59,9 @@ impl<P: RankedPlacement> RankedPlacement for MemoizedPlacement<'_, P> {
         if let Some(cached_placement) = cached {
             return cached_placement;
         }
-        let placement = self
-            .inner
-            .place_ranked_level(model, level, leaving_edges, interiors, measure);
+        let placement =
+            self.inner
+                .place_ranked_level(model, level, leaving_edges, interiors, measure);
         let cached_placement = placement.clone();
         let mut placements = self.cache.placements.borrow_mut();
         placements.insert(key, cached_placement);

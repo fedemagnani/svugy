@@ -19,12 +19,12 @@ use super::{LevelPlacement, LevelPlans, PlacedLevel, PlacedLevels};
 use crate::metrics::{LabelBlock, LabelRole, TextMeasure};
 use compact::SeedArrangement;
 pub(in crate::layout) use compound::CompoundRegions;
-pub(in crate::layout) use memo::MemoizedPlacement;
-pub(crate) use memo::PlacementCache;
-pub(super) use rank_moves::MovedWithinRanks;
 use footprints::Footprints;
 use layered::Layered;
+pub(in crate::layout) use memo::MemoizedPlacement;
+pub(crate) use memo::PlacementCache;
 use packed::Packed;
+pub(super) use rank_moves::MovedWithinRanks;
 
 /// Clear margin between a level's boundary and its outermost footprints, the example's inset inside the desk.
 const LEVEL_MARGIN: f64 = 18.0;

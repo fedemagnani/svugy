@@ -615,11 +615,23 @@ mod tests {
     #[test]
     fn every_example_splits_each_lifted_pair_into_as_many_complete_groups_as_its_adjacency_rank() {
         let example_sources = [
-            ("cluster", include_str!("../../../../examples/cluster/cluster.md")),
-            ("events", include_str!("../../../../examples/events/events.md")),
-            ("release", include_str!("../../../../examples/release/release.md")),
+            (
+                "cluster",
+                include_str!("../../../../examples/cluster/cluster.md"),
+            ),
+            (
+                "events",
+                include_str!("../../../../examples/events/events.md"),
+            ),
+            (
+                "release",
+                include_str!("../../../../examples/release/release.md"),
+            ),
             ("svugy", include_str!("../../../../examples/svugy/svugy.md")),
-            ("webapp", include_str!("../../../../examples/webapp/webapp.md")),
+            (
+                "webapp",
+                include_str!("../../../../examples/webapp/webapp.md"),
+            ),
         ];
         for (example_name, example_source) in example_sources {
             let import = MarkdownLanguage::import(example_source);
@@ -633,7 +645,8 @@ mod tests {
                 .map(|(edge, _attributes)| edge.home_level())
                 .collect();
             for level in &home_levels {
-                let edges_by_lifted_pair = PlacedLevels::edges_by_lifted_pair_in(level, &homed_edges);
+                let edges_by_lifted_pair =
+                    PlacedLevels::edges_by_lifted_pair_in(level, &homed_edges);
                 for (lifted_pair, edges) in edges_by_lifted_pair {
                     let adjacency = adjacency_matrix_of(&edges);
                     let adjacency_rank = rank_by_bareiss(adjacency);
@@ -703,15 +716,18 @@ mod tests {
                 continue;
             };
             matrix.swap(rank, pivot_row);
-            let pivot = matrix[rank][pivot_column];
-            for row in rank + 1..row_count {
-                let leading = matrix[row][pivot_column];
-                for column in pivot_column + 1..column_count {
-                    let scaled = pivot * matrix[row][column];
-                    let eliminated = leading * matrix[rank][column];
-                    matrix[row][column] = (scaled - eliminated) / previous_pivot;
+            let (rows_to_pivot, rows_below) = matrix.split_at_mut(rank + 1);
+            let pivot_values = &rows_to_pivot[rank];
+            let pivot = pivot_values[pivot_column];
+            for row in rows_below {
+                let leading = row[pivot_column];
+                let cells_right_of_pivot = row.iter_mut().zip(pivot_values).skip(pivot_column + 1);
+                for (cell, pivot_value) in cells_right_of_pivot {
+                    let scaled = pivot * *cell;
+                    let eliminated = leading * pivot_value;
+                    *cell = (scaled - eliminated) / previous_pivot;
                 }
-                matrix[row][pivot_column] = 0;
+                row[pivot_column] = 0;
             }
             previous_pivot = pivot;
             rank += 1;

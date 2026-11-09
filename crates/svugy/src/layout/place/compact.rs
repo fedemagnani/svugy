@@ -167,7 +167,8 @@ impl AxisProgram {
             program.add_difference(after, nearest, kept_distance, SEED_GAP_WEIGHT);
         }
         for (from, to) in joined_pairs {
-            let (Some(&from_index), Some(&to_index)) = (index_by_path.get(from), index_by_path.get(to))
+            let (Some(&from_index), Some(&to_index)) =
+                (index_by_path.get(from), index_by_path.get(to))
             else {
                 continue;
             };
@@ -312,14 +313,20 @@ fn invert(matrix: &[Vec<f64>]) -> Vec<Vec<f64>> {
     let size = matrix.len();
     let mut left: Vec<Vec<f64>> = matrix.to_vec();
     let mut right: Vec<Vec<f64>> = (0..size)
-        .map(|row| (0..size).map(|column| f64::from(u8::from(row == column))).collect())
+        .map(|row| {
+            (0..size)
+                .map(|column| f64::from(u8::from(row == column)))
+                .collect()
+        })
         .collect();
     for pivot in 0..size {
         let pivot_row = (pivot..size)
             .max_by(|&row, &other_row| {
                 let magnitude = left[row][pivot].abs();
                 let other_magnitude = left[other_row][pivot].abs();
-                magnitude.total_cmp(&other_magnitude).then(other_row.cmp(&row))
+                magnitude
+                    .total_cmp(&other_magnitude)
+                    .then(other_row.cmp(&row))
             })
             .expect("a pivot column holds at least its own row");
         left.swap(pivot, pivot_row);

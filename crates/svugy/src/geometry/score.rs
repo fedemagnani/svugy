@@ -135,7 +135,8 @@ impl<'s> PlanScene<'s> {
             .iter()
             .filter(|&&tip_hider| tip_hider == TipHider::OtherSolid)
             .count();
-        let arrowheads_hidden_inside_endpoints = tip_hiders.len() - arrowheads_hidden_by_other_solids;
+        let arrowheads_hidden_inside_endpoints =
+            tip_hiders.len() - arrowheads_hidden_by_other_solids;
         hidden_junctions += arrowheads_hidden_inside_endpoints;
         let total_length: f64 = courses.map(DrawnCourse::screen_length).sum();
         let violations = arcs_through_solids + arrowheads_hidden_by_other_solids;
@@ -604,11 +605,7 @@ impl<'s> SolidPrism<'s> {
         segments
             .flat_map(|segment| {
                 let is_straight = matches!(segment, PathSeg::Line(_line));
-                let sample_count = if is_straight {
-                    1
-                } else {
-                    Self::CURVE_SAMPLES
-                };
+                let sample_count = if is_straight { 1 } else { Self::CURVE_SAMPLES };
                 (0..sample_count).map(move |sample_index| {
                     let parameter = f64::from(sample_index) / f64::from(sample_count);
                     segment.eval(parameter)
