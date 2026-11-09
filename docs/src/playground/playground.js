@@ -37,6 +37,7 @@
     let shownPreview = container.querySelector('object.svugy');
     let loadingPreview = null;
     let pendingRender = null;
+    let renderGeneration = 0;
     const diagnosticsList = document.createElement('ul');
     diagnosticsList.className = 'svugy-diagnostics';
     const highlight = buildEditor();
@@ -141,18 +142,35 @@
       highlightBlock.scrollLeft = source.scrollLeft;
     }
 
+    // A quick draft in the seed arrangement shows first, then the searched layout replaces it; a newer edit discards both.
     async function renderSource() {
-      let verdict;
+      renderGeneration += 1;
+      const generation = renderGeneration;
+      const { byte } = LANGUAGES[activeLanguageName];
+      const request = { editorKey: editorIndex, generation, text: source.value, languageByte: byte };
+      let draftVerdict;
+      let fullVerdict;
       try {
-        sharedRendererPromise ??= instantiateRenderer();
+        sharedRendererPromise ??= startRenderer();
         const renderer = await sharedRendererPromise;
-        const { byte } = LANGUAGES[activeLanguageName];
-        verdict = renderer(source.value, byte);
+        const draftPromise = renderer.render({ ...request, isDraft: true });
+        const fullPromise = renderer.render({ ...request, isDraft: false });
+        draftVerdict = await draftPromise;
+        if (generation !== renderGeneration || !draftVerdict) return;
+        showVerdict(draftVerdict);
+        fullVerdict = await fullPromise;
       } catch (error) {
-        sharedRendererPromise = null;
+        discardRenderer();
         showStatus(`The renderer crashed on this input: ${error}`);
         return;
       }
+      if (generation !== renderGeneration || !fullVerdict) return;
+      const isSameAsDraft = fullVerdict.svg === draftVerdict.svg;
+      if (isSameAsDraft) return;
+      showVerdict(fullVerdict);
+    }
+
+    function showVerdict(verdict) {
       showDiagnostics(verdict.diagnostics);
       if (verdict.svg) {
         showPreview(verdict.svg);
@@ -324,24 +342,148 @@
     fragment.append(span);
   }
 
-  async function instantiateRenderer() {
+  // Render off the page's thread in a worker, so typing never waits on the search; where a worker cannot start, render on the page.
+  async function startRenderer() {
+    try {
+      const workerWasmBytes = decodedWasmBytes();
+      return await startWorkerRenderer(workerWasmBytes);
+    } catch {
+      const pageWasmBytes = decodedWasmBytes();
+      return startPageRenderer(pageWasmBytes);
+    }
+  }
+
+  function discardRenderer() {
+    const discardedRendererPromise = sharedRendererPromise;
+    sharedRendererPromise = null;
+    discardedRendererPromise?.then((renderer) => renderer.close(), () => {});
+  }
+
+  function decodedWasmBytes() {
     const binary = atob(encodedWasm);
-    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-    const { instance } = await WebAssembly.instantiate(bytes, {});
-    const { memory, input_buffer, render, output_pointer } = instance.exports;
+    return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  }
+
+  // The worker is built from a blob, so it starts from file:// too; its script is the wasm wrapper and the request loop.
+  function startWorkerRenderer(wasmBytes) {
+    const workerSource = `${wasmRendererOf.toString()}\n(${rendererWorker.toString()})();`;
+    const workerBlob = new Blob([workerSource], { type: 'text/javascript' });
+    const workerUrl = URL.createObjectURL(workerBlob);
+    const worker = new Worker(workerUrl);
+    const verdictResolvers = new Map();
+    let nextRequestId = 0;
+    const renderer = {
+      render(request) {
+        const id = nextRequestId;
+        nextRequestId += 1;
+        const verdictPromise = new Promise((resolve, reject) => verdictResolvers.set(id, { resolve, reject }));
+        worker.postMessage({ type: 'render', id, ...request });
+        return verdictPromise;
+      },
+      close() {
+        worker.terminate();
+        URL.revokeObjectURL(workerUrl);
+      },
+    };
+    return new Promise((resolve, reject) => {
+      worker.addEventListener('error', (event) => reject(event.error ?? event.message), { once: true });
+      worker.addEventListener('message', (event) => {
+        const message = event.data;
+        if (message.type === 'ready') {
+          resolve(renderer);
+          return;
+        }
+        if (message.type === 'failed') {
+          renderer.close();
+          reject(message.reason);
+          return;
+        }
+        const verdictResolver = verdictResolvers.get(message.id);
+        verdictResolvers.delete(message.id);
+        if (message.error) {
+          verdictResolver.reject(message.error);
+          return;
+        }
+        verdictResolver.resolve(message.verdict);
+      });
+      worker.postMessage({ type: 'init', wasmBytes }, [wasmBytes.buffer]);
+    });
+  }
+
+  // The fallback blocks the page while it renders, but yields between the draft and the search so the draft paints first.
+  async function startPageRenderer(wasmBytes) {
+    const { instance } = await WebAssembly.instantiate(wasmBytes, {});
+    const renderOnWasm = wasmRendererOf(instance);
+    return {
+      async render({ text, languageByte, isDraft }) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        return renderOnWasm(text, languageByte, isDraft);
+      },
+      close() {},
+    };
+  }
+
+  // Wrap one wasm instance of svugy into one function: source text in, verdict out, drafted in the seed arrangement when asked.
+  function wasmRendererOf(instance) {
+    const { memory, input_buffer, render, render_draft, output_pointer } = instance.exports;
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
-    return (text, languageByte) => {
+    return (text, languageByte, isDraft) => {
       const encoded = encoder.encode(text);
       const inputStart = input_buffer(encoded.length);
       const inputView = new Uint8Array(memory.buffer, inputStart, encoded.length);
       inputView.set(encoded);
-      const outputLength = render(languageByte);
+      const renderVerdict = isDraft ? render_draft : render;
+      const outputLength = renderVerdict(languageByte);
       const outputStart = output_pointer();
       const output = new Uint8Array(memory.buffer, outputStart, outputLength);
       const verdictJson = decoder.decode(output);
       return JSON.parse(verdictJson);
     };
+  }
+
+  // Runs inside the worker: renders requests in arrival order, answering null for one a newer request from the same editor has made stale.
+  function rendererWorker() {
+    let renderOnWasm = null;
+    const queue = [];
+    let isDrainScheduled = false;
+
+    self.addEventListener('message', async (event) => {
+      const message = event.data;
+      if (message.type === 'init') {
+        try {
+          const { instance } = await WebAssembly.instantiate(message.wasmBytes, {});
+          renderOnWasm = wasmRendererOf(instance);
+          self.postMessage({ type: 'ready' });
+        } catch (error) {
+          self.postMessage({ type: 'failed', reason: String(error) });
+        }
+        return;
+      }
+      queue.push(message);
+      scheduleDrain();
+    });
+
+    // Draining one request per task lets requests sent during a long search arrive before the next one starts.
+    function scheduleDrain() {
+      if (isDrainScheduled) return;
+      isDrainScheduled = true;
+      setTimeout(drainOne, 0);
+    }
+
+    function drainOne() {
+      isDrainScheduled = false;
+      const request = queue.shift();
+      if (!request) return;
+      const isStale = queue.some((queued) => queued.editorKey === request.editorKey && queued.generation > request.generation);
+      try {
+        const verdict = isStale ? null : renderOnWasm(request.text, request.languageByte, request.isDraft);
+        self.postMessage({ type: 'verdict', id: request.id, verdict });
+      } catch (error) {
+        self.postMessage({ type: 'verdict', id: request.id, error: String(error) });
+      }
+      if (queue.length > 0) scheduleDrain();
+    }
   }
 
   function diagnosticItem(diagnostic) {

@@ -3,7 +3,7 @@
 mod interactive;
 mod r#static;
 
-pub use interactive::InteractiveSvg;
+pub use interactive::{DraftInteractiveSvg, InteractiveSvg};
 pub use r#static::StaticSvg;
 
 use svugy_model::model::Model;

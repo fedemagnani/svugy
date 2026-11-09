@@ -1,10 +1,10 @@
-//! Render a diagram, written in Markdown or d2, into the interactive SVG inside a browser, through three plain exports and no bindings generator.
+//! Render a diagram, written in Markdown or d2, into the interactive SVG inside a browser, through four plain exports and no bindings generator: a searched render and a quick draft one.
 
 use std::cell::RefCell;
 
 use miette::Diagnostic;
 use serde::Serialize;
-use svugy::{InteractiveSvg, RenderSvg};
+use svugy::{DraftInteractiveSvg, InteractiveSvg, RenderSvg};
 use svugy_model::problem::ErrorSeverity;
 use svugy_parse::d2::D2Language;
 use svugy_parse::diagnostic::{LabelledDiagnostic, SourceLanguage};
@@ -30,10 +30,16 @@ pub extern "C" fn input_buffer(length: usize) -> *mut u8 {
     PLAYGROUND.with_borrow_mut(|playground| playground.input_buffer(length))
 }
 
-/// Render the source in the input buffer, read in the language `language_byte` names (0 Markdown, 1 d2), and return the byte length of the JSON verdict.
+/// Render the source in the input buffer, read in the language `language_byte` names (0 Markdown, 1 d2), laid out in its searched arrangement, and return the byte length of the JSON verdict.
 #[unsafe(no_mangle)]
 pub extern "C" fn render(language_byte: u8) -> usize {
-    PLAYGROUND.with_borrow_mut(|playground| playground.render_input(language_byte))
+    PLAYGROUND.with_borrow_mut(|playground| playground.render_input::<InteractiveSvg>(language_byte))
+}
+
+/// Render like `render`, laid out in the seed arrangement without searching: a quick draft to show while `render` runs.
+#[unsafe(no_mangle)]
+pub extern "C" fn render_draft(language_byte: u8) -> usize {
+    PLAYGROUND.with_borrow_mut(|playground| playground.render_input::<DraftInteractiveSvg>(language_byte))
 }
 
 /// Return the output pointer: where the JSON verdict of the last render starts.
@@ -77,27 +83,27 @@ impl Playground {
         self.input.as_mut_ptr()
     }
 
-    /// Serialise the verdict on the input buffer's source, read in the language `language_byte` names, into the output, returning its byte length.
-    fn render_input(&mut self, language_byte: u8) -> usize {
+    /// Serialise the verdict on the input buffer's source, read in the language `language_byte` names and rendered by `R`, into the output, returning its byte length.
+    fn render_input<R: RenderSvg>(&mut self, language_byte: u8) -> usize {
         let source = String::from_utf8_lossy(&self.input);
-        let verdict = Verdict::of_language_byte(language_byte, &source);
+        let verdict = Verdict::of_language_byte::<R>(language_byte, &source);
         self.output = serde_json::to_string(&verdict).expect("a verdict serialises");
         self.output.len()
     }
 }
 
 impl Verdict {
-    /// Judge `source` in the language `language_byte` names, or report the byte when it names none.
-    fn of_language_byte(language_byte: u8, source: &str) -> Self {
+    /// Judge `source` in the language `language_byte` names, rendering by `R`, or report the byte when it names none.
+    fn of_language_byte<R: RenderSvg>(language_byte: u8, source: &str) -> Self {
         match language_byte {
-            MARKDOWN_LANGUAGE_BYTE => Self::of::<MarkdownLanguage>(source),
-            D2_LANGUAGE_BYTE => Self::of::<D2Language>(source),
+            MARKDOWN_LANGUAGE_BYTE => Self::of::<MarkdownLanguage, R>(source),
+            D2_LANGUAGE_BYTE => Self::of::<D2Language, R>(source),
             _unknown_language_byte => Self::unknown_language(language_byte),
         }
     }
 
-    /// Judge `source` in the language `L`: the interactive SVG when nothing is an error, and every diagnostic located in the source.
-    fn of<L: SourceLanguage>(source: &str) -> Self {
+    /// Judge `source` in the language `L`: the SVG `R` renders when nothing is an error, and every diagnostic located in the source.
+    fn of<L: SourceLanguage, R: RenderSvg>(source: &str) -> Self {
         let import = L::import(source);
         let diagnostics = import
             .diagnostics()
@@ -105,7 +111,7 @@ impl Verdict {
             .map(|diagnostic| LocatedDiagnostic::locate(diagnostic, source))
             .collect();
         let admitted_model = import.admitted_model();
-        let svg = admitted_model.map(InteractiveSvg::render);
+        let svg = admitted_model.map(R::render);
         Self { svg, diagnostics }
     }
 
@@ -170,7 +176,7 @@ mod tests {
     const D2_SAMPLE: &str = include_str!("../../../docs/src/playground/sample.d2");
 
     fn verdict_of(language_byte: u8, source: &str) -> Value {
-        let verdict = Verdict::of_language_byte(language_byte, source);
+        let verdict = Verdict::of_language_byte::<InteractiveSvg>(language_byte, source);
         serde_json::to_value(&verdict).expect("the verdict is JSON")
     }
 
