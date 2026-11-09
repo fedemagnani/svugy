@@ -4,6 +4,7 @@ mod compact;
 mod compound;
 mod footprints;
 mod layered;
+mod memo;
 mod packed;
 mod rank_moves;
 
@@ -18,6 +19,8 @@ use super::{LevelPlacement, LevelPlans, PlacedLevel, PlacedLevels};
 use crate::metrics::{LabelBlock, LabelRole, TextMeasure};
 use compact::SeedArrangement;
 pub(in crate::layout) use compound::CompoundRegions;
+pub(in crate::layout) use memo::MemoizedPlacement;
+pub(crate) use memo::PlacementCache;
 pub(super) use rank_moves::MovedWithinRanks;
 use footprints::Footprints;
 use layered::Layered;

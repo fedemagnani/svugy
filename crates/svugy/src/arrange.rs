@@ -7,7 +7,7 @@ use svugy_model::model::Model;
 use svugy_model::path::ElementPath;
 
 use crate::geometry::{QuantizedLength, Scene, SceneScore};
-use crate::layout::{Arrangements, GroupId, LevelPlans, RankMove, SlotSide};
+use crate::layout::{Arrangements, GroupId, LevelPlans, PlacementCache, RankMove, SlotSide};
 use crate::metrics::TextMeasure;
 
 /// Ranks one candidate arrangement, smaller reading better, in four tiers compared in order: hard violations, then crossings, then ink, the drawn length with every other visual cost priced in length, then the sibling pairs packed against the author's order.
@@ -24,6 +24,9 @@ pub(crate) struct ArrangementSearch<'s, M> {
     model: &'s Model,
     measure: &'s M,
     layouts_left: usize,
+    placement_cache: PlacementCache,
+    evaluated: BTreeSet<Arrangements>,
+    scored_layouts: Vec<(LevelPlans, SceneScore)>,
 }
 
 /// Holds one laid out arrangement with its score.
@@ -91,10 +94,16 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
     /// Search `model`'s arrangements, measuring labels with `measure`.
     pub(crate) fn new(model: &'s Model, measure: &'s M) -> Self {
         let layouts_left = Self::LAYOUT_BUDGET;
+        let placement_cache = PlacementCache::new();
+        let evaluated = BTreeSet::new();
+        let scored_layouts = Vec::new();
         Self {
             model,
             measure,
             layouts_left,
+            placement_cache,
+            evaluated,
+            scored_layouts,
         }
     }
 
@@ -102,7 +111,11 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
     pub(crate) fn best(mut self) -> (Arrangements, LevelPlans) {
         let (seed_plans, seed_arrangements) = LevelPlans::lay_out_seeded(self.model, self.measure);
         self.layouts_left -= 1;
-        let seed_score = self.score_of(&seed_arrangements, &seed_plans);
+        let seed_scene_score = self.remembered_scene_score_of(&seed_plans);
+        let seed_source_order_distance = seed_arrangements.source_order_distance(self.model);
+        let seed_score = LayoutScore::new(seed_scene_score, seed_source_order_distance);
+        let evaluated_seed = seed_arrangements.clone();
+        self.evaluated.insert(evaluated_seed);
         let mut best = Candidate {
             arrangements: seed_arrangements,
             plans: seed_plans,
@@ -139,7 +152,7 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
         (best.arrangements, best.plans)
     }
 
-    /// Lay out every one of `moves` the budget allows and keep in `best` each one scoring strictly better than it, ties keeping the earlier; tell whether any did.
+    /// Lay out every one of `moves` not evaluated before that the budget allows and keep in `best` each one scoring strictly better than it, ties keeping the earlier; tell whether any did. An arrangement evaluated before cannot win: it scored no better than a best that has only improved since. A layout equal to one already scored reuses its scene score instead of projecting it again.
     fn keep_best_of(&mut self, moves: Vec<Arrangements>, best: &mut Candidate) -> bool {
         let mut is_improved = false;
         for arrangements in moves {
@@ -147,13 +160,22 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
             if is_exhausted {
                 break;
             }
-            let is_current = arrangements == best.arrangements;
-            if is_current {
+            let is_evaluated = self.evaluated.contains(&arrangements);
+            if is_evaluated {
                 continue;
             }
+            let evaluated_arrangements = arrangements.clone();
+            self.evaluated.insert(evaluated_arrangements);
             self.layouts_left -= 1;
-            let plans = LevelPlans::lay_out_with(self.model, &arrangements, self.measure);
-            let score = self.score_of(&arrangements, &plans);
+            let plans = LevelPlans::lay_out_with(
+                self.model,
+                &arrangements,
+                &self.placement_cache,
+                self.measure,
+            );
+            let scene_score = self.remembered_scene_score_of(&plans);
+            let source_order_distance = arrangements.source_order_distance(self.model);
+            let score = LayoutScore::new(scene_score, source_order_distance);
             let is_better = score.cmp(&best.score) == Ordering::Less;
             if !is_better {
                 continue;
@@ -244,12 +266,25 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
         moves
     }
 
-    /// Score `arrangements` laid out as `plans`: project the scene, measure it, and add how far the arrangement strays from source order.
-    fn score_of(&self, arrangements: &Arrangements, plans: &LevelPlans) -> LayoutScore {
+    /// Return the scene score of a layout equal to `plans` already scored, else score `plans` and remember it: many moves change nothing, so many candidates repeat a layout.
+    fn remembered_scene_score_of(&mut self, plans: &LevelPlans) -> SceneScore {
+        let scored_layout = self
+            .scored_layouts
+            .iter()
+            .find(|(scored_plans, _scene_score)| scored_plans == plans);
+        if let Some((_scored_plans, scene_score)) = scored_layout {
+            return *scene_score;
+        }
+        let scene_score = self.scene_score_of(plans);
+        let scored_plans = plans.clone();
+        self.scored_layouts.push((scored_plans, scene_score));
+        scene_score
+    }
+
+    /// Measure what the scene `plans` lay out costs its reader: project it and score it.
+    fn scene_score_of(&self, plans: &LevelPlans) -> SceneScore {
         let scene = Scene::project(self.model, plans, self.measure);
-        let scene_score = scene.score();
-        let source_order_distance = arrangements.source_order_distance(self.model);
-        LayoutScore::new(scene_score, source_order_distance)
+        scene.score()
     }
 
     /// Return every order of `children`, in lexicographic order of their positions, `children` itself first.
@@ -307,16 +342,26 @@ mod tests {
             let search = ArrangementSearch::new(&model, &font);
 
             let (seed_plans, seed_arrangements) = LevelPlans::lay_out_seeded(&model, &font);
-            let seed_score = search.score_of(&seed_arrangements, &seed_plans);
+            let seed_score = layout_score_of(&search, &seed_arrangements, &seed_plans);
             let (best_arrangements, best_plans) = search.best();
             let rescoring_search = ArrangementSearch::new(&model, &font);
-            let best_score = rescoring_search.score_of(&best_arrangements, &best_plans);
+            let best_score = layout_score_of(&rescoring_search, &best_arrangements, &best_plans);
 
             assert!(
                 best_score <= seed_score,
                 "{name}: the search keeps a move only when it scores better, so it never ends worse than its seed: {best_score:?} > {seed_score:?}"
             );
         }
+    }
+
+    fn layout_score_of(
+        search: &ArrangementSearch<BundledFont>,
+        arrangements: &Arrangements,
+        plans: &LevelPlans,
+    ) -> LayoutScore {
+        let scene_score = search.scene_score_of(plans);
+        let source_order_distance = arrangements.source_order_distance(&search.model);
+        LayoutScore::new(scene_score, source_order_distance)
     }
 
     fn example_model(markdown: &str) -> Model {

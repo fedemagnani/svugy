@@ -10,7 +10,7 @@ use super::edge_levels::{HomedEdges, LeavingEdges};
 use super::place::{CompoundRegions, SiblingGraph};
 
 /// Holds the decisions a layout follows beyond what the author wrote: for each container free to arrange, those with no author's hint and no edge among their children, a column instead of a row and an order for their children; for each complete group of edges, whether it stays unbundled and which side its slots take.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Arrangements {
     columns: BTreeSet<ElementPath>,
     packing_orders: BTreeMap<ElementPath, Vec<ElementPath>>,
@@ -24,7 +24,7 @@ pub(crate) struct Arrangements {
 pub(crate) struct GroupId(pub(crate) EdgeId);
 
 /// Names where a bundle's slot sits on a container's boundary: where the line toward the far child leaves it, or on the container's side toward plan +x or +y nearest that line.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum SlotSide {
     #[default]
     TowardFarChild,
@@ -32,7 +32,7 @@ pub(crate) enum SlotSide {
 }
 
 /// Names one move of a child of a ranked level within its rank band, the siblings whose plan x-ranges overlap its own, ranks running along plan x: to the band's north or south end, or past its nearest south neighbour.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum RankMove {
     ToNorthEnd(ElementPath),
     ToSouthEnd(ElementPath),
@@ -84,8 +84,13 @@ impl Arrangements {
         self
     }
 
-    /// Seat the slots of the complete group `group` on `slot_side`.
+    /// Seat the slots of the complete group `group` on `slot_side`, the default side leaving no entry so equal arrangements compare equal.
     pub(crate) fn with_slot_side(mut self, group: GroupId, slot_side: SlotSide) -> Self {
+        let is_default_side = slot_side == SlotSide::default();
+        if is_default_side {
+            self.slot_sides.remove(&group);
+            return self;
+        }
         self.slot_sides.insert(group, slot_side);
         self
     }

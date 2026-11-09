@@ -19,7 +19,11 @@ use svugy_model::path::ElementPath;
 use crate::metrics::TextMeasure;
 pub(crate) use arrangements::Arrangements;
 use edge_levels::{HomedEdges, LeavingEdges};
-use place::{CompoundRegions, MovedWithinRanks, RankedPlacement, RearrangedFromSeed, SiblingGraph};
+use place::{
+    CompoundRegions, MemoizedPlacement, MovedWithinRanks, RankedPlacement, RearrangedFromSeed,
+    SiblingGraph,
+};
+pub(crate) use place::PlacementCache;
 pub(crate) use arrangements::{GroupId, RankMove, SlotSide};
 pub(crate) use route::{Branch, Course, Route};
 pub(crate) use stub::Stub;
@@ -54,14 +58,16 @@ impl LevelPlans {
         plans
     }
 
-    /// Lay out every level of `model` following exactly `arrangements`, nothing picked on the way: ranked levels as compound layouts with their children then moved within their ranks.
+    /// Lay out every level of `model` following exactly `arrangements`, nothing picked on the way: ranked levels as compound layouts, reused from `cache` when it holds them for the same inputs, with their children then moved within their ranks.
     pub(crate) fn lay_out_with(
         model: &Model,
         arrangements: &Arrangements,
+        cache: &PlacementCache,
         measure: &impl TextMeasure,
     ) -> Self {
         let compound_regions = CompoundRegions::of(model);
-        let moved_within_ranks = MovedWithinRanks::new(&compound_regions, arrangements);
+        let memoized_placement = MemoizedPlacement::new(&compound_regions, cache);
+        let moved_within_ranks = MovedWithinRanks::new(&memoized_placement, arrangements);
         Self::lay_out_ranking_by(model, &moved_within_ranks, arrangements, measure)
     }
 
@@ -75,7 +81,9 @@ impl LevelPlans {
             return Vec::new();
         };
         let deepest_model = deepest_layer.model();
-        let deepest_plans = Self::lay_out_with(deepest_model, arrangements, measure);
+        let placement_cache = PlacementCache::new();
+        let deepest_plans =
+            Self::lay_out_with(deepest_model, arrangements, &placement_cache, measure);
         let rearranged_from_seed = RearrangedFromSeed::new(&deepest_plans);
         let mut layer_plans: Vec<Self> = shallower_layers
             .iter()
