@@ -5,6 +5,7 @@ mod compound;
 mod footprints;
 mod layered;
 mod packed;
+mod rank_moves;
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -16,7 +17,8 @@ use super::edge_levels::LeavingEdges;
 use super::{LevelPlacement, LevelPlans, PlacedLevel, PlacedLevels};
 use crate::metrics::{LabelBlock, LabelRole, TextMeasure};
 use compact::SeedArrangement;
-pub(super) use compound::CompoundRegions;
+pub(in crate::layout) use compound::CompoundRegions;
+pub(super) use rank_moves::MovedWithinRanks;
 use footprints::Footprints;
 use layered::Layered;
 use packed::Packed;

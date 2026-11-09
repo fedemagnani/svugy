@@ -19,8 +19,8 @@ use svugy_model::path::ElementPath;
 use crate::metrics::TextMeasure;
 pub(crate) use arrangements::Arrangements;
 use edge_levels::{HomedEdges, LeavingEdges};
-use place::{CompoundRegions, RankedPlacement, RearrangedFromSeed, SiblingGraph};
-pub(crate) use arrangements::{GroupId, SlotSide};
+use place::{CompoundRegions, MovedWithinRanks, RankedPlacement, RearrangedFromSeed, SiblingGraph};
+pub(crate) use arrangements::{GroupId, RankMove, SlotSide};
 pub(crate) use route::{Branch, Course, Route};
 pub(crate) use stub::Stub;
 
@@ -54,14 +54,15 @@ impl LevelPlans {
         plans
     }
 
-    /// Lay out every level of `model` following exactly `arrangements`, nothing picked on the way.
+    /// Lay out every level of `model` following exactly `arrangements`, nothing picked on the way: ranked levels as compound layouts with their children then moved within their ranks.
     pub(crate) fn lay_out_with(
         model: &Model,
         arrangements: &Arrangements,
         measure: &impl TextMeasure,
     ) -> Self {
         let compound_regions = CompoundRegions::of(model);
-        Self::lay_out_ranking_by(model, &compound_regions, arrangements, measure)
+        let moved_within_ranks = MovedWithinRanks::new(&compound_regions, arrangements);
+        Self::lay_out_ranking_by(model, &moved_within_ranks, arrangements, measure)
     }
 
     /// Lay out every layer following exactly `arrangements`, the deepest one afresh and every shallower one rearranged from it, so each layer keeps the deepest arrangement.

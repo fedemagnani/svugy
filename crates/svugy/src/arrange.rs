@@ -1,26 +1,22 @@
 //! Search a model's arrangements for its most readable layout: layout lays each candidate out, geometry projects and measures it, and one score, straying from the author's order last, ranks them.
 
 use std::cmp::Ordering;
+use std::collections::BTreeSet;
 
 use svugy_model::model::Model;
 use svugy_model::path::ElementPath;
 
 use crate::geometry::{QuantizedLength, Scene, SceneScore};
-use crate::layout::{Arrangements, GroupId, LevelPlans, SlotSide};
+use crate::layout::{Arrangements, GroupId, LevelPlans, RankMove, SlotSide};
 use crate::metrics::TextMeasure;
 
-/// Ranks one candidate arrangement, smaller reading better, compared field by field in declaration order: a hard violation outweighs any number of crossings, a crossing any amount of hidden ink, and so on down to total length.
+/// Ranks one candidate arrangement, smaller reading better, in four tiers compared in order: hard violations, then crossings, then ink, the drawn length with every other visual cost priced in length, then the sibling pairs packed against the author's order.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct LayoutScore {
     violations: usize,
     crossings: usize,
-    hidden_junctions: usize,
-    arc_length_over_solids: QuantizedLength,
-    hidden_trace_length: QuantizedLength,
-    arcs: usize,
-    bends: usize,
+    ink: QuantizedLength,
     source_order_distance: usize,
-    total_length: QuantizedLength,
 }
 
 /// Searches a model's arrangements for its most readable layout: starting from the seed layout's, it tries every move of one decision at a time, keeps a move only when it scores strictly better, and stops when a sweep improves nothing or its layouts run out.
@@ -38,7 +34,19 @@ struct Candidate {
 }
 
 impl LayoutScore {
+    /// Screen units of drawn length one unit of arc over a solid adds on top of its own length.
+    const ARC_OVER_SOLID_PRICE: f64 = 0.5;
+    /// Screen units of drawn length one unit of hidden trace adds on top of its own length.
+    const HIDDEN_TRACE_PRICE: f64 = 2.0;
+    /// Screen units of drawn length one bend costs.
+    const BEND_PRICE: f64 = 15.0;
+    /// Screen units of drawn length one arc, a trunk or a lone arc, costs as a separate stroke.
+    const ARC_PRICE: f64 = 30.0;
+    /// Screen units of drawn length one hidden junction costs.
+    const HIDDEN_JUNCTION_PRICE: f64 = 40.0;
+
     /// Rank a candidate by what its projected scene costs, `scene_score`, and by `source_order_distance`, the sibling pairs it packs against the author's order.
+    // ink = L + ½·A + 2·H + 15·b + 30·a + 40·j: L total length, A arc over solids, H hidden trace, b bends, a arcs, j hidden junctions
     pub(crate) fn new(scene_score: SceneScore, source_order_distance: usize) -> Self {
         let SceneScore {
             violations,
@@ -50,23 +58,33 @@ impl LayoutScore {
             bends,
             total_length,
         } = scene_score;
+        let total_length_units = total_length.units();
+        let arc_over_solids_units = arc_length_over_solids.units();
+        let hidden_trace_units = hidden_trace_length.units();
+        let arc_over_solids_cost = Self::ARC_OVER_SOLID_PRICE * arc_over_solids_units;
+        let hidden_trace_cost = Self::HIDDEN_TRACE_PRICE * hidden_trace_units;
+        let bend_cost = Self::BEND_PRICE * bends as f64;
+        let arc_cost = Self::ARC_PRICE * arcs as f64;
+        let hidden_junction_cost = Self::HIDDEN_JUNCTION_PRICE * hidden_junctions as f64;
+        let ink_units = total_length_units
+            + arc_over_solids_cost
+            + hidden_trace_cost
+            + bend_cost
+            + arc_cost
+            + hidden_junction_cost;
+        let ink = QuantizedLength::of(ink_units);
         Self {
             violations,
             crossings,
-            hidden_junctions,
-            arc_length_over_solids,
-            hidden_trace_length,
-            arcs,
-            bends,
+            ink,
             source_order_distance,
-            total_length,
         }
     }
 }
 
 impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
     /// Layouts one search may run, the seed's included, so a busy diagram still renders at interactive speed.
-    const LAYOUT_BUDGET: usize = 240;
+    const LAYOUT_BUDGET: usize = 600;
     /// Most children a container may hold for every order of them to be tried; larger ones try adjacent swaps.
     const MAX_PERMUTED_CHILDREN: usize = 6;
 
@@ -80,7 +98,7 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
         }
     }
 
-    /// Return the most readable arrangements found, with their layout: sweep every free container's orders and orientations, then every bundle's acceptance and slot side, until a sweep improves nothing.
+    /// Return the most readable arrangements found, with their layout: sweep every ranked level's moves within ranks, every free container's orders and orientations, then every bundle's acceptance and slot side; when a sweep improves nothing, try each container move paired with each rank move, since a container's new order often pays only once its neighbours move too; stop when that improves nothing either.
     pub(crate) fn best(mut self) -> (Arrangements, LevelPlans) {
         let (seed_plans, seed_arrangements) = LevelPlans::lay_out_seeded(self.model, self.measure);
         self.layouts_left -= 1;
@@ -90,10 +108,15 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
             plans: seed_plans,
             score: seed_score,
         };
+        let rank_movable_levels = Arrangements::rank_movable_levels(self.model);
         let free_containers = Arrangements::free_containers(self.model);
         let bundle_groups = GroupId::bundle_candidates_of(self.model);
         loop {
             let mut is_improved = false;
+            for level in &rank_movable_levels {
+                let level_moves = self.moves_within_ranks_of(&best.arrangements, level);
+                is_improved |= self.keep_best_of(level_moves, &mut best);
+            }
             for container in &free_containers {
                 let container_moves = self.moves_of_container(&best.arrangements, container);
                 is_improved |= self.keep_best_of(container_moves, &mut best);
@@ -101,6 +124,12 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
             for group in &bundle_groups {
                 let group_moves = Self::moves_of_group(&best.arrangements, group);
                 is_improved |= self.keep_best_of(group_moves, &mut best);
+            }
+            let is_stuck = !is_improved;
+            if is_stuck {
+                let paired_moves =
+                    self.paired_moves_of(&best.arrangements, &free_containers, &rank_movable_levels);
+                is_improved = self.keep_best_of(paired_moves, &mut best);
             }
             let is_exhausted = self.layouts_left == 0;
             if !is_improved || is_exhausted {
@@ -162,6 +191,43 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
             let in_column = ordered.with_column(container.clone());
             moves.push(in_row);
             moves.push(in_column);
+        }
+        moves
+    }
+
+    /// Return `current` with each move of a free container combined with each move within the ranks of every rank movable level.
+    fn paired_moves_of(
+        &self,
+        current: &Arrangements,
+        free_containers: &BTreeSet<ElementPath>,
+        rank_movable_levels: &[ElementPath],
+    ) -> Vec<Arrangements> {
+        let mut paired_moves = Vec::new();
+        for container in free_containers {
+            let container_moves = self.moves_of_container(current, container);
+            for container_move in container_moves {
+                for level in rank_movable_levels {
+                    let level_moves = self.moves_within_ranks_of(&container_move, level);
+                    paired_moves.extend(level_moves);
+                }
+            }
+        }
+        paired_moves
+    }
+
+    /// Return `current` with each child of the ranked `level` moved to each end of its rank band and past its south neighbour.
+    fn moves_within_ranks_of(&self, current: &Arrangements, level: &ElementPath) -> Vec<Arrangements> {
+        let mut moves = Vec::new();
+        for (child, _element) in self.model.children(level) {
+            let rank_moves = [
+                RankMove::ToNorthEnd(child.clone()),
+                RankMove::ToSouthEnd(child.clone()),
+                RankMove::SwapWithSouthNeighbour(child.clone()),
+            ];
+            for rank_move in rank_moves {
+                let moved = current.clone().with_rank_move(level.clone(), rank_move);
+                moves.push(moved);
+            }
         }
         moves
     }

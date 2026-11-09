@@ -64,6 +64,17 @@ impl Footprints {
         self.translated(shift)
     }
 
+    /// Translate every footprint so their union starts exactly at `inset` on both axes.
+    pub(super) fn shifted_onto_inset(self, inset: f64) -> Self {
+        let Some(union) = self.union() else {
+            return self;
+        };
+        let shift_x = inset - union.x0;
+        let shift_y = inset - union.y0;
+        let shift = Vec2::new(shift_x, shift_y);
+        self.translated(shift)
+    }
+
     /// Size the extent from the origin to the farthest footprint corner plus the inset.
     pub(super) fn extent_enclosing(&self, inset: f64) -> Size {
         let far_corner = self

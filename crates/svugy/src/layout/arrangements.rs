@@ -7,7 +7,7 @@ use svugy_model::path::ElementPath;
 
 use super::LevelPlans;
 use super::edge_levels::{HomedEdges, LeavingEdges};
-use super::place::SiblingGraph;
+use super::place::{CompoundRegions, SiblingGraph};
 
 /// Holds the decisions a layout follows beyond what the author wrote: for each container free to arrange, those with no author's hint and no edge among their children, a column instead of a row and an order for their children; for each complete group of edges, whether it stays unbundled and which side its slots take.
 #[derive(Clone, Debug, PartialEq)]
@@ -16,6 +16,7 @@ pub(crate) struct Arrangements {
     packing_orders: BTreeMap<ElementPath, Vec<ElementPath>>,
     unbundled_groups: BTreeSet<GroupId>,
     slot_sides: BTreeMap<GroupId, SlotSide>,
+    rank_moves: BTreeMap<ElementPath, Vec<RankMove>>,
 }
 
 /// Names a complete group of edges, one sharing a trunk when bundled, by its first edge in edge order: groups partition the edges, so no two share it.
@@ -30,18 +31,28 @@ pub(crate) enum SlotSide {
     TowardPlanEastOrSouth,
 }
 
+/// Names one move of a child of a ranked level within its rank band, the siblings whose plan x-ranges overlap its own, ranks running along plan x: to the band's north or south end, or past its nearest south neighbour.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum RankMove {
+    ToNorthEnd(ElementPath),
+    ToSouthEnd(ElementPath),
+    SwapWithSouthNeighbour(ElementPath),
+}
+
 impl Arrangements {
-    /// Arrange nothing: every container packs as authored, unhinted ones in a row, all in source order, and every complete group bundles with its slots toward the far child.
+    /// Arrange nothing: every container packs as authored, unhinted ones in a row, all in source order, and every complete group bundles with its slots toward the far child, and no child moves within its rank.
     pub(crate) fn none() -> Self {
         let columns = BTreeSet::new();
         let packing_orders = BTreeMap::new();
         let unbundled_groups = BTreeSet::new();
         let slot_sides = BTreeMap::new();
+        let rank_moves = BTreeMap::new();
         Self {
             columns,
             packing_orders,
             unbundled_groups,
             slot_sides,
+            rank_moves,
         }
     }
 
@@ -105,6 +116,34 @@ impl Arrangements {
             .sum()
     }
 
+    /// Move a child of the ranked `level` within its rank band, after the moves already picked for it.
+    pub(crate) fn with_rank_move(mut self, level: ElementPath, rank_move: RankMove) -> Self {
+        let level_moves = self.rank_moves.entry(level).or_default();
+        level_moves.push(rank_move);
+        self
+    }
+
+    /// Return the levels whose children may move within their rank bands: ranked levels placed as region roots, so changing their extent moves nothing already placed.
+    pub(crate) fn rank_movable_levels(model: &Model) -> Vec<ElementPath> {
+        let compound_regions = CompoundRegions::of(model);
+        let root = ElementPath::root();
+        let containers = model
+            .elements()
+            .keys()
+            .filter(|path| model.is_container(path));
+        let levels = std::iter::once(&root).chain(containers);
+        levels
+            .filter(|level| compound_regions.is_region_root(model, level))
+            .cloned()
+            .collect()
+    }
+
+    /// Return the moves picked for children of `level` within their rank bands, in order.
+    pub(crate) fn rank_moves_of(&self, level: &ElementPath) -> &[RankMove] {
+        let level_moves = self.rank_moves.get(level);
+        level_moves.map_or(&[], Vec::as_slice)
+    }
+
     /// Return the containers free to arrange: left by edges, packing two or more children with no author's hint and no edge among them.
     pub(crate) fn free_containers(model: &Model) -> BTreeSet<ElementPath> {
         let leaving_edges = LeavingEdges::of(model);
@@ -140,11 +179,13 @@ impl Arrangements {
         let packing_orders = BTreeMap::new();
         let unbundled_groups = BTreeSet::new();
         let slot_sides = BTreeMap::new();
+        let rank_moves = BTreeMap::new();
         Self {
             columns,
             packing_orders,
             unbundled_groups,
             slot_sides,
+            rank_moves,
         }
     }
 

@@ -89,6 +89,13 @@ impl CompoundRegions {
         self.absorbed.contains(level)
     }
 
+    /// Tell whether `level` roots a compound layout: ranked, and not absorbed into its parent's.
+    pub(in crate::layout) fn is_region_root(&self, model: &Model, level: &ElementPath) -> bool {
+        let is_ranked = Self::is_ranked(model, level);
+        let is_absorbed = self.is_absorbed(level);
+        is_ranked && !is_absorbed
+    }
+
     /// Place `region_root` and its absorbed containers in one compound layout, returning each of their levels.
     fn place_region(
         &self,

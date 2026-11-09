@@ -46,6 +46,12 @@ impl QuantizedLength {
         let rounded_steps = steps.round();
         Self(rounded_steps as i64)
     }
+
+    /// Return this length in user units.
+    pub(crate) fn units(self) -> f64 {
+        let steps = self.0 as f64;
+        steps / Self::STEPS_PER_UNIT
+    }
 }
 
 impl Scene {
