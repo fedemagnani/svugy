@@ -11,7 +11,7 @@ use super::{LevelLayout, SiblingGraph};
 /// Gap between packed neighbours, the example's gap between the desk's modules.
 const PACKED_GAP: f32 = 24.0;
 
-/// Packs footprints over taffy into a grid of a fixed column count, filling rows in path order.
+/// Packs footprints over taffy into a grid of a fixed column count, filling rows in the siblings' packing order.
 pub(super) struct Packed {
     column_count: u16,
 }
@@ -33,10 +33,12 @@ impl Packed {
 impl LevelLayout for Packed {
     fn place_footprints(&self, siblings: &SiblingGraph) -> BTreeMap<ElementPath, Rect> {
         let mut tree: TaffyTree<()> = TaffyTree::new();
-        let leaves: Vec<NodeId> = siblings
-            .sizes()
-            .values()
-            .map(|size| {
+        let sizes = siblings.sizes();
+        let packing_order = siblings.packing_order();
+        let leaves: Vec<NodeId> = packing_order
+            .iter()
+            .map(|path| {
+                let size = sizes[path];
                 let leaf_width = length(size.width as f32);
                 let leaf_height = length(size.height as f32);
                 let leaf_size = taffy::Size {
@@ -57,11 +59,11 @@ impl LevelLayout for Packed {
             .expect("taffy accepts the grid of its own leaves");
         tree.compute_layout(grid, taffy::Size::MAX_CONTENT)
             .expect("taffy lays out a grid of fixed-size leaves");
-        siblings
-            .sizes()
+        packing_order
             .iter()
             .zip(&leaves)
-            .map(|((path, &size), &leaf)| {
+            .map(|(path, &leaf)| {
+                let size = sizes[path];
                 let leaf_layout = tree.layout(leaf).expect("taffy laid out every leaf");
                 let x = f64::from(leaf_layout.location.x);
                 let y = f64::from(leaf_layout.location.y);
@@ -104,14 +106,16 @@ mod tests {
     use super::*;
 
     fn siblings_of_size(child_count: usize, size: Size) -> SiblingGraph {
-        let sizes = (0..child_count)
+        let sizes: BTreeMap<ElementPath, Size> = (0..child_count)
             .map(|child_index| {
                 let path = ElementPath::from_segments([format!("child{child_index}")]);
                 (path, size)
             })
             .collect();
+        let packing_order = sizes.keys().cloned().collect();
         SiblingGraph {
             sizes,
+            packing_order,
             joined_pairs: BTreeSet::new(),
         }
     }

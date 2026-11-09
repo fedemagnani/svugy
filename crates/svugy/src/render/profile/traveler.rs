@@ -92,12 +92,13 @@ pub(crate) struct TravelerSymbols {
 }
 
 impl TravelerSymbols {
-    /// Collect the traveler of every connection of `drawn_layers` that moves one, interiors included, each resolved in the model its layer is drawn from.
+    /// Collect the traveler of every connection of `drawn_layers` that moves one, traces and arcs, interiors included, each resolved in the model its layer is drawn from.
     pub(crate) fn collect(drawn_layers: &[(&Group, &Model)]) -> Self {
         let mut travelers_by_name = BTreeMap::new();
         for &(root, model) in drawn_layers {
             let levels = root.this_and_nested_levels();
-            let connections = levels.flat_map(|(group, _to_root)| &group.connections);
+            let connections =
+                levels.flat_map(|(group, _to_root)| group.traces.iter().chain(&group.connections));
             let moving_connections = connections.filter(|connection| connection.dot_path.is_some());
             let layer_travelers = moving_connections.map(|connection| {
                 let traveler = ResolvedTraveler::carried_along(&connection.edge, model);

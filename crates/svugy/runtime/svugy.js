@@ -213,7 +213,24 @@
         const isSameOrdinal = edge.getAttribute(EDGE) === writtenEdgeName;
         return isSameEndpoints && isSameOrdinal;
       });
-      return targetedEdge ?? null;
+      return targetedEdge === undefined ? null : Contract.homeGroupOf(scope, targetedEdge);
+    },
+
+    /** Finds the group of `group`'s edge in its home level, the outermost of the edge's groups in `scope`, since a bundled edge's branches lie in its containers' levels; `group` itself when it draws no edge. */
+    homeGroupOf(scope, group) {
+      const edgeName = group.getAttribute(EDGE);
+      if (edgeName === null) {
+        return group;
+      }
+      const levelDepthOf = (edgeGroup) => {
+        const enclosingLevel = Contract.enclosingLevelOf(edgeGroup);
+        return Contract.depthOf(enclosingLevel);
+      };
+      const edgeGroups = Contract.edgesAt(scope, edgeName);
+      return edgeGroups.reduce((homeGroup, candidate) => {
+        const isCandidateOuter = levelDepthOf(candidate) < levelDepthOf(homeGroup);
+        return isCandidateOuter ? candidate : homeGroup;
+      });
     },
 
     /** Lists the groups of `scope` drawing the element or edge `group` draws: the element's group, or every group of the edge, its label's included. */
@@ -782,7 +799,8 @@
       if (isLeaf) {
         return this.zoomOntoLeaf(group);
       }
-      const reachedLevel = this.levelReachedThrough(group);
+      const homeGroup = Contract.homeGroupOf(this.shownLayer, group);
+      const reachedLevel = this.levelReachedThrough(homeGroup);
       return this.focus(reachedLevel);
     }
 

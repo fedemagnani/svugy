@@ -1,9 +1,12 @@
 //! Place one level's children as footprints: pinned ones where the author put them, free ones automatically around them.
 
+mod compact;
 mod compound;
 mod footprints;
 mod layered;
+mod memo;
 mod packed;
+mod rank_moves;
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -11,12 +14,17 @@ use kurbo::{Point, Rect, Size};
 use svugy_model::model::{Element, Model, PlacementHint};
 use svugy_model::path::ElementPath;
 
-use super::{PlacedLevel, PlacedLevels};
+use super::edge_levels::{HomedEdges, LeavingEdges};
+use super::{LevelPlacement, LevelPlans, PlacedLevel, PlacedLevels};
 use crate::metrics::{LabelBlock, LabelRole, TextMeasure};
-pub(super) use compound::CompoundRegions;
+use compact::SeedArrangement;
+pub(in crate::layout) use compound::CompoundRegions;
 use footprints::Footprints;
 use layered::Layered;
+pub(in crate::layout) use memo::MemoizedPlacement;
+pub(crate) use memo::PlacementCache;
 use packed::Packed;
+pub(super) use rank_moves::MovedWithinRanks;
 
 /// Clear margin between a level's boundary and its outermost footprints, the example's inset inside the desk.
 const LEVEL_MARGIN: f64 = 18.0;
@@ -31,14 +39,73 @@ pub(super) trait LevelLayout {
     fn place_footprints(&self, siblings: &SiblingGraph) -> BTreeMap<ElementPath, Rect>;
 }
 
-/// Holds the footprint size of every child of one level and the pairs of children an edge joins, directly or lifted.
+/// Places a ranked level once the levels nested in it are placed, returning every level it fixes.
+pub(super) trait RankedPlacement {
+    /// Place the ranked `level`, sizing its container children by their placed `interiors`.
+    fn place_ranked_level(
+        &self,
+        model: &Model,
+        level: &ElementPath,
+        leaving_edges: &LeavingEdges,
+        interiors: &PlacedLevels,
+        measure: &impl TextMeasure,
+    ) -> Vec<(ElementPath, PlacedLevel)>;
+}
+
+/// Places each ranked level rearranged from the seed's footprints of it, so a shallower layer keeps the deepest layer's arrangement.
+pub(super) struct RearrangedFromSeed<'s> {
+    seed: &'s LevelPlans,
+}
+
+impl<'s> RearrangedFromSeed<'s> {
+    /// Rearrange from `seed`, the deepest layer's plans.
+    pub(super) fn new(seed: &'s LevelPlans) -> Self {
+        Self { seed }
+    }
+}
+
+impl RankedPlacement for RearrangedFromSeed<'_> {
+    /// Rearrange the seed's footprints of `level` to its children's sizes in this layer, fixing that level alone.
+    fn place_ranked_level(
+        &self,
+        model: &Model,
+        level: &ElementPath,
+        leaving_edges: &LeavingEdges,
+        interiors: &PlacedLevels,
+        measure: &impl TextMeasure,
+    ) -> Vec<(ElementPath, PlacedLevel)> {
+        let sizes = SiblingGraph::measured_sizes_of_children(model, level, interiors, measure);
+        let seed_plan = self
+            .seed
+            .level(level)
+            .expect("a level ranked in a shallower layer is placed in the deepest one");
+        let seed_level = seed_plan.placed();
+        let is_left_by_edges = leaving_edges.is_left_by_edges(level);
+        let homed_edges = HomedEdges::of(model);
+        let joined_pairs = homed_edges.lifted_pairs_in(level);
+        let placed_level = PlacedLevel::place_children_from_seed(
+            model,
+            level,
+            &sizes,
+            &joined_pairs,
+            seed_level,
+            is_left_by_edges,
+            measure,
+        );
+        let level_key = level.clone();
+        vec![(level_key, placed_level)]
+    }
+}
+
+/// Holds the footprint size of every child of one level, the order a packing lays them in, and the pairs of children an edge joins, directly or lifted.
 pub(super) struct SiblingGraph {
     sizes: BTreeMap<ElementPath, Size>,
+    packing_order: Vec<ElementPath>,
     joined_pairs: BTreeSet<(ElementPath, ElementPath)>,
 }
 
 impl SiblingGraph {
-    /// Build the sibling graph of `parent`'s children, a container sized by its own level's extent and a leaf by its labels, joined by `joined_pairs`.
+    /// Build the sibling graph of `parent`'s children, a container sized by its own level's extent and a leaf by its labels, packed in source order, joined by `joined_pairs`.
     pub(super) fn of_measured_children(
         model: &Model,
         parent: &ElementPath,
@@ -46,7 +113,52 @@ impl SiblingGraph {
         interiors: &PlacedLevels,
         measure: &impl TextMeasure,
     ) -> Self {
-        let sizes = model
+        let sizes = Self::measured_sizes_of_children(model, parent, interiors, measure);
+        let packing_order = Self::source_order_of_children(model, parent);
+        Self {
+            sizes,
+            packing_order,
+            joined_pairs,
+        }
+    }
+
+    /// List `parent`'s children in the order their source declares them, path order breaking ties and ordering a source without spans.
+    pub(in crate::layout) fn source_order_of_children(
+        model: &Model,
+        parent: &ElementPath,
+    ) -> Vec<ElementPath> {
+        let mut children_by_span_start: Vec<(Option<usize>, &ElementPath)> = model
+            .children(parent)
+            .map(|(path, element)| {
+                let span = element.span();
+                let span_start = span.map(|span| span.start);
+                (span_start, path)
+            })
+            .collect();
+        children_by_span_start.sort();
+        children_by_span_start
+            .into_iter()
+            .map(|(_span_start, path)| path.clone())
+            .collect()
+    }
+
+    /// Pack the children in `packing_order`, a permutation of them, instead.
+    pub(in crate::layout) fn packed_in(self, packing_order: &[ElementPath]) -> Self {
+        let packing_order = packing_order.to_vec();
+        Self {
+            packing_order,
+            ..self
+        }
+    }
+
+    /// Size every child of `parent`: a container by its own level's extent, a leaf by its labels.
+    fn measured_sizes_of_children(
+        model: &Model,
+        parent: &ElementPath,
+        interiors: &PlacedLevels,
+        measure: &impl TextMeasure,
+    ) -> BTreeMap<ElementPath, Size> {
+        model
             .children(parent)
             .map(|(path, element)| {
                 let interior = interiors.level(path);
@@ -57,11 +169,7 @@ impl SiblingGraph {
                 let path_key = path.clone();
                 (path_key, size)
             })
-            .collect();
-        Self {
-            sizes,
-            joined_pairs,
-        }
+            .collect()
     }
 
     /// Size a footprint to fit the room its title over its caption needs on its top face, never below the smallest block.
@@ -75,23 +183,49 @@ impl SiblingGraph {
 }
 
 impl PlacedLevel {
-    /// Place the children of `parent` around the pinned ones by its hint, inside a margin with stub room when edges leave it, in a level sized to fit them and its hanging tag.
+    /// Place the children of `parent` around the pinned ones by `hint`, inside a margin with stub room when edges leave it, in a level sized to fit them and its hanging tag.
     pub(super) fn place_children(
         model: &Model,
         parent: &ElementPath,
         siblings: SiblingGraph,
+        hint: Option<PlacementHint>,
         is_left_by_edges: bool,
         measure: &impl TextMeasure,
     ) -> Self {
         let inset = Self::inset_inside_boundary(is_left_by_edges);
         let (pinned_footprints, free_siblings) = siblings.split_off_pinned(model);
         let parent_element = model.element(parent);
-        let hint = parent_element.and_then(Element::child_placement);
         let free_footprints = free_siblings.place_by_hint(hint);
         let cleared_free_footprints =
             free_footprints.shifted_clear_of_pinned(&pinned_footprints, inset);
         let footprints = pinned_footprints.merged_with(cleared_free_footprints);
         let inset_footprints = footprints.shifted_inside_inset(inset);
+        let extent = Self::extent_fitting_footprints_and_tag(
+            &inset_footprints,
+            inset,
+            parent_element,
+            measure,
+        );
+        let footprints_by_path = inset_footprints.into_by_path();
+        Self::new(extent, footprints_by_path)
+    }
+
+    /// Rearrange `seed`'s footprints of the ranked `parent`'s children to their `sizes`, shortening the `joined_pairs` between them, inside a margin with stub room when edges leave it, in a level sized to fit them and its hanging tag.
+    fn place_children_from_seed(
+        model: &Model,
+        parent: &ElementPath,
+        sizes: &BTreeMap<ElementPath, Size>,
+        joined_pairs: &BTreeSet<(ElementPath, ElementPath)>,
+        seed: &PlacedLevel,
+        is_left_by_edges: bool,
+        measure: &impl TextMeasure,
+    ) -> Self {
+        let inset = Self::inset_inside_boundary(is_left_by_edges);
+        let seed_arrangement = SeedArrangement::new(&seed.footprints);
+        let rearranged_by_path = seed_arrangement.rearranged(sizes, joined_pairs);
+        let rearranged_footprints = Footprints::new(rearranged_by_path);
+        let inset_footprints = rearranged_footprints.shifted_onto_inset(inset);
+        let parent_element = model.element(parent);
         let extent = Self::extent_fitting_footprints_and_tag(
             &inset_footprints,
             inset,
@@ -143,6 +277,11 @@ impl SiblingGraph {
             let pinned_footprint = Rect::from_origin_size(pinned_origin, size);
             pinned_footprints.insert(path, pinned_footprint);
         }
+        let free_packing_order = self
+            .packing_order
+            .into_iter()
+            .filter(|path| free_sizes.contains_key(path))
+            .collect();
         let free_joined_pairs = self
             .joined_pairs
             .into_iter()
@@ -154,6 +293,7 @@ impl SiblingGraph {
             .collect();
         let free_siblings = Self {
             sizes: free_sizes,
+            packing_order: free_packing_order,
             joined_pairs: free_joined_pairs,
         };
         let pinned = Footprints::new(pinned_footprints);
@@ -186,6 +326,11 @@ impl SiblingGraph {
         &self.sizes
     }
 
+    /// Return the children in the order a packing lays them.
+    pub(super) fn packing_order(&self) -> &[ElementPath] {
+        &self.packing_order
+    }
+
     /// Return the pairs of children an edge joins, directly or lifted.
     pub(super) fn joined_pairs(&self) -> &BTreeSet<(ElementPath, ElementPath)> {
         &self.joined_pairs
@@ -209,7 +354,9 @@ mod tests {
         let no_interiors = PlacedLevels::new(BTreeMap::new());
         let siblings =
             SiblingGraph::of_measured_children(model, level, joined_pairs, &no_interiors, &measure);
-        PlacedLevel::place_children(model, level, siblings, is_left_by_edges, &measure)
+        let level_element = model.element(level);
+        let hint = level_element.and_then(Element::child_placement);
+        PlacedLevel::place_children(model, level, siblings, hint, is_left_by_edges, &measure)
     }
 
     fn place_top_level(model: &Model) -> PlacedLevel {

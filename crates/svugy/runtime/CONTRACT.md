@@ -54,7 +54,9 @@ Every element, edge and stub group starts with `<title>LABEL</title><desc data-s
 
 - It holds its stroke `<path data-svugy-flow="">`, whose dash offset the runtime CSS animates.
 - Interactive only: it also holds `<use data-svugy-traveler="NAME" href="#traveler-NAME">`, moved by SMIL `<animateMotion>`. NAME is `dot`, `envelope`, `parcel`, `document` or `key`; `<defs>` holds `<symbol id="traveler-NAME">` for each NAME used.
-- A labelled connection has a second group with the same three attributes, title and details, painted after every arc of its level so labels sit on top. The runtime never assumes edge groups are unique.
+- A connection traced flat on its level's floor comes before that level's element groups, which stand on it; an arc comes after them.
+- A bundled connection is an arc group for its trunk in its home level, holding the traveler that runs the whole route, plus one traced group per branch in the level of the container the branch runs on. Only the group reaching the target ends in an arrowhead.
+- A labelled connection has a second group with the same three attributes, title and details, painted after every element, trace and arc of its level so labels sit on top; a bundled connection's label group is in the level of the branch carrying it, the target's if any. The runtime never assumes edge groups are unique.
 
 **Lifted connection:** a connection whose EDGE names its merged edge, which is no edge of the source model: its ordinal follows those of the written edges joining the same pair in its layer, so it never repeats one. A merge of one edge keeps its label, style and traveler; a merge of several has no label, the default style and the `dot` traveler. Title: its label, else its endpoints' labels joined by " → ". Its details list the source edges it stands for.
 

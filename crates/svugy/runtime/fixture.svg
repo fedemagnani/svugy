@@ -1,4 +1,4 @@
-<svg data-svugy-contract="2" height="627.9" viewBox="-112.335 -89.743 876.192 627.9" width="876.192" xmlns="http://www.w3.org/2000/svg">
+<svg data-svugy-contract="2" height="606.853" viewBox="-197.533 -71.743 878.252 606.853" width="878.252" xmlns="http://www.w3.org/2000/svg">
 <style>/*<![CDATA[*/[data-svugy-contract]{--svugy-canvas:#0a0b10;--svugy-grid-line:#151722;--svugy-face-outline:#0a0b10;--svugy-text:#e6e8ee;--svugy-text-muted:#8b93a5;--svugy-external-outline:#5b6170;--svugy-neutral-top:#3a3f4b;--svugy-neutral-left:#2b2f39;--svugy-neutral-right:#22252d;--svugy-neutral-ink:#e6e8ee;--svugy-container-blue-top:#1b2436;--svugy-container-blue-left:#131a28;--svugy-container-blue-right:#0d131f;--svugy-container-blue-ink:#8aa0c8;font-family:Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif}
 @media (prefers-color-scheme: light){
 [data-svugy-contract]{--svugy-canvas:#f6f8ff;--svugy-grid-line:#e1e4f4;--svugy-face-outline:#f6f8ff;--svugy-text:#14161a;--svugy-text-muted:#535a6a;--svugy-external-outline:#858b9b;--svugy-neutral-top:#acb2c0;--svugy-neutral-left:#868b96;--svugy-neutral-right:#6d717b;--svugy-neutral-ink:#14161a;--svugy-container-blue-top:#c8d4ed;--svugy-container-blue-left:#9da6ba;--svugy-container-blue-right:#808898;--svugy-container-blue-ink:#3c4f72}
@@ -98,113 +98,113 @@
 <path d="M0,0 L60,0 L60,60 L0,60 Z" fill="none" stroke="var(--svugy-grid-line)" stroke-width="1.155"/>
 </pattern>
 </defs>
-<rect fill="var(--svugy-canvas)" height="627.9" rx="14" width="876.192" x="-112.335" y="-89.743"/>
+<rect fill="var(--svugy-canvas)" height="606.853" rx="14" width="878.252" x="-197.533" y="-71.743"/>
 <rect fill="url(#ground-grid)" height="2000000" width="2000000" x="-1000000" y="-1000000"/>
 <g data-svugy-layer="0">
 <g data-svugy-heading="">
-<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="87.341" x="-57.158" y="-49.274">A web app</text>
-<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="234.835" x="-57.158" y="-31.274">from the browser to the database and back</text>
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="87.341" x="-99.593" y="-24.774">A web app</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="234.835" x="-99.593" y="-6.774">from the browser to the database and back</text>
 </g>
-<g data-svugy-level="" data-svugy-view="-81.158 -89.743 452.865 418.22">
-<g data-svugy-closed="" data-svugy-element="backend">
-<title>Backend</title>
-<desc data-svugy-details="">{"kind":"element","path":"backend","label":"Backend","caption":"your servers","description":"Every browser request lands on [the API](#backend.api). From there:\n- the API answers the browser right away\n- work that can wait, like the receipt, goes through [the queue](#backend.queue) to [the worker](#backend.worker)"}</desc>
-<path d="M67.55,127.5 L129.904,163.5 L129.904,159 L67.55,123 Z M187.061,130.5 L129.904,163.5 L129.904,159 L187.061,126 Z M124.708,90 L187.061,126 L129.904,159 L67.55,123 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
-<path d="M67.55,123 L129.904,159 L129.904,136.5 L67.55,100.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M187.061,126 L129.904,159 L129.904,136.5 L187.061,103.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M124.708,67.5 L187.061,103.5 L129.904,136.5 L67.55,100.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="51.111" transform="matrix(0.866 0.5 -0.866 0.5 127.306 102)" x="0" y="-2">Backend</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="51.291" transform="matrix(0.866 0.5 -0.866 0.5 127.306 102)" x="0" y="11">your servers</text>
-</g>
+<g data-svugy-level="" data-svugy-view="-123.593 -65.243 441.962 412.492">
 <g data-svugy-element="browser">
 <title>Browser</title>
 <desc data-svugy-details="">{"kind":"element","path":"browser","label":"Browser","caption":"the user's tab"}</desc>
-<path d="M-57.158,51 L5.196,87 L5.196,64.5 L-57.158,28.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M62.354,54 L5.196,87 L5.196,64.5 L62.354,31.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M0,-4.5 L62.354,31.5 L5.196,64.5 L-57.158,28.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="49.143" transform="matrix(0.866 0.5 -0.866 0.5 2.598 30)" x="0" y="-2">Browser</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="55.715" transform="matrix(0.866 0.5 -0.866 0.5 2.598 30)" x="0" y="11">the user's tab</text>
+<path d="M-99.593,75.5 L-37.239,111.5 L-37.239,89 L-99.593,53 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M19.919,78.5 L-37.239,111.5 L-37.239,89 L19.919,56 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-42.435,20 L19.919,56 L-37.239,89 L-99.593,53 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="49.143" transform="matrix(0.866 0.5 -0.866 0.5 -39.837 54.5)" x="0" y="-2">Browser</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="55.715" transform="matrix(0.866 0.5 -0.866 0.5 -39.837 54.5)" x="0" y="11">the user's tab</text>
 </g>
 <g data-svugy-element="cdn">
 <title>CDN</title>
 <desc data-svugy-details="">{"kind":"element","path":"cdn","label":"CDN","caption":"static files"}</desc>
-<path d="M-13.715,168.881 L-13.715,179.381 C-13.715,192.816 5.221,204.656 28.579,205.826 C51.937,206.997 70.872,197.054 70.872,183.619 L70.872,173.119 C70.872,186.554 51.937,196.497 28.579,195.326 C5.221,194.156 -13.715,182.316 -13.715,168.881 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M70.872,173.119 C70.872,186.554 51.937,196.497 28.579,195.326 C5.221,194.156 -13.715,182.316 -13.715,168.881 C-13.715,155.446 5.221,145.503 28.579,146.674 C51.937,147.844 70.872,159.684 70.872,173.119 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="26.689" transform="matrix(0.866 0.5 -0.866 0.5 28.579 171)" x="0" y="-2">CDN</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="41.583" transform="matrix(0.866 0.5 -0.866 0.5 28.579 171)" x="0" y="11">static files</text>
+<path d="M64.228,99.881 L64.228,110.381 C64.228,123.816 83.163,135.656 106.521,136.826 C129.879,137.997 148.815,128.054 148.815,114.619 L148.815,104.119 C148.815,117.554 129.879,127.497 106.521,126.326 C83.163,125.156 64.228,113.316 64.228,99.881 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M148.815,104.119 C148.815,117.554 129.879,127.497 106.521,126.326 C83.163,125.156 64.228,113.316 64.228,99.881 C64.228,86.446 83.163,76.503 106.521,77.674 C129.879,78.844 148.815,90.684 148.815,104.119 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="26.689" transform="matrix(0.866 0.5 -0.866 0.5 106.521 102)" x="0" y="-2">CDN</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="41.583" transform="matrix(0.866 0.5 -0.866 0.5 106.521 102)" x="0" y="11">static files</text>
+</g>
+<g data-svugy-closed="" data-svugy-element="backend">
+<title>Backend</title>
+<desc data-svugy-details="">{"kind":"element","path":"backend","label":"Backend","caption":"your servers","description":"Every browser request lands on [the API](#backend.api). From there:\n- the API answers the browser right away\n- work that can wait, like the receipt, goes through [the queue](#backend.queue) to [the worker](#backend.worker)"}</desc>
+<path d="M26.016,201.52 L88.37,237.52 L88.37,233.02 L26.016,197.02 Z M145.527,204.52 L88.37,237.52 L88.37,233.02 L145.527,200.02 Z M83.173,164.02 L145.527,200.02 L88.37,233.02 L26.016,197.02 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M26.016,197.02 L88.37,233.02 L88.37,210.52 L26.016,174.52 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M145.527,200.02 L88.37,233.02 L88.37,210.52 L145.527,177.52 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M83.173,141.52 L145.527,177.52 L88.37,210.52 L26.016,174.52 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="51.111" transform="matrix(0.866 0.5 -0.866 0.5 85.771 176.02)" x="0" y="-2">Backend</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="51.291" transform="matrix(0.866 0.5 -0.866 0.5 85.771 176.02)" x="0" y="11">your servers</text>
 </g>
 <g data-svugy-closed="" data-svugy-element="data">
 <title>Data</title>
 <desc data-svugy-details="">{"kind":"element","path":"data","label":"Data","caption":"what the app remembers","description":"[The database](#data.db) keeps users and orders. [The cache](#data.cache) keeps the reads the API repeats most."}</desc>
-<path d="M192.258,199.5 L290.55,256.249 L290.55,251.749 L192.258,195 Z M347.707,223.249 L290.55,256.249 L290.55,251.749 L347.707,218.749 Z M249.415,162 L347.707,218.749 L290.55,251.749 L192.258,195 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
-<path d="M192.258,195 L290.55,251.749 L290.55,229.249 L192.258,172.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M347.707,218.749 L290.55,251.749 L290.55,229.249 L347.707,196.249 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M249.415,139.5 L347.707,196.249 L290.55,229.249 L192.258,172.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="26.994" transform="matrix(0.866 0.5 -0.866 0.5 269.982 184.374)" x="0" y="-2">Data</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="101.498" transform="matrix(0.866 0.5 -0.866 0.5 269.982 184.374)" x="0" y="11">what the app remembers</text>
+<path d="M-58.89,266.5 L39.402,323.249 L39.402,318.749 L-58.89,262 Z M96.56,290.249 L39.402,323.249 L39.402,318.749 L96.56,285.749 Z M-1.732,229 L96.56,285.749 L39.402,318.749 L-58.89,262 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M-58.89,262 L39.402,318.749 L39.402,296.249 L-58.89,239.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M96.56,285.749 L39.402,318.749 L39.402,296.249 L96.56,263.249 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-1.732,206.5 L96.56,263.249 L39.402,296.249 L-58.89,239.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="26.994" transform="matrix(0.866 0.5 -0.866 0.5 18.835 251.374)" x="0" y="-2">Data</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="101.498" transform="matrix(0.866 0.5 -0.866 0.5 18.835 251.374)" x="0" y="11">what the app remembers</text>
 </g>
 <g data-svugy-element="mail">
 <title>Email provider</title>
 <desc data-svugy-details="">{"kind":"element","path":"mail","label":"Email provider","caption":"outside your servers"}</desc>
-<path d="M100.93,256.272 L184.424,304.477 L184.424,281.977 L100.93,233.772 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
-<path d="M241.581,271.477 L184.424,304.477 L184.424,281.977 L241.581,248.977 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
-<path d="M158.088,200.772 L241.581,248.977 L184.424,281.977 L100.93,233.772 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
-<text fill="var(--svugy-text-muted)" font-size="12" font-weight="650" text-anchor="middle" textLength="84.41" transform="matrix(0.866 0.5 -0.866 0.5 171.256 241.374)" x="0" y="-2">Email provider</text>
-<text fill="var(--svugy-text-muted)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="83.664" transform="matrix(0.866 0.5 -0.866 0.5 171.256 241.374)" x="0" y="11">outside your servers</text>
+<path d="M153.718,270.749 L237.212,318.954 L237.212,296.454 L153.718,248.249 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
+<path d="M294.369,285.954 L237.212,318.954 L237.212,296.454 L294.369,263.454 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
+<path d="M210.876,215.249 L294.369,263.454 L237.212,296.454 L153.718,248.249 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
+<text fill="var(--svugy-text-muted)" font-size="12" font-weight="650" text-anchor="middle" textLength="84.41" transform="matrix(0.866 0.5 -0.866 0.5 224.044 255.851)" x="0" y="-2">Email provider</text>
+<text fill="var(--svugy-text-muted)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="83.664" transform="matrix(0.866 0.5 -0.866 0.5 224.044 255.851)" x="0" y="11">outside your servers</text>
 </g>
 <g data-svugy-edge="(backend -&gt; data)[0]" data-svugy-from="backend" data-svugy-to="data">
 <title>Backend → Data</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"backend","to":"data","edges":[{"kind":"edge","edge":"(backend.api -&gt; data.cache)[0]","from":"backend.api","to":"data.cache","label":"looks up"},{"kind":"edge","edge":"(backend.api -&gt; data.db)[0]","from":"backend.api","to":"data.db","label":"saves the order"}]}</desc>
-<path d="M168.009,114.5 Q194.265,66.405 220.521,154.93" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M57.193,192.52 Q52.335,149.808 47.478,233.762" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M168.009,114.5 Q194.423,66.116 220.836,156" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M57.193,192.52 Q52.303,149.526 47.414,234.874" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(backend -&gt; mail)[0]" data-svugy-from="backend" data-svugy-to="mail">
 <title>sends the receipt</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"backend","to":"mail","label":"sends the receipt","edges":[{"kind":"edge","edge":"(backend.worker -&gt; mail)[0]","from":"backend.worker","to":"mail","label":"sends the receipt","description":"The email provider delivers the receipt to the user's inbox."}]}</desc>
-<path d="M148.956,125.5 Q139.272,79.272 129.587,216.158" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M116.948,194.02 Q149.43,143.004 181.911,230.702" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="envelope" fill="var(--svugy-text-muted)" height="10" href="#traveler-envelope" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M148.956,125.5 Q139.233,79.085 129.509,217.272" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M116.948,194.02 Q149.623,142.701 182.297,231.749" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(browser -&gt; backend)[0]" data-svugy-from="browser" data-svugy-to="backend">
 <title>Browser → Backend</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"browser","to":"backend","edges":[{"kind":"edge","edge":"(browser -&gt; backend.api)[0]","from":"browser","to":"backend.api","label":"signs in"},{"kind":"edge","edge":"(browser -&gt; backend.api)[1]","from":"browser","to":"backend.api","label":"places an order"}]}</desc>
-<path d="M43.301,42.5 Q69.557,-5.595 95.813,82.93" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M-18.186,78 Q18.054,27.093 54.295,156.944" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M43.301,42.5 Q69.715,-5.884 96.129,84" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M-18.186,78 Q18.204,26.882 54.595,158.02" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(browser -&gt; cdn)[0]" data-svugy-from="browser" data-svugy-to="cdn">
 <title>loads the page</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; cdn)[0]","from":"browser","to":"cdn","label":"loads the page"}</desc>
-<path d="M24.249,53.5 Q10.875,1.175 -2.5,151.887" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M0.866,67 Q37.88,-0.578 74.895,82.98" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M24.249,53.5 Q10.825,0.982 -2.598,153" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M0.866,67 Q38.105,-0.988 75.344,84" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(backend -&gt; mail)[0]" data-svugy-from="backend" data-svugy-to="mail">
 <title>sends the receipt</title>
 <desc data-svugy-details="">{"kind":"lifted","from":"backend","to":"mail","label":"sends the receipt","edges":[{"kind":"edge","edge":"(backend.worker -&gt; mail)[0]","from":"backend.worker","to":"mail","label":"sends the receipt","description":"The email provider delivers the receipt to the user's inbox."}]}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="107.107" x="84.435" y="124.008"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="87.107" x="137.989" y="135.68">sends the receipt</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="107.107" x="115.96" y="194.43"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="87.107" x="169.514" y="206.101">sends the receipt</text>
 </g>
 <g data-svugy-edge="(browser -&gt; cdn)[0]" data-svugy-from="browser" data-svugy-to="cdn">
 <title>loads the page</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; cdn)[0]","from":"browser","to":"cdn","label":"loads the page"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="93.879" x="-38.954" y="57.075"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="73.879" x="7.986" y="68.747">loads the page</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="93.879" x="-8.835" y="29.404"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="73.879" x="38.105" y="41.075">loads the page</text>
 </g>
 <g data-svugy-overlay=""/>
 </g>
 </g>
 <g data-svugy-layer="1" data-svugy-shown="">
 <g data-svugy-heading="">
-<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="87.341" x="-88.335" y="-31.274">A web app</text>
-<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="234.835" x="-88.335" y="-13.274">from the browser to the database and back</text>
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="87.341" x="-173.533" y="-31.274">A web app</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="234.835" x="-173.533" y="-13.274">from the browser to the database and back</text>
 </g>
-<g data-svugy-level="" data-svugy-view="-112.335 -71.743 876.192 609.9">
+<g data-svugy-level="" data-svugy-view="-197.533 -71.743 878.252 606.853">
 <g data-svugy-element="browser">
 <title>Browser</title>
 <desc data-svugy-details="">{"kind":"element","path":"browser","label":"Browser","caption":"the user's tab"}</desc>
@@ -214,13 +214,37 @@
 <text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="49.143" transform="matrix(0.866 0.5 -0.866 0.5 -28.579 48)" x="0" y="-2">Browser</text>
 <text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="55.715" transform="matrix(0.866 0.5 -0.866 0.5 -28.579 48)" x="0" y="11">the user's tab</text>
 </g>
+<g data-svugy-element="cdn">
+<title>CDN</title>
+<desc data-svugy-details="">{"kind":"element","path":"cdn","label":"CDN","caption":"static files"}</desc>
+<path d="M103.035,122.286 L103.035,132.786 C103.035,146.221 121.97,158.061 145.329,159.232 C168.687,160.402 187.622,150.46 187.622,137.025 L187.622,126.525 C187.622,139.96 168.687,149.902 145.329,148.732 C121.97,147.561 103.035,135.721 103.035,122.286 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M187.622,126.525 C187.622,139.96 168.687,149.902 145.329,148.732 C121.97,147.561 103.035,135.721 103.035,122.286 C103.035,108.851 121.97,98.909 145.329,100.079 C168.687,101.25 187.622,113.09 187.622,126.525 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="26.689" transform="matrix(0.866 0.5 -0.866 0.5 145.329 124.405)" x="0" y="-2">CDN</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="41.583" transform="matrix(0.866 0.5 -0.866 0.5 145.329 124.405)" x="0" y="11">static files</text>
+</g>
 <g data-svugy-element="backend">
 <title>Backend</title>
 <desc data-svugy-details="">{"kind":"element","path":"backend","label":"Backend","caption":"your servers","description":"Every browser request lands on [the API](#backend.api). From there:\n- the API answers the browser right away\n- work that can wait, like the receipt, goes through [the queue](#backend.queue) to [the worker](#backend.worker)"}</desc>
-<path d="M-10.392,150 L521.264,456.952 L521.264,446.452 L-10.392,139.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M640.776,387.952 L521.264,456.952 L521.264,446.452 L640.776,377.452 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M109.119,70.5 L640.776,377.452 L521.264,446.452 L-10.392,139.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<g data-svugy-level="backend" data-svugy-view="2.722 60 640.837 398.203" transform="matrix(1 0 0 1 109.119 70.5)">
+<path d="M-95.263,199 L353.255,457.952 L353.255,447.452 L-95.263,188.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M472.767,388.952 L353.255,457.952 L353.255,447.452 L472.767,378.452 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M24.249,119.5 L472.767,378.452 L353.255,447.452 L-95.263,188.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="backend" data-svugy-view="-56.909 97.328 551.078 351.125" transform="matrix(1 0 0 1 24.249 119.5)">
+<g data-svugy-edge="(backend.api -&gt; backend.queue)[0]" data-svugy-from="backend.api" data-svugy-to="backend.queue">
+<title>schedules a receipt</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(backend.api -&gt; backend.queue)[0]","from":"backend.api","to":"backend.queue","label":"schedules a receipt","description":"The API answers [the browser](#browser) *before* the receipt is sent."}</desc>
+<path d="M38.644,91.311 L131.204,144.751" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="parcel" fill="#3478f6" height="10" href="#traveler-parcel" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M38.644,91.311 L132.174,145.311" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(backend.queue -&gt; backend.worker)[0]" data-svugy-from="backend.queue" data-svugy-to="backend.worker">
+<title>hands over</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(backend.queue -&gt; backend.worker)[0]","from":"backend.queue","to":"backend.worker","label":"hands over"}</desc>
+<path d="M194.528,181.311 L287.089,234.751" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M194.528,181.311 L288.059,235.311" repeatCount="indefinite"/>
+</use>
+</g>
 <g data-svugy-element="backend.api">
 <title>API</title>
 <desc data-svugy-details="">{"kind":"element","path":"backend.api","label":"API","caption":"HTTP endpoints"}</desc>
@@ -233,214 +257,190 @@
 <g data-svugy-element="backend.queue">
 <title>Queue</title>
 <desc data-svugy-details="">{"kind":"element","path":"backend.queue","label":"Queue","caption":"pending jobs"}</desc>
-<path d="M145.165,185.811 L207.519,221.811 L207.519,211.311 L145.165,175.311 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M264.676,188.811 L207.519,221.811 L207.519,211.311 L264.676,178.311 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M202.322,142.311 L264.676,178.311 L207.519,211.311 L145.165,175.311 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="38.561" transform="matrix(0.866 0.5 -0.866 0.5 204.921 176.811)" x="0" y="-2">Queue</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="52.511" transform="matrix(0.866 0.5 -0.866 0.5 204.921 176.811)" x="0" y="11">pending jobs</text>
+<path d="M103.596,161.811 L165.949,197.811 L165.949,187.311 L103.596,151.311 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M223.107,164.811 L165.949,197.811 L165.949,187.311 L223.107,154.311 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M160.753,118.311 L223.107,154.311 L165.949,187.311 L103.596,151.311 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="38.561" transform="matrix(0.866 0.5 -0.866 0.5 163.351 152.811)" x="0" y="-2">Queue</text>
+<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="52.511" transform="matrix(0.866 0.5 -0.866 0.5 163.351 152.811)" x="0" y="11">pending jobs</text>
 </g>
 <g data-svugy-element="backend.worker">
 <title>Worker</title>
 <desc data-svugy-details="">{"kind":"element","path":"backend.worker","label":"Worker","caption":"background jobs"}</desc>
-<path d="M342.619,299.811 L412.145,339.952 L412.145,317.452 L342.619,277.311 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M469.303,306.952 L412.145,339.952 L412.145,317.452 L469.303,284.452 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M399.776,244.311 L469.303,284.452 L412.145,317.452 L342.619,277.311 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="43.693" transform="matrix(0.866 0.5 -0.866 0.5 405.961 280.881)" x="0" y="-2">Worker</text>
-<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="68.282" transform="matrix(0.866 0.5 -0.866 0.5 405.961 280.881)" x="0" y="11">background jobs</text>
+<path d="M259.48,251.811 L329.007,291.952 L329.007,269.452 L259.48,229.311 Z" fill="#275dc2" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M386.164,258.952 L329.007,291.952 L329.007,269.452 L386.164,236.452 Z" fill="#1e4b9e" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M316.638,196.311 L386.164,236.452 L329.007,269.452 L259.48,229.311 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="43.693" transform="matrix(0.866 0.5 -0.866 0.5 322.822 232.881)" x="0" y="-2">Worker</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="68.282" transform="matrix(0.866 0.5 -0.866 0.5 322.822 232.881)" x="0" y="11">background jobs</text>
 </g>
 <g data-svugy-edge="(backend.api -&gt; backend.queue)[0]" data-svugy-from="backend.api" data-svugy-to="backend.queue">
 <title>schedules a receipt</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.api -&gt; backend.queue)[0]","from":"backend.api","to":"backend.queue","label":"schedules a receipt","description":"The API answers [the browser](#browser) *before* the receipt is sent."}</desc>
-<path d="M38.644,68.811 Q105.975,-0.365 173.307,157.782" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="parcel" fill="#3478f6" height="10" href="#traveler-parcel" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M38.644,68.811 Q106.194,-0.589 173.744,158.811" repeatCount="indefinite"/>
-</use>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="118.202" x="26.308" y="110.459"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="98.202" x="85.409" y="122.13">schedules a receipt</text>
 </g>
 <g data-svugy-edge="(backend.queue -&gt; backend.worker)[0]" data-svugy-from="backend.queue" data-svugy-to="backend.worker">
 <title>hands over</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.queue -&gt; backend.worker)[0]","from":"backend.queue","to":"backend.worker","label":"hands over"}</desc>
-<path d="M236.097,194.811 Q303.414,113.692 370.731,259.795" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
-<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M236.097,194.811 Q303.647,113.411 371.197,260.811" repeatCount="indefinite"/>
-</use>
-</g>
-<g data-svugy-edge="(backend.api -&gt; backend.queue)[0]" data-svugy-from="backend.api" data-svugy-to="backend.queue">
-<title>schedules a receipt</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(backend.api -&gt; backend.queue)[0]","from":"backend.api","to":"backend.queue","label":"schedules a receipt","description":"The API answers [the browser](#browser) *before* the receipt is sent."}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="118.202" x="47.093" y="48.759"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="98.202" x="106.194" y="60.43">schedules a receipt</text>
-</g>
-<g data-svugy-edge="(backend.queue -&gt; backend.worker)[0]" data-svugy-from="backend.queue" data-svugy-to="backend.worker">
-<title>hands over</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(backend.queue -&gt; backend.worker)[0]","from":"backend.queue","to":"backend.worker","label":"hands over"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="76.145" x="265.575" y="162.759"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="56.145" x="303.647" y="174.43">hands over</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="76.145" x="203.221" y="200.459"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="56.145" x="241.294" y="212.13">hands over</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="" data-svugy-stub="browser">
 <title>to Browser</title>
 <desc data-svugy-details="">{"kind":"stub","target":"browser","edges":[{"kind":"edge","edge":"(browser -&gt; backend.api)[0]","from":"browser","to":"backend.api","label":"signs in"},{"kind":"edge","edge":"(browser -&gt; backend.api)[1]","from":"browser","to":"backend.api","label":"places an order"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -48.799 37.526)" width="61.887" x="-30.944" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="41.887" transform="matrix(0.866 -0.5 0.866 0.5 -48.799 37.526)" x="0" y="3.82">Browser</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 -20.566 21.226)" width="61.887" x="-30.944" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="41.887" transform="matrix(0.866 -0.5 0.866 0.5 -20.566 21.226)" x="0" y="3.82">Browser</text>
 </g>
 <g data-svugy-goto="data" data-svugy-stub="data.cache">
 <title>to Cache</title>
 <desc data-svugy-details="">{"kind":"stub","target":"data.cache","edges":[{"kind":"edge","edge":"(backend.api -&gt; data.cache)[0]","from":"backend.api","to":"data.cache","label":"looks up"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 28.327 145.002)" width="52.208" x="-26.104" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="32.208" transform="matrix(0.866 0.5 -0.866 0.5 28.327 145.002)" x="0" y="3.82">Cache</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 -2.786 127.039)" width="52.208" x="-26.104" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="32.208" transform="matrix(0.866 0.5 -0.866 0.5 -2.786 127.039)" x="0" y="3.82">Cache</text>
 </g>
 <g data-svugy-goto="data" data-svugy-stub="data.db">
 <title>to Database</title>
 <desc data-svugy-details="">{"kind":"stub","target":"data.db","edges":[{"kind":"edge","edge":"(backend.api -&gt; data.db)[0]","from":"backend.api","to":"data.db","label":"saves the order"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 82.609 176.342)" width="67.353" x="-33.676" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="47.353" transform="matrix(0.866 0.5 -0.866 0.5 82.609 176.342)" x="0" y="3.82">Database</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 55.48 160.679)" width="67.353" x="-33.676" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="47.353" transform="matrix(0.866 0.5 -0.866 0.5 55.48 160.679)" x="0" y="3.82">Database</text>
 </g>
 <g data-svugy-goto="" data-svugy-stub="mail">
 <title>to Email provider</title>
 <desc data-svugy-details="">{"kind":"stub","target":"mail","edges":[{"kind":"edge","edge":"(backend.worker -&gt; mail)[0]","from":"backend.worker","to":"mail","label":"sends the receipt","description":"The email provider delivers the receipt to the user's inbox."}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 463.801 336.776)" width="92.003" x="-46.001" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="72.003" transform="matrix(0.866 -0.5 0.866 0.5 463.801 336.776)" x="0" y="3.82">Email provider</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 -0.5 0.866 0.5 399.281 278.027)" width="92.003" x="-46.001" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="72.003" transform="matrix(0.866 -0.5 0.866 0.5 399.281 278.027)" x="0" y="3.82">Email provider</text>
 </g>
 </g>
 </g>
-<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="39.712" transform="matrix(0.866 0.5 0 1 -10.392 139.5)" x="9" y="21.5">Backend</text>
-<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="51.291" transform="matrix(0.866 0.5 0 1 -10.392 139.5)" x="9" y="34.5">your servers</text>
-</g>
-<g data-svugy-element="cdn">
-<title>CDN</title>
-<desc data-svugy-details="">{"kind":"element","path":"cdn","label":"CDN","caption":"static files"}</desc>
-<path d="M-44.189,207.286 L-44.189,217.786 C-44.189,231.221 -25.254,243.061 -1.896,244.232 C21.462,245.402 40.398,235.46 40.398,222.025 L40.398,211.525 C40.398,224.96 21.462,234.902 -1.896,233.732 C-25.254,232.561 -44.189,220.721 -44.189,207.286 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M40.398,211.525 C40.398,224.96 21.462,234.902 -1.896,233.732 C-25.254,232.561 -44.189,220.721 -44.189,207.286 C-44.189,193.851 -25.254,183.909 -1.896,185.079 C21.462,186.25 40.398,198.09 40.398,211.525 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="26.689" transform="matrix(0.866 0.5 -0.866 0.5 -1.896 209.405)" x="0" y="-2">CDN</text>
-<text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="41.583" transform="matrix(0.866 0.5 -0.866 0.5 -1.896 209.405)" x="0" y="11">static files</text>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="39.712" transform="matrix(0.866 0.5 0 1 -95.263 188.5)" x="9" y="21.5">Backend</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="51.291" transform="matrix(0.866 0.5 0 1 -95.263 188.5)" x="9" y="34.5">your servers</text>
 </g>
 <g data-svugy-element="data">
 <title>Data</title>
 <desc data-svugy-details="">{"kind":"element","path":"data","label":"Data","caption":"what the app remembers","description":"[The database](#data.db) keeps users and orders. [The cache](#data.cache) keeps the reads the API repeats most."}</desc>
-<path d="M3.137,327.811 L210.983,447.811 L210.983,437.311 L3.137,317.311 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M330.494,378.811 L210.983,447.811 L210.983,437.311 L330.494,368.311 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M122.648,248.311 L330.494,368.311 L210.983,437.311 L3.137,317.311 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<g data-svugy-level="data" data-svugy-view="58.953 244.891 215.726 170.339" transform="matrix(1 0 0 1 122.648 248.311)">
-<g data-svugy-element="data.cache">
-<title>Cache</title>
-<desc data-svugy-details="">{"kind":"element","path":"data.cache","label":"Cache","caption":"hot reads"}</desc>
-<path d="M-39.696,42.881 L-39.696,68.381 C-39.696,81.816 -20.76,93.656 2.598,94.826 C25.956,95.997 44.892,86.054 44.892,72.619 L44.892,47.119 C44.892,60.554 25.956,70.497 2.598,69.326 C-20.76,68.156 -39.696,56.316 -39.696,42.881 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M44.892,47.119 C44.892,60.554 25.956,70.497 2.598,69.326 C-20.76,68.156 -39.696,56.316 -39.696,42.881 C-39.696,29.446 -20.76,19.503 2.598,20.674 C25.956,21.844 44.892,33.684 44.892,47.119 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="37.523" transform="matrix(1 0 0 1 2.598 45)" x="0" y="4">Cache</text>
-<text fill="#1a1b1e" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="38.345" transform="matrix(1 0 0 1 2.598 45)" x="0" y="17">hot reads</text>
-</g>
+<path d="M-173.533,429.811 L-48.825,501.811 L-48.825,491.311 L-173.533,419.311 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M148.629,387.811 L-48.825,501.811 L-48.825,491.311 L148.629,377.311 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M23.921,305.311 L148.629,377.311 L-48.825,491.311 L-173.533,419.311 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="data" data-svugy-view="-117.717 301.891 260.952 167.339" transform="matrix(1 0 0 1 23.921 305.311)">
 <g data-svugy-element="data.db">
 <title>Database</title>
 <desc data-svugy-details="">{"kind":"element","path":"data.db","label":"Database","caption":"users · orders"}</desc>
-<path d="M43.443,90.881 L43.443,116.381 C43.443,129.816 62.378,141.656 85.737,142.826 C109.095,143.997 128.03,134.054 128.03,120.619 L128.03,95.119 C128.03,108.554 109.095,118.497 85.737,117.326 C62.378,116.156 43.443,104.316 43.443,90.881 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<path d="M128.03,95.119 C128.03,108.554 109.095,118.497 85.737,117.326 C62.378,116.156 43.443,104.316 43.443,90.881 C43.443,77.446 62.378,67.503 85.737,68.674 C109.095,69.844 128.03,81.684 128.03,95.119 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
-<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="55.395" transform="matrix(1 0 0 1 85.737 93)" x="0" y="4">Database</text>
-<text fill="#1a1b1e" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="56.192" transform="matrix(1 0 0 1 85.737 93)" x="0" y="17">users · orders</text>
+<path d="M-39.696,42.881 L-39.696,68.381 C-39.696,81.816 -20.76,93.656 2.598,94.826 C25.956,95.997 44.892,86.054 44.892,72.619 L44.892,47.119 C44.892,60.554 25.956,70.497 2.598,69.326 C-20.76,68.156 -39.696,56.316 -39.696,42.881 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M44.892,47.119 C44.892,60.554 25.956,70.497 2.598,69.326 C-20.76,68.156 -39.696,56.316 -39.696,42.881 C-39.696,29.446 -20.76,19.503 2.598,20.674 C25.956,21.844 44.892,33.684 44.892,47.119 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="55.395" transform="matrix(1 0 0 1 2.598 45)" x="0" y="4">Database</text>
+<text fill="#1a1b1e" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="56.192" transform="matrix(1 0 0 1 2.598 45)" x="0" y="17">users · orders</text>
+</g>
+<g data-svugy-element="data.cache">
+<title>Cache</title>
+<desc data-svugy-details="">{"kind":"element","path":"data.cache","label":"Cache","caption":"hot reads"}</desc>
+<path d="M-117.638,87.881 L-117.638,113.381 C-117.638,126.816 -98.702,138.656 -75.344,139.826 C-51.986,140.997 -33.051,131.054 -33.051,117.619 L-33.051,92.119 C-33.051,105.554 -51.986,115.497 -75.344,114.326 C-98.702,113.156 -117.638,101.316 -117.638,87.881 Z" fill="#a7adb8" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<path d="M-33.051,92.119 C-33.051,105.554 -51.986,115.497 -75.344,114.326 C-98.702,113.156 -117.638,101.316 -117.638,87.881 C-117.638,74.446 -98.702,64.503 -75.344,65.674 C-51.986,66.844 -33.051,78.684 -33.051,92.119 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="37.523" transform="matrix(1 0 0 1 -75.344 90)" x="0" y="4">Cache</text>
+<text fill="#1a1b1e" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="38.345" transform="matrix(1 0 0 1 -75.344 90)" x="0" y="17">hot reads</text>
 </g>
 <g data-svugy-overlay="">
 <g data-svugy-goto="backend" data-svugy-stub="backend.api">
 <title>to API</title>
 <desc data-svugy-details="">{"kind":"stub","target":"backend.api","edges":[{"kind":"edge","edge":"(backend.api -&gt; data.cache)[0]","from":"backend.api","to":"data.cache","label":"looks up"},{"kind":"edge","edge":"(backend.api -&gt; data.db)[0]","from":"backend.api","to":"data.db","label":"saves the order"}]}</desc>
-<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 76.314 53.412)" width="37.042" x="-18.521" y="-7.852"/>
-<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="17.042" transform="matrix(0.866 0.5 -0.866 0.5 76.314 53.412)" x="0" y="3.82">API</text>
+<rect fill="var(--svugy-container-blue-top)" height="15.705" rx="7.852" stroke="var(--svugy-container-blue-ink)" stroke-opacity="0.55" transform="matrix(0.866 0.5 -0.866 0.5 72.474 51.195)" width="37.042" x="-18.521" y="-7.852"/>
+<text fill="var(--svugy-container-blue-ink)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="17.042" transform="matrix(0.866 0.5 -0.866 0.5 72.474 51.195)" x="0" y="3.82">API</text>
 </g>
 </g>
 </g>
-<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="20.913" transform="matrix(0.866 0.5 0 1 3.137 317.311)" x="9" y="21.5">Data</text>
-<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="101.498" transform="matrix(0.866 0.5 0 1 3.137 317.311)" x="9" y="34.5">what the app remembers</text>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="20.913" transform="matrix(0.866 0.5 0 1 -173.533 419.311)" x="9" y="21.5">Data</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="101.498" transform="matrix(0.866 0.5 0 1 -173.533 419.311)" x="9" y="34.5">what the app remembers</text>
 </g>
 <g data-svugy-element="mail">
 <title>Email provider</title>
 <desc data-svugy-details="">{"kind":"element","path":"mail","label":"Email provider","caption":"outside your servers"}</desc>
-<path d="M599.206,465.952 L682.7,514.157 L682.7,491.657 L599.206,443.452 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
-<path d="M739.858,481.157 L682.7,514.157 L682.7,491.657 L739.858,458.657 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
-<path d="M656.364,410.452 L739.858,458.657 L682.7,491.657 L599.206,443.452 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
-<text fill="var(--svugy-text-muted)" font-size="12" font-weight="650" text-anchor="middle" textLength="84.41" transform="matrix(0.866 0.5 -0.866 0.5 669.532 451.055)" x="0" y="-2">Email provider</text>
-<text fill="var(--svugy-text-muted)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="83.664" transform="matrix(0.866 0.5 -0.866 0.5 669.532 451.055)" x="0" y="11">outside your servers</text>
+<path d="M516.068,417.952 L599.562,466.157 L599.562,443.657 L516.068,395.452 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
+<path d="M656.719,433.157 L599.562,466.157 L599.562,443.657 L656.719,410.657 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
+<path d="M573.226,362.452 L656.719,410.657 L599.562,443.657 L516.068,395.452 Z" fill="none" stroke="var(--svugy-external-outline)" stroke-dasharray="5 4" stroke-width="1"/>
+<text fill="var(--svugy-text-muted)" font-size="12" font-weight="650" text-anchor="middle" textLength="84.41" transform="matrix(0.866 0.5 -0.866 0.5 586.394 403.055)" x="0" y="-2">Email provider</text>
+<text fill="var(--svugy-text-muted)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="83.664" transform="matrix(0.866 0.5 -0.866 0.5 586.394 403.055)" x="0" y="11">outside your servers</text>
 </g>
 <g data-svugy-edge="(backend.api -&gt; data.cache)[0]" data-svugy-from="backend.api" data-svugy-to="data.cache">
 <title>looks up</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.api -&gt; data.cache)[0]","from":"backend.api","to":"data.cache","label":"looks up"}</desc>
-<path d="M157.289,133.811 Q125.767,77.41 94.246,274.207" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M-10.501,178.937 Q-16.659,121.166 -22.817,377.693" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M157.289,133.811 Q125.679,77.252 94.069,275.311" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M-10.501,178.937 Q-16.673,121.04 -22.844,378.811" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(backend.api -&gt; data.db)[0]" data-svugy-from="backend.api" data-svugy-to="data.db">
 <title>saves the order</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.api -&gt; data.db)[0]","from":"backend.api","to":"data.db","label":"saves the order"}</desc>
-<path d="M138.237,144.811 Q157.676,87.739 177.115,322.196" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M11.906,191.874 Q33.441,136.805 54.976,332.7" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="document" fill="#3478f6" height="10" href="#traveler-document" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M138.237,144.811 Q157.722,87.603 177.208,323.311" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M11.906,191.874 Q33.502,136.649 55.098,333.811" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(backend.worker -&gt; mail)[0]" data-svugy-from="backend.worker" data-svugy-to="mail">
 <title>sends the receipt</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.worker -&gt; mail)[0]","from":"backend.worker","to":"mail","label":"sends the receipt","description":"The email provider delivers the receipt to the user's inbox."}</desc>
-<path d="M549.843,371.452 Q588.633,312.975 627.424,425.896" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M381.834,372.452 Q462.901,272.398 543.969,378.064" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="envelope" fill="#3478f6" height="10" href="#traveler-envelope" stroke="#3478f6" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M549.843,371.452 Q588.814,312.702 627.785,426.952" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M381.834,372.452 Q463.24,271.979 544.647,378.952" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(browser -&gt; backend.api)[0]" data-svugy-from="browser" data-svugy-to="backend.api">
 <title>signs in</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; backend.api)[0]","from":"browser","to":"backend.api","label":"signs in"}</desc>
-<path d="M16.887,57.75 Q53.293,-9.851 89.699,93.947" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M2.598,66 Q3.892,4.677 5.186,142.883" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="key" fill="var(--svugy-text-muted)" height="10" href="#traveler-key" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M16.887,57.75 Q53.477,-10.192 90.067,95" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M2.598,66 Q3.897,4.43 5.196,144" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(browser -&gt; backend.api)[1]" data-svugy-from="browser" data-svugy-to="backend.api">
 <title>places an order</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; backend.api)[1]","from":"browser","to":"backend.api","label":"places an order"}</desc>
-<path d="M2.598,66 Q36.635,-0.434 70.672,104.938" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M-11.691,74.25 Q-12.77,12.744 -13.848,153.883" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="envelope" fill="var(--svugy-text-muted)" height="10" href="#traveler-envelope" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M2.598,66 Q36.806,-0.768 71.014,106" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M-11.691,74.25 Q-12.774,12.501 -13.856,155" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(browser -&gt; cdn)[0]" data-svugy-from="browser" data-svugy-to="cdn">
 <title>loads the page</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; cdn)[0]","from":"browser","to":"cdn","label":"loads the page"}</desc>
-<path d="M-11.691,74.25 Q-22.347,21.109 -33.003,190.29" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<path d="M16.887,57.75 Q65.3,-7.561 113.713,105.379" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
-<animateMotion dur="2.4s" path="M-11.691,74.25 Q-22.382,20.934 -33.073,191.405" repeatCount="indefinite"/>
+<animateMotion dur="2.4s" path="M16.887,57.75 Q65.52,-7.857 114.152,106.405" repeatCount="indefinite"/>
 </use>
 </g>
 <g data-svugy-edge="(backend.api -&gt; data.cache)[0]" data-svugy-from="backend.api" data-svugy-to="data.cache">
 <title>looks up</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.api -&gt; data.cache)[0]","from":"backend.api","to":"data.cache","label":"looks up"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="62.461" x="87.811" y="150.717"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="42.461" x="119.042" y="162.389">looks up</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="62.461" x="-47.904" y="192.105"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="42.461" x="-16.673" y="203.777">looks up</text>
 </g>
 <g data-svugy-edge="(backend.api -&gt; data.db)[0]" data-svugy-from="backend.api" data-svugy-to="data.db">
 <title>saves the order</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.api -&gt; data.db)[0]","from":"backend.api","to":"data.db","label":"saves the order"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="98.253" x="112.105" y="171.428"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="78.253" x="161.231" y="183.1">saves the order</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="98.253" x="-10.938" y="210.266"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="78.253" x="38.189" y="221.938">saves the order</text>
 </g>
 <g data-svugy-edge="(backend.worker -&gt; mail)[0]" data-svugy-from="backend.worker" data-svugy-to="mail">
 <title>sends the receipt</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(backend.worker -&gt; mail)[0]","from":"backend.worker","to":"mail","label":"sends the receipt","description":"The email provider delivers the receipt to the user's inbox."}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="107.107" x="548.19" y="362.067"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="87.107" x="601.744" y="373.739">sends the receipt</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" width="107.107" x="409.687" y="315.988"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="87.107" x="463.24" y="327.66">sends the receipt</text>
 </g>
 <g data-svugy-edge="(browser -&gt; backend.api)[0]" data-svugy-from="browser" data-svugy-to="backend.api">
 <title>signs in</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; backend.api)[0]","from":"browser","to":"backend.api","label":"signs in"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="58.539" x="24.207" y="25.239"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="38.539" x="53.477" y="36.911">signs in</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="58.539" x="-24.807" y="73.399"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="38.539" x="4.463" y="85.071">signs in</text>
 </g>
 <g data-svugy-edge="(browser -&gt; backend.api)[1]" data-svugy-from="browser" data-svugy-to="backend.api">
 <title>places an order</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; backend.api)[1]","from":"browser","to":"backend.api","label":"places an order"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="97.981" x="7.133" y="59.892"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="77.981" x="56.123" y="71.564">places an order</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="97.981" x="-62.374" y="94.645"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="77.981" x="-13.384" y="106.317">places an order</text>
 </g>
 <g data-svugy-edge="(browser -&gt; cdn)[0]" data-svugy-from="browser" data-svugy-to="cdn">
 <title>loads the page</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(browser -&gt; cdn)[0]","from":"browser","to":"cdn","label":"loads the page"}</desc>
-<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="93.879" x="-71.307" y="81.834"/>
-<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="73.879" x="-24.367" y="93.505">loads the page</text>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="93.879" x="18.58" y="29.258"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="73.879" x="65.52" y="40.93">loads the page</text>
 </g>
 <g data-svugy-overlay=""/>
 </g>
@@ -661,7 +661,24 @@
         const isSameOrdinal = edge.getAttribute(EDGE) === writtenEdgeName;
         return isSameEndpoints && isSameOrdinal;
       });
-      return targetedEdge ?? null;
+      return targetedEdge === undefined ? null : Contract.homeGroupOf(scope, targetedEdge);
+    },
+
+    /** Finds the group of `group`'s edge in its home level, the outermost of the edge's groups in `scope`, since a bundled edge's branches lie in its containers' levels; `group` itself when it draws no edge. */
+    homeGroupOf(scope, group) {
+      const edgeName = group.getAttribute(EDGE);
+      if (edgeName === null) {
+        return group;
+      }
+      const levelDepthOf = (edgeGroup) => {
+        const enclosingLevel = Contract.enclosingLevelOf(edgeGroup);
+        return Contract.depthOf(enclosingLevel);
+      };
+      const edgeGroups = Contract.edgesAt(scope, edgeName);
+      return edgeGroups.reduce((homeGroup, candidate) => {
+        const isCandidateOuter = levelDepthOf(candidate) < levelDepthOf(homeGroup);
+        return isCandidateOuter ? candidate : homeGroup;
+      });
     },
 
     /** Lists the groups of `scope` drawing the element or edge `group` draws: the element's group, or every group of the edge, its label's included. */
@@ -1230,7 +1247,8 @@
       if (isLeaf) {
         return this.zoomOntoLeaf(group);
       }
-      const reachedLevel = this.levelReachedThrough(group);
+      const homeGroup = Contract.homeGroupOf(this.shownLayer, group);
+      const reachedLevel = this.levelReachedThrough(homeGroup);
       return this.focus(reachedLevel);
     }
 

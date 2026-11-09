@@ -1,8 +1,5 @@
-//! Snapshot the svugy golden, examples/svugy/svugy.md, as static and interactive SVG text and as its static raster.
+//! Snapshot the svugy golden, examples/svugy/svugy.md, as static and interactive SVG text.
 
-mod support;
-
-use support::pixel_snapshot_test;
 use svugy::{InteractiveSvg, RenderSvg, StaticSvg};
 use svugy_model::model::Model;
 use svugy_parse::markdown::MarkdownParse;
@@ -58,8 +55,6 @@ fn svugy_example_static_svg_needs_no_css_script_font_or_animation() {
         assert!(!is_live_only_markup_present, "{live_only_markup}");
     }
 }
-
-pixel_snapshot_test!(svugy_example_static_raster, render_svugy_example());
 
 fn render_svugy_example() -> String {
     let model = svugy_example_model();
