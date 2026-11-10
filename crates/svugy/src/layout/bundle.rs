@@ -495,7 +495,7 @@ mod tests {
 
     use super::*;
     use crate::layout::LevelPlans;
-    use crate::metrics::BundledFont;
+    use crate::metrics::{BundledFont, InterFaces};
 
     #[test]
     fn edges_from_a_leaf_into_one_container_share_a_trunk_and_branch_flat_unless_one_ends_deeper() {
@@ -514,7 +514,7 @@ mod tests {
             builder.add_edge(&client, inner, Edge::new());
         }
         let model = builder.build().model.expect("fixture model is valid");
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
 
         let plans = LevelPlans::lay_out(&model, &font);
 

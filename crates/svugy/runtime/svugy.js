@@ -73,6 +73,7 @@
   const HEX_COLOR_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
   const RGB_COLOR_PATTERN = /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i;
   const FLOW_PATH_SELECTOR = 'path[data-svugy-flow]';
+  const FACE_PATH_SELECTOR = ':scope > path:not([data-svugy-hachure])';
   const LINK_HOVER_PROPERTY = '--svugy-link-hover';
   const MIN_LINK_CONTRAST = 3;
 
@@ -1536,7 +1537,7 @@
     },
 
     topFaceFillOf(group) {
-      const faces = Array.from(group.querySelectorAll(':scope > path'));
+      const faces = Array.from(group.querySelectorAll(FACE_PATH_SELECTOR));
       const filledFaces = faces.filter((face) => face.getAttribute('fill') !== 'none');
       const topFace = filledFaces.at(-1);
       if (topFace === undefined) {

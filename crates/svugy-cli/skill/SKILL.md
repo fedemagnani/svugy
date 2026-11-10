@@ -10,7 +10,7 @@ description: Draw architecture diagrams as interactive isometric SVGs by writing
 1. Write `NAME.md`, starting from the example below; to edit a diagram, change it in place.
 2. `svugy validate NAME.md --format json`: every problem in one pass, with line, column and a `did you mean` for typos. Fix all of them; repeat until exit code 0 (warnings don't block).
 3. Once per diagram, run `svugy view NAME.md` in the background: the user's browser shows it and reloads on every later save. Don't rerun it after edits.
-4. For the final file: `svugy render NAME.md -o NAME.svg`.
+4. For the final file: `svugy render NAME.md -o NAME.svg`; add `--theme sketch` if the user asks for a hand-drawn look.
 
 Starting from a `.d2` or `.json` file: `svugy import IN.d2 -o NAME.md` first. If the input holds something Markdown can't say, it lists every such part and writes nothing. Imported items spell every property out; factor repeated sets into frontmatter styles if the user will keep editing.
 

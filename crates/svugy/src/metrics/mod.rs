@@ -6,7 +6,7 @@ mod sized_face;
 use kurbo::{BezPath, Point, Size};
 use svugy_model::model::Element;
 
-pub(crate) use bundled::BundledFont;
+pub(crate) use bundled::{BundledFont, ExcalifontFaces, FaceSet, InterFaces};
 
 /// Measures the line box a single-line label occupies.
 pub(crate) trait TextMeasure {

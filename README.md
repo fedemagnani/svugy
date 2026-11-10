@@ -34,6 +34,7 @@ To let your agent do both, paste it the [installation prompt](https://svugy.dev/
 ```sh
 svugy render my.md -o my.svg                    # export interactive SVG
 svugy render my.md --profile static -o my.svg   # export static SVG
+svugy render my.md --theme sketch -o my.svg     # hand-drawn look, with either profile
 svugy view my.md                                # live rendering in the browser, reloaded on every save
 ```
 
@@ -46,4 +47,6 @@ Animations don't depend on the interactive feature: they use no script.
 
 ## License
 
-MIT or Apache-2.0, at your option. `svugy-dagre` is MIT, as dagre-dgl-rs is.
+MIT or Apache-2.0, at your option. `svugy-dagre` is MIT, as dagre-dgl-rs is. The sketch theme's strokes and hachure are ported from [rough.js](https://github.com/rough-stuff/rough) and [roughr](https://github.com/orhanbalci/rough-rs), both MIT.
+
+The bundled fonts are under the SIL Open Font License 1.1: Inter ([OFL.txt](crates/svugy/assets/fonts/OFL.txt)) and Excalifont, © Excalidraw ([Excalifont-OFL.txt](crates/svugy/assets/fonts/Excalifont-OFL.txt)).

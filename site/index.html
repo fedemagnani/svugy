@@ -9,6 +9,20 @@
     content="Write a diagram as a Markdown list; svugy renders it as one isometric SVG you can click into.">
   <link rel="stylesheet" href="playground.css">
   <link rel="stylesheet" href="site.css">
+  <link rel="preload" href="fonts/Excalifont-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+    // set before the first paint, so a remembered sketch theme never flashes the standard one; site.js remembers each pick
+    (() => {
+      let rememberedTheme = null;
+      try {
+        rememberedTheme = localStorage.getItem('svugy-theme');
+      } catch {
+        // storage blocked: every visit starts standard
+      }
+      const isSketch = rememberedTheme === 'sketch';
+      document.documentElement.dataset.theme = isSketch ? 'sketch' : 'standard';
+    })();
+  </script>
 </head>
 
 <body>

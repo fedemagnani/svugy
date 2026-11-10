@@ -33,6 +33,10 @@ impl RuntimeContract {
     pub(crate) const TO: &'static str = "data-svugy-to";
     /// Mark a connection's stroke, whose dash offset the runtime animates as flow.
     pub(crate) const FLOW: &'static str = "data-svugy-flow";
+    /// Mark a face's hachure strokes, which shade it but never take pointer events or highlights.
+    pub(crate) const HACHURE: &'static str = "data-svugy-hachure";
+    /// Mark a hatched face's fill paths, its canvas underlay and shade wash, which a highlight never restyles.
+    pub(crate) const FACE_FILL: &'static str = "data-svugy-face-fill";
     /// Mark a connection's moving traveler with its name.
     pub(crate) const TRAVELER: &'static str = "data-svugy-traveler";
     /// Mark a stub marker's group with its external endpoint.
@@ -83,7 +87,7 @@ mod tests {
     use svugy_model::model::{Edge, Element, Model, Traveler};
 
     use super::RuntimeContract;
-    use crate::render::profile::Interactive;
+    use crate::render::profile::Runtime;
     use crate::{InteractiveSvg, RenderSvg, StaticSvg};
 
     const CDATA_END: &str = "]]>";
@@ -149,8 +153,8 @@ mod tests {
                 .chain(runtime_owned_attributes);
             runtime_attributes
                 .filter(|attribute| {
-                    let is_missing_from_script = !Interactive::RUNTIME_SCRIPT.contains(attribute);
-                    let is_missing_from_style = !Interactive::RUNTIME_STYLE.contains(attribute);
+                    let is_missing_from_script = !Runtime::SCRIPT.contains(attribute);
+                    let is_missing_from_style = !Runtime::STYLE.contains(attribute);
                     is_missing_from_script && is_missing_from_style
                 })
                 .collect()
@@ -236,8 +240,8 @@ mod tests {
 
     #[test]
     fn runtime_sources_never_close_their_cdata_wrapper() {
-        let is_script_free_of_cdata_end = !Interactive::RUNTIME_SCRIPT.contains(CDATA_END);
-        let is_style_free_of_cdata_end = !Interactive::RUNTIME_STYLE.contains(CDATA_END);
+        let is_script_free_of_cdata_end = !Runtime::SCRIPT.contains(CDATA_END);
+        let is_style_free_of_cdata_end = !Runtime::STYLE.contains(CDATA_END);
         assert!(
             is_script_free_of_cdata_end,
             "runtime/svugy.js contains {CDATA_END}"

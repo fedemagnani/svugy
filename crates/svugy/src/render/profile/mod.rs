@@ -19,15 +19,19 @@ use crate::geometry::{
 };
 use crate::metrics::LabelRole;
 use crate::render::contract::{ContractAnnotator, DiagramDetails, RuntimeContract};
-use crate::render::theme::Token;
+use crate::render::theme::paint::Paint;
+use crate::render::theme::shading::Shading;
+use crate::render::theme::stroke::Stroke;
+use crate::render::theme::{Theme, Token};
 use crate::render::writer::css::CssValue;
 use crate::render::writer::path_data::PathData;
 use crate::render::writer::{Attributes, SvgWriter, ViewBox};
 use arrowhead::ArrowheadMarkers;
 use ground::EndlessGround;
 pub(crate) use interactive::Interactive;
+#[cfg(test)]
+pub(crate) use interactive::Runtime;
 use level_view::LevelViews;
-pub(crate) use paint::Paint;
 use paint::{Dashes, ModelPaints, PlatePaint, SolidPaint};
 pub(crate) use static_profile::Static;
 use traveler::{ResolvedTraveler, TravelerSymbols};
@@ -49,6 +53,9 @@ const SHEET_STROKE_OPACITY: f64 = 0.3;
 
 /// Express an output profile: how a paint is written, how a label is drawn, whether live-only content is shown, what runtime embeds the document.
 pub(crate) trait Profile {
+    /// Draw in this theme's palettes, label font and hand.
+    type Theme: Theme;
+
     /// Write `token` as the CSS value this profile gives it.
     fn token_value(&self, token: Token) -> CssValue;
 
@@ -89,10 +96,16 @@ pub(crate) struct Renderer<P> {
 }
 
 /// Renders the interactive profile, the product: themed in both palettes, labels in the viewer's font, the runtime embedded.
-pub(crate) type InteractiveRenderer = Renderer<Interactive>;
+pub(crate) type InteractiveRenderer<T> = Renderer<Interactive<T>>;
 
 /// Renders the self-contained static profile in the dark palette.
-pub(crate) type StaticRenderer<'f> = Renderer<Static<'f>>;
+pub(crate) type StaticRenderer<'f, T> = Renderer<Static<'f, T>>;
+
+/// Redraws paths in the hand of profile `P`'s theme.
+type ThemeStroke<P> = <<P as Profile>::Theme as Theme>::Stroke;
+
+/// Shades faces in the manner of profile `P`'s theme.
+type ThemeShading<P> = <<P as Profile>::Theme as Theme>::Shading;
 
 /// Pairs a disclosure layer with the scene projected from it: one layer of the interactive document.
 pub(crate) struct LayerScene<'d> {
@@ -179,7 +192,7 @@ impl<P: Profile> Renderer<P> {
     }
 }
 
-impl InteractiveRenderer {
+impl<T: Theme> InteractiveRenderer<T> {
     /// Write `layer_scenes`, disclosed from `model`, as the interactive document sized to the canvas covering every layer's root view, so changing layer never changes its aspect ratio: the model's title, its diagram details, the definitions every layer shares, one canvas under every layer's root view, the endless ground the reader pans across, then one group per layer, the deepest shown so a viewer without scripts sees the whole diagram.
     pub(crate) fn write_layered_document(
         &self,
@@ -194,7 +207,7 @@ impl InteractiveRenderer {
             })
             .collect();
         let definitions = Definitions::collect(&drawn_layers).with_endless_ground();
-        let layer_passes: Vec<LayerPass<'_, '_, Interactive>> = layer_scenes
+        let layer_passes: Vec<LayerPass<'_, '_, Interactive<T>>> = layer_scenes
             .iter()
             .map(|layer_scene| {
                 let layer_model = layer_scene.disclosure.model();
@@ -362,17 +375,30 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
             });
     }
 
-    /// Draw `label` in `ink`, a caption at the caption opacity.
+    /// Draw `label` in `ink`.
     fn write_label_in_ink(&self, writer: &mut SvgWriter, label: &Label, ink: Paint) {
+        let presentation = self.label_presentation(label, ink);
+        self.profile.write_label(writer, label, presentation);
+    }
+
+    /// Draw `label`, lying on a face its solid inks in `solid_ink`, inked and haloed as the theme's shading keeps it legible.
+    fn write_label_on_face(&self, writer: &mut SvgWriter, label: &Label, solid_ink: Paint) {
+        let legible_ink = ThemeShading::<P>::label_ink(solid_ink);
+        let ink_presentation = self.label_presentation(label, legible_ink);
+        let paint_value = |paint| self.profile.paint_value(paint);
+        let haloed_presentation = ThemeShading::<P>::halo_label(ink_presentation, paint_value);
+        self.profile.write_label(writer, label, haloed_presentation);
+    }
+
+    /// Fill `label` in `ink`, a caption at the caption opacity.
+    fn label_presentation(&self, label: &Label, ink: Paint) -> Attributes {
         let ink_fill = self.profile.paint_value(ink);
         let ink_presentation = Attributes::new().with_css_value("fill", &ink_fill);
         let is_caption = label.role == LabelRole::Caption;
-        let presentation = if is_caption {
-            ink_presentation.with_number("opacity", CAPTION_OPACITY)
-        } else {
-            ink_presentation
-        };
-        self.profile.write_label(writer, label, presentation);
+        if is_caption {
+            return ink_presentation.with_number("opacity", CAPTION_OPACITY);
+        }
+        ink_presentation
     }
 
     /// Set the legend's title in text ink and its entries muted, then each key row's sample and its muted description, outside every level group like the heading.
@@ -404,7 +430,8 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
                 let mut sample_path = BezPath::new();
                 sample_path.move_to(line.p0);
                 sample_path.line_to(line.p1);
-                let path_data = PathData(&sample_path).to_string();
+                let drawn_sample_path = ThemeStroke::<P>::redraw_connection(&sample_path);
+                let path_data = PathData(&drawn_sample_path).to_string();
                 let sample_attributes = self
                     .stroke_attributes(sample_paint, dashes)
                     .with_text("d", &path_data);
@@ -430,20 +457,26 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
             .with_dash_array(dashes)
     }
 
-    /// Paint one face of a solid in `solid_paint`: filled in its shade, outlined in the solid's outline.
+    /// Paint one face of a solid in `solid_paint`: its area shaded in the theme's manner, outlined in the solid's outline by the theme's hand.
     fn write_face(&self, writer: &mut SvgWriter, face: &Face, solid_paint: &SolidPaint) {
-        let face_paint = solid_paint.face(face.shade);
-        let face_fill = self.profile.paint_value(face_paint);
+        let shade = solid_paint.face(face.shade);
         let outline = solid_paint.outline();
         let outline_stroke = self.profile.paint_value(outline.paint);
-        let outline_data = PathData(&face.outline).to_string();
-        let face_attributes = Attributes::new()
-            .with_text("d", &outline_data)
-            .with_css_value("fill", &face_fill)
+        let outline_width = ThemeStroke::<P>::outline_width(outline.width);
+        let outline_presentation = Attributes::new()
             .with_css_value("stroke", &outline_stroke)
-            .with_number("stroke-width", outline.width)
+            .with_number("stroke-width", outline_width)
             .with_dash_array(outline.dashes);
-        writer.empty_element("path", &face_attributes);
+        let write_area = |writer: &mut SvgWriter, area_presentation| {
+            let paint_value = |paint| self.profile.paint_value(paint);
+            ThemeShading::<P>::write_area(writer, face, shade, area_presentation, paint_value);
+        };
+        ThemeStroke::<P>::write_outlined_area(
+            writer,
+            write_area,
+            &face.outline,
+            outline_presentation,
+        );
     }
 
     /// Paint `group` as level `level`'s group, back to front: traces on its floor, solids, lifted arcs, every connection's plated label over all of them, then its overlay.
@@ -495,7 +528,7 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
             }
             let label_ink = self.label_ink(solid, &solid_paint);
             for label in &solid.labels {
-                self.write_label_in_ink(writer, label, label_ink);
+                self.write_label_on_face(writer, label, label_ink);
             }
             for badge in &solid.badges {
                 self.write_badge(writer, badge);
@@ -510,15 +543,25 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         let ink_paint = solid_paint.ink();
         let sheet_stroke = self.profile.paint_value(ink_paint);
         let outline = solid_paint.outline();
-        let sheet_data = PathData(sheet).to_string();
-        let sheet_attributes = Attributes::new()
-            .with_text("d", &sheet_data)
-            .with_css_value("fill", &sheet_fill)
-            .with_number("fill-opacity", SHEET_FILL_OPACITY)
+        let outline_width = ThemeStroke::<P>::outline_width(outline.width);
+        let outline_presentation = Attributes::new()
             .with_css_value("stroke", &sheet_stroke)
             .with_number("stroke-opacity", SHEET_STROKE_OPACITY)
-            .with_number("stroke-width", outline.width);
-        writer.empty_element("path", &sheet_attributes);
+            .with_number("stroke-width", outline_width);
+        let sheet_data = PathData(sheet).to_string();
+        let write_sheet_area = |writer: &mut SvgWriter, area_presentation: Attributes| {
+            let sheet_attributes = area_presentation
+                .with_text("d", &sheet_data)
+                .with_css_value("fill", &sheet_fill)
+                .with_number("fill-opacity", SHEET_FILL_OPACITY);
+            writer.empty_element("path", &sheet_attributes);
+        };
+        ThemeStroke::<P>::write_outlined_area(
+            writer,
+            write_sheet_area,
+            sheet,
+            outline_presentation,
+        );
     }
 
     /// Ink a solid's labels: a hanging tag and its caption lie on the level's ground and take its ink, any other label lies on a face and takes the solid's.
@@ -566,7 +609,8 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         connection: &Connection,
         connection_paint: Paint,
     ) {
-        let path_data = PathData(&connection.path).to_string();
+        let drawn_path = ThemeStroke::<P>::redraw_connection(&connection.path);
+        let path_data = PathData(&drawn_path).to_string();
         let dashes = self.paints.connection_dashes(&connection.edge);
         let path_attributes = self
             .stroke_attributes(connection_paint, dashes)
@@ -620,23 +664,35 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         plated_label: &PlatedLabel,
         plate_paint: PlatePaint,
     ) {
-        let plate_rect = plated_label.plate.rect();
+        let plate = plated_label.plate;
+        let plate_rect = plate.rect();
         let plate_width = plate_rect.width();
         let plate_height = plate_rect.height();
-        let corner_radius = plated_label.plate.radii().top_left;
+        let corner_radius = plate.radii().top_left;
+        let plane = plated_label.label.plane;
         let plate_fill = self.profile.paint_value(plate_paint.fill);
         let plate_outline = self.profile.paint_value(plate_paint.outline);
-        let plate_attributes = Attributes::new()
-            .with_number("x", plate_rect.x0)
-            .with_number("y", plate_rect.y0)
-            .with_number("width", plate_width)
-            .with_number("height", plate_height)
-            .with_number("rx", corner_radius)
-            .with_css_value("fill", &plate_fill)
+        let outline_presentation = Attributes::new()
             .with_css_value("stroke", &plate_outline)
-            .with_number("stroke-opacity", PLATE_STROKE_OPACITY)
-            .with_transform(plated_label.label.plane);
-        writer.empty_element("rect", &plate_attributes);
+            .with_number("stroke-opacity", PLATE_STROKE_OPACITY);
+        let write_plate = |writer: &mut SvgWriter, plate_presentation: Attributes| {
+            let plate_attributes = plate_presentation
+                .with_number("x", plate_rect.x0)
+                .with_number("y", plate_rect.y0)
+                .with_number("width", plate_width)
+                .with_number("height", plate_height)
+                .with_number("rx", corner_radius)
+                .with_css_value("fill", &plate_fill)
+                .with_transform(plane);
+            writer.empty_element("rect", &plate_attributes);
+        };
+        ThemeStroke::<P>::write_outlined_plate(
+            writer,
+            write_plate,
+            plate,
+            plane,
+            outline_presentation,
+        );
         self.write_label_in_ink(writer, &plated_label.label, plate_paint.ink);
     }
 
@@ -675,8 +731,9 @@ mod tests {
     use crate::geometry::fixtures::FixedAdvanceMeasure;
     use crate::geometry::{FaceShade, NestedInterior, StubMarker};
     use crate::layout::{LevelPlan, LevelPlans};
-    use crate::metrics::{BundledFont, TextAnchor};
-    use crate::render::theme::FaceShades;
+    use crate::metrics::{BundledFont, ExcalifontFaces, InterFaces, TextAnchor};
+    use crate::render::theme::sketch::Sketch;
+    use crate::render::theme::{FaceShades, Standard};
     use crate::{InteractiveSvg, RenderSvg, StaticSvg};
 
     const FORBIDDEN_STATIC_MARKUP: [&str; 6] = [
@@ -722,15 +779,15 @@ mod tests {
     }
 
     fn render_fixture_scene(model: &Model) -> String {
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let scene = Scene::two_solids_and_one_connection();
-        let profile = Static::new(&font);
+        let profile = Static::<Standard>::new(&font);
         render_scene(model, &scene, profile)
     }
 
     fn render_interactive_fixture_scene(model: &Model) -> String {
         let scene = Scene::two_solids_and_one_connection();
-        render_scene(model, &scene, Interactive)
+        render_scene(model, &scene, Interactive::<Standard>::new())
     }
 
     #[test]
@@ -738,6 +795,17 @@ mod tests {
         let a_element = Element::new("a");
         let model = model_with_a_and_b(a_element);
         let markup = render_fixture_scene(&model);
+        insta::assert_snapshot!(markup);
+    }
+
+    #[test]
+    fn fixture_scene_renders_in_the_sketch_theme_as_a_static_document() {
+        let a_element = Element::new("a");
+        let model = model_with_a_and_b(a_element);
+        let font = BundledFont::<ExcalifontFaces>::new();
+        let scene = Scene::two_solids_and_one_connection();
+        let profile = Static::<Sketch>::new(&font);
+        let markup = render_scene(&model, &scene, profile);
         insta::assert_snapshot!(markup);
     }
 
@@ -908,10 +976,10 @@ mod tests {
     }
 
     fn render_nested(depth: usize) -> String {
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let model = nested_model(depth);
         let scene = nested_scene(depth);
-        let profile = Static::new(&font);
+        let profile = Static::<Standard>::new(&font);
         render_scene(&model, &scene, profile)
     }
 
@@ -1013,7 +1081,7 @@ mod tests {
     fn every_nested_level_carries_its_outer_view_as_its_data_view() {
         let model = nested_model(DEEP_NESTED_DEPTH);
         let scene = nested_scene(DEEP_NESTED_DEPTH);
-        let markup = render_scene(&model, &scene, Interactive);
+        let markup = render_scene(&model, &scene, Interactive::<Standard>::new());
         let nested_interiors: Vec<NestedInterior> = scene.root.nested_interiors().collect();
         assert_eq!(nested_interiors.len(), DEEP_NESTED_DEPTH - 1);
         for nested_interior in nested_interiors {
@@ -1113,6 +1181,26 @@ mod tests {
     }
 
     #[test]
+    fn only_the_sketch_theme_hatches_faces_over_fills_the_runtime_never_highlights() {
+        let model = model_with_a_and_b(Element::new("a"));
+        let scene = Scene::two_solids_and_one_connection();
+        let standard_markup = render_interactive_fixture_scene(&model);
+        let sketch_markup = render_scene(&model, &scene, Interactive::<Sketch>::new());
+        let sketch_attributes = [RuntimeContract::HACHURE, RuntimeContract::FACE_FILL];
+        for sketch_attribute in sketch_attributes {
+            let marked_element = format!(" {sketch_attribute}=\"\"");
+            assert!(
+                sketch_markup.contains(&marked_element),
+                "a sketched face must carry {sketch_attribute}"
+            );
+            assert!(
+                !standard_markup.contains(&marked_element),
+                "a standard face must never carry {sketch_attribute}"
+            );
+        }
+    }
+
+    #[test]
     fn interactive_document_themes_both_palettes_and_embeds_the_runtime_last() {
         let model = model_with_a_and_b(Element::new("a"));
         let markup = render_interactive_fixture_scene(&model);
@@ -1173,7 +1261,7 @@ mod tests {
         let views_by_level =
             BTreeMap::from([(ElementPath::root(), view), (desk.path().clone(), view)]);
         let scene = Scene::new(Vec::new(), root, views_by_level);
-        let markup = render_scene(&model, &scene, Interactive);
+        let markup = render_scene(&model, &scene, Interactive::<Standard>::new());
         let desk_tag = label_line(&markup, "desk");
         let core_tag = label_line(&markup, "core");
         assert!(
@@ -1184,7 +1272,7 @@ mod tests {
     }
 
     /// Build the fixture plan's `a -> b`, titled and subtitled, projected in `font`.
-    fn headed_fixture(font: &BundledFont) -> (Model, Scene) {
+    fn headed_fixture(font: &BundledFont<InterFaces>) -> (Model, Scene) {
         let mut builder = ModelBuilder::new()
             .with_title("svugy · how it is built")
             .with_subtitle("full Rust stack");
@@ -1211,9 +1299,9 @@ mod tests {
 
     #[test]
     fn interactive_heading_sets_upright_text_outside_every_level_in_text_and_muted_ink() {
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let (model, scene) = headed_fixture(&font);
-        let markup = render_scene(&model, &scene, Interactive);
+        let markup = render_scene(&model, &scene, Interactive::<Standard>::new());
 
         let heading_lines = lines_before_the_root_level(&markup);
 
@@ -1255,9 +1343,9 @@ mod tests {
 
     #[test]
     fn static_heading_outlines_both_lines_in_palette_literals_before_the_root_level() {
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let (model, scene) = headed_fixture(&font);
-        let profile = Static::new(&font);
+        let profile = Static::<Standard>::new(&font);
         let markup = render_scene(&model, &scene, profile);
 
         let heading_lines = lines_before_the_root_level(&markup);
@@ -1307,7 +1395,7 @@ mod tests {
         let labelled_connection = scene.root.connections.remove(0);
         scene.root.traces.push(labelled_connection);
 
-        let markup = render_scene(&model, &scene, Interactive);
+        let markup = render_scene(&model, &scene, Interactive::<Standard>::new());
 
         let document = roxmltree::Document::parse(&markup).expect("well-formed XML");
         let root_level = document
@@ -1388,7 +1476,7 @@ mod tests {
     fn interactive_profile_overlays_every_level_with_its_stub_markers() {
         let model = nested_model(NESTED_DEPTH);
         let scene = nested_scene(NESTED_DEPTH);
-        let markup = render_scene(&model, &scene, Interactive);
+        let markup = render_scene(&model, &scene, Interactive::<Standard>::new());
         let overlay_group_count = markup.matches("<g data-svugy-overlay=\"\"").count();
         assert_eq!(overlay_group_count, NESTED_DEPTH);
         let stub_group =

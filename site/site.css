@@ -9,7 +9,9 @@
   --ring: #d4d4d8;
   --radius: 6px;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --standard-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --sketch-sans: Excalifont, "Comic Sans MS", cursive;
+  --sans: var(--standard-sans);
   /* the names docs/theme/playground.css reads from mdBook */
   --quote-bg: #111216;
   --fg: var(--text);
@@ -34,6 +36,31 @@
   .svugy-token-arrow { color: #a06a00; }
   .svugy-token-punctuation { color: #5b6b80; }
 }
+
+/* Excalifont, © Excalidraw, SIL OFL 1.1: fonts/Excalifont-OFL.txt */
+@font-face {
+  font-family: Excalifont;
+  src: url("fonts/Excalifont-Regular.woff2") format("woff2");
+  font-display: swap;
+}
+
+/* the sketch theme, picked on the live editor's switch: the diagram's hand-drawn font, and wobbly borders from uneven elliptic corners */
+:root[data-theme="sketch"] {
+  --sans: var(--sketch-sans);
+  --sketch-corners: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  font-synthesis: none;
+}
+[data-theme="sketch"] :is(.outline-button, .command, .segmented, .svugy-theme-switch, .picker select) { border-radius: var(--sketch-corners); }
+[data-theme="sketch"] .segmented button { font-size: 14.5px; }
+[data-theme="sketch"] :is(.segmented button, .svugy-theme-switch label) { border-radius: var(--sketch-corners); }
+[data-theme="sketch"] .command { border-width: 1.5px; }
+[data-theme="sketch"] .hero h1 { letter-spacing: 0; }
+[data-theme="sketch"] .try .picker select { border-radius: 14px 5px 0 0 / 6px 12px 0 0; }
+[data-theme="sketch"] .svugy-live object.svugy { border-width: 1.5px; border-radius: 0 22px 12px 26px / 0 12px 24px 14px; }
+
+/* each theme's switch label wears that theme's font, so it previews the page it picks */
+.svugy-theme-switch label:has(input[value="standard"]) { font-family: var(--standard-sans); }
+.svugy-theme-switch label:has(input[value="sketch"]) { font-family: var(--sketch-sans); font-size: 14.5px; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -159,9 +186,9 @@ main, main:has(.svugy-playground) {
 .install { display: flex; flex-direction: column; align-items: center; gap: 6px; width: min(100%, 620px); }
 /* on a narrow phone the button drops under its label rather than wrapping either */
 .ask-agent { margin: 8px 0 0; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 10px; font-size: 14.5px; color: var(--text-muted); white-space: nowrap; }
-/* shadcn's tabs, small */
-.segmented { display: flex; padding: 2px; background: var(--muted); border-radius: var(--radius); }
-.segmented button {
+/* shadcn's tabs, small; the playground's theme switch wears them too */
+.segmented, .svugy-theme-switch { display: flex; padding: 2px; background: var(--muted); border-radius: var(--radius); }
+.segmented button, .svugy-theme-switch label {
   font: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -173,7 +200,7 @@ main, main:has(.svugy-playground) {
   padding: 3px 11px;
   cursor: pointer;
 }
-.segmented button[aria-selected="true"] { color: var(--text); background: var(--canvas); box-shadow: 0 1px 2px rgb(0 0 0 / 0.3); }
+.segmented button[aria-selected="true"], .svugy-theme-switch label:has(:checked) { color: var(--text); background: var(--canvas); box-shadow: 0 1px 2px rgb(0 0 0 / 0.3); }
 /* an empty first column as wide as the copy button keeps the command at the exact centre */
 .command {
   display: grid;
@@ -195,6 +222,10 @@ main, main:has(.svugy-playground) {
 .try .picker select { height: 30px; font-size: 13px; padding: 0 28px 0 10px; border-radius: var(--radius) var(--radius) 0 0; }
 .try .picker::after { right: 11px; width: 5px; height: 5px; }
 .try .svugy-editor { border-top-left-radius: 0; }
+/* the theme switch sits level with the example picker, on the canvas's top-right corner */
+.try .svugy-switches { position: absolute; right: 0; bottom: calc(100% + 1px); }
+.svugy-theme-switch input { position: absolute; opacity: 0; pointer-events: none; }
+.svugy-theme-switch label:has(:focus-visible) { outline: 2px solid var(--ring); }
 /* shadcn's select trigger */
 .picker { position: relative; }
 .picker select {

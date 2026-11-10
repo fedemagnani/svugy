@@ -12,6 +12,7 @@ expression: interactive_svg
 [data-svugy-shown] [data-svugy-entered] > [data-svugy-overlay] { visibility: visible; }
 
 [data-svugy-flow] { animation: svugy-flow 1.2s linear infinite; }
+[data-svugy-hachure] { pointer-events: none; }
 @keyframes svugy-flow { to { stroke-dashoffset: -24; } }
 
 [data-svugy-dimmed] > :not([data-svugy-level], [data-svugy-edge]) { opacity: 0.2; }
@@ -25,20 +26,20 @@ expression: interactive_svg
 [data-svugy-contract] .svugy-description { -webkit-user-select: text; user-select: text; }
 [data-svugy-contract][data-svugy-panning], [data-svugy-contract][data-svugy-panning] * { cursor: grabbing; }
 [data-svugy-contract][data-svugy-panning] .svugy-panel { visibility: hidden; }
-:is([data-svugy-element], [data-svugy-stub])[role="button"]:hover:not(:has([role="button"]:hover, [data-svugy-entered])) > :is(path, rect),
-:is([data-svugy-element], [data-svugy-edge], [data-svugy-stub]):focus-visible:not(:has([data-svugy-entered])) > :is(path, rect) { stroke: var(--svugy-text); stroke-opacity: 1; stroke-width: 2; fill-opacity: 0.8; }
+:is([data-svugy-element], [data-svugy-stub])[role="button"]:hover:not(:has([role="button"]:hover, [data-svugy-entered])) > :is(path, rect):not([data-svugy-hachure], [data-svugy-face-fill]),
+:is([data-svugy-element], [data-svugy-edge], [data-svugy-stub]):focus-visible:not(:has([data-svugy-entered])) > :is(path, rect):not([data-svugy-hachure], [data-svugy-face-fill]) { stroke: var(--svugy-text); stroke-opacity: 1; stroke-width: 2; fill-opacity: 0.8; }
 [data-svugy-contract] .svugy-highlighted { animation: svugy-highlight 0.3s ease-in-out 4 alternate; }
-[data-svugy-contract] .svugy-highlighted > :is(path, rect) { stroke: var(--svugy-container-blue-ink); stroke-opacity: 1; stroke-width: 2.5; }
+[data-svugy-contract] .svugy-highlighted > :is(path, rect):not([data-svugy-hachure], [data-svugy-face-fill]) { stroke: var(--svugy-container-blue-ink); stroke-opacity: 1; stroke-width: 2.5; }
 @keyframes svugy-highlight { to { filter: drop-shadow(0 0 6px var(--svugy-container-blue-ink)); } }
 
 [data-svugy-contract] .svugy-panel { pointer-events: none; }
-[data-svugy-contract] .svugy-panel-plate { fill: #12141c; fill-opacity: 0.96; stroke: #2c3242; stroke-width: 1; }
-[data-svugy-contract] :is(.svugy-panel-title, .svugy-panel-body) { font-family: Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; text-anchor: start; letter-spacing: 0; }
-[data-svugy-contract] .svugy-panel-title { font-size: 12.5px; font-weight: 650; fill: #eef0f6; }
-[data-svugy-contract] .svugy-panel-body { font-size: 11.5px; font-weight: 450; fill: #a6adbf; }
+[data-svugy-contract] .svugy-panel-plate { fill: color-mix(in srgb, var(--svugy-canvas) 96%, white); fill-opacity: 0.96; stroke: color-mix(in srgb, var(--svugy-text-muted) 25%, var(--svugy-canvas)); stroke-width: 1; }
+[data-svugy-contract] :is(.svugy-panel-title, .svugy-panel-body) { text-anchor: start; letter-spacing: 0; }
+[data-svugy-contract] .svugy-panel-title { font-size: 12.5px; font-weight: 650; fill: var(--svugy-text); }
+[data-svugy-contract] .svugy-panel-body { font-size: 11.5px; font-weight: 450; fill: var(--svugy-text-muted); }
 
 [data-svugy-contract] .svugy-description-frame { overflow: visible; }
-[data-svugy-contract] .svugy-description { box-sizing: border-box; max-height: 100%; overflow-y: auto; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--svugy-text-muted) 40%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--svugy-canvas) 94%, var(--svugy-text)); box-shadow: 0 4px 16px rgb(0 0 0 / 0.25); color: var(--svugy-text); font: 450 12.5px/1.5 Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; overflow-wrap: anywhere; }
+[data-svugy-contract] .svugy-description { box-sizing: border-box; max-height: 100%; overflow-y: auto; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--svugy-text-muted) 40%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--svugy-canvas) 94%, var(--svugy-text)); box-shadow: 0 4px 16px rgb(0 0 0 / 0.25); color: var(--svugy-text); font-size: 12.5px; font-weight: 450; line-height: 1.5; overflow-wrap: anywhere; }
 [data-svugy-contract] .svugy-description :is(h3, h4, h5, h6, p, ul, ol, pre, section) { margin: 0 0 8px; }
 [data-svugy-contract] .svugy-description > :last-child,
 [data-svugy-contract] .svugy-description :is(section, li) > :last-child { margin-bottom: 0; }
@@ -57,12 +58,6 @@ expression: interactive_svg
 [data-svugy-contract] .svugy-description a { color: var(--svugy-container-blue-ink); }
 [data-svugy-contract] .svugy-description button { margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; line-height: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 45%, transparent); text-underline-offset: 2px; cursor: pointer; }
 [data-svugy-contract] .svugy-description button:hover, [data-svugy-contract] .svugy-description button:focus-visible { color: var(--svugy-link-hover, var(--svugy-container-blue-ink)); text-decoration-color: currentColor; outline: none; }
-
-@media (prefers-color-scheme: light) {
-  [data-svugy-contract] .svugy-panel-plate { fill: #ffffff; stroke: #d5d9e3; }
-  [data-svugy-contract] .svugy-panel-title { fill: #161922; }
-  [data-svugy-contract] .svugy-panel-body { fill: #545b6c; }
-}
 
 @media (prefers-reduced-motion: reduce) {
   [data-svugy-flow] { animation: none; }
@@ -1322,6 +1317,7 @@ expression: interactive_svg
   const HEX_COLOR_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
   const RGB_COLOR_PATTERN = /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i;
   const FLOW_PATH_SELECTOR = 'path[data-svugy-flow]';
+  const FACE_PATH_SELECTOR = ':scope > path:not([data-svugy-hachure])';
   const LINK_HOVER_PROPERTY = '--svugy-link-hover';
   const MIN_LINK_CONTRAST = 3;
 
@@ -2785,7 +2781,7 @@ expression: interactive_svg
     },
 
     topFaceFillOf(group) {
-      const faces = Array.from(group.querySelectorAll(':scope > path'));
+      const faces = Array.from(group.querySelectorAll(FACE_PATH_SELECTOR));
       const filledFaces = faces.filter((face) => face.getAttribute('fill') !== 'none');
       const topFace = filledFaces.at(-1);
       if (topFace === undefined) {

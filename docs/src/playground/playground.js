@@ -15,6 +15,10 @@
       tokenPattern: /(?<string>"(?:[^"\\\n]|\\.)*")|(?<comment>#.*)|(?<arrow><->|->|<-|--)|(?<keyword>(?<![\w.-])(?:vars|svugy|style|shape|label|link|direction|caption|height|position|badge|subtitle|legend|title|entries|dashes|badges|x|y)(?![\w.-])(?=\s*:))|(?<key>[A-Za-z_][\w.-]*(?=\s*:))|(?<number>-?\b\d+(?:\.\d+)?\b)|(?<punctuation>[{}[\];:])/g,
     },
   };
+  const THEMES = {
+    standard: { label: 'Standard', byte: 0 },
+    sketch: { label: 'Sketch', byte: 1 },
+  };
 
   const encodedWasm = globalThis.svugyWasmBase64;
   let sharedRendererPromise = null;
@@ -22,7 +26,7 @@
   const unmountedContainers = document.querySelectorAll('.svugy-live:not([data-svugy-mounted])');
   unmountedContainers.forEach(mountLiveEditor);
 
-  // Mount one editor: its first `textarea[data-svugy-language]` is shown, any further one turns into a switchable draft, and data-svugy-curtain lays the source over the diagram as a curtain.
+  // Mount one editor: its first `textarea[data-svugy-language]` is shown, any further one turns into a switchable draft, a theme switch picks standard or sketch (starting from data-svugy-theme, announcing each pick as a bubbling `svugy-theme` event), and data-svugy-curtain lays the source over the diagram as a curtain.
   function mountLiveEditor(container, editorIndex) {
     container.dataset.svugyMounted = '';
     const sources = container.querySelectorAll('textarea[data-svugy-language]');
@@ -34,6 +38,9 @@
     }
     const isSwitchable = alternateSources.length > 0;
     let activeLanguageName = source.dataset.svugyLanguage;
+    const requestedThemeName = container.dataset.svugyTheme;
+    const isKnownTheme = Object.hasOwn(THEMES, requestedThemeName);
+    let activeThemeName = isKnownTheme ? requestedThemeName : 'standard';
     let shownPreview = container.querySelector('object.svugy');
     let loadingPreview = null;
     let pendingRender = null;
@@ -71,12 +78,8 @@
       editor.append(highlightBlock, source);
       previewPane.append(shownPreview);
       playground.append(editor, previewPane);
-      const editorParts = [playground, diagnosticsList];
-      if (isSwitchable) {
-        const languageSwitch = buildLanguageSwitch();
-        editorParts.unshift(languageSwitch);
-      }
-      container.replaceChildren(...editorParts);
+      const switches = buildSwitches();
+      container.replaceChildren(switches, playground, diagnosticsList);
       const hasCurtain = container.hasAttribute('data-svugy-curtain');
       if (hasCurtain) {
         const curtain = buildCurtain(playground);
@@ -91,24 +94,39 @@
       source.setAttribute('aria-label', `${activeLanguage.label} source`);
     }
 
-    function buildLanguageSwitch() {
-      const languageSwitch = document.createElement('div');
-      languageSwitch.className = 'svugy-language-switch';
-      languageSwitch.setAttribute('role', 'radiogroup');
-      languageSwitch.setAttribute('aria-label', 'Source language');
-      for (const languageName of Object.keys(drafts)) {
-        const language = LANGUAGES[languageName];
+    function buildSwitches() {
+      const switches = document.createElement('div');
+      switches.className = 'svugy-switches';
+      if (isSwitchable) {
+        const draftLanguageNames = Object.keys(drafts);
+        const languageSwitch = buildRadioSwitch('language', 'Source language', draftLanguageNames, LANGUAGES, activeLanguageName);
+        languageSwitch.addEventListener('change', onLanguageSwitched);
+        switches.append(languageSwitch);
+      }
+      const themeNames = Object.keys(THEMES);
+      const themeSwitch = buildRadioSwitch('theme', 'Theme', themeNames, THEMES, activeThemeName);
+      themeSwitch.addEventListener('change', onThemeSwitched);
+      switches.append(themeSwitch);
+      return switches;
+    }
+
+    function buildRadioSwitch(kind, ariaLabel, choiceNames, choices, checkedName) {
+      const radioSwitch = document.createElement('div');
+      radioSwitch.className = `svugy-${kind}-switch`;
+      radioSwitch.setAttribute('role', 'radiogroup');
+      radioSwitch.setAttribute('aria-label', ariaLabel);
+      for (const choiceName of choiceNames) {
+        const choice = choices[choiceName];
         const option = document.createElement('label');
         const radio = document.createElement('input');
         radio.type = 'radio';
-        radio.name = `svugy-language-${editorIndex}`;
-        radio.value = languageName;
-        radio.checked = languageName === activeLanguageName;
-        option.append(radio, ` ${language.label}`);
-        languageSwitch.append(option);
+        radio.name = `svugy-${kind}-${editorIndex}`;
+        radio.value = choiceName;
+        radio.checked = choiceName === checkedName;
+        option.append(radio, ` ${choice.label}`);
+        radioSwitch.append(option);
       }
-      languageSwitch.addEventListener('change', onLanguageSwitched);
-      return languageSwitch;
+      return radioSwitch;
     }
 
     function onLanguageSwitched(event) {
@@ -117,6 +135,13 @@
       source.value = drafts[activeLanguageName];
       labelSource();
       onSourceEdited();
+    }
+
+    function onThemeSwitched(event) {
+      activeThemeName = event.target.value;
+      const themeEvent = new CustomEvent('svugy-theme', { bubbles: true, detail: { themeName: activeThemeName } });
+      container.dispatchEvent(themeEvent);
+      renderSoon();
     }
 
     function onSourceEdited() {
@@ -146,8 +171,9 @@
     async function renderSource() {
       renderGeneration += 1;
       const generation = renderGeneration;
-      const { byte } = LANGUAGES[activeLanguageName];
-      const request = { editorKey: editorIndex, generation, text: source.value, languageByte: byte };
+      const languageByte = LANGUAGES[activeLanguageName].byte;
+      const themeByte = THEMES[activeThemeName].byte;
+      const request = { editorKey: editorIndex, generation, text: source.value, languageByte, themeByte };
       let draftVerdict;
       let fullVerdict;
       try {
@@ -415,26 +441,26 @@
     const { instance } = await WebAssembly.instantiate(wasmBytes, {});
     const renderOnWasm = wasmRendererOf(instance);
     return {
-      async render({ text, languageByte, isDraft }) {
+      async render({ text, languageByte, themeByte, isDraft }) {
         await new Promise((resolve) => setTimeout(resolve, 0));
-        return renderOnWasm(text, languageByte, isDraft);
+        return renderOnWasm(text, languageByte, themeByte, isDraft);
       },
       close() {},
     };
   }
 
-  // Wrap one wasm instance of svugy into one function: source text in, verdict out, drafted in the seed arrangement when asked.
+  // Wrap one wasm instance of svugy into one function: source text in, verdict out, drawn in the theme named, drafted in the seed arrangement when asked.
   function wasmRendererOf(instance) {
     const { memory, input_buffer, render, render_draft, output_pointer } = instance.exports;
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
-    return (text, languageByte, isDraft) => {
+    return (text, languageByte, themeByte, isDraft) => {
       const encoded = encoder.encode(text);
       const inputStart = input_buffer(encoded.length);
       const inputView = new Uint8Array(memory.buffer, inputStart, encoded.length);
       inputView.set(encoded);
       const renderVerdict = isDraft ? render_draft : render;
-      const outputLength = renderVerdict(languageByte);
+      const outputLength = renderVerdict(languageByte, themeByte);
       const outputStart = output_pointer();
       const output = new Uint8Array(memory.buffer, outputStart, outputLength);
       const verdictJson = decoder.decode(output);
@@ -477,7 +503,7 @@
       if (!request) return;
       const isStale = queue.some((queued) => queued.editorKey === request.editorKey && queued.generation > request.generation);
       try {
-        const verdict = isStale ? null : renderOnWasm(request.text, request.languageByte, request.isDraft);
+        const verdict = isStale ? null : renderOnWasm(request.text, request.languageByte, request.themeByte, request.isDraft);
         self.postMessage({ type: 'verdict', id: request.id, verdict });
       } catch (error) {
         self.postMessage({ type: 'verdict', id: request.id, error: String(error) });

@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use kurbo::{BezPath, Point};
 use ttf_parser::Face;
 
@@ -9,50 +11,44 @@ const MIDDLE_BAND_LIGHTEST_WEIGHT: u16 = 400;
 /// Name the heaviest weight of the middle band CSS matches within first.
 const MIDDLE_BAND_HEAVIEST_WEIGHT: u16 = 500;
 
-/// Bundles every Inter face with its CSS weight, by ascending weight.
-const INTER_BY_ASCENDING_WEIGHT: [(u16, &[u8]); 4] = [
-    (400, include_bytes!("../../assets/fonts/Inter-Regular.ttf")),
-    (500, include_bytes!("../../assets/fonts/Inter-Medium.ttf")),
-    (600, include_bytes!("../../assets/fonts/Inter-SemiBold.ttf")),
-    (700, include_bytes!("../../assets/fonts/Inter-Bold.ttf")),
-];
-
-/// Sets every label in the bundled static Inter faces.
-pub(crate) struct BundledFont {
+/// Sets every label in the bundled faces of the face set `S`.
+pub(crate) struct BundledFont<S> {
     faces_by_ascending_weight: Vec<WeightedFace>,
+    face_set: PhantomData<S>,
 }
 
-impl BundledFont {
-    /// Parse every bundled Inter face, by ascending weight.
+impl<S: FaceSet> BundledFont<S> {
+    /// Parse every bundled face of `S`, by ascending weight.
     pub(crate) fn new() -> Self {
-        let faces_by_ascending_weight = INTER_BY_ASCENDING_WEIGHT
+        let faces_by_ascending_weight = S::FACES_BY_ASCENDING_WEIGHT
             .iter()
             .map(|&(weight, face_bytes)| {
-                let face = Face::parse(face_bytes, 0).expect("bundled Inter parses");
+                let face = Face::parse(face_bytes, 0).expect("bundled face parses");
                 WeightedFace { weight, face }
             })
             .collect();
         Self {
             faces_by_ascending_weight,
+            face_set: PhantomData,
         }
     }
 }
 
-impl TextMeasure for BundledFont {
+impl<S> TextMeasure for BundledFont<S> {
     fn measure(&self, spec: &TextSpec) -> TextSize {
         let sized_face = self.sized_face_matching(spec);
         sized_face.measure(spec.text, spec.letter_spacing)
     }
 }
 
-impl TextOutline for BundledFont {
+impl<S> TextOutline for BundledFont<S> {
     fn outline(&self, spec: &TextSpec, baseline_origin: Point, anchor: TextAnchor) -> BezPath {
         let sized_face = self.sized_face_matching(spec);
         sized_face.outline(spec.text, spec.letter_spacing, baseline_origin, anchor)
     }
 }
 
-impl BundledFont {
+impl<S> BundledFont<S> {
     /// Size the face matching `spec`'s weight at `spec`'s size.
     fn sized_face_matching(&self, spec: &TextSpec) -> SizedFace<'_> {
         let weighted_face = self.face_matching_css_weight(spec.weight);
@@ -92,6 +88,53 @@ struct WeightedFace {
     face: Face<'static>,
 }
 
+/// Bundles a font family's face set as TTF bytes paired with their CSS weight.
+pub(crate) trait FaceSet {
+    /// List every face of the set with its CSS weight, by ascending weight.
+    const FACES_BY_ASCENDING_WEIGHT: &'static [(u16, &'static [u8])];
+    /// Name the faces as a CSS font-family stack, falling back to the viewer's closest system faces.
+    const CSS_FONT_FAMILY_STACK: &'static str;
+    /// Embed the set's single face as WOFF2 in interactive documents, or `None` to leave viewers their installed faces.
+    const EMBEDDED_WOFF2: Option<&'static [u8]>;
+
+    /// Name the stack's first family, the one the embedded face is declared as, so the two never drift apart.
+    fn first_css_family() -> &'static str {
+        let stack = Self::CSS_FONT_FAMILY_STACK;
+        let (first_family, _fallback_families) = stack.split_once(',').unwrap_or((stack, ""));
+        first_family.trim()
+    }
+}
+
+/// Bundles the four static Inter faces.
+pub(crate) struct InterFaces;
+
+impl FaceSet for InterFaces {
+    const FACES_BY_ASCENDING_WEIGHT: &'static [(u16, &'static [u8])] = &[
+        (400, include_bytes!("../../assets/fonts/Inter-Regular.ttf")),
+        (500, include_bytes!("../../assets/fonts/Inter-Medium.ttf")),
+        (600, include_bytes!("../../assets/fonts/Inter-SemiBold.ttf")),
+        (700, include_bytes!("../../assets/fonts/Inter-Bold.ttf")),
+    ];
+    const CSS_FONT_FAMILY_STACK: &'static str =
+        "Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif";
+    const EMBEDDED_WOFF2: Option<&'static [u8]> = None;
+}
+
+/// Bundles the single Excalifont face, merged from Excalidraw's latin and greek subsets.
+pub(crate) struct ExcalifontFaces;
+
+impl FaceSet for ExcalifontFaces {
+    const FACES_BY_ASCENDING_WEIGHT: &'static [(u16, &'static [u8])] = &[(
+        400,
+        include_bytes!("../../assets/fonts/Excalifont-Regular.ttf"),
+    )];
+    const CSS_FONT_FAMILY_STACK: &'static str =
+        "Excalifont, 'Segoe Print', 'Comic Sans MS', cursive";
+    const EMBEDDED_WOFF2: Option<&'static [u8]> = Some(include_bytes!(
+        "../../assets/fonts/Excalifont-Regular.woff2"
+    ));
+}
+
 #[cfg(test)]
 mod tests {
     use kurbo::Shape;
@@ -108,10 +151,10 @@ mod tests {
     ];
 
     fn width_table(sizes: &[f64]) -> String {
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let mut table = String::new();
         for &size in sizes {
-            for (weight, _face_bytes) in INTER_BY_ASCENDING_WEIGHT {
+            for &(weight, _face_bytes) in InterFaces::FACES_BY_ASCENDING_WEIGHT {
                 for label in LABELS {
                     let spec = TextSpec::new(label, weight, size);
                     let measured = font.measure(&spec);
@@ -121,6 +164,27 @@ mod tests {
             }
         }
         table
+    }
+
+    #[test]
+    fn excalifont_sets_every_weight_in_its_single_face_wider_than_inter() {
+        let inter = BundledFont::<InterFaces>::new();
+        let excalifont = BundledFont::<ExcalifontFaces>::new();
+        let regular_label = TextSpec::new("Order API", 400, 14.0);
+        let bold_label = TextSpec::new("Order API", 700, 14.0);
+
+        let inter_regular_width = inter.measure(&regular_label).width;
+        let excalifont_regular_width = excalifont.measure(&regular_label).width;
+        let excalifont_bold_width = excalifont.measure(&bold_label).width;
+
+        assert!(
+            excalifont_regular_width > inter_regular_width,
+            "hand-drawn Excalifont sets a label wider than Inter: {excalifont_regular_width} vs {inter_regular_width}"
+        );
+        assert_eq!(
+            excalifont_bold_width, excalifont_regular_width,
+            "a single-face set resolves every requested weight to its one face"
+        );
     }
 
     #[test]
@@ -181,7 +245,7 @@ mod tests {
 
     #[test]
     fn weights_resolve_by_css_font_matching() {
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let requested_weights = [
             100, 300, 399, 400, 420, 450, 500, 501, 550, 600, 650, 700, 800, 900,
         ];
@@ -217,7 +281,7 @@ mod tests {
 
     #[test]
     fn bundled_faces_declare_the_weight_they_are_matched_by() {
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
 
         for weighted_face in &font.faces_by_ascending_weight {
             let declared_weight = weighted_face.face.weight().to_number();
@@ -227,7 +291,7 @@ mod tests {
 
     #[test]
     fn letter_spacing_widens_each_gap_between_characters() {
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let unspaced = TextSpec::new("Order API", 400, 12.0);
         let spaced = unspaced.with_letter_spacing(0.5);
 
@@ -241,7 +305,7 @@ mod tests {
 
     #[test]
     fn line_box_comes_from_the_face_metrics() {
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let spec = TextSpec::new("Order API", 600, 12.0);
 
         let measured = font.measure(&spec);
@@ -255,7 +319,7 @@ mod tests {
 
     #[test]
     fn outline_spans_the_measured_width_around_its_anchor() {
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let spec = TextSpec::new("Order API", 500, 14.0);
         let baseline_origin = Point::new(100.0, 50.0);
 

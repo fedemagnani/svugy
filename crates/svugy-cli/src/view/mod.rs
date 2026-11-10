@@ -7,9 +7,9 @@ use std::ffi::OsStr;
 use std::sync::Arc;
 
 use clap::Args;
-use svugy::{InteractiveSvg, RenderSvg};
 
 use crate::failure::Failure;
+use crate::flavor::{RenderProfile, RenderTheme, SvgFlavor};
 use crate::input::ModelInput;
 use crate::output::browser::DefaultBrowser;
 use live::{FileWatcher, LiveDiagram};
@@ -24,12 +24,15 @@ stderr as render does, and reloads the page on the level it was focused on. A
 save with errors leaves the last good diagram on the page under its
 diagnostics.";
 
-/// Serve the input's interactive SVG on 127.0.0.1 and re-render it on every change, opening the page unless `--no-open` is given.
+/// Serve the input's interactive SVG in the chosen theme on 127.0.0.1 and re-render it on every change, opening the page unless `--no-open` is given.
 #[derive(Args)]
 pub struct ViewCommand {
     /// Diagram (.md), d2 file or JSON model to watch.
     #[arg(value_parser = ModelInput::parse)]
     input: ModelInput,
+    /// How to draw the diagram.
+    #[arg(long, value_enum, default_value_t = RenderTheme::Standard)]
+    theme: RenderTheme,
     /// Port on 127.0.0.1 to serve on; 0 lets the OS pick a free one.
     #[arg(long, default_value_t = 0)]
     port: u16,
@@ -41,10 +44,11 @@ pub struct ViewCommand {
 impl ViewCommand {
     /// Run `view`: render the input, serve it, open the page, then re-render on every change until interrupted.
     pub fn run(self) -> Result<(), Failure> {
+        let flavor = SvgFlavor::new(RenderProfile::Interactive, self.theme);
         let watched_input = self.input.clone();
-        let watcher = FileWatcher::new(watched_input);
+        let watcher = FileWatcher::new(watched_input, flavor);
         let model = self.input.load_model_printing_diagnostics()?;
-        let svg = InteractiveSvg::render(&model);
+        let svg = flavor.render(&model);
         let live_diagram = LiveDiagram::new(svg);
         let live_diagram = Arc::new(live_diagram);
         let served_live_diagram = Arc::clone(&live_diagram);

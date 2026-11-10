@@ -10,7 +10,7 @@ default:
 docs: figures playground
     mdbook build docs --open
 
-# Assemble the svugy.dev site into _site: the landing page with the book's live editor, each committed example's .md and .svg under models/, the book under docs/, the released installation prompt as install.md.
+# Assemble the svugy.dev site into _site: the landing page with the book's live editor, each committed example's .md and .svg under models/ beside its sketch render, Excalifont under fonts/, the book under docs/, the released installation prompt as install.md.
 site: figures playground
     #!/usr/bin/env bash
     set -euo pipefail
@@ -21,9 +21,14 @@ site: figures playground
     cp -R docs/book _site/docs
     # mdBook renames its CSS with a content hash; its scripts keep their names, so the page loads those from docs/
     cp docs/theme/playground.css _site/
+    # each example also pre-rendered in the sketch theme, shown to a visitor who picked it until the live renderer loads
     for source in examples/*/*.md; do
         cp "$source" "${source%.md}.svg" _site/models/
+        name="$(basename "${source%.md}")"
+        {{svugy}} render "$source" --theme sketch -o "_site/models/$name-sketch.svg"
     done
+    mkdir -p _site/fonts
+    cp crates/svugy/assets/fonts/Excalifont-Regular.woff2 crates/svugy/assets/fonts/Excalifont-OFL.txt _site/fonts/
     # the installation prompt the latest release publishes, kept only if our release workflow built it from a commit merged to main
     gh release download --repo fedemagnani/svugy --pattern install.md --output _site/install.md
     source_commit="$(gh attestation verify _site/install.md --repo fedemagnani/svugy \
@@ -36,7 +41,7 @@ serve-site port="8000": site
     @echo "svugy.dev preview: http://127.0.0.1:{{port}}"
     python3 -m http.server {{port}} --bind 127.0.0.1 --directory _site
 
-# Render every docs/diagrams/*.md, the web-app example in Markdown, d2 and Rust, and the golden examples/svugy/svugy.md as interactive SVGs.
+# Render every docs/diagrams/*.md, the web-app example in Markdown, d2, Rust and the sketch theme, and the golden examples/svugy/svugy.md as interactive SVGs.
 figures:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -47,6 +52,7 @@ figures:
         {{svugy}} render "$source" -o "{{figures}}/$name.svg"
     done
     {{svugy}} render examples/webapp/webapp.d2 -o "{{figures}}/webapp-in-d2.svg"
+    {{svugy}} render examples/webapp/webapp.md --theme sketch -o "{{figures}}/webapp-sketch.svg"
     cargo run --quiet --release -p svugy-examples --example webapp > "{{figures}}/webapp-rust.svg"
 
 # Compile svugy to wasm and embed it, base64-encoded, in a script the live editors load, so they work from file:// too.

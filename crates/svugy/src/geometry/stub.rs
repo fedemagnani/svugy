@@ -181,7 +181,7 @@ mod tests {
     use crate::geometry::fixtures::FixedAdvanceMeasure;
     use crate::geometry::{NestedInterior, Scene};
     use crate::layout::{PlacedLevel, Stub};
-    use crate::metrics::BundledFont;
+    use crate::metrics::{BundledFont, InterFaces};
     use crate::svugy_example::SvugyExample;
 
     const TOLERANCE: f64 = 1e-9;
@@ -215,7 +215,7 @@ mod tests {
     impl ProjectedExample {
         fn new() -> Self {
             let model = SvugyExample::model();
-            let font = BundledFont::new();
+            let font = BundledFont::<InterFaces>::new();
             let plans = LevelPlans::lay_out(&model, &font);
             let scene = Scene::project(&model, &plans, &font);
             Self { plans, scene }
@@ -258,7 +258,7 @@ mod tests {
         interior: &NestedInterior,
     ) -> Vec<(ElementPath, usize, usize)> {
         let plan = example.plans.level(interior.container).expect("planned");
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let model = empty_model();
         let mut obstructions = Obstructions::around_stubs_of(&example.scene.root, interior);
         let mut overlap_counts = Vec::new();

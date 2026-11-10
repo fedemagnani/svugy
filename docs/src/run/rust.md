@@ -16,7 +16,7 @@ The Quickstart's web app, built in code ([`examples/webapp/webapp.rs`](https://g
 
 - `add_top_level` and `add_child` return an `ElementRef`, and edges take only `ElementRef`s, so an edge can't name a missing element.
 - `build()` runs the same checks as a Markdown file: `model` is `None` if any problem is an error, and `report` lists every problem.
-- `InteractiveSvg::render(&model)` and `StaticSvg::render(&model)` return the SVG as a `String`.
+- `InteractiveSvg::render(&model)` and `StaticSvg::render(&model)` return the SVG as a `String`; `SketchInteractiveSvg` and `SketchStaticSvg` do the same in the sketch theme.
 - `svugy_parse::json::JsonPrinter::print(&model)` returns the model as JSON, which `svugy render` reads.
 
 Each Markdown property is one `with_*` call:
