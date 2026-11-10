@@ -1,10 +1,12 @@
-//! Render a diagram, written in Markdown or d2, into the interactive SVG inside a browser, through four plain exports and no bindings generator: a searched render and a quick draft one.
+//! Render a diagram, written in Markdown or d2, into the interactive SVG of the standard or sketch theme inside a browser, through four plain exports and no bindings generator: a searched render and a quick draft one.
 
 use std::cell::RefCell;
 
 use miette::Diagnostic;
 use serde::Serialize;
-use svugy::{DraftInteractiveSvg, InteractiveSvg, RenderSvg};
+use svugy::{
+    DraftInteractiveSvg, InteractiveSvg, RenderSvg, SketchDraftInteractiveSvg, SketchInteractiveSvg,
+};
 use svugy_model::problem::ErrorSeverity;
 use svugy_parse::d2::D2Language;
 use svugy_parse::diagnostic::{LabelledDiagnostic, SourceLanguage};
@@ -15,6 +17,12 @@ const MARKDOWN_LANGUAGE_BYTE: u8 = 0;
 
 /// Name d2 in a `render` call.
 const D2_LANGUAGE_BYTE: u8 = 1;
+
+/// Name the standard theme in a `render` call.
+const STANDARD_THEME_BYTE: u8 = 0;
+
+/// Name the hand-drawn sketch theme in a `render` call.
+const SKETCH_THEME_BYTE: u8 = 1;
 
 thread_local! {
     /// Hold the one playground the exports share, as wasm runs on a single thread.
@@ -30,18 +38,19 @@ pub extern "C" fn input_buffer(length: usize) -> *mut u8 {
     PLAYGROUND.with_borrow_mut(|playground| playground.input_buffer(length))
 }
 
-/// Render the source in the input buffer, read in the language `language_byte` names (0 Markdown, 1 d2), laid out in its searched arrangement, and return the byte length of the JSON verdict.
+/// Render the source in the input buffer, read in the language `language_byte` names (0 Markdown, 1 d2), drawn in the theme `theme_byte` names (0 standard, 1 sketch), laid out in its searched arrangement, and return the byte length of the JSON verdict.
 #[unsafe(no_mangle)]
-pub extern "C" fn render(language_byte: u8) -> usize {
-    PLAYGROUND
-        .with_borrow_mut(|playground| playground.render_input::<InteractiveSvg>(language_byte))
+pub extern "C" fn render(language_byte: u8, theme_byte: u8) -> usize {
+    PLAYGROUND.with_borrow_mut(|playground| {
+        playground.render_input::<Searched>(language_byte, theme_byte)
+    })
 }
 
 /// Render like `render`, laid out in the seed arrangement without searching: a quick draft to show while `render` runs.
 #[unsafe(no_mangle)]
-pub extern "C" fn render_draft(language_byte: u8) -> usize {
+pub extern "C" fn render_draft(language_byte: u8, theme_byte: u8) -> usize {
     PLAYGROUND
-        .with_borrow_mut(|playground| playground.render_input::<DraftInteractiveSvg>(language_byte))
+        .with_borrow_mut(|playground| playground.render_input::<Draft>(language_byte, theme_byte))
 }
 
 /// Return the output pointer: where the JSON verdict of the last render starts.
@@ -49,6 +58,29 @@ pub extern "C" fn render_draft(language_byte: u8) -> usize {
 pub extern "C" fn output_pointer() -> *const u8 {
     PLAYGROUND.with_borrow(|playground| playground.output.as_ptr())
 }
+
+/// Name a theme's SVG flavour for each arrangement.
+trait Theme {
+    type Searched: RenderSvg;
+    type Draft: RenderSvg;
+}
+
+/// Name the standard theme's flavours.
+struct StandardTheme;
+
+/// Name the hand-drawn sketch theme's flavours.
+struct SketchTheme;
+
+/// Pick the flavour a theme renders in this arrangement.
+trait Arrangement {
+    type Flavour<T: Theme>: RenderSvg;
+}
+
+/// Select the searched arrangement.
+struct Searched;
+
+/// Select the seed arrangement, drafted without searching.
+struct Draft;
 
 /// Hold the playground's source a page writes in and the JSON verdict it reads back, so no pointer ever crosses the boundary inward.
 #[derive(Default)]
@@ -85,16 +117,47 @@ impl Playground {
         self.input.as_mut_ptr()
     }
 
-    /// Serialise the verdict on the input buffer's source, read in the language `language_byte` names and rendered by `R`, into the output, returning its byte length.
-    fn render_input<R: RenderSvg>(&mut self, language_byte: u8) -> usize {
+    /// Serialise the verdict on the input buffer's source, read in the language `language_byte` names and drawn in the theme `theme_byte` names in arrangement `A`, into the output, returning its byte length.
+    fn render_input<A: Arrangement>(&mut self, language_byte: u8, theme_byte: u8) -> usize {
         let source = String::from_utf8_lossy(&self.input);
-        let verdict = Verdict::of_language_byte::<R>(language_byte, &source);
+        let verdict = Verdict::of_theme_byte::<A>(theme_byte, language_byte, &source);
         self.output = serde_json::to_string(&verdict).expect("a verdict serialises");
         self.output.len()
     }
 }
 
+impl Theme for StandardTheme {
+    type Searched = InteractiveSvg;
+    type Draft = DraftInteractiveSvg;
+}
+
+impl Theme for SketchTheme {
+    type Searched = SketchInteractiveSvg;
+    type Draft = SketchDraftInteractiveSvg;
+}
+
+impl Arrangement for Searched {
+    type Flavour<T: Theme> = T::Searched;
+}
+
+impl Arrangement for Draft {
+    type Flavour<T: Theme> = T::Draft;
+}
+
 impl Verdict {
+    /// Judge `source` drawn in the theme `theme_byte` names in arrangement `A`, or report the byte when it names none.
+    fn of_theme_byte<A: Arrangement>(theme_byte: u8, language_byte: u8, source: &str) -> Self {
+        match theme_byte {
+            STANDARD_THEME_BYTE => {
+                Self::of_language_byte::<A::Flavour<StandardTheme>>(language_byte, source)
+            }
+            SKETCH_THEME_BYTE => {
+                Self::of_language_byte::<A::Flavour<SketchTheme>>(language_byte, source)
+            }
+            _unknown_theme_byte => Self::unknown_theme(theme_byte),
+        }
+    }
+
     /// Judge `source` in the language `language_byte` names, rendering by `R`, or report the byte when it names none.
     fn of_language_byte<R: RenderSvg>(language_byte: u8, source: &str) -> Self {
         match language_byte {
@@ -117,19 +180,32 @@ impl Verdict {
         Self { svg, diagnostics }
     }
 
+    /// Withhold the SVG behind one error naming the `theme_byte` no theme answers to.
+    fn unknown_theme(theme_byte: u8) -> Self {
+        let message = format!(
+            "no theme has byte {theme_byte}: pass {STANDARD_THEME_BYTE} for standard or {SKETCH_THEME_BYTE} for sketch"
+        );
+        Self::withheld_by(message)
+    }
+
     /// Withhold the SVG behind one error naming the `language_byte` no language answers to.
     fn unknown_language(language_byte: u8) -> Self {
         let message = format!(
             "no language has byte {language_byte}: pass {MARKDOWN_LANGUAGE_BYTE} for Markdown or {D2_LANGUAGE_BYTE} for d2"
         );
-        let unknown_language_error = LocatedDiagnostic {
+        Self::withheld_by(message)
+    }
+
+    /// Withhold the SVG behind one unlocated error carrying `message`.
+    fn withheld_by(message: String) -> Self {
+        let unlocated_error = LocatedDiagnostic {
             is_error: true,
             message,
             help: None,
             line: None,
             column: None,
         };
-        let diagnostics = vec![unknown_language_error];
+        let diagnostics = vec![unlocated_error];
         Self {
             svg: None,
             diagnostics,
@@ -227,19 +303,20 @@ mod tests {
     }
 
     #[test]
-    fn exports_render_what_the_input_buffer_holds_in_the_language_named() {
+    fn exports_render_what_the_input_buffer_holds_in_the_language_and_theme_named() {
         let source = b"## Components\n- a\n- b\n\n## Edges\n- a -> b\n";
         let buffer = input_buffer(source.len());
         let input = PLAYGROUND.with_borrow_mut(|playground| playground.input.as_mut_ptr());
         assert_eq!(buffer, input);
         PLAYGROUND.with_borrow_mut(|playground| playground.input.copy_from_slice(source));
 
-        let output_length = render(MARKDOWN_LANGUAGE_BYTE);
+        let output_length = render(MARKDOWN_LANGUAGE_BYTE, SKETCH_THEME_BYTE);
 
         let output = PLAYGROUND.with_borrow(|playground| playground.output.clone());
         assert_eq!(output.len(), output_length);
         let output_start = PLAYGROUND.with_borrow(|playground| playground.output.as_ptr());
         assert_eq!(output_pointer(), output_start);
         assert!(output.contains("\"svg\":\"<svg "));
+        assert!(output.contains("font-family:Excalifont"));
     }
 }

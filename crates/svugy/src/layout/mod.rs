@@ -507,11 +507,11 @@ mod tests {
     use std::collections::BTreeSet;
 
     use super::*;
-    use crate::metrics::BundledFont;
+    use crate::metrics::{BundledFont, InterFaces};
     use crate::svugy_example::SvugyExample;
 
     fn lay_out(model: &Model) -> LevelPlans {
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         LevelPlans::lay_out(model, &font)
     }
 

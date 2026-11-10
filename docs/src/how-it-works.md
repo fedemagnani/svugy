@@ -14,7 +14,7 @@
 - **Traces or arcs:** an edge between two components on the same container's slab runs flat along the floor in right-angle segments, at most two bends, when such a path clears the other components and earlier traces; ports less than 36 units out of line snap straight. Every other edge, and every edge on the open ground, arcs over the scene.
 - **Bundles:** two or more edges joining the same two components, at least one a container, share one arc between the containers' boundaries and branch flat inside each one, when every source among them reaches every target, so a bundle never implies an edge that does not exist. An edge that does not fit keeps its own arc.
 - **Static or interactive:** the static SVG draws the deepest layer with no CSS or script. The interactive one draws every layer and embeds the runtime that switches between them ([Interactive SVG](interactive.md)).
-- **Deterministic:** the same input gives the same bytes on Linux, macOS and wasm: the font is bundled, the maths avoids platform-dependent functions, and nothing depends on hash order. Committed SVGs diff cleanly.
+- **Deterministic:** the same input gives the same bytes on Linux, macOS and wasm: the fonts are bundled, the sketch wobble is seeded by each path's coordinates, the maths avoids platform-dependent functions, and nothing depends on hash order. Committed SVGs diff cleanly.
 
 ## Crates
 

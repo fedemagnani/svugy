@@ -2,6 +2,13 @@ main:has(.svugy-playground) {
   max-width: min(1100px, calc(100% - 160px));
 }
 
+/* the language and theme switches share one row above the playground */
+.svugy-switches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+}
+
 /* side by side: the source on the left, the diagram it renders on the right */
 .svugy-playground {
   display: grid;

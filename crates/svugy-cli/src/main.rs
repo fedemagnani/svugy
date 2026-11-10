@@ -2,6 +2,7 @@
 
 mod example;
 mod failure;
+mod flavor;
 mod input;
 mod output;
 mod report;
@@ -11,12 +12,11 @@ mod view;
 use std::process::ExitCode;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use svugy::{InteractiveSvg, RenderSvg, StaticSvg};
-use svugy_model::model::Model;
 use svugy_parse::json::JsonPrinter;
 
 use crate::example::ExampleCommand;
 use crate::failure::Failure;
+use crate::flavor::SvgFlavor;
 use crate::input::{LoadedInput, ModelInput};
 use crate::output::{ModelFile, OutputTarget};
 use crate::report::InputReport;
@@ -82,7 +82,7 @@ struct Cli {
 /// Name the subcommand to run.
 #[derive(Subcommand)]
 enum Command {
-    /// Render a model as an SVG, interactive unless --profile static is given.
+    /// Render a model as an SVG, interactive unless --profile static is given, hand-drawn with --theme sketch.
     Render(RenderCommand),
     /// Serve the interactive SVG in the default browser, reloading it whenever INPUT changes.
     #[command(after_long_help = LIVE_VIEW_HELP)]
@@ -98,15 +98,14 @@ enum Command {
     Example(ExampleCommand),
 }
 
-/// Render the input as an SVG in the chosen profile, into a file or onto stdout, and open the file if asked.
+/// Render the input as an SVG in the chosen profile and theme, into a file or onto stdout, and open the file if asked.
 #[derive(Args)]
 struct RenderCommand {
     /// Diagram (.md), d2 file or JSON model to render.
     #[arg(value_parser = ModelInput::parse)]
     input: ModelInput,
-    /// Which SVG to write.
-    #[arg(long, value_enum, default_value_t = RenderProfile::Interactive)]
-    profile: RenderProfile,
+    #[command(flatten)]
+    flavor: SvgFlavor,
     #[command(flatten)]
     output: OutputTarget,
     /// Open the written SVG in the default browser; needs -o.
@@ -134,15 +133,6 @@ struct ImportCommand {
     /// File to write: a Markdown diagram when it ends in .md, model JSON when it ends in .json; JSON on stdout when omitted.
     #[arg(short, long, value_parser = ModelFile::parse)]
     output: Option<ModelFile>,
-}
-
-/// Name the SVG profile `render` writes.
-#[derive(Clone, Copy, ValueEnum)]
-enum RenderProfile {
-    /// Explorable in a browser: themed, animated, with the embedded runtime.
-    Interactive,
-    /// Self-contained for <img> embeds and design tools: no CSS, script, fonts or animation.
-    Static,
 }
 
 /// Name how `validate` prints an input's report.
@@ -178,26 +168,16 @@ impl Command {
 }
 
 impl RenderCommand {
-    /// Run `render`: load the input, render it in the profile, write the SVG and open it when `--open` asks.
+    /// Run `render`: load the input, render it in the flavor, write the SVG and open it when `--open` asks.
     fn run(self) -> Result<(), Failure> {
         let model = self.input.load_model_printing_diagnostics()?;
-        let svg = self.profile.render(&model);
+        let svg = self.flavor.render(&model);
         self.output.write(&svg)?;
         let is_open_requested = self.open;
         if is_open_requested {
             self.output.open_in_default_browser()?;
         }
         Ok(())
-    }
-}
-
-impl RenderProfile {
-    /// Render `model` as the SVG of this profile.
-    fn render(self, model: &Model) -> String {
-        match self {
-            Self::Interactive => InteractiveSvg::render(model),
-            Self::Static => StaticSvg::render(model),
-        }
     }
 }
 

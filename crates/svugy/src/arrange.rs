@@ -330,7 +330,7 @@ mod tests {
     use svugy_parse::markdown::MarkdownLanguage;
 
     use super::*;
-    use crate::metrics::BundledFont;
+    use crate::metrics::{BundledFont, InterFaces};
 
     #[test]
     fn the_search_never_returns_a_layout_scoring_worse_than_its_seed() {
@@ -347,7 +347,7 @@ mod tests {
             ("svugy", include_str!("../../../examples/svugy/svugy.md")),
             ("webapp", include_str!("../../../examples/webapp/webapp.md")),
         ];
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         for (name, markdown) in examples {
             let model = example_model(markdown);
             let search = ArrangementSearch::new(&model, &font);
@@ -366,7 +366,7 @@ mod tests {
     }
 
     fn layout_score_of(
-        search: &ArrangementSearch<BundledFont>,
+        search: &ArrangementSearch<BundledFont<InterFaces>>,
         arrangements: &Arrangements,
         plans: &LevelPlans,
     ) -> LayoutScore {

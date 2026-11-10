@@ -46,6 +46,7 @@ Every element, edge and stub group starts with `<title>LABEL</title><desc data-s
 **Element:** `<g data-svugy-element="PATH">` holding its faces, its interior level if open, its labels, then its badges. Title: its label.
 
 - Closed container: also `data-svugy-closed=""`; no interior level; its content starts with its sheet, a faint plate under its faces.
+- A theme that shades faces with hatching draws each face as its fill paths `<path data-svugy-face-fill="">` (an opaque canvas underlay, then the shade as a translucent wash), its hatch strokes `<path data-svugy-hachure="" fill="none">`, then its outline `<path fill="none">`. Hatch strokes take no pointer events; hover, focus and highlight restyle only the outline.
 - A `link` resolving to a model path adds `data-svugy-goto="LEVEL"`; a click goes to LEVEL instead. A link to a leaf resolves to the leaf's enclosing level.
 - A URL link that passes the sanitiser wraps the group in `<a href="…">`, with no data attribute.
 - An open container's interior is `<g data-svugy-level="PATH" data-svugy-view="…" transform="…">` inside its group, with the same PATH.
@@ -97,7 +98,7 @@ The CSS toggles `visibility`, never `display:none`, so the runtime can measure a
 - `role="button"` on every element, edge and stub group;
 - an `aria-label` from each group's title;
 - `tabindex="0"`, `role="button"` and `aria-label="diagram description"` on each heading group;
-- the `svugy-panel*` classes (detail panel) and `svugy-description*` classes (description panel).
+- the `svugy-panel*` classes (detail panel) and `svugy-description*` classes (description panel); both panels take the root's `font-family` and derive their colours from `--svugy-canvas`, `--svugy-text` and `--svugy-text-muted`.
 
 The runtime binds only to the SVG it lives in.
 

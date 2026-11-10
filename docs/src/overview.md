@@ -6,7 +6,7 @@ Write a diagram in Markdown; svugy renders it as one isometric SVG you can click
 - **Output:** one self-contained `.svg`. Open it in a browser; nothing to install or serve.
 - **Errors:** `svugy validate` reports every problem in one run, with line and column.
 
-Edit the diagram below: svugy, compiled to wasm, re-renders it as you type.
+Edit the diagram below: svugy, compiled to wasm, re-renders it as you type. The theme toggle switches between the standard and sketch themes.
 
 <div class="svugy-live">
 

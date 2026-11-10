@@ -343,10 +343,10 @@ mod tests {
     use svugy_model::model::{Edge, Position};
 
     use super::*;
-    use crate::metrics::BundledFont;
+    use crate::metrics::{BundledFont, InterFaces};
 
     fn place_level(model: &Model, level: &ElementPath, is_left_by_edges: bool) -> PlacedLevel {
-        let measure = BundledFont::new();
+        let measure = BundledFont::<InterFaces>::new();
         let joined_pairs = model
             .layoutable_edges()
             .map(|(edge_id, _edge)| (edge_id.from().clone(), edge_id.to().clone()))
@@ -515,7 +515,7 @@ mod tests {
         let cluster = builder.add_top_level("cluster", Element::new(long_tag));
         builder.add_child(&cluster, "x", Element::new("x"));
         let model = builder.build().model.expect("fixture model is valid");
-        let measure = BundledFont::new();
+        let measure = BundledFont::<InterFaces>::new();
         let cluster_element = model.element(cluster.path()).expect("cluster is declared");
         let tag_block = LabelBlock::measure(cluster_element, LabelRole::ContainerTag, &measure);
 

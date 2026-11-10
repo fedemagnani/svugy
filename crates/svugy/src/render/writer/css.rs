@@ -2,6 +2,10 @@
 
 use svugy_model::color::Rgba;
 
+/// Spell each six-bit value as its standard base64 digit.
+const BASE64_ALPHABET: &[u8; 64] =
+    b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
 /// Builds a style sheet from static rules and sanitised selectors and declarations.
 #[derive(Default)]
 pub(crate) struct StyleSheet {
@@ -48,6 +52,40 @@ impl StyleSheet {
         self.css.push_str("{\n");
         self.push_rule(selector, declarations);
         self.css.push_str("}\n");
+    }
+
+    /// Push an `@font-face` rule declaring `woff2` as `family` at every weight, so the browser never synthesizes bold from the single face.
+    pub(crate) fn push_font_face(&mut self, family: &'static str, woff2: &[u8]) {
+        self.css.push_str("@font-face{font-family:");
+        self.css.push_str(family);
+        self.css.push_str(";src:url(data:font/woff2;base64,");
+        self.push_base64(woff2);
+        self.css
+            .push_str(") format(\"woff2\");font-weight:100 900;font-display:block}\n");
+    }
+
+    /// Push `bytes` as padded base64: every 3 bytes as 4 six-bit digits, a short last group padded with `=`.
+    fn push_base64(&mut self, bytes: &[u8]) {
+        let digit_count = bytes.len().div_ceil(3) * 4;
+        self.css.reserve(digit_count);
+        for group in bytes.chunks(3) {
+            let mut padded_group = [0u8; 3];
+            padded_group[..group.len()].copy_from_slice(group);
+            let [first_byte, second_byte, third_byte] = padded_group;
+            let packed_group = u32::from_be_bytes([0, first_byte, second_byte, third_byte]);
+            let significant_digit_count = group.len() + 1;
+            for digit_index in 0..4 {
+                let is_padding = digit_index >= significant_digit_count;
+                if is_padding {
+                    self.css.push('=');
+                    continue;
+                }
+                let shift = 18 - 6 * digit_index;
+                let sextet = (packed_group >> shift) & 0x3f;
+                let digit = BASE64_ALPHABET[sextet as usize];
+                self.css.push(char::from(digit));
+            }
+        }
     }
 
     /// Borrow the style sheet's CSS as a str.
@@ -136,6 +174,17 @@ impl CssValue {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn font_face_embeds_woff2_as_padded_base64_for_every_weight() {
+        let woff2_magic_and_one_byte = [b'w', b'O', b'F', b'2', 0xff];
+        let mut style_sheet = StyleSheet::new();
+
+        style_sheet.push_font_face("Excalifont", &woff2_magic_and_one_byte);
+
+        let expected = "@font-face{font-family:Excalifont;src:url(data:font/woff2;base64,d09GMv8=) format(\"woff2\");font-weight:100 900;font-display:block}\n";
+        assert_eq!(style_sheet.as_str(), expected);
+    }
 
     #[test]
     fn colors_are_written_as_six_digit_hex_unless_translucent() {

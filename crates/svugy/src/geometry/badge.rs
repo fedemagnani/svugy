@@ -184,7 +184,7 @@ mod tests {
     use super::*;
     use crate::geometry::Scene;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
-    use crate::metrics::BundledFont;
+    use crate::metrics::{BundledFont, InterFaces};
     use crate::svugy_example::SvugyExample;
 
     const TOLERANCE: f64 = 1e-9;
@@ -279,7 +279,7 @@ mod tests {
     #[test]
     fn every_badge_of_the_example_stays_clear_of_its_sources_labels_and_other_badges() {
         let model = SvugyExample::model();
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let plans = LevelPlans::lay_out(&model, &font);
 
         let scene = Scene::project(&model, &plans, &font);

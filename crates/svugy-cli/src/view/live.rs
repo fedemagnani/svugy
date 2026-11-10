@@ -5,9 +5,8 @@ use std::sync::{Condvar, Mutex, MutexGuard, PoisonError};
 use std::thread;
 use std::time::{Duration, SystemTime};
 
-use svugy::{InteractiveSvg, RenderSvg};
-
 use crate::failure::Failure;
+use crate::flavor::SvgFlavor;
 use crate::input::{LoadedInput, ModelInput};
 
 /// Space the checks of the watched file's modification time.
@@ -42,6 +41,7 @@ pub struct LiveUpdate {
 /// Re-render the watched file into the live diagram whenever its modification time changes.
 pub struct FileWatcher {
     input: ModelInput,
+    flavor: SvgFlavor,
     last_modified: Option<SystemTime>,
 }
 
@@ -120,11 +120,12 @@ impl Subscription<'_> {
 }
 
 impl FileWatcher {
-    /// Create a new watcher of `input`, its current modification time counting as already rendered.
-    pub fn new(input: ModelInput) -> Self {
+    /// Create a new watcher of `input` rendering it as `flavor`, its current modification time counting as already rendered.
+    pub fn new(input: ModelInput, flavor: SvgFlavor) -> Self {
         let last_modified = Self::modification_time_of(&input);
         Self {
             input,
+            flavor,
             last_modified,
         }
     }
@@ -155,7 +156,7 @@ impl FileWatcher {
             live_diagram.publish_diagnostics(diagnostics);
             return;
         };
-        let svg = InteractiveSvg::render(&model);
+        let svg = self.flavor.render(&model);
         live_diagram.publish_svg(svg);
     }
 

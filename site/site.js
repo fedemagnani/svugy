@@ -10,6 +10,8 @@
   const EMPTY_REST_MS = 350;
   // loaded after the first example shows: the renderer is 5 MB, and playground.js mounts as soon as it runs
   const LIVE_EDITOR_SCRIPTS = ['docs/playground/svugy-wasm.js', 'docs/playground/playground.js'];
+  // the head script reads it before the first paint
+  const THEME_STORAGE_KEY = 'svugy-theme';
 
   /** Shows the install panel of the clicked tab. */
   function bindInstallTabs(root) {
@@ -121,6 +123,29 @@
     source.dispatchEvent(inputEvent);
   }
 
+  /** Starts the live editor in the page's theme, showing the example pre-rendered in it until the renderer loads. */
+  function startLiveEditorInPageTheme(liveContainer, exampleName) {
+    const pageThemeName = document.documentElement.dataset.theme;
+    liveContainer.dataset.svugyTheme = pageThemeName;
+    const isSketch = pageThemeName === 'sketch';
+    if (!isSketch) return;
+    const preview = liveContainer.querySelector('object.svugy');
+    preview.data = `models/${exampleName}-sketch.svg#svugy=`;
+  }
+
+  /** Restyles the page in each theme the live editor's switch picks, and remembers it for the next visit. */
+  function followLiveEditorTheme(liveContainer) {
+    liveContainer.addEventListener('svugy-theme', (event) => {
+      const { themeName } = event.detail;
+      document.documentElement.dataset.theme = themeName;
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, themeName);
+      } catch {
+        // storage blocked: the theme lasts for this visit only
+      }
+    });
+  }
+
   function loadLiveEditorScripts() {
     for (const scriptPath of LIVE_EDITOR_SCRIPTS) {
       const script = document.createElement('script');
@@ -137,8 +162,11 @@
   bindCommandCopyButtons();
   const installPromptCopyButton = document.querySelector('[data-copy-install-prompt]');
   bindInstallPromptCopyButton(installPromptCopyButton);
-  const source = document.querySelector('.svugy-live textarea');
+  const liveContainer = document.querySelector('.svugy-live');
+  const source = liveContainer.querySelector('textarea');
   const examplePicker = document.querySelector('[data-example-picker]');
+  startLiveEditorInPageTheme(liveContainer, examplePicker.value);
+  followLiveEditorTheme(liveContainer);
   examplePicker.addEventListener('change', () => loadExampleIntoEditor(examplePicker.value, source));
   loadExampleIntoEditor(examplePicker.value, source).then(loadLiveEditorScripts);
 })();

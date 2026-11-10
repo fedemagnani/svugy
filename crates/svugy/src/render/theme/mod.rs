@@ -1,11 +1,18 @@
 //! Resolve every color and style decision from theme tokens.
 
 pub(crate) mod color;
+pub(crate) mod paint;
+pub(crate) mod shading;
+pub(crate) mod sketch;
+pub(crate) mod stroke;
 
 use color::Oklab;
 use svugy_model::color::{Rgb, Rgba};
 
+use crate::metrics::{FaceSet, InterFaces};
 use crate::render::writer::css::{CssDeclaration, CssIdentifier, CssValue};
+use shading::{Flat, Shading};
+use stroke::{Crisp, Stroke};
 
 /// Dim a base into its left face's shade.
 const LEFT_FACE_DIMMING: f64 = 0.835;
@@ -17,6 +24,34 @@ const LIGHT_BASE_LIGHTNESS: f64 = 0.7;
 const DARK_INK_DIMMING: f64 = 0.25;
 /// Ink the labels of a dark base in white.
 const LIGHT_INK: Rgb = Rgb::from_packed(0xffffff);
+
+/// Bundles a look: the faces labels are set in, the stroke paths are drawn with, the shading faces are filled with, the palettes tokens resolve in.
+pub(crate) trait Theme {
+    /// Set labels in these faces.
+    type Faces: FaceSet;
+    /// Draw outlines, connections and arrowheads in this hand.
+    type Stroke: Stroke;
+    /// Fill faces in this shading.
+    type Shading: Shading;
+    /// Paint tokens for viewers preferring a dark color scheme.
+    const DARK_PALETTE: Palette;
+    /// Paint tokens for viewers preferring a light color scheme.
+    const LIGHT_PALETTE: Palette;
+    /// Paint tokens the static profile inlines.
+    const STATIC_PALETTE: Palette;
+}
+
+/// Looks like svugy by default: Inter, crisp strokes, dark unless the viewer prefers light, static in dark.
+pub(crate) struct Standard;
+
+impl Theme for Standard {
+    type Faces = InterFaces;
+    type Stroke = Crisp;
+    type Shading = Flat;
+    const DARK_PALETTE: Palette = DARK_PALETTE;
+    const LIGHT_PALETTE: Palette = LIGHT_PALETTE;
+    const STATIC_PALETTE: Palette = DARK_PALETTE;
+}
 
 /// Names a theme token: a flat color role, or a face or the ink of a shaded surface.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]

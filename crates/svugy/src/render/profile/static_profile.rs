@@ -3,26 +3,28 @@
 use super::Profile;
 use crate::geometry::Label;
 use crate::metrics::{BundledFont, TextOutline};
-use crate::render::theme::{DARK_PALETTE, Token};
+use crate::render::theme::{Theme, Token};
 use crate::render::writer::css::CssValue;
 use crate::render::writer::path_data::PathData;
 use crate::render::writer::{Attributes, SvgWriter};
 
-/// Renders the static profile: every token inlined as its dark palette literal, every label outlined in the font it was measured in, live-only content dropped.
-pub(crate) struct Static<'f> {
-    font: &'f BundledFont,
+/// Renders the static profile in theme `T`: every token inlined as its static palette literal, every label outlined in the font it was measured in, live-only content dropped.
+pub(crate) struct Static<'f, T: Theme> {
+    font: &'f BundledFont<T::Faces>,
 }
 
-impl<'f> Static<'f> {
+impl<'f, T: Theme> Static<'f, T> {
     /// Outline labels in `font`, the font they were measured in.
-    pub(crate) fn new(font: &'f BundledFont) -> Self {
+    pub(crate) fn new(font: &'f BundledFont<T::Faces>) -> Self {
         Self { font }
     }
 }
 
-impl Profile for Static<'_> {
+impl<T: Theme> Profile for Static<'_, T> {
+    type Theme = T;
+
     fn token_value(&self, token: Token) -> CssValue {
-        DARK_PALETTE.literal_value(token)
+        T::STATIC_PALETTE.literal_value(token)
     }
 
     fn write_label(&self, writer: &mut SvgWriter, label: &Label, presentation: Attributes) {

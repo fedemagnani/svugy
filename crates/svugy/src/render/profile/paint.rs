@@ -9,6 +9,7 @@ use svugy_model::style::{ColorKey, NumberKey};
 
 use crate::geometry::FaceShade;
 use crate::render::theme::color::Oklab;
+use crate::render::theme::paint::Paint;
 use crate::render::theme::{BaseShades, FaceShades, Surface, Token};
 use crate::render::writer::FixedDecimal;
 
@@ -28,14 +29,6 @@ const CONNECTION_DASH_GAP_EXCESS: f64 = 2.0;
 /// Picks paints from the model's `fill`, `stroke` and `stroke-dash` styles, falling back to theme surfaces.
 pub(crate) struct ModelPaints<'m> {
     model: &'m Model,
-}
-
-/// Names a color by theme token or by literal, or paints nothing.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) enum Paint {
-    Token(Token),
-    Literal(Rgba),
-    None,
 }
 
 /// Holds the paints of one solid's three face shades, of the ink its labels are set in, and of its outline.
@@ -177,17 +170,6 @@ impl<'m> ModelPaints<'m> {
             return SolidPaint::unfilled();
         }
         SolidPaint::from_base(fill)
-    }
-}
-
-impl Paint {
-    /// Paint `color` as a literal, or nothing when it is fully transparent.
-    fn from_color(color: Rgba) -> Self {
-        let is_transparent = color.is_transparent();
-        if is_transparent {
-            return Paint::None;
-        }
-        Paint::Literal(color)
     }
 }
 

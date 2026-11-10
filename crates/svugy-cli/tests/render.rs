@@ -1,4 +1,4 @@
-//! Prove `svugy render` writes the interactive or static SVG from JSON and d2 input, and exits with the documented codes.
+//! Prove `svugy render` writes the interactive or static SVG in either theme from JSON and d2 input, and exits with the documented codes.
 
 mod support;
 
@@ -13,6 +13,8 @@ const SVUGY_EXAMPLE_JSON: &str = concat!(
 );
 
 const SCRIPT_OPENING: &str = "<script>";
+
+const HACHURE_ATTRIBUTE: &str = " data-svugy-hachure=";
 
 fn stdout_text(run: &Output) -> String {
     let stdout = run.stdout.clone();
@@ -41,6 +43,32 @@ fn render_writes_the_interactive_svg_unless_the_static_profile_is_asked_for() {
         "static carries no script"
     );
     assert!(static_svg.starts_with("<svg "));
+}
+
+#[test]
+fn render_draws_either_profile_hand_drawn_only_under_the_sketch_theme() {
+    let model_argument = SVUGY_EXAMPLE_JSON.to_owned();
+
+    let default_run = run_svugy(&["render", &model_argument]);
+    let sketch_interactive_run = run_svugy(&["render", &model_argument, "--theme", "sketch"]);
+    let sketch_static_run = run_svugy(&[
+        "render",
+        &model_argument,
+        "--theme",
+        "sketch",
+        "--profile",
+        "static",
+    ]);
+
+    let default_svg = stdout_text(&default_run);
+    let sketch_interactive_svg = stdout_text(&sketch_interactive_run);
+    let sketch_static_svg = stdout_text(&sketch_static_run);
+    assert!(
+        !default_svg.contains(HACHURE_ATTRIBUTE),
+        "the standard theme is the default and hatches no face"
+    );
+    assert!(sketch_interactive_svg.contains(HACHURE_ATTRIBUTE));
+    assert!(sketch_static_svg.contains(HACHURE_ATTRIBUTE));
 }
 
 #[test]

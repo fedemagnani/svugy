@@ -1,25 +1,39 @@
 //! Render for browsers: colors as custom properties of a light and a dark palette, labels as text in the viewer's font, the runtime embedded.
 
+use std::marker::PhantomData;
+
 use super::Profile;
 use crate::geometry::Label;
-use crate::metrics::TextAnchor;
+use crate::metrics::{FaceSet, TextAnchor};
 use crate::render::contract::RuntimeContract;
-use crate::render::theme::{DARK_PALETTE, LIGHT_PALETTE, Token};
+use crate::render::theme::{Theme, Token};
 use crate::render::writer::css::{
     CssDeclaration, CssIdentifier, CssSelector, CssValue, StyleSheet,
 };
 use crate::render::writer::{Attributes, SvgWriter};
 
-/// Set labels in Inter, else in the viewer's closest system sans-serif.
-const LABEL_FONT_FAMILY_STACK: &str =
-    "Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif";
 /// Match viewers who prefer the light color scheme.
 const LIGHT_SCHEME_QUERY: &str = "(prefers-color-scheme: light)";
 
-/// Renders the interactive profile: tokens as custom properties, dark unless the viewer prefers light, labels as viewer-font text, the runtime that navigates levels embedded.
-pub(crate) struct Interactive;
+/// Renders the interactive profile in theme `T`: tokens as custom properties, dark unless the viewer prefers light, labels as viewer-font text, the runtime that navigates levels embedded.
+pub(crate) struct Interactive<T> {
+    theme: PhantomData<T>,
+}
 
-impl Profile for Interactive {
+/// Embeds the runtime that drives every interactive document: its script and its style sheet.
+pub(crate) struct Runtime;
+
+impl<T: Theme> Interactive<T> {
+    /// Render the interactive profile in theme `T`.
+    pub(crate) fn new() -> Self {
+        let theme = PhantomData;
+        Self { theme }
+    }
+}
+
+impl<T: Theme> Profile for Interactive<T> {
+    type Theme = T;
+
     fn token_value(&self, token: Token) -> CssValue {
         let custom_property = token.css_custom_property();
         CssValue::custom_property_reference(&custom_property)
@@ -69,7 +83,7 @@ impl Profile for Interactive {
         let style_sheet = Self::style_sheet();
         writer.style_element(&style_sheet);
         write_content(writer);
-        writer.script_element(Self::RUNTIME_SCRIPT);
+        writer.script_element(Runtime::SCRIPT);
     }
 }
 
@@ -83,28 +97,34 @@ impl TextAnchor {
     }
 }
 
-impl Interactive {
-    /// Embed the runtime script that navigates levels.
-    pub(crate) const RUNTIME_SCRIPT: &'static str = include_str!("../../../runtime/svugy.js");
-    /// Embed the runtime style sheet.
-    pub(crate) const RUNTIME_STYLE: &'static str = include_str!("../../../runtime/svugy.css");
-
-    /// Build the style sheet: both palettes as custom properties of the root, the label font inherited from it, then the runtime's rules.
+impl<T: Theme> Interactive<T> {
+    /// Build the style sheet: `T`'s embedded label face if any, both of `T`'s palettes as custom properties of the root, `T`'s label font inherited from it, then the runtime's rules.
     fn style_sheet() -> StyleSheet {
         let root = CssSelector::attribute(RuntimeContract::CONTRACT);
         let font_family_property = CssIdentifier::from_static("font-family");
-        let font_family_stack = CssValue::from_static(LABEL_FONT_FAMILY_STACK);
+        let font_family_stack = CssValue::from_static(T::Faces::CSS_FONT_FAMILY_STACK);
         let font_family = CssDeclaration {
             property: font_family_property,
             value: font_family_stack,
         };
-        let mut dark_declarations = DARK_PALETTE.custom_property_declarations();
+        let mut dark_declarations = T::DARK_PALETTE.custom_property_declarations();
         dark_declarations.push(font_family);
-        let light_declarations = LIGHT_PALETTE.custom_property_declarations();
+        let light_declarations = T::LIGHT_PALETTE.custom_property_declarations();
         let mut style_sheet = StyleSheet::new();
+        if let Some(woff2) = T::Faces::EMBEDDED_WOFF2 {
+            let embedded_family = T::Faces::first_css_family();
+            style_sheet.push_font_face(embedded_family, woff2);
+        }
         style_sheet.push_rule(&root, &dark_declarations);
         style_sheet.push_media_rule(LIGHT_SCHEME_QUERY, &root, &light_declarations);
-        style_sheet.push_static(Self::RUNTIME_STYLE);
+        style_sheet.push_static(Runtime::STYLE);
         style_sheet
     }
+}
+
+impl Runtime {
+    /// Embed the runtime script that navigates levels.
+    pub(crate) const SCRIPT: &'static str = include_str!("../../../runtime/svugy.js");
+    /// Embed the runtime style sheet.
+    pub(crate) const STYLE: &'static str = include_str!("../../../runtime/svugy.css");
 }

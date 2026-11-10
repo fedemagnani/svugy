@@ -3,8 +3,10 @@
 mod interactive;
 mod r#static;
 
-pub use interactive::{DraftInteractiveSvg, InteractiveSvg};
-pub use r#static::StaticSvg;
+pub use interactive::{
+    DraftInteractiveSvg, InteractiveSvg, SketchDraftInteractiveSvg, SketchInteractiveSvg,
+};
+pub use r#static::{SketchStaticSvg, StaticSvg};
 
 use svugy_model::model::Model;
 
@@ -20,8 +22,8 @@ mod tests {
 
     use crate::geometry::Scene;
     use crate::layout::LevelPlans;
-    use crate::metrics::BundledFont;
-    use crate::render::{Static, StaticRenderer};
+    use crate::metrics::{BundledFont, InterFaces};
+    use crate::render::{Standard, Static, StaticRenderer};
     use crate::svugy_example::SvugyExample;
     use svugy_model::builder::ModelBuilder;
     use svugy_model::model::{Edge, Element};
@@ -73,7 +75,7 @@ mod tests {
     #[test]
     fn stubs_move_no_drawn_arc_and_no_static_pixel() {
         let model = SvugyExample::model();
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let plans = LevelPlans::lay_out(&model, &font);
         let stubless_plans = plans.clone().without_stubs();
 
@@ -89,7 +91,7 @@ mod tests {
         let connections = connections_of_every_level(&scene);
         let stubless_connections = connections_of_every_level(&stubless_scene);
         assert_eq!(connections, stubless_connections);
-        let profile = Static::new(&font);
+        let profile = Static::<Standard>::new(&font);
         let renderer = StaticRenderer::new(profile);
         let static_svg = renderer.write_document(&model, &scene);
         let stubless_static_svg = renderer.write_document(&model, &stubless_scene);
@@ -132,7 +134,7 @@ mod tests {
     fn badges_draw_no_arc_and_move_no_other_arc_than_removing_their_edges_would() {
         let model = SvugyExample::model();
         let unbadged_model = without_edges_into(&model, "pipeline.inter");
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let plans = LevelPlans::lay_out(&model, &font);
         let unbadged_plans = LevelPlans::lay_out(&unbadged_model, &font);
 
@@ -173,7 +175,7 @@ mod tests {
 
     #[test]
     fn badge_edges_take_no_part_in_automatic_placement() {
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
         let badged_model = layered_model_writing_to_a_badge(true);
         let unwritten_model = layered_model_writing_to_a_badge(false);
 
@@ -197,7 +199,7 @@ mod tests {
         let store = builder.add_top_level("store", Element::new("store"));
         let writes = builder.add_edge(&quoter, &store, Edge::new().with_badge());
         let model = builder.build().model.expect("fixture model is valid");
-        let font = BundledFont::new();
+        let font = BundledFont::<InterFaces>::new();
 
         let plans = LevelPlans::lay_out(&model, &font);
         let scene = Scene::project(&model, &plans, &font);
