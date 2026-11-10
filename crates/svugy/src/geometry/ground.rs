@@ -5,9 +5,10 @@ use std::ops::RangeInclusive;
 
 use kurbo::{Affine, Line, Point, Rect};
 
-use super::projection::IsometricProjection;
+use super::camera::Camera;
 
 /// Describes one ground cell and its projection, so a renderer can tile the ground without end.
+#[derive(Clone, Copy)]
 pub(crate) struct GroundPattern {
     /// Side of one square cell, in plan units.
     pub(crate) cell: f64,
@@ -16,9 +17,9 @@ pub(crate) struct GroundPattern {
 }
 
 impl GroundPattern {
-    /// Describe the grid's own cell on the ground plane, as `GroundGrid` rules it at the example's spacing.
-    pub(crate) fn projected() -> Self {
-        let plan_to_page = IsometricProjection::horizontal_plane_at(0.0);
+    /// Describe the grid's own cell on the ground plane as camera `C` sees it, as `GroundGrid` rules it at the example's spacing.
+    pub(crate) fn projected<C: Camera>() -> Self {
+        let plan_to_page = C::horizontal_plane_at(0.0);
         Self {
             cell: GroundGrid::EXAMPLE_CELL,
             plan_to_page,
@@ -57,9 +58,9 @@ impl GroundGrid {
             .expect("doubling cells eventually cover any finite boundary within the cap")
     }
 
-    /// Return the projected lines of constant x, west to east, then those of constant y, north to south.
-    pub(super) fn lines(&self) -> Vec<Line> {
-        let ground = IsometricProjection::horizontal_plane_at(0.0);
+    /// Return the lines of constant x, west to east, then those of constant y, north to south, projected by camera `C`.
+    pub(super) fn lines<C: Camera>(&self) -> Vec<Line> {
+        let ground = C::horizontal_plane_at(0.0);
         let first_row = *self.rows.start();
         let last_row = *self.rows.end();
         let first_column = *self.columns.start();
@@ -130,6 +131,7 @@ mod tests {
     use glam::DVec3;
 
     use super::*;
+    use crate::geometry::camera::Isometric;
 
     #[test]
     fn grid_reaches_one_cell_past_the_boundary_at_the_example_spacing() {
@@ -137,11 +139,11 @@ mod tests {
         let grid = GroundGrid::covering(boundary);
         assert_eq!(grid.columns, -1..=5);
         assert_eq!(grid.rows, -1..=3);
-        let lines = grid.lines();
+        let lines = grid.lines::<Isometric>();
         assert_eq!(lines.len(), 7 + 5);
         let first_line = lines[0];
-        let north_west = IsometricProjection::project(DVec3::new(-60.0, -60.0, 0.0));
-        let south_west = IsometricProjection::project(DVec3::new(-60.0, 180.0, 0.0));
+        let north_west = Isometric::project(DVec3::new(-60.0, -60.0, 0.0));
+        let south_west = Isometric::project(DVec3::new(-60.0, 180.0, 0.0));
         assert!((first_line.p0 - north_west).hypot2().sqrt() < 1e-9);
         assert!((first_line.p1 - south_west).hypot2().sqrt() < 1e-9);
     }
@@ -149,7 +151,7 @@ mod tests {
     #[test]
     fn neighbouring_lines_are_one_cell_apart_like_the_example() {
         let boundary = Rect::new(0.0, 0.0, 120.0, 120.0);
-        let lines = GroundGrid::covering(boundary).lines();
+        let lines = GroundGrid::covering(boundary).lines::<Isometric>();
         let step = lines[1].p0 - lines[0].p0;
         assert!((step.x - 52.0).abs() < 0.05);
         assert!((step.y - 30.0).abs() < 1e-9);
@@ -159,7 +161,7 @@ mod tests {
     fn a_boundary_at_the_magnitude_bound_rules_a_capped_grid_that_still_covers_it() {
         let boundary = Rect::new(0.0, 0.0, 2_000_000.0, 60.0);
         let grid = GroundGrid::covering(boundary);
-        let lines = grid.lines();
+        let lines = grid.lines::<Isometric>();
         let max_line_count = 2 * GroundGrid::MAX_LINES_PER_AXIS as usize;
         assert!(lines.len() <= max_line_count, "{} lines", lines.len());
         let west_x = grid.cell_coordinate(*grid.columns.start());

@@ -1,8 +1,8 @@
-use svugy_model::model::Model;
+use svugy_model::model::{Model, ViewAngle};
 
 use super::RenderSvg;
 use crate::arrange::ArrangementSearch;
-use crate::geometry::Scene;
+use crate::geometry::{Camera, Isometric, Scene, Top};
 use crate::metrics::BundledFont;
 use crate::render::{Sketch, Standard, Static, StaticRenderer, Theme};
 
@@ -25,12 +25,21 @@ impl RenderSvg for SketchStaticSvg {
 }
 
 impl StaticSvg {
-    /// Lay `model` out in its most readable arrangement and project it in theme `T`'s font, then write the scene as the static document in `T`, its labels outlined in that font.
+    /// Render `model` in theme `T` from the angle its author picks, isometric when none.
     fn render_themed<T: Theme>(model: &Model) -> String {
+        let view = model.view().unwrap_or_default();
+        match view {
+            ViewAngle::Isometric => Self::render_seen_by::<T, Isometric>(model),
+            ViewAngle::Top => Self::render_seen_by::<T, Top>(model),
+        }
+    }
+
+    /// Lay `model` out in its most readable arrangement as camera `C` sees it and project it in theme `T`'s font, then write the scene as the static document in `T`, its labels outlined in that font.
+    fn render_seen_by<T: Theme, C: Camera>(model: &Model) -> String {
         let font = BundledFont::<T::Faces>::new();
-        let search = ArrangementSearch::new(model, &font);
+        let search = ArrangementSearch::<_, C>::new(model, &font);
         let (_arrangements, plans) = search.best();
-        let scene = Scene::project(model, &plans, &font);
+        let scene = Scene::project::<C>(model, &plans, &font);
         let profile = Static::<T>::new(&font);
         let renderer = StaticRenderer::new(profile);
         renderer.write_document(model, &scene)

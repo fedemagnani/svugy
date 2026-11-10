@@ -2,11 +2,12 @@
 
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
+use std::marker::PhantomData;
 
 use svugy_model::model::Model;
 use svugy_model::path::ElementPath;
 
-use crate::geometry::{QuantizedLength, Scene, SceneScore};
+use crate::geometry::{Camera, QuantizedLength, Scene, SceneScore};
 use crate::layout::{Arrangements, GroupId, LevelPlans, PlacementCache, RankMove, SlotSide};
 use crate::metrics::TextMeasure;
 
@@ -19,14 +20,15 @@ pub(crate) struct LayoutScore {
     source_order_distance: usize,
 }
 
-/// Searches a model's arrangements for its most readable layout: starting from the seed layout's, it tries every move of one decision at a time, keeps a move only when it scores strictly better, and stops when a sweep improves nothing or its layouts run out.
-pub(crate) struct ArrangementSearch<'s, M> {
+/// Searches a model's arrangements for its most readable layout as camera `C` sees it: starting from the seed layout's, it tries every move of one decision at a time, keeps a move only when it scores strictly better, and stops when a sweep improves nothing or its layouts run out.
+pub(crate) struct ArrangementSearch<'s, M, C> {
     model: &'s Model,
     measure: &'s M,
     layouts_left: usize,
     placement_cache: PlacementCache,
     evaluated: BTreeSet<Arrangements>,
     scored_layouts: Vec<(LevelPlans, SceneScore)>,
+    camera: PhantomData<C>,
 }
 
 /// Holds one laid out arrangement with its score.
@@ -85,7 +87,7 @@ impl LayoutScore {
     }
 }
 
-impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
+impl<'s, M: TextMeasure, C: Camera> ArrangementSearch<'s, M, C> {
     /// Layouts one search may run, the seed's included, so a busy diagram still renders at interactive speed.
     const LAYOUT_BUDGET: usize = 600;
     /// Most children a container may hold for every order of them to be tried; larger ones try adjacent swaps.
@@ -104,6 +106,7 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
             placement_cache,
             evaluated,
             scored_layouts,
+            camera: PhantomData,
         }
     }
 
@@ -288,8 +291,8 @@ impl<'s, M: TextMeasure> ArrangementSearch<'s, M> {
 
     /// Measure what the scene `plans` lay out costs its reader: project it and score it.
     fn scene_score_of(&self, plans: &LevelPlans) -> SceneScore {
-        let scene = Scene::project(self.model, plans, self.measure);
-        scene.score()
+        let scene = Scene::project::<C>(self.model, plans, self.measure);
+        scene.score::<C>()
     }
 
     /// Return every order of `children`, in lexicographic order of their positions, `children` itself first.
@@ -330,6 +333,7 @@ mod tests {
     use svugy_parse::markdown::MarkdownLanguage;
 
     use super::*;
+    use crate::geometry::Isometric;
     use crate::metrics::{BundledFont, InterFaces};
 
     #[test]
@@ -350,12 +354,12 @@ mod tests {
         let font = BundledFont::<InterFaces>::new();
         for (name, markdown) in examples {
             let model = example_model(markdown);
-            let search = ArrangementSearch::new(&model, &font);
+            let search = ArrangementSearch::<_, Isometric>::new(&model, &font);
 
             let (seed_plans, seed_arrangements) = LevelPlans::lay_out_seeded(&model, &font);
             let seed_score = layout_score_of(&search, &seed_arrangements, &seed_plans);
             let (best_arrangements, best_plans) = search.best();
-            let rescoring_search = ArrangementSearch::new(&model, &font);
+            let rescoring_search = ArrangementSearch::<_, Isometric>::new(&model, &font);
             let best_score = layout_score_of(&rescoring_search, &best_arrangements, &best_plans);
 
             assert!(
@@ -366,7 +370,7 @@ mod tests {
     }
 
     fn layout_score_of(
-        search: &ArrangementSearch<BundledFont<InterFaces>>,
+        search: &ArrangementSearch<BundledFont<InterFaces>, Isometric>,
         arrangements: &Arrangements,
         plans: &LevelPlans,
     ) -> LayoutScore {

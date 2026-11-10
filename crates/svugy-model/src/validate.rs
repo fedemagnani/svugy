@@ -8,7 +8,7 @@ use miette::{Diagnostic, JSONReportHandler, Severity, SourceSpan};
 use crate::description::{DescriptionOwner, DescriptionTarget, TargetLink};
 use crate::legend::{DashKey, Legend};
 use crate::link::Link;
-use crate::model::{Edge, EdgeId, Element, MAX_MAGNITUDE, Model, PlacementHint, Shape};
+use crate::model::{Edge, EdgeId, Element, MAX_MAGNITUDE, Model, PlacementHint, Shape, ViewAngle};
 use crate::path::ElementPath;
 use crate::problem::{
     AncestorDescendantEdge, BadgeEdgeOnContainer, ChildPlacementWithoutChildren,
@@ -38,6 +38,7 @@ impl UncheckedModel {
         let model = Model {
             title,
             subtitle,
+            view: None,
             description: None,
             legend,
             elements,
@@ -53,6 +54,12 @@ impl UncheckedModel {
     pub fn with_description(mut self, description: impl Into<String>) -> Self {
         let description = description.into();
         self.model.description = Some(description);
+        self
+    }
+
+    /// Show the diagram from `view` first.
+    pub fn with_view(mut self, view: ViewAngle) -> Self {
+        self.model.view = Some(view);
         self
     }
 

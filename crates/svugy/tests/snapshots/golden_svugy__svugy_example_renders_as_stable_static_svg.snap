@@ -2,7 +2,7 @@
 source: crates/svugy/tests/golden_svugy.rs
 expression: static_svg
 ---
-<svg data-svugy-contract="2" height="1451.998" viewBox="-557.472 40.257 1936.438 1451.998" width="1936.438" xmlns="http://www.w3.org/2000/svg">
+<svg data-svugy-contract="3" height="1451.998" viewBox="-557.472 40.257 1936.438 1451.998" width="1936.438" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <marker id="arrowhead-0" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
 <path d="M0,1 L9,5 L0,9 Z" fill="#8b93a5"/>

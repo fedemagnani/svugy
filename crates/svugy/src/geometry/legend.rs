@@ -6,6 +6,7 @@ use svugy_model::model::{EdgeId, Model};
 use svugy_model::path::ElementPath;
 
 use super::badge::BadgeIcon;
+use super::camera::Camera;
 use super::obstruction::Obstructions;
 use super::{Connection, Face, KeyRow, KeySample, Label, LegendPanel, Scene};
 use crate::layout::LevelPlans;
@@ -15,8 +16,8 @@ impl LegendPanel {
     /// Length of a stroke sample, from the panel's left edge.
     const SAMPLE_LENGTH: f64 = 30.0;
 
-    /// Set `model`'s legend top-right of `scene`'s root view, beside its heading, else just right of the content when drawables take that spot, or `None` when it has nothing to draw.
-    pub(super) fn set_top_right_of(
+    /// Set `model`'s legend top-right of `scene`'s root view, beside its heading, else just right of the content when drawables take that spot, its badge samples seen by camera `C`, or `None` when it has nothing to draw.
+    pub(super) fn set_top_right_of<C: Camera>(
         scene: &Scene,
         model: &Model,
         plans: &LevelPlans,
@@ -24,7 +25,7 @@ impl LegendPanel {
     ) -> Option<Self> {
         let legend = model.legend()?;
         let drawn_dashes = DrawnDash::all_described_in(legend, model);
-        let drawn_badges = DrawnBadge::all_described_in(legend, model, plans);
+        let drawn_badges = DrawnBadge::all_described_in::<C>(legend, model, plans);
         let unplaced_panel = Self::set_from(legend, &drawn_dashes, &drawn_badges, measure)?;
         let unplaced_bounds = unplaced_panel.bounds;
         let legend_offset = Self::offset_to_top_right_of(scene, unplaced_bounds);
@@ -195,8 +196,12 @@ struct DrawnBadge<'m> {
 }
 
 impl<'m> DrawnBadge<'m> {
-    /// Collect every target `model`'s badges point to, in first-use order, keeping all those `legend` has described.
-    fn all_described_in(legend: &'m Legend, model: &'m Model, plans: &LevelPlans) -> Vec<Self> {
+    /// Collect every target `model`'s badges point to, in first-use order, keeping all those `legend` has described, each icon seen by camera `C`.
+    fn all_described_in<C: Camera>(
+        legend: &'m Legend,
+        model: &'m Model,
+        plans: &LevelPlans,
+    ) -> Vec<Self> {
         let mut targets: Vec<&'m ElementPath> = Vec::new();
         for edge_id in model.badge_edges() {
             let target = edge_id.to();
@@ -209,7 +214,7 @@ impl<'m> DrawnBadge<'m> {
             .into_iter()
             .filter_map(|target| {
                 let description = legend.badge_description(target)?;
-                let icon = BadgeIcon::of_target_in(model, plans, target)?;
+                let icon = BadgeIcon::<C>::of_target_in(model, plans, target)?;
                 let (icon_faces, icon_bounds) = icon.upright_faces_with_bounds();
                 let drawn_badge = Self {
                     target,
@@ -434,6 +439,7 @@ mod tests {
     use svugy_model::model::{Edge, Element};
 
     use super::*;
+    use crate::geometry::Isometric;
     use crate::geometry::Scene;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
 
@@ -449,7 +455,7 @@ mod tests {
         builder.add_edge(&a, &store, Edge::new().with_badge());
         let model = builder.build().model.expect("fixture model is valid");
         let plans = LevelPlans::lay_out(&model, &FixedAdvanceMeasure);
-        Scene::project(&model, &plans, &FixedAdvanceMeasure)
+        Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure)
     }
 
     fn store_path() -> ElementPath {

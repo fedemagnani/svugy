@@ -1,14 +1,15 @@
 //! Score a projected scene's readability: the crossings, occlusions and ink its connections cost, measured on screen.
 
 use std::collections::BTreeSet;
+use std::marker::PhantomData;
 
 use glam::DVec3;
 use kurbo::{Affine, BezPath, ParamCurve, PathSeg, Point, Rect, Vec2};
 use svugy_model::model::EdgeId;
 use svugy_model::path::ElementPath;
 
+use super::camera::Camera;
 use super::connection::PlanCourse;
-use super::projection::IsometricProjection;
 use super::{Connection, FaceShade, Group, Scene, Solid};
 
 /// Counts what a projected scene costs its reader: hard violations, crossings, hidden junctions, arc lengths over solids, hidden trace length, arcs, bends and total connection length.
@@ -55,23 +56,23 @@ impl QuantizedLength {
 }
 
 impl Scene {
-    /// Score this scene's readability as its reader sees it on screen.
-    pub(crate) fn score(&self) -> SceneScore {
-        let plan_scene = PlanScene::of(&self.root);
+    /// Score this scene's readability as its reader sees it on screen, the scene projected by camera `C`.
+    pub(crate) fn score<C: Camera>(&self) -> SceneScore {
+        let plan_scene = PlanScene::<C>::of(&self.root);
         plan_scene.score()
     }
 }
 
-/// Lifts a scene's solids and drawn connections into document plan, the one frame where a sight line tells what stands in front of what.
-struct PlanScene<'s> {
-    prisms: Vec<SolidPrism<'s>>,
+/// Lifts a scene's solids and drawn connections, projected by camera `C`, into document plan, the one frame where a sight line tells what stands in front of what.
+struct PlanScene<'s, C> {
+    prisms: Vec<SolidPrism<'s, C>>,
     /// Arcs drawn, a trunk several bundled edges draw lifted once.
     arcs: Vec<DrawnCourse<'s>>,
     /// Traces drawn, a branch several bundled edges draw lifted once.
     traces: Vec<DrawnCourse<'s>>,
 }
 
-impl<'s> PlanScene<'s> {
+impl<'s, C: Camera> PlanScene<'s, C> {
     /// Lift every level under `root`, the root's floor at the plan origin.
     fn of(root: &'s Group) -> Self {
         let mut plan_scene = Self {
@@ -95,7 +96,7 @@ impl<'s> PlanScene<'s> {
         let mut hidden_junctions = 0;
         let mut bends = 0;
         for trace in &self.traces {
-            let obstructing_prisms: Vec<&SolidPrism> = self
+            let obstructing_prisms: Vec<&SolidPrism<C>> = self
                 .obstructing_prisms_of(trace)
                 .filter(|prism| !trace.has_endpoint_enclosing(prism))
                 .collect();
@@ -115,7 +116,7 @@ impl<'s> PlanScene<'s> {
         let mut arc_length_over_solids = 0.0;
         let mut arcs_through_solids = 0;
         for arc in &self.arcs {
-            let obstructing_prisms: Vec<&SolidPrism> = self.obstructing_prisms_of(arc).collect();
+            let obstructing_prisms: Vec<&SolidPrism<C>> = self.obstructing_prisms_of(arc).collect();
             let depth_runs = Self::depth_runs_along(arc, &obstructing_prisms);
             let overlapping_depths = [SightDepth::SolidInFront, SightDepth::SolidBehind];
             arc_length_over_solids += arc.screen_length_where(&depth_runs, &overlapping_depths);
@@ -158,13 +159,13 @@ impl<'s> PlanScene<'s> {
 
     /// Lift `group`'s traces, arcs and solids, its floor at `level_origin`, then every interior standing on its solids, whose floor is its container's top.
     fn lift_level(&mut self, group: &'s Group, level_origin: DVec3) {
-        DrawnCourse::lift_merging_shared(&mut self.traces, &group.traces, level_origin);
-        DrawnCourse::lift_merging_shared(&mut self.arcs, &group.connections, level_origin);
+        DrawnCourse::lift_merging_shared::<C>(&mut self.traces, &group.traces, level_origin);
+        DrawnCourse::lift_merging_shared::<C>(&mut self.arcs, &group.connections, level_origin);
         for solid in &group.solids {
             let Some(plan_height) = solid.plan_height else {
                 continue;
             };
-            let roof = IsometricProjection::horizontal_plane_at(plan_height);
+            let roof = C::horizontal_plane_at(plan_height);
             let roof_to_level_plan = roof.inverse();
             let prism =
                 SolidPrism::under_top_of(solid, roof_to_level_plan, level_origin, plan_height);
@@ -212,7 +213,7 @@ impl<'s> PlanScene<'s> {
     fn obstructing_prisms_of<'c>(
         &'c self,
         course: &'c DrawnCourse,
-    ) -> impl Iterator<Item = &'c SolidPrism<'s>> + Clone + 'c {
+    ) -> impl Iterator<Item = &'c SolidPrism<'s, C>> + Clone + 'c {
         self.prisms
             .iter()
             .filter(|prism| course.is_obstructable_by(prism))
@@ -221,7 +222,7 @@ impl<'s> PlanScene<'s> {
     /// Return, per segment of `course`, the runs of it each of `obstructing_prisms` overlaps on screen, by sight depth.
     fn depth_runs_along(
         course: &DrawnCourse,
-        obstructing_prisms: &[&SolidPrism],
+        obstructing_prisms: &[&SolidPrism<C>],
     ) -> Vec<Vec<DepthRun>> {
         let segments = course.segments();
         segments
@@ -243,7 +244,7 @@ impl<'s> PlanScene<'s> {
             return None;
         }
         let tip = course.last_plan_point();
-        let hiding_prisms: Vec<&SolidPrism> = self
+        let hiding_prisms: Vec<&SolidPrism<C>> = self
             .obstructing_prisms_of(course)
             .filter(|prism| prism.hides(tip))
             .collect();
@@ -282,14 +283,14 @@ impl<'s> DrawnCourse<'s> {
     const END_CLEARANCE: f64 = 0.5;
 
     /// Lift `connections`, one level's traces or arcs, its floor at `level_origin`, into `courses`, one per distinct plan course, so a branch or trunk several bundled edges draw is lifted once, drawn by all of them.
-    fn lift_merging_shared(
+    fn lift_merging_shared<C: Camera>(
         courses: &mut Vec<Self>,
         connections: &'s [Connection],
         level_origin: DVec3,
     ) {
         let first_level_course_index = courses.len();
         for connection in connections {
-            let Some(course) = Self::lifted(connection, level_origin) else {
+            let Some(course) = Self::lifted::<C>(connection, level_origin) else {
                 continue;
             };
             let level_courses = &mut courses[first_level_course_index..];
@@ -306,18 +307,14 @@ impl<'s> DrawnCourse<'s> {
     }
 
     /// Lift `connection`, its level's floor at `level_origin`, or `None` when it was drawn without a plan.
-    fn lifted(connection: &'s Connection, level_origin: DVec3) -> Option<Self> {
+    fn lifted<C: Camera>(connection: &'s Connection, level_origin: DVec3) -> Option<Self> {
         let plan_course = connection.plan_course.as_ref()?;
-        let level_plan_points = plan_course.flattened();
+        let level_plan_points = plan_course.flattened::<C>();
         let plan_points: Vec<DVec3> = level_plan_points
             .into_iter()
             .map(|level_plan_point| level_origin + level_plan_point)
             .collect();
-        let screen_points = plan_points
-            .iter()
-            .copied()
-            .map(IsometricProjection::project)
-            .collect();
+        let screen_points = plan_points.iter().copied().map(C::project).collect();
         let edges = vec![&connection.edge];
         let drawn_course = Self {
             edges,
@@ -329,7 +326,7 @@ impl<'s> DrawnCourse<'s> {
     }
 
     /// Tell whether `prism` may obstruct this course: it is neither an endpoint of an edge drawing it nor a container enclosing both its endpoints.
-    fn is_obstructable_by(&self, prism: &SolidPrism) -> bool {
+    fn is_obstructable_by<C>(&self, prism: &SolidPrism<C>) -> bool {
         let solid = prism.element;
         let is_exempt = self.edges.iter().any(|edge| {
             let source = edge.from();
@@ -344,7 +341,7 @@ impl<'s> DrawnCourse<'s> {
     }
 
     /// Tell whether `prism` stands inside an endpoint of an edge drawing this course, a child of the container that edge ends on.
-    fn has_endpoint_enclosing(&self, prism: &SolidPrism) -> bool {
+    fn has_endpoint_enclosing<C>(&self, prism: &SolidPrism<C>) -> bool {
         let solid = prism.element;
         self.edges.iter().any(|edge| {
             let source = edge.from();
@@ -556,16 +553,17 @@ enum TipHider {
     OtherSolid,
 }
 
-struct SolidPrism<'s> {
+struct SolidPrism<'s, C> {
     element: &'s ElementPath,
     floor_height: f64,
     roof_height: f64,
     /// Half-planes whose intersection is the top face's plan outline.
     sides: Vec<PrismSide>,
     screen_bounds: Rect,
+    camera: PhantomData<C>,
 }
 
-impl<'s> SolidPrism<'s> {
+impl<'s, C: Camera> SolidPrism<'s, C> {
     /// Samples per curved segment of a top face's outline, keeping a cylinder's within 2% of its ellipse.
     const CURVE_SAMPLES: u32 = 4;
 
@@ -595,6 +593,7 @@ impl<'s> SolidPrism<'s> {
             roof_height,
             sides,
             screen_bounds,
+            camera: PhantomData,
         };
         Some(prism)
     }
@@ -622,7 +621,7 @@ impl<'s> SolidPrism<'s> {
                 .iter()
                 .map(move |corner| DVec3::new(corner.x, corner.y, height))
         });
-        let screen_corners = plan_corners.map(IsometricProjection::project);
+        let screen_corners = plan_corners.map(C::project);
         let corner_bounds = screen_corners.map(|corner| Rect::from_points(corner, corner));
         let bounds = corner_bounds.reduce(|bounds, next_bounds| bounds.union(next_bounds));
         bounds.unwrap_or(Rect::ZERO)
@@ -669,7 +668,7 @@ impl<'s> SolidPrism<'s> {
         sight_bounds.depth()
     }
 
-    /// Return the bounds on t the sight line `point` + t·(1, 1, 1) keeps within inside the prism, t growing toward the viewer: the floor and roof, then each side n·q ≤ c, which bounds t·(n_x + n_y) ≤ c − n·q.
+    /// Return the bounds on t the sight line `point` + t·v keeps within inside the prism, v the camera's step toward the viewer rising one unit, t growing toward the viewer: the floor and roof, then each side n·q ≤ c, which bounds t·(n_x·v_x + n_y·v_y) ≤ c − n·q.
     fn sight_bounds_at(&self, point: DVec3) -> SightBounds {
         let floor_entry = self.floor_height - point.z;
         let roof_exit = self.roof_height - point.z;
@@ -679,10 +678,12 @@ impl<'s> SolidPrism<'s> {
             parallel_slacks: Vec::new(),
         };
         let plan_point = Vec2::new(point.x, point.y);
+        let toward_viewer = C::TOWARD_VIEWER;
+        let toward_viewer_on_ground = Vec2::new(toward_viewer.x, toward_viewer.y);
         for side in &self.sides {
             let normal_reach = side.outward_normal.dot(plan_point);
             let slack = side.offset - normal_reach;
-            let sight_rate = side.outward_normal.x + side.outward_normal.y;
+            let sight_rate = side.outward_normal.dot(toward_viewer_on_ground);
             if sight_rate > 0.0 {
                 let exit = slack / sight_rate;
                 sight_bounds.exit_bounds.push(exit);
@@ -825,17 +826,17 @@ impl PlanCourse {
     const FLATTENING_TOLERANCE: f64 = 0.25;
 
     /// Return the course's plan points in flow order: a trace's corners, or an arc flattened.
-    fn flattened(&self) -> Vec<DVec3> {
+    fn flattened<C: Camera>(&self) -> Vec<DVec3> {
         match self {
             Self::Trace(corners) => corners.clone(),
-            Self::Arc(control_points) => Self::flattened_arc(*control_points),
+            Self::Arc(control_points) => Self::flattened_arc::<C>(*control_points),
         }
     }
 
     /// Flatten the arc through `control_points` into n equal parameter steps, n = ⌈√(|S₀ − 2S₁ + S₂| / 4τ)⌉ for its screen control points Sᵢ, keeping every chord within τ of the arc on screen; B(t) = (1 − t)²P₀ + 2t(1 − t)P₁ + t²P₂.
-    fn flattened_arc(control_points: [DVec3; 3]) -> Vec<DVec3> {
+    fn flattened_arc<C: Camera>(control_points: [DVec3; 3]) -> Vec<DVec3> {
         let [source_end, control, target_end] = control_points;
-        let screen_control_points = control_points.map(IsometricProjection::project);
+        let screen_control_points = control_points.map(C::project);
         let [screen_source, screen_control, screen_target] =
             screen_control_points.map(Point::to_vec2);
         let second_difference = screen_source - screen_control * 2.0 + screen_target;
@@ -865,6 +866,7 @@ mod tests {
     use svugy_model::model::{Edge, Element};
 
     use super::*;
+    use crate::geometry::Isometric;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
     use crate::layout::{LevelPlan, LevelPlans, PlacedLevel, Port, Route, Side};
 
@@ -911,9 +913,9 @@ mod tests {
         let placed = PlacedLevel::new(extent, footprints);
         let plan = LevelPlan::new(placed, routes, BTreeMap::new());
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
 
-        let score = scene.score();
+        let score = scene.score::<Isometric>();
 
         assert_eq!(
             score.crossings, 1,

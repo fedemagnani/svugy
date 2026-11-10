@@ -1,6 +1,7 @@
 //! Collapse edges into badges: minis of their targets seated on their sources' top faces.
 
 use std::iter;
+use std::marker::PhantomData;
 use std::slice;
 
 use glam::DVec3;
@@ -8,21 +9,28 @@ use kurbo::{Affine, BezPath, Point, Rect, Shape as _, Size};
 use svugy_model::model::{EdgeId, Element, Model};
 use svugy_model::path::ElementPath;
 
+use super::camera::Camera;
 use super::obstruction::Obstructions;
 use super::primitive::ResolvedPrimitive;
-use super::projection::IsometricProjection;
 use super::{Badge, Face, FaceShade, Solid};
 use crate::layout::LevelPlans;
 
-/// Shapes a badge's icon: its target's primitive shrunk to a fixed screen width over a footprint of the target's proportions.
-#[derive(Clone, Copy)]
-pub(super) struct BadgeIcon {
-    primitive: ResolvedPrimitive,
+/// Shapes a badge's icon: its target's primitive, seen by camera `C`, shrunk to a fixed screen width over a footprint of the target's proportions.
+pub(super) struct BadgeIcon<C> {
+    primitive: ResolvedPrimitive<C>,
     footprint_size: Size,
     icon_height: f64,
 }
 
-impl BadgeIcon {
+impl<C> Clone for BadgeIcon<C> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<C> Copy for BadgeIcon<C> {}
+
+impl<C: Camera> BadgeIcon<C> {
     /// Screen width of every icon, as wide as the reference's SQLite badges (2 × 9.6).
     const SCREEN_WIDTH: f64 = 19.2;
 
@@ -64,7 +72,7 @@ impl BadgeIcon {
         let footprint = Rect::from_center_size(center, self.footprint_size);
         let ground_faces = self.primitive.faces_over(footprint, self.icon_height);
         let plan_floor_origin = DVec3::new(0.0, 0.0, floor);
-        let floor_origin = IsometricProjection::project(plan_floor_origin);
+        let floor_origin = C::project(plan_floor_origin);
         let floor_offset = floor_origin.to_vec2();
         let raise = Affine::translate(floor_offset);
         ground_faces
@@ -83,15 +91,16 @@ impl BadgeIcon {
     }
 }
 
-/// Seats icons one by one on a solid's top face, each clear of what is already seated or labelled there.
-pub(super) struct BadgeSeater {
+/// Seats icons one by one on a solid's top face, as camera `C` sees it, each clear of what is already seated or labelled there.
+pub(super) struct BadgeSeater<C> {
     footprint: Rect,
     top_height: f64,
     top_outline: Option<BezPath>,
     obstructions: Obstructions,
+    camera: PhantomData<C>,
 }
 
-impl BadgeSeater {
+impl<C: Camera> BadgeSeater<C> {
     /// Plan gap an icon keeps from the footprint's border and from its neighbours.
     const GAP: f64 = 3.0;
 
@@ -106,11 +115,12 @@ impl BadgeSeater {
             top_height,
             top_outline,
             obstructions,
+            camera: PhantomData,
         }
     }
 
     /// Seat a badge per edge of `badge_icons`, in edge order, each clear of those seated before it.
-    pub(super) fn seat_badges(mut self, badge_icons: Vec<(EdgeId, BadgeIcon)>) -> Vec<Badge> {
+    pub(super) fn seat_badges(mut self, badge_icons: Vec<(EdgeId, BadgeIcon<C>)>) -> Vec<Badge> {
         badge_icons
             .into_iter()
             .map(|(edge_id, icon)| {
@@ -121,7 +131,7 @@ impl BadgeSeater {
     }
 
     /// Seat `icon` at the first spot from the east corner that stays on the top face and overlaps the fewest obstructions, else on the footprint's centre, recording it among them.
-    fn seat(&mut self, icon: &BadgeIcon) -> Vec<Face> {
+    fn seat(&mut self, icon: &BadgeIcon<C>) -> Vec<Face> {
         let seats = self.seats_from_the_east_corner(icon.footprint_size);
         let seats_on_top: Vec<Point> = seats
             .into_iter()
@@ -171,7 +181,7 @@ impl BadgeSeater {
         let corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)];
         corners.into_iter().all(|(x, y)| {
             let raised_corner = DVec3::new(x, y, self.top_height);
-            let projected_corner = IsometricProjection::project(raised_corner);
+            let projected_corner = C::project(raised_corner);
             top_outline.contains(projected_corner)
         })
     }
@@ -183,20 +193,21 @@ mod tests {
 
     use super::*;
     use crate::geometry::Scene;
+    use crate::geometry::camera::Isometric;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
     use crate::metrics::{BundledFont, InterFaces};
     use crate::svugy_example::SvugyExample;
 
     const TOLERANCE: f64 = 1e-9;
 
-    fn sqlite_icon() -> BadgeIcon {
+    fn sqlite_icon() -> BadgeIcon<Isometric> {
         let sqlite = Element::new("SQLite").with_shape(Shape::Cylinder);
         let sqlite_footprint = Rect::new(0.0, 0.0, 63.0, 63.0);
         BadgeIcon::of_target(&sqlite, sqlite_footprint)
     }
 
     /// Return the plan centre of a badge's floor, found under its top face's centre one icon height down, at `top_height`.
-    fn floor_center_of(badge: &Badge, icon: &BadgeIcon, top_height: f64) -> Point {
+    fn floor_center_of(badge: &Badge, icon: &BadgeIcon<Isometric>, top_height: f64) -> Point {
         let top_face = badge
             .faces
             .iter()
@@ -204,7 +215,7 @@ mod tests {
             .expect("every icon has a top");
         let top_center = top_face.outline.bounding_box().center();
         let floor_center = top_center + kurbo::Vec2::new(0.0, icon.icon_height);
-        let top_plane = IsometricProjection::horizontal_plane_at(top_height);
+        let top_plane = Isometric::horizontal_plane_at(top_height);
         top_plane.inverse() * floor_center
     }
 
@@ -215,7 +226,7 @@ mod tests {
         let faces = icon.faces_centered_on(Point::ORIGIN, 0.0);
 
         let bounds = Face::bounds_of(&faces).expect("an icon has faces");
-        assert!((bounds.width() - BadgeIcon::SCREEN_WIDTH).abs() < 1e-6);
+        assert!((bounds.width() - BadgeIcon::<Isometric>::SCREEN_WIDTH).abs() < 1e-6);
         assert!((icon.footprint_size.width - icon.footprint_size.height).abs() < TOLERANCE);
         let height_per_side = icon.icon_height / icon.footprint_size.width;
         assert!((height_per_side - 25.5 / 63.0).abs() < TOLERANCE);
@@ -228,7 +239,7 @@ mod tests {
         let path = ElementPath::from_segments(["quoter"]);
         let element = Element::new("quoter").with_caption("prices · signs");
         let footprint = Rect::new(0.0, 0.0, 132.0, 66.0);
-        let primitive = ResolvedPrimitive::of_leaf(&element);
+        let primitive = ResolvedPrimitive::<Isometric>::of_leaf(&element);
         let solid = primitive.draw(&path, &element, footprint, &FixedAdvanceMeasure);
         let labels_only = Obstructions::around_text_of(slice::from_ref(&solid));
         let icon = sqlite_icon();
@@ -254,7 +265,7 @@ mod tests {
             let corners = [floor.origin(), Point::new(floor.x1, floor.y1)];
             for corner in corners {
                 let raised_corner = DVec3::new(corner.x, corner.y, primitive.height);
-                let projected_corner = IsometricProjection::project(raised_corner);
+                let projected_corner = Isometric::project(raised_corner);
                 assert!(
                     top_face.outline.contains(projected_corner),
                     "{}",
@@ -265,8 +276,8 @@ mod tests {
         }
         let first_center = floor_centers[0];
         let east_corner_center = Point::new(
-            footprint.x1 - BadgeSeater::GAP - icon.footprint_size.width / 2.0,
-            footprint.y0 + BadgeSeater::GAP + icon.footprint_size.height / 2.0,
+            footprint.x1 - BadgeSeater::<Isometric>::GAP - icon.footprint_size.width / 2.0,
+            footprint.y0 + BadgeSeater::<Isometric>::GAP + icon.footprint_size.height / 2.0,
         );
         assert!((first_center - east_corner_center).hypot2().sqrt() < 1e-6);
         for pair in floor_centers.windows(2) {
@@ -282,7 +293,7 @@ mod tests {
         let font = BundledFont::<InterFaces>::new();
         let plans = LevelPlans::lay_out(&model, &font);
 
-        let scene = Scene::project(&model, &plans, &font);
+        let scene = Scene::project::<Isometric>(&model, &plans, &font);
 
         let interiors = scene.root.nested_interiors();
         let solids = interiors.flat_map(|interior| &interior.group.solids);

@@ -1,4 +1,4 @@
-//! Read the YAML frontmatter into the diagram's title, subtitle and style sources, reporting every unknown key.
+//! Read the YAML frontmatter into the diagram's title, subtitle, view angle and style sources, reporting every unknown key.
 
 use std::collections::HashMap;
 use std::fmt;
@@ -8,6 +8,7 @@ use chumsky::span::Spanned;
 use serde::de::{Deserialize, Deserializer, IgnoredAny, MapAccess, Visitor};
 use serde_saphyr::{DefaultMessageFormatter, Location, MessageFormatter, Spanned as YamlSpanned};
 use strum::{EnumString, VariantNames};
+use svugy_model::model::ViewAngle;
 
 use super::ast::Span;
 use super::diagnostic::Diagnostics;
@@ -17,11 +18,12 @@ use crate::prose::ProseList;
 /// List the quotes a YAML flow scalar may open and close with.
 const QUOTES: [char; 2] = ['"', '\''];
 
-/// Hold what the frontmatter sets: the title, the subtitle, and each style's verbatim properties list.
+/// Hold what the frontmatter sets: the title, the subtitle, the view angle, and each style's verbatim properties list.
 #[derive(Debug, Default)]
 pub(crate) struct Frontmatter {
     pub(crate) title: Option<String>,
     pub(crate) subtitle: Option<String>,
+    pub(crate) view: Option<ViewAngle>,
     pub(crate) styles: Vec<StyleSource>,
 }
 
@@ -40,6 +42,7 @@ pub(crate) struct StyleSource {
 enum FrontmatterKey {
     Title,
     Subtitle,
+    View,
     Styles,
 }
 
@@ -48,6 +51,7 @@ enum FrontmatterKey {
 struct FrontmatterFields {
     title: Option<String>,
     subtitle: Option<String>,
+    view: Option<ViewAngle>,
     styles: HashMap<YamlSpanned<String>, YamlSpanned<String>>,
     unknown_keys: Vec<YamlSpanned<String>>,
 }
@@ -76,6 +80,7 @@ impl Frontmatter {
         let FrontmatterFields {
             title,
             subtitle,
+            view,
             styles,
             unknown_keys,
         } = fields;
@@ -93,6 +98,7 @@ impl Frontmatter {
         Self {
             title,
             subtitle,
+            view,
             styles,
         }
     }
@@ -169,6 +175,7 @@ impl<'de> Visitor<'de> for FrontmatterFieldsVisitor {
             match frontmatter_key {
                 Ok(FrontmatterKey::Title) => fields.title = Some(entries.next_value()?),
                 Ok(FrontmatterKey::Subtitle) => fields.subtitle = Some(entries.next_value()?),
+                Ok(FrontmatterKey::View) => fields.view = Some(entries.next_value()?),
                 Ok(FrontmatterKey::Styles) => fields.styles = entries.next_value()?,
                 Err(_unknown_key) => {
                     let _ignored_value: IgnoredAny = entries.next_value()?;

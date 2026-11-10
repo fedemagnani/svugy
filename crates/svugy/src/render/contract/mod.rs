@@ -9,13 +9,15 @@ pub(crate) struct RuntimeContract;
 
 impl RuntimeContract {
     /// Version the contract, bumped by any rename, removal or change of meaning.
-    pub(crate) const VERSION: &'static str = "2";
+    pub(crate) const VERSION: &'static str = "3";
 
     /// Mark the root with the contract version.
     pub(crate) const CONTRACT: &'static str = "data-svugy-contract";
+    /// Mark a camera's group with the angle it sees the diagram from.
+    pub(crate) const CAMERA: &'static str = "data-svugy-camera";
     /// Mark a layer's group with its disclosure depth.
     pub(crate) const LAYER: &'static str = "data-svugy-layer";
-    /// Mark the layer a viewer sees, rendered on the deepest layer and moved to layer 0 when the runtime starts.
+    /// Mark the camera and the layer a viewer sees, rendered on the author's camera and every camera's deepest layer, the layer moved to layer 0 when the runtime starts.
     pub(crate) const SHOWN: &'static str = "data-svugy-shown";
     /// Mark a level group with its level path.
     pub(crate) const LEVEL: &'static str = "data-svugy-level";
@@ -58,8 +60,9 @@ impl RuntimeContract {
 
     /// Lists the attributes rendering emits; `ENTERED` and `DIMMED` are left out because only the runtime sets them.
     #[cfg(test)]
-    pub(crate) const RENDERED_ATTRIBUTES: [&'static str; 17] = [
+    pub(crate) const RENDERED_ATTRIBUTES: [&'static str; 18] = [
         Self::CONTRACT,
+        Self::CAMERA,
         Self::LAYER,
         Self::SHOWN,
         Self::LEVEL,
@@ -82,6 +85,7 @@ impl RuntimeContract {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeSet;
+    use std::iter;
 
     use svugy_model::builder::ModelBuilder;
     use svugy_model::model::{Edge, Element, Model, Traveler};
@@ -187,7 +191,7 @@ mod tests {
     }
 
     #[test]
-    fn an_envelope_edge_and_a_default_edge_each_move_their_own_traveler_only_live() {
+    fn an_envelope_edge_and_a_default_edge_each_move_their_own_traveler_live_from_every_camera() {
         let mut builder = ModelBuilder::new();
         let client = builder.add_top_level("client", Element::new("client"));
         let api = builder.add_top_level("api", Element::new("api"));
@@ -205,8 +209,12 @@ mod tests {
             symbol_ids_and_traveler_uses(&static_markup);
         let envelope_use = ("envelope".to_owned(), "#traveler-envelope".to_owned());
         let dot_use = ("dot".to_owned(), "#traveler-dot".to_owned());
+        let camera_count = interactive_markup.matches("<g data-svugy-camera=").count();
+        let dot_uses = iter::repeat_n(dot_use, camera_count);
+        let envelope_uses = iter::repeat_n(envelope_use, camera_count);
+        let expected_traveler_uses: Vec<(String, String)> = dot_uses.chain(envelope_uses).collect();
         assert_eq!(symbol_ids, ["traveler-dot", "traveler-envelope"]);
-        assert_eq!(traveler_uses, [dot_use, envelope_use]);
+        assert_eq!(traveler_uses, expected_traveler_uses);
         assert_eq!(static_symbol_ids, Vec::<String>::new());
         assert_eq!(static_traveler_uses, Vec::<(String, String)>::new());
     }

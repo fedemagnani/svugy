@@ -1,4 +1,4 @@
-//! Project plan-space boxes into the isometric scene graph.
+//! Project plan-space boxes into the scene graph a camera sees.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::iter;
@@ -11,14 +11,15 @@ use svugy_model::path::ElementPath;
 use crate::layout::{LevelPlacement, LevelPlan, LevelPlans};
 use crate::metrics::{LabelRole, TextAnchor, TextMeasure, TextSize, TextSpec};
 
+pub(crate) use self::camera::{Camera, Isometric, Top};
 use self::connection::PlanCourse;
 use self::ground::GroundGrid;
 pub(crate) use self::ground::GroundPattern;
 use self::level::LevelProjector;
-use self::projection::IsometricProjection;
 pub(crate) use self::score::{QuantizedLength, SceneScore};
 
 mod badge;
+mod camera;
 mod connection;
 mod depth;
 mod ground;
@@ -27,7 +28,6 @@ mod legend;
 mod level;
 mod obstruction;
 mod primitive;
-mod projection;
 mod score;
 mod stub;
 
@@ -64,25 +64,29 @@ impl Scene {
         }
     }
 
-    /// Project every level `plans` lays out for `model` into one scene, closing no container.
-    pub(crate) fn project(model: &Model, plans: &LevelPlans, measure: &impl TextMeasure) -> Self {
+    /// Project every level `plans` lays out for `model` into one scene seen by camera `C`, closing no container.
+    pub(crate) fn project<C: Camera>(
+        model: &Model,
+        plans: &LevelPlans,
+        measure: &impl TextMeasure,
+    ) -> Self {
         let no_closed_containers = BTreeSet::new();
-        Self::project_closing(model, &no_closed_containers, plans, measure)
+        Self::project_closing::<C>(model, &no_closed_containers, plans, measure)
     }
 
-    /// Project one disclosure layer, laid out by `plans`, into one scene, stacking a sheet under each container it closes.
-    pub(crate) fn project_disclosed(
+    /// Project one disclosure layer, laid out by `plans`, into one scene seen by camera `C`, stacking a sheet under each container it closes.
+    pub(crate) fn project_disclosed<C: Camera>(
         disclosed: &DisclosedModel,
         plans: &LevelPlans,
         measure: &impl TextMeasure,
     ) -> Self {
         let disclosed_model = disclosed.model();
         let closed_containers = disclosed.closed_containers();
-        Self::project_closing(disclosed_model, closed_containers, plans, measure)
+        Self::project_closing::<C>(disclosed_model, closed_containers, plans, measure)
     }
 
-    /// Project every level `plans` lays out into one scene: the ground grid under the root, each container's interior stacked on its solid, a sheet under each of `closed_containers`, each edge arced in its home level or badged on its source, every container's stub markers over it, every level's view framed around what it draws, then the diagram's heading and legend above it all.
-    fn project_closing(
+    /// Project every level `plans` lays out into one scene seen by camera `C`: the ground grid under the root, each container's interior stacked on its solid, a sheet under each of `closed_containers`, each edge arced in its home level or badged on its source, every container's stub markers over it, every level's view framed around what it draws, then the diagram's heading and legend above it all.
+    fn project_closing<C: Camera>(
         model: &Model,
         closed_containers: &BTreeSet<ElementPath>,
         plans: &LevelPlans,
@@ -92,18 +96,18 @@ impl Scene {
         let root_plan = plans
             .level(&root_path)
             .expect("layout plans the root level");
-        let projector = LevelProjector::new(model, closed_containers, plans, measure);
+        let projector = LevelProjector::<_, C>::new(model, closed_containers, plans, measure);
         let no_floor_branches = Vec::new();
         let mut root =
             projector.project_level(&root_path, root_plan, Affine::IDENTITY, no_floor_branches);
         let mut stub_markers_by_container =
-            root.plate_stub_markers_per_container(model, plans, measure);
+            root.plate_stub_markers_per_container::<_, C>(model, plans, measure);
         root.hand_stub_markers_to_interiors(&mut stub_markers_by_container);
-        let views_by_level = Self::frame_every_level(&root, plans);
+        let views_by_level = Self::frame_every_level::<C>(&root, plans);
         let root_placed = root_plan.placed();
         let root_boundary = root_placed.boundary();
         let ground_grid = GroundGrid::covering(root_boundary);
-        let ground_lines = ground_grid.lines();
+        let ground_lines = ground_grid.lines::<C>();
         let mut scene = Self::new(ground_lines, root, views_by_level);
         let content_view = scene.root_view();
         let heading = Heading::set_above(content_view, model, measure);
@@ -112,7 +116,7 @@ impl Scene {
             scene.widen_root_view_to_frame(heading_bounds);
             scene = scene.with_heading(heading);
         }
-        let legend = LegendPanel::set_top_right_of(&scene, model, plans, measure);
+        let legend = LegendPanel::set_top_right_of::<C>(&scene, model, plans, measure);
         if let Some(legend) = legend {
             scene.widen_root_view_to_frame(legend.bounds);
             scene = scene.with_legend(legend);
@@ -120,8 +124,11 @@ impl Scene {
         scene
     }
 
-    /// Frame the view of `root` and of every level nested in it, each laid out by `plans`, keyed by level.
-    fn frame_every_level(root: &Group, plans: &LevelPlans) -> BTreeMap<ElementPath, Rect> {
+    /// Frame the view of `root` and of every level nested in it, each laid out by `plans` and seen by camera `C`, keyed by level.
+    fn frame_every_level<C: Camera>(
+        root: &Group,
+        plans: &LevelPlans,
+    ) -> BTreeMap<ElementPath, Rect> {
         let root_level = (ElementPath::root(), root);
         let nested_levels = root.nested_interiors().map(|interior| {
             let level = interior.container.clone();
@@ -133,7 +140,7 @@ impl Scene {
                 let plan = plans
                     .level(&level)
                     .expect("layout plans every projected level");
-                let view = group.framed_view(plan);
+                let view = group.framed_view::<C>(plan);
                 (level, view)
             })
             .collect()
@@ -201,13 +208,13 @@ impl Group {
         }
     }
 
-    /// Frame this level's view, laid out by `plan`: a margin around what it draws, nested levels included, and its stub tags, or around its floor when it draws nothing; the ground grid may bleed past the view.
-    fn framed_view(&self, plan: &LevelPlan) -> Rect {
+    /// Frame this level's view, laid out by `plan` and seen by camera `C`: a margin around what it draws, nested levels included, and its stub tags, or around its floor when it draws nothing; the ground grid may bleed past the view.
+    fn framed_view<C: Camera>(&self, plan: &LevelPlan) -> Rect {
         let content_bounds = self.content_bounds();
         let drawn_bounds = content_bounds.unwrap_or_else(|| {
             let placed = plan.placed();
             let boundary = placed.boundary();
-            let floor = IsometricProjection::horizontal_plane_at(0.0);
+            let floor = C::horizontal_plane_at(0.0);
             floor.transform_rect_bbox(boundary)
         });
         let stub_tag_bounds = self
@@ -727,7 +734,6 @@ pub(crate) mod fixtures {
     use glam::DVec3;
     use kurbo::Vec2;
 
-    use super::projection::IsometricProjection;
     use super::*;
     use crate::metrics::TextMeasure;
 
@@ -771,28 +777,28 @@ pub(crate) mod fixtures {
                 DVec3::new(x1, y1, BLOCK_HEIGHT),
                 DVec3::new(x0, y1, BLOCK_HEIGHT),
             ]
-            .map(IsometricProjection::project);
+            .map(Isometric::project);
             let right_corners = [
                 DVec3::new(x1, y0, 0.0),
                 DVec3::new(x1, y1, 0.0),
                 DVec3::new(x1, y1, BLOCK_HEIGHT),
                 DVec3::new(x1, y0, BLOCK_HEIGHT),
             ]
-            .map(IsometricProjection::project);
+            .map(Isometric::project);
             let top_corners = [
                 DVec3::new(x0, y0, BLOCK_HEIGHT),
                 DVec3::new(x1, y0, BLOCK_HEIGHT),
                 DVec3::new(x1, y1, BLOCK_HEIGHT),
                 DVec3::new(x0, y1, BLOCK_HEIGHT),
             ]
-            .map(IsometricProjection::project);
+            .map(Isometric::project);
             let left_face = Face::quad(left_corners, FaceShade::Left);
             let right_face = Face::quad(right_corners, FaceShade::Right);
             let top_face = Face::quad(top_corners, FaceShade::Top);
             let faces = vec![left_face, right_face, top_face];
             let top_center = footprint.center();
             let title_plane_origin = DVec3::new(top_center.x, top_center.y, BLOCK_HEIGHT);
-            let title_plane = IsometricProjection::plane(title_plane_origin, DVec3::X, DVec3::Y);
+            let title_plane = Isometric::plane(title_plane_origin, DVec3::X, DVec3::Y);
             let title_text = element.to_string();
             let title_baseline_origin = Point::new(0.0, -2.0);
             let title_size = LabelRole::Title.measure_text(&title_text, &FixedAdvanceMeasure);
@@ -819,11 +825,11 @@ pub(crate) mod fixtures {
             let a_solid = Solid::box_over(a, a_footprint);
             let b_solid = Solid::box_over(b, b_footprint);
             let plan_source_point = DVec3::new(80.0, 50.0, BLOCK_HEIGHT / 2.0);
-            let source_point = IsometricProjection::project(plan_source_point);
+            let source_point = Isometric::project(plan_source_point);
             let plan_control_point = DVec3::new(110.0, 60.0, BLOCK_HEIGHT * 2.0);
-            let control_point = IsometricProjection::project(plan_control_point);
+            let control_point = Isometric::project(plan_control_point);
             let plan_target_point = DVec3::new(140.0, 70.0, BLOCK_HEIGHT);
-            let target_point = IsometricProjection::project(plan_target_point);
+            let target_point = Isometric::project(plan_target_point);
             let mut path = BezPath::new();
             path.move_to(source_point);
             path.quad_to(control_point, target_point);
@@ -847,13 +853,13 @@ pub(crate) mod fixtures {
                 .with_dot_path(path)
                 .with_label(plated_label);
             let plan_west_corner = DVec3::new(0.0, 110.0, 0.0);
-            let west_corner = IsometricProjection::project(plan_west_corner);
+            let west_corner = Isometric::project(plan_west_corner);
             let plan_east_corner = DVec3::new(220.0, 0.0, 0.0);
-            let east_corner = IsometricProjection::project(plan_east_corner);
+            let east_corner = Isometric::project(plan_east_corner);
             let plan_north_corner = DVec3::new(0.0, 0.0, BLOCK_HEIGHT * 2.0);
-            let north_corner = IsometricProjection::project(plan_north_corner);
+            let north_corner = Isometric::project(plan_north_corner);
             let plan_south_corner = DVec3::new(220.0, 110.0, 0.0);
-            let south_corner = IsometricProjection::project(plan_south_corner);
+            let south_corner = Isometric::project(plan_south_corner);
             let view = Rect::from_points(west_corner, east_corner)
                 .union_pt(north_corner)
                 .union_pt(south_corner);

@@ -10,12 +10,12 @@ mod traveler;
 
 use kurbo::{BezPath, Line, Rect};
 use svugy_model::disclose::DisclosedModel;
-use svugy_model::model::Model;
+use svugy_model::model::{Model, ViewAngle};
 use svugy_model::path::ElementPath;
 
 use crate::geometry::{
-    Badge, Connection, Face, FaceShade, Group, Heading, KeySample, Label, LegendPanel, PlatedLabel,
-    Scene, Solid,
+    Badge, Camera, Connection, Face, FaceShade, Group, Heading, KeySample, Label, LegendPanel,
+    PlatedLabel, Scene, Solid,
 };
 use crate::metrics::LabelRole;
 use crate::render::contract::{ContractAnnotator, DiagramDetails, RuntimeContract};
@@ -113,11 +113,18 @@ pub(crate) struct LayerScene<'d> {
     scene: Scene,
 }
 
-/// Holds the definitions every layer of a document references: one arrowhead marker per connection paint, one symbol per traveler, and the endless ground's pattern when the document has one.
+/// Groups every disclosure layer one camera projects, with the ground it sees: one angle of the interactive document.
+pub(crate) struct CameraLayers<'d> {
+    angle: ViewAngle,
+    ground: EndlessGround,
+    layer_scenes: Vec<LayerScene<'d>>,
+}
+
+/// Holds the definitions every layer of a document references: one arrowhead marker per connection paint, one symbol per traveler, and one endless ground pattern per camera the document has.
 struct Definitions {
     arrowheads: ArrowheadMarkers,
     travelers: TravelerSymbols,
-    ground: Option<EndlessGround>,
+    grounds: Vec<EndlessGround>,
 }
 
 /// Writes one layer's scene in a single pass, painted from the model it draws, ending each connection in its shared arrowhead, moving each traveler as its shared symbol and framing each level in its collected view.
@@ -193,38 +200,27 @@ impl<P: Profile> Renderer<P> {
 }
 
 impl<T: Theme> InteractiveRenderer<T> {
-    /// Write `layer_scenes`, disclosed from `model`, as the interactive document sized to the canvas covering every layer's root view, so changing layer never changes its aspect ratio: the model's title, its diagram details, the definitions every layer shares, one canvas under every layer's root view, the endless ground the reader pans across, then one group per layer, the deepest shown so a viewer without scripts sees the whole diagram.
+    /// Write `camera_layers`, each camera's disclosure layers of `model`, as the interactive document sized to the canvas covering every layer's root view from `shown_angle`, so changing layer never changes its aspect ratio: the model's title, its diagram details, the definitions every camera shares, one canvas, then one group per camera holding the endless ground the reader pans across and one group per layer; the group of the camera at `shown_angle` and every camera's deepest layer are shown, so a viewer without scripts sees the whole diagram from the author's angle.
     pub(crate) fn write_layered_document(
         &self,
         model: &Model,
-        layer_scenes: &[LayerScene],
+        shown_angle: ViewAngle,
+        camera_layers: &[CameraLayers],
     ) -> String {
-        let drawn_layers: Vec<(&Group, &Model)> = layer_scenes
-            .iter()
+        let every_layer_scene = camera_layers.iter().flat_map(|camera| &camera.layer_scenes);
+        let drawn_layers: Vec<(&Group, &Model)> = every_layer_scene
             .map(|layer_scene| {
                 let layer_model = layer_scene.disclosure.model();
                 (&layer_scene.scene.root, layer_model)
             })
             .collect();
-        let definitions = Definitions::collect(&drawn_layers).with_endless_ground();
-        let layer_passes: Vec<LayerPass<'_, '_, Interactive<T>>> = layer_scenes
+        let grounds = camera_layers.iter().map(|camera| camera.ground).collect();
+        let definitions = Definitions::collect(&drawn_layers).with_endless_grounds(grounds);
+        let shown_camera = camera_layers
             .iter()
-            .map(|layer_scene| {
-                let layer_model = layer_scene.disclosure.model();
-                let annotator = ContractAnnotator::new(model)
-                    .with_disclosure(layer_scene.disclosure)
-                    .with_descriptions();
-                let scene = &layer_scene.scene;
-                LayerPass::new(&self.profile, scene, layer_model, annotator, &definitions)
-            })
-            .collect();
-        let root_views = layer_scenes
-            .iter()
-            .map(|layer_scene| layer_scene.scene.root_view());
-        let canvas_view = root_views
-            .reduce(|covered_view, root_view| covered_view.union(root_view))
-            .expect("disclosure yields layer 0 at least");
-        let deepest_layer_index = layer_scenes.len() - 1;
+            .find(|camera| camera.angle == shown_angle)
+            .expect("every interactive document projects the author's angle");
+        let canvas_view = shown_camera.canvas_view();
         self.write_root(canvas_view, |writer| {
             if let Some(title) = model.title() {
                 let no_attributes = Attributes::new();
@@ -235,22 +231,55 @@ impl<T: Theme> InteractiveRenderer<T> {
             }
             definitions.write(writer, &self.profile);
             self.write_canvas(writer, canvas_view);
-            EndlessGround::write_plane(writer);
-            for (layer_index, layer_pass) in layer_passes.iter().enumerate() {
-                let layer_value = layer_index.to_string();
-                let layer_attributes =
-                    Attributes::new().with_text(RuntimeContract::LAYER, &layer_value);
-                let is_deepest_layer = layer_index == deepest_layer_index;
-                let shown_layer_attributes = if is_deepest_layer {
-                    layer_attributes.with_text(RuntimeContract::SHOWN, "")
-                } else {
-                    layer_attributes
-                };
-                writer.open_element("g", &shown_layer_attributes);
-                layer_pass.write_layer(writer);
-                writer.close_element();
+            for camera in camera_layers {
+                let is_shown_camera = camera.angle == shown_angle;
+                self.write_camera(writer, model, camera, is_shown_camera, &definitions);
             }
         })
+    }
+
+    /// Write `camera`'s group, its layers disclosed from `model`: the endless ground, then one group per layer, the deepest shown; the group itself shown when `is_shown_camera`.
+    fn write_camera(
+        &self,
+        writer: &mut SvgWriter,
+        model: &Model,
+        camera: &CameraLayers,
+        is_shown_camera: bool,
+        definitions: &Definitions,
+    ) {
+        let angle_spelling: &'static str = camera.angle.into();
+        let camera_attributes =
+            Attributes::new().with_text(RuntimeContract::CAMERA, angle_spelling);
+        let shown_camera_attributes = if is_shown_camera {
+            camera_attributes.with_text(RuntimeContract::SHOWN, "")
+        } else {
+            camera_attributes
+        };
+        writer.open_element("g", &shown_camera_attributes);
+        camera.ground.write_plane(writer);
+        let deepest_layer_index = camera.layer_scenes.len() - 1;
+        for (layer_index, layer_scene) in camera.layer_scenes.iter().enumerate() {
+            let layer_model = layer_scene.disclosure.model();
+            let annotator = ContractAnnotator::new(model)
+                .with_disclosure(layer_scene.disclosure)
+                .with_descriptions();
+            let scene = &layer_scene.scene;
+            let layer_pass =
+                LayerPass::new(&self.profile, scene, layer_model, annotator, definitions);
+            let layer_value = layer_index.to_string();
+            let layer_attributes =
+                Attributes::new().with_text(RuntimeContract::LAYER, &layer_value);
+            let is_deepest_layer = layer_index == deepest_layer_index;
+            let shown_layer_attributes = if is_deepest_layer {
+                layer_attributes.with_text(RuntimeContract::SHOWN, "")
+            } else {
+                layer_attributes
+            };
+            writer.open_element("g", &shown_layer_attributes);
+            layer_pass.write_layer(writer);
+            writer.close_element();
+        }
+        writer.close_element();
     }
 }
 
@@ -258,6 +287,29 @@ impl<'d> LayerScene<'d> {
     /// Pair `disclosure` with `scene`, projected from its model.
     pub(crate) fn new(disclosure: &'d DisclosedModel, scene: Scene) -> Self {
         Self { disclosure, scene }
+    }
+}
+
+impl<'d> CameraLayers<'d> {
+    /// Group `layer_scenes`, every disclosure layer projected by camera `C`, with the ground `C` sees.
+    pub(crate) fn seen_by<C: Camera>(layer_scenes: Vec<LayerScene<'d>>) -> Self {
+        let ground = EndlessGround::seen_by::<C>();
+        Self {
+            angle: C::ANGLE,
+            ground,
+            layer_scenes,
+        }
+    }
+
+    /// Return the union of every layer's root view.
+    fn canvas_view(&self) -> Rect {
+        let root_views = self
+            .layer_scenes
+            .iter()
+            .map(|layer_scene| layer_scene.scene.root_view());
+        root_views
+            .reduce(|covered_view, root_view| covered_view.union(root_view))
+            .expect("disclosure yields layer 0 at least")
     }
 }
 
@@ -269,24 +321,20 @@ impl Definitions {
         Self {
             arrowheads,
             travelers,
-            ground: None,
+            grounds: Vec::new(),
         }
     }
 
-    /// Add the endless ground's pattern, for a document the reader can pan across without end.
-    fn with_endless_ground(self) -> Self {
-        let ground = EndlessGround::new();
-        Self {
-            ground: Some(ground),
-            ..self
-        }
+    /// Add the patterns of `grounds`, for a document the reader can pan across without end from every camera.
+    fn with_endless_grounds(self, grounds: Vec<EndlessGround>) -> Self {
+        Self { grounds, ..self }
     }
 
-    /// Write a `<defs>` holding the arrowhead markers, the traveler symbols a live viewer moves, then the ground pattern, or nothing when none was collected.
+    /// Write a `<defs>` holding the arrowhead markers, the traveler symbols a live viewer moves, then the ground patterns, or nothing when none was collected.
     fn write<P: Profile>(&self, writer: &mut SvgWriter, profile: &P) {
         let has_no_marker = self.arrowheads.is_empty();
         let has_no_traveler = self.travelers.is_empty();
-        let has_no_ground = self.ground.is_none();
+        let has_no_ground = self.grounds.is_empty();
         let has_no_definition = has_no_marker && has_no_traveler && has_no_ground;
         if has_no_definition {
             return;
@@ -295,7 +343,7 @@ impl Definitions {
         writer.open_element("defs", &no_attributes);
         self.arrowheads.write_markers(writer, profile);
         profile.write_live_only(writer, |writer| self.travelers.write_symbols(writer));
-        if let Some(ground) = &self.ground {
+        for ground in &self.grounds {
             ground.write_pattern(writer, profile);
         }
         writer.close_element();
@@ -728,6 +776,7 @@ mod tests {
     use svugy_parse::json::{JsonLanguage, JsonPrinter};
 
     use super::*;
+    use crate::geometry::Isometric;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
     use crate::geometry::{FaceShade, NestedInterior, StubMarker};
     use crate::layout::{LevelPlan, LevelPlans};
@@ -1282,7 +1331,7 @@ mod tests {
         let model = builder.build().model.expect("valid model");
         let plan = LevelPlan::two_boxes_and_one_route();
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project(&model, &plans, font);
+        let scene = Scene::project::<Isometric>(&model, &plans, font);
         (model, scene)
     }
 
@@ -1565,7 +1614,8 @@ mod tests {
     }
 
     #[test]
-    fn a_badge_is_its_edges_one_group_with_its_details_inside_its_sources_group_in_both_profiles() {
+    fn a_badge_is_its_edges_one_group_per_camera_with_its_details_inside_its_sources_group_in_both_profiles()
+     {
         let source_group = r#"<g data-svugy-element="pipeline.render.profile">"#;
         let next_source_group = r#"<g data-svugy-element="pipeline.render.writer">"#;
         let badge_group_opening = r#"<g data-svugy-edge="(pipeline.render.profile -&gt; pipeline.inter)[0]" data-svugy-from="pipeline.render.profile" data-svugy-to="pipeline.inter">"#;
@@ -1575,7 +1625,8 @@ mod tests {
         let model = golden_model(false);
         let interactive_svg = InteractiveSvg::render(&model);
         let static_svg = StaticSvg::render(&model);
-        for svg in [interactive_svg, static_svg] {
+        let camera_count = interactive_svg.matches("<g data-svugy-camera=").count();
+        for (svg, camera_count) in [(interactive_svg, camera_count), (static_svg, 1)] {
             let source_start = svg.find(source_group).expect("profile is drawn");
             let next_source_start = svg.find(next_source_group).expect("writer is drawn");
             let badge_start = svg
@@ -1583,7 +1634,7 @@ mod tests {
                 .expect("the badge carries its details");
             let edge_group_count = svg.matches(badge_group_opening).count();
             assert!(source_start < badge_start && badge_start < next_source_start);
-            assert_eq!(edge_group_count, 1);
+            assert_eq!(edge_group_count, camera_count);
         }
     }
 }

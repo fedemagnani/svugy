@@ -2,7 +2,7 @@
 
 use crate::description::DescriptionOwner;
 use crate::legend::Legend;
-use crate::model::{Edge, EdgeId, Element};
+use crate::model::{Edge, EdgeId, Element, ViewAngle};
 use crate::path::ElementPath;
 use crate::validate::{ModelAdmission, UncheckedModel};
 
@@ -29,6 +29,12 @@ impl ModelBuilder {
     pub fn with_subtitle(mut self, subtitle: impl Into<String>) -> Self {
         let subtitle = subtitle.into();
         self.unchecked.model.subtitle = Some(subtitle);
+        self
+    }
+
+    /// Show the diagram from `view` first.
+    pub fn with_view(mut self, view: ViewAngle) -> Self {
+        self.unchecked.model.view = Some(view);
         self
     }
 

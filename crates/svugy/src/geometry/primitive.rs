@@ -1,26 +1,35 @@
 //! Turn an element's footprint into its primitive's faces and label site.
 
 use std::array;
+use std::marker::PhantomData;
 
 use glam::DVec3;
 use kurbo::{Affine, BezPath, CubicBez, Point, Rect, Vec2};
 use svugy_model::model::{Element, Model, Shape};
 use svugy_model::path::ElementPath;
 
-use super::projection::IsometricProjection;
+use super::camera::Camera;
 use super::{Face, FaceShade, Label, Solid};
 use crate::metrics::{LabelBlock, LabelRole, TextAnchor, TextMeasure};
 
-/// Resolves an element's shape to the primitive it is drawn as, the one place a model `Shape` becomes a `Primitive`.
-#[derive(Clone, Copy)]
-pub(super) struct ResolvedPrimitive {
+/// Resolves an element's shape to the primitive it is drawn as, seen by camera `C`, the one place a model `Shape` becomes a `Primitive`.
+pub(super) struct ResolvedPrimitive<C> {
     /// Height of the top face above the element's floor, where its connections attach and its interior sits.
     pub(super) height: f64,
     faces_over: fn(Rect, f64) -> Vec<Face>,
     label_site: fn(Rect, f64) -> LabelSite,
+    camera: PhantomData<C>,
 }
 
-impl ResolvedPrimitive {
+impl<C> Clone for ResolvedPrimitive<C> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<C> Copy for ResolvedPrimitive<C> {}
+
+impl<C: Camera> ResolvedPrimitive<C> {
     /// Thickness of the sheet stacked under a closed container, a fifth of a block's height.
     const SHEET_THICKNESS: f64 = Block::DEFAULT_HEIGHT / 5.0;
 
@@ -40,8 +49,9 @@ impl ResolvedPrimitive {
     fn of_container() -> Self {
         Self {
             height: Slab::DEFAULT_HEIGHT,
-            faces_over: <Slab as Primitive>::Body::faces_over,
-            label_site: LabelSite::hanging_from_front_left_face,
+            faces_over: <Slab as Primitive>::Body::faces_over::<C>,
+            label_site: LabelSite::hanging_from_front_face::<C>,
+            camera: PhantomData,
         }
     }
 
@@ -62,8 +72,9 @@ impl ResolvedPrimitive {
         let height = authored_height.unwrap_or(P::DEFAULT_HEIGHT);
         Self {
             height,
-            faces_over: P::Body::faces_over,
-            label_site: P::leaf_label_site,
+            faces_over: P::Body::faces_over::<C>,
+            label_site: P::leaf_label_site::<C>,
+            camera: PhantomData,
         }
     }
 
@@ -87,7 +98,7 @@ impl ResolvedPrimitive {
     pub(super) fn sheet_under(&self, footprint: Rect) -> BezPath {
         let plate_faces = (self.faces_over)(footprint, Self::SHEET_THICKNESS);
         let plan_plate_floor = DVec3::new(0.0, 0.0, -Self::SHEET_THICKNESS);
-        let plate_floor = IsometricProjection::project(plan_plate_floor);
+        let plate_floor = C::project(plan_plate_floor);
         let plate_floor_offset = plate_floor.to_vec2();
         let lower_to_plate_floor = Affine::translate(plate_floor_offset);
         let lowered_outlines = plate_faces
@@ -110,9 +121,9 @@ trait Primitive {
     /// Body the primitive extrudes over its footprint.
     type Body: Extrusion;
 
-    /// Return where a leaf's labels sit on its top `height` above the ground: centred on the top face, unless the primitive stands them elsewhere.
-    fn leaf_label_site(footprint: Rect, height: f64) -> LabelSite {
-        LabelSite::centered_on_top_face(footprint, height)
+    /// Return where a leaf's labels sit on its top `height` above the ground, seen by camera `C`: centred on the top face, unless the primitive stands them elsewhere.
+    fn leaf_label_site<C: Camera>(footprint: Rect, height: f64) -> LabelSite {
+        LabelSite::centered_on_top_face::<C>(footprint, height)
     }
 }
 
@@ -142,8 +153,8 @@ impl Primitive for Cylinder {
 
     type Body = EllipticCylinder;
 
-    fn leaf_label_site(footprint: Rect, height: f64) -> LabelSite {
-        LabelSite::upright_over_top_face(footprint, height)
+    fn leaf_label_site<C: Camera>(footprint: Rect, height: f64) -> LabelSite {
+        LabelSite::upright_over_top_face::<C>(footprint, height)
     }
 }
 
@@ -158,16 +169,16 @@ impl Primitive for Disc {
 
 /// Outlines the faces the viewer sees of the body a footprint is extruded into.
 trait Extrusion {
-    /// Return the visible faces of the body extruded `height` tall over `footprint`, back to front.
-    fn faces_over(footprint: Rect, height: f64) -> Vec<Face>;
+    /// Return the faces camera `C` sees of the body extruded `height` tall over `footprint`, back to front.
+    fn faces_over<C: Camera>(footprint: Rect, height: f64) -> Vec<Face>;
 }
 
-/// Outlines the three visible faces of a cuboid extruded over a footprint.
+/// Outlines the faces a camera sees of a cuboid extruded over a footprint.
 struct Cuboid;
 
 impl Extrusion for Cuboid {
-    /// Return the max-y face (screen left), the max-x face (screen right), then the top.
-    fn faces_over(footprint: Rect, height: f64) -> Vec<Face> {
+    /// Return those of the max-y face (screen left), the max-x face (screen right) and the top that `C` sees, in that order.
+    fn faces_over<C: Camera>(footprint: Rect, height: f64) -> Vec<Face> {
         let Rect { x0, y0, x1, y1 } = footprint;
         let left_corners = [
             DVec3::new(x0, y1, 0.0),
@@ -187,17 +198,23 @@ impl Extrusion for Cuboid {
             DVec3::new(x1, y1, height),
             DVec3::new(x0, y1, height),
         ];
-        let left_face = Face::projected_quad(left_corners, FaceShade::Left);
-        let right_face = Face::projected_quad(right_corners, FaceShade::Right);
-        let top_face = Face::projected_quad(top_corners, FaceShade::Top);
-        vec![left_face, right_face, top_face]
+        let left_side = (DVec3::Y, left_corners, FaceShade::Left);
+        let right_side = (DVec3::X, right_corners, FaceShade::Right);
+        let top_side = (DVec3::Z, top_corners, FaceShade::Top);
+        let sides = [left_side, right_side, top_side];
+        let seen_sides = sides
+            .into_iter()
+            .filter(|(outward_normal, _corners, _shade)| C::sees(*outward_normal));
+        seen_sides
+            .map(|(_outward_normal, corners, shade)| Face::projected_quad::<C>(corners, shade))
+            .collect()
     }
 }
 
 impl Face {
-    /// Fill the projection of the closed plan quadrilateral through `corners`.
-    fn projected_quad(corners: [DVec3; 4], shade: FaceShade) -> Self {
-        let [first, second, third, fourth] = corners.map(IsometricProjection::project);
+    /// Fill the projection by camera `C` of the closed plan quadrilateral through `corners`.
+    fn projected_quad<C: Camera>(corners: [DVec3; 4], shade: FaceShade) -> Self {
+        let [first, second, third, fourth] = corners.map(C::project);
         let mut outline = BezPath::new();
         outline.move_to(first);
         outline.line_to(second);
@@ -212,23 +229,29 @@ impl Face {
 struct EllipticCylinder;
 
 impl Extrusion for EllipticCylinder {
-    /// Return the curved side, bounded by the screen silhouette and both front half-ellipses, then the top.
-    fn faces_over(footprint: Rect, height: f64) -> Vec<Face> {
+    /// Return the curved side, bounded by the screen silhouette and both front half-ellipses, when `C` sees any side, then the top.
+    fn faces_over<C: Camera>(footprint: Rect, height: f64) -> Vec<Face> {
         let base = InscribedEllipse::inscribed_in(footprint);
-        let quarter_arcs = base.quarter_arcs_from_screen_rightmost();
-        let side = Self::side_outline(quarter_arcs, height);
-        let top = Self::top_outline(quarter_arcs, height);
-        let side_face = Face::new(side, FaceShade::Left);
+        let quarter_arcs = base.quarter_arcs_from_screen_rightmost::<C>();
+        let top = Self::top_outline::<C>(quarter_arcs, height);
         let top_face = Face::new(top, FaceShade::Top);
+        let toward_viewer = C::TOWARD_VIEWER;
+        let side_facing_the_viewer = DVec3::new(toward_viewer.x, toward_viewer.y, 0.0);
+        let is_side_hidden = !C::sees(side_facing_the_viewer);
+        if is_side_hidden {
+            return vec![top_face];
+        }
+        let side = Self::side_outline::<C>(quarter_arcs, height);
+        let side_face = Face::new(side, FaceShade::Left);
         vec![side_face, top_face]
     }
 }
 
 impl EllipticCylinder {
     /// Outline the curved side standing `height` tall: down the leftmost silhouette, back along both front ground quarters, up the rightmost silhouette, then along both front top quarters.
-    fn side_outline(quarter_arcs: [CubicBez; 4], height: f64) -> BezPath {
-        let ground = IsometricProjection::horizontal_plane_at(0.0);
-        let roof = IsometricProjection::horizontal_plane_at(height);
+    fn side_outline<C: Camera>(quarter_arcs: [CubicBez; 4], height: f64) -> BezPath {
+        let ground = C::horizontal_plane_at(0.0);
+        let roof = C::horizontal_plane_at(height);
         let [
             rightmost_to_front,
             front_to_leftmost,
@@ -268,8 +291,8 @@ impl EllipticCylinder {
     }
 
     /// Outline the top `height` up: all four quarters raised to the roof.
-    fn top_outline(quarter_arcs: [CubicBez; 4], height: f64) -> BezPath {
-        let roof = IsometricProjection::horizontal_plane_at(height);
+    fn top_outline<C: Camera>(quarter_arcs: [CubicBez; 4], height: f64) -> BezPath {
+        let roof = C::horizontal_plane_at(height);
         let top_arcs = quarter_arcs.map(|arc| roof * arc);
         let mut top = BezPath::new();
         top.move_to(top_arcs[0].p0);
@@ -300,15 +323,20 @@ impl InscribedEllipse {
         Self { center, semi_axes }
     }
 
-    /// Return the quarters of E(t) = c + (a·cos t, b·sin t) from t₀ = argmax (a·cos t − b·sin t), where (cos t₀, sin t₀) = (a, −b)/√(a² + b²).
-    fn quarter_arcs_from_screen_rightmost(&self) -> [CubicBez; 4] {
+    /// Return the quarters of E(t) = c + (a·cos t, b·sin t) from t₀ = argmax (r_x·a·cos t + r_y·b·sin t), where (cos t₀, sin t₀) = (r_x·a, r_y·b)/√((r_x·a)² + (r_y·b)²) and r = (v_y, −v_x) is the ground direction across `C`'s sight line v.
+    fn quarter_arcs_from_screen_rightmost<C: Camera>(&self) -> [CubicBez; 4] {
         let Vec2 { x: a, y: b } = self.semi_axes;
-        let norm = (a * a + b * b).sqrt();
+        let toward_viewer = C::TOWARD_VIEWER;
+        let across_sight_x = toward_viewer.y;
+        let across_sight_y = -toward_viewer.x;
+        let rightmost_x = across_sight_x * a;
+        let rightmost_y = across_sight_y * b;
+        let norm = (rightmost_x * rightmost_x + rightmost_y * rightmost_y).sqrt();
         let is_degenerate = norm == 0.0;
         let mut cos_sin = if is_degenerate {
             Vec2::new(1.0, 0.0)
         } else {
-            Vec2::new(a / norm, -b / norm)
+            Vec2::new(rightmost_x / norm, rightmost_y / norm)
         };
         array::from_fn(|_quarter_index| {
             let arc = self.quarter_arc_from(cos_sin);
@@ -349,11 +377,11 @@ impl LabelSite {
     /// Tag baseline on a front face, from its west top corner: the tag inset along it, below the top edge.
     const HANGING_TAG_BASELINE: Point = Point::new(LabelBlock::TAG_INSET, 21.5);
 
-    /// Centre the title on the top face, reading along plan x, as the example titles its blocks.
-    fn centered_on_top_face(footprint: Rect, height: f64) -> Self {
+    /// Centre the title on the top face as camera `C` sees it, reading along plan x, as the example titles its blocks.
+    fn centered_on_top_face<C: Camera>(footprint: Rect, height: f64) -> Self {
         let top_center = footprint.center();
         let origin = DVec3::new(top_center.x, top_center.y, height);
-        let plane = IsometricProjection::plane(origin, DVec3::X, DVec3::Y);
+        let plane = C::plane(origin, DVec3::X, DVec3::Y);
         Self {
             plane,
             anchor: TextAnchor::Middle,
@@ -362,11 +390,11 @@ impl LabelSite {
         }
     }
 
-    /// Stand the title upright over the top face's centre, as the example titles its cylinders.
-    fn upright_over_top_face(footprint: Rect, height: f64) -> Self {
+    /// Stand the title upright over the top face's centre as camera `C` sees it, as the example titles its cylinders.
+    fn upright_over_top_face<C: Camera>(footprint: Rect, height: f64) -> Self {
         let top_center = footprint.center();
         let origin = DVec3::new(top_center.x, top_center.y, height);
-        let projected_origin = IsometricProjection::project(origin);
+        let projected_origin = C::project(origin);
         let origin_offset = projected_origin.to_vec2();
         let plane = Affine::translate(origin_offset);
         Self {
@@ -377,10 +405,10 @@ impl LabelSite {
         }
     }
 
-    /// Hang the tag below the front-left face's top edge, from its west corner, as the example tags its slabs.
-    fn hanging_from_front_left_face(footprint: Rect, height: f64) -> Self {
+    /// Hang the tag below the front (max-y) face's top edge, from its west corner, down the way camera `C` hangs tags, as the example tags its slabs.
+    fn hanging_from_front_face<C: Camera>(footprint: Rect, height: f64) -> Self {
         let west_top_corner = DVec3::new(footprint.x0, footprint.y1, height);
-        let plane = IsometricProjection::plane(west_top_corner, DVec3::X, DVec3::NEG_Z);
+        let plane = C::plane(west_top_corner, DVec3::X, C::HANGING_DOWN);
         Self {
             plane,
             anchor: TextAnchor::Start,
@@ -424,6 +452,7 @@ mod tests {
     use kurbo::Shape as _;
 
     use super::*;
+    use crate::geometry::camera::Isometric;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
 
     const COS_30: f64 = 0.866_025_403_784_438_6;
@@ -436,17 +465,17 @@ mod tests {
 
     impl DrawnSolid {
         fn of_leaf(path: &ElementPath, element: &Element, footprint: Rect) -> Self {
-            let primitive = ResolvedPrimitive::of_leaf(element);
+            let primitive = ResolvedPrimitive::<Isometric>::of_leaf(element);
             Self::drawn_by(primitive, path, element, footprint)
         }
 
         fn of_container(path: &ElementPath, element: &Element, footprint: Rect) -> Self {
-            let primitive = ResolvedPrimitive::of_container();
+            let primitive = ResolvedPrimitive::<Isometric>::of_container();
             Self::drawn_by(primitive, path, element, footprint)
         }
 
         fn drawn_by(
-            primitive: ResolvedPrimitive,
+            primitive: ResolvedPrimitive<Isometric>,
             path: &ElementPath,
             element: &Element,
             footprint: Rect,
@@ -472,26 +501,27 @@ mod tests {
     #[test]
     fn block_draws_left_right_then_top_over_its_footprint() {
         let footprint = Rect::new(20.0, 30.0, 80.0, 70.0);
-        let faces = <Block as Primitive>::Body::faces_over(footprint, Block::DEFAULT_HEIGHT);
+        let faces =
+            <Block as Primitive>::Body::faces_over::<Isometric>(footprint, Block::DEFAULT_HEIGHT);
         let shades: Vec<FaceShade> = faces.iter().map(|face| face.shade).collect();
         assert_eq!(shades, [FaceShade::Left, FaceShade::Right, FaceShade::Top]);
         let top_points = outline_points(&faces[2]);
-        let north_corner =
-            IsometricProjection::project(DVec3::new(20.0, 30.0, Block::DEFAULT_HEIGHT));
-        let south_corner =
-            IsometricProjection::project(DVec3::new(80.0, 70.0, Block::DEFAULT_HEIGHT));
+        let north_corner = Isometric::project(DVec3::new(20.0, 30.0, Block::DEFAULT_HEIGHT));
+        let south_corner = Isometric::project(DVec3::new(80.0, 70.0, Block::DEFAULT_HEIGHT));
         assert_eq!(top_points[0], north_corner);
         assert_eq!(top_points[2], south_corner);
         let left_points = outline_points(&faces[0]);
-        let west_ground = IsometricProjection::project(DVec3::new(20.0, 70.0, 0.0));
+        let west_ground = Isometric::project(DVec3::new(20.0, 70.0, 0.0));
         assert_eq!(left_points[0], west_ground);
     }
 
     #[test]
     fn slab_is_a_lower_box_than_block() {
         let footprint = Rect::new(0.0, 0.0, 200.0, 100.0);
-        let slab_faces = <Slab as Primitive>::Body::faces_over(footprint, Slab::DEFAULT_HEIGHT);
-        let block_faces = <Block as Primitive>::Body::faces_over(footprint, Block::DEFAULT_HEIGHT);
+        let slab_faces =
+            <Slab as Primitive>::Body::faces_over::<Isometric>(footprint, Slab::DEFAULT_HEIGHT);
+        let block_faces =
+            <Block as Primitive>::Body::faces_over::<Isometric>(footprint, Block::DEFAULT_HEIGHT);
         let slab_top = slab_faces[2].outline.bounding_box();
         let block_top = block_faces[2].outline.bounding_box();
         assert_eq!(slab_faces.len(), 3);
@@ -505,13 +535,16 @@ mod tests {
     fn cylinder_top_is_the_projected_circle_with_the_example_proportions() {
         let radius = 31.5;
         let footprint = square_footprint(radius);
-        let faces = <Cylinder as Primitive>::Body::faces_over(footprint, Cylinder::DEFAULT_HEIGHT);
+        let faces = <Cylinder as Primitive>::Body::faces_over::<Isometric>(
+            footprint,
+            Cylinder::DEFAULT_HEIGHT,
+        );
         let shades: Vec<FaceShade> = faces.iter().map(|face| face.shade).collect();
         assert_eq!(shades, [FaceShade::Left, FaceShade::Top]);
         let top_bounds = faces[1].outline.bounding_box();
         let center = footprint.center();
         let projected_center =
-            IsometricProjection::project(DVec3::new(center.x, center.y, Cylinder::DEFAULT_HEIGHT));
+            Isometric::project(DVec3::new(center.x, center.y, Cylinder::DEFAULT_HEIGHT));
         let expected_rx = radius * 2.0_f64.sqrt() * COS_30;
         let expected_ry = radius * 2.0_f64.sqrt() * 0.5;
         assert!((top_bounds.x1 - projected_center.x - expected_rx).abs() < 1e-9);
@@ -525,7 +558,10 @@ mod tests {
     fn cylinder_side_spans_the_silhouette_from_ground_to_top() {
         let radius = 20.0;
         let footprint = square_footprint(radius);
-        let faces = <Cylinder as Primitive>::Body::faces_over(footprint, Cylinder::DEFAULT_HEIGHT);
+        let faces = <Cylinder as Primitive>::Body::faces_over::<Isometric>(
+            footprint,
+            Cylinder::DEFAULT_HEIGHT,
+        );
         let side_bounds = faces[0].outline.bounding_box();
         let top_bounds = faces[1].outline.bounding_box();
         assert!((side_bounds.x0 - top_bounds.x0).abs() < 1e-9);
@@ -542,7 +578,8 @@ mod tests {
     #[test]
     fn elongated_footprint_keeps_its_silhouette_points_on_the_ellipse_extremes() {
         let footprint = Rect::new(0.0, 0.0, 120.0, 40.0);
-        let faces = <Disc as Primitive>::Body::faces_over(footprint, Disc::DEFAULT_HEIGHT);
+        let faces =
+            <Disc as Primitive>::Body::faces_over::<Isometric>(footprint, Disc::DEFAULT_HEIGHT);
         let top_bounds = faces[1].outline.bounding_box();
         let top_points = outline_points(&faces[1]);
         let rightmost = top_points[0];
@@ -560,8 +597,7 @@ mod tests {
         let labels = &projected.solid.labels;
         assert_eq!(projected.height, Block::DEFAULT_HEIGHT);
         assert_eq!(labels.len(), 2);
-        let top_center =
-            IsometricProjection::project(DVec3::new(54.0, 33.0, Block::DEFAULT_HEIGHT));
+        let top_center = Isometric::project(DVec3::new(54.0, 33.0, Block::DEFAULT_HEIGHT));
         let [a, b, c, d, e, f] = labels[0].plane.as_coeffs();
         assert_eq!([a, b, c, d], [COS_30, 0.5, -COS_30, 0.5]);
         assert_eq!(Point::new(e, f), top_center);
@@ -579,7 +615,7 @@ mod tests {
         let authored_height = 84.0;
         let center = footprint.center();
         let plan_raised_center = DVec3::new(center.x, center.y, authored_height);
-        let raised_center = IsometricProjection::project(plan_raised_center);
+        let raised_center = Isometric::project(plan_raised_center);
         for shape in [Shape::Box, Shape::Slab, Shape::Cylinder, Shape::Disc] {
             let element = Element::new("svugy-cli")
                 .with_shape(shape)
@@ -656,7 +692,7 @@ mod tests {
         let projected = DrawnSolid::of_leaf(&path, &element, footprint);
         let title = &projected.solid.labels[0];
         let plan_top_center = DVec3::new(150.0, 33.0, Slab::DEFAULT_HEIGHT);
-        let top_center = IsometricProjection::project(plan_top_center);
+        let top_center = Isometric::project(plan_top_center);
         let [a, b, c, d, e, f] = title.plane.as_coeffs();
         assert_eq!(projected.height, Slab::DEFAULT_HEIGHT);
         assert_eq!(title.role, LabelRole::Title);

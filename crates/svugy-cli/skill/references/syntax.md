@@ -6,7 +6,7 @@ Rules SKILL.md's example and rules leave out.
 
 - Parts, in order: frontmatter (optional), `## Components` (required, ≥ 1 item), `## Edges`, `## Legend` or `## Legend: TITLE`.
 - Sections hold bullet lists only. Blank lines and `<!-- … -->` are ignored anywhere, including at the end of an item.
-- Frontmatter keys: `title`, `subtitle`, `styles`; any other key is an error. Quote a YAML value holding `: `: `title: "Checkout: the flow"`.
+- Frontmatter keys: `title`, `subtitle`, `view`, `styles`; any other key is an error. `view` is `isometric` (default) or `top` (flat 2D plan). Quote a YAML value holding `: `: `title: "Checkout: the flow"`.
 - A style is a properties list, parentheses included: `service: (color=#3478f6, shape=box)`. It may hold component keys, edge keys or both; each key must suit where the style is used.
 
 ## Components

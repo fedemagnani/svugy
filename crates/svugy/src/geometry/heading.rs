@@ -104,6 +104,7 @@ mod tests {
     use svugy_model::model::{Edge, Element};
 
     use super::*;
+    use crate::geometry::Isometric;
     use crate::geometry::Scene;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
     use crate::layout::{LevelPlan, LevelPlans};
@@ -120,7 +121,7 @@ mod tests {
         let model = builder.build().model.expect("fixture model is valid");
         let plan = LevelPlan::two_boxes_and_one_route();
         let plans = LevelPlans::root_only(plan);
-        Scene::project(&model, &plans, &FixedAdvanceMeasure)
+        Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure)
     }
 
     fn untitled_scene() -> Scene {

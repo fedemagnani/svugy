@@ -2,6 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::iter;
+use std::marker::PhantomData;
 
 use glam::DVec3;
 use kurbo::{Affine, Point, Rect, Vec2};
@@ -9,21 +10,22 @@ use svugy_model::model::{Edge, EdgeId, Model};
 use svugy_model::path::ElementPath;
 
 use super::badge::{BadgeIcon, BadgeSeater};
+use super::camera::Camera;
 use super::connection::{ConnectionShape, FlatTrace, LiftedArc};
 use super::depth::DepthOrder;
 use super::obstruction::Obstructions;
 use super::primitive::ResolvedPrimitive;
-use super::projection::IsometricProjection;
 use super::{Connection, Group, PlatedLabel, Solid};
 use crate::layout::{Branch, Course, LevelPlacement, LevelPlan, LevelPlans, Route};
 use crate::metrics::TextMeasure;
 
-/// Projects levels top-down, each container's interior onto its solid's top, a sheet under each closed container.
-pub(super) struct LevelProjector<'a, M> {
+/// Projects levels top-down as camera `C` sees them, each container's interior onto its solid's top, a sheet under each closed container.
+pub(super) struct LevelProjector<'a, M, C> {
     model: &'a Model,
     closed_containers: &'a BTreeSet<ElementPath>,
     plans: &'a LevelPlans,
     measure: &'a M,
+    camera: PhantomData<C>,
 }
 
 /// Hands one bundled edge's branch to the projector of the container it runs on, traced on that container's floor in its frame.
@@ -34,7 +36,7 @@ pub(super) struct FloorBranch {
     carries_label: bool,
 }
 
-impl<'a, M: TextMeasure> LevelProjector<'a, M> {
+impl<'a, M: TextMeasure, C: Camera> LevelProjector<'a, M, C> {
     /// Set up a projector of the levels `plans` lays out for `model`, closing `closed_containers`, its labels measured by `measure`.
     pub(super) fn new(
         model: &'a Model,
@@ -47,6 +49,7 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
             closed_containers,
             plans,
             measure,
+            camera: PhantomData,
         }
     }
 
@@ -78,12 +81,12 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
         let placed = plan.placed();
         let footprints = placed.footprints();
         let routes = plan.routes();
-        let back_to_front = DepthOrder::back_to_front(footprints);
+        let back_to_front = DepthOrder::<C>::back_to_front(footprints);
         back_to_front
             .into_iter()
             .filter_map(|path| {
                 let element = self.model.element(path)?;
-                let primitive = ResolvedPrimitive::of_path(self.model, path)?;
+                let primitive = ResolvedPrimitive::<C>::of_path(self.model, path)?;
                 let footprint = footprints[path];
                 let drawn_solid = primitive
                     .draw(path, element, footprint, self.measure)
@@ -112,7 +115,7 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
         &self,
         path: &ElementPath,
         footprint: Rect,
-        primitive: &ResolvedPrimitive,
+        primitive: &ResolvedPrimitive<C>,
         drawn_solid: Solid,
     ) -> Solid {
         let hides_no_children = !self.closed_containers.contains(path);
@@ -124,7 +127,7 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
     }
 
     /// Shape the icon of every edge drawn as a badge on `source`, each its target shrunk, in edge order.
-    fn badge_icons_from(&self, source: &ElementPath) -> Vec<(EdgeId, BadgeIcon)> {
+    fn badge_icons_from(&self, source: &ElementPath) -> Vec<(EdgeId, BadgeIcon<C>)> {
         let badge_edges = self.model.badge_edges_from(source);
         badge_edges
             .filter_map(|edge_id| {
@@ -149,9 +152,9 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
             return drawn_solid;
         };
         let floor_branches =
-            FloorBranch::every_one_on_floor_of(path, footprint, enclosing_level_routes);
+            FloorBranch::every_one_on_floor_of::<C>(path, footprint, enclosing_level_routes);
         let raised_origin = DVec3::new(footprint.x0, footprint.y0, primitive_height);
-        let projected_origin = IsometricProjection::project(raised_origin);
+        let projected_origin = C::project(raised_origin);
         let interior_offset = projected_origin.to_vec2();
         let interior_frame = Affine::translate(interior_offset);
         let interior = self.project_level(path, interior_plan, interior_frame, floor_branches);
@@ -176,7 +179,7 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
                 let bend_points = bends.iter().copied();
                 let target_port = iter::once(route.target.point);
                 let plan_corners = source_port.chain(bend_points).chain(target_port);
-                let trace = FlatTrace::on_floor_through(level_floor_height, plan_corners);
+                let trace = FlatTrace::on_floor_through::<C>(level_floor_height, plan_corners);
                 let connection = self.connection_along(edge_id, &trace, obstructions);
                 Some(connection)
             })
@@ -256,7 +259,7 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
         let target_port = route.target.point;
         let source_end = self.trunk_end_above(level, source, source_port, source_branch);
         let target_end = self.trunk_end_above(level, target, target_port, target_branch);
-        let trunk = LiftedArc::between(source_end, target_end);
+        let trunk = LiftedArc::between::<C>(source_end, target_end);
         let is_unbranched = matches!((source_branch, target_branch), (None, None));
         if is_unbranched {
             return self.connection_along(edge_id, &trunk, obstructions);
@@ -301,7 +304,7 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
         plan_corners: Vec<Point>,
     ) -> FlatTrace {
         let container_floor_height = self.elevation_above(level, &branch.container);
-        FlatTrace::on_floor_through(container_floor_height, plan_corners)
+        FlatTrace::on_floor_through::<C>(container_floor_height, plan_corners)
     }
 
     /// Connect `edge_id` along `shape`, stroked under its target arrowhead, its dot travelling port to port, its label, if any, plated where `shape` is least obstructed and recorded among `obstructions`.
@@ -351,7 +354,7 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
         let Some(label_text) = edge_label else {
             return connection;
         };
-        let plated_label = PlatedLabel::place_least_obstructed_along(
+        let plated_label = PlatedLabel::place_least_obstructed_along::<C>(
             label_text,
             shape,
             obstructions,
@@ -369,7 +372,7 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
         endpoint_and_ancestors
             .filter(|path| level.is_ancestor_of(path))
             .filter_map(|path| {
-                let primitive = ResolvedPrimitive::of_path(self.model, &path)?;
+                let primitive = ResolvedPrimitive::<C>::of_path(self.model, &path)?;
                 Some(primitive.height)
             })
             .sum()
@@ -377,8 +380,8 @@ impl<'a, M: TextMeasure> LevelProjector<'a, M> {
 }
 
 impl FloorBranch {
-    /// Trace in `container`'s frame the branch of every bundled route among `routes` that runs on its floor, `footprint` being where it stands in their plan: a target branch ends in the arrowhead and carries the label, a source branch carries it only when its route has no target branch.
-    fn every_one_on_floor_of(
+    /// Trace in `container`'s frame, as camera `C` sees it, the branch of every bundled route among `routes` that runs on its floor, `footprint` being where it stands in their plan: a target branch ends in the arrowhead and carries the label, a source branch carries it only when its route has no target branch.
+    fn every_one_on_floor_of<C: Camera>(
         container: &ElementPath,
         footprint: Rect,
         routes: &BTreeMap<EdgeId, Route>,
@@ -399,7 +402,7 @@ impl FloorBranch {
             if let Some(branch) = source_branch_here {
                 let source_port = route.source.point;
                 let plan_corners = branch.corners_from_port_to_slot(source_port);
-                let trace = Self::trace_on_container_floor(plan_corners, container_offset);
+                let trace = Self::trace_on_container_floor::<C>(plan_corners, container_offset);
                 let is_target_unbranched = target_branch.is_none();
                 let floor_branch = Self {
                     edge_id: edge_id.clone(),
@@ -415,7 +418,7 @@ impl FloorBranch {
             if let Some(branch) = target_branch_here {
                 let target_port = route.target.point;
                 let plan_corners = branch.corners_from_slot_to_port(target_port);
-                let trace = Self::trace_on_container_floor(plan_corners, container_offset);
+                let trace = Self::trace_on_container_floor::<C>(plan_corners, container_offset);
                 let floor_branch = Self {
                     edge_id: edge_id.clone(),
                     trace,
@@ -429,12 +432,15 @@ impl FloorBranch {
     }
 
     /// Trace the polyline through `plan_corners`, in the enclosing level's plan, on the floor of the container whose footprint corner lies `container_offset` from that plan's origin.
-    fn trace_on_container_floor(plan_corners: Vec<Point>, container_offset: Vec2) -> FlatTrace {
+    fn trace_on_container_floor<C: Camera>(
+        plan_corners: Vec<Point>,
+        container_offset: Vec2,
+    ) -> FlatTrace {
         let container_floor_height = 0.0;
         let container_corners = plan_corners
             .into_iter()
             .map(|plan_corner| plan_corner - container_offset);
-        FlatTrace::on_floor_through(container_floor_height, container_corners)
+        FlatTrace::on_floor_through::<C>(container_floor_height, container_corners)
     }
 }
 
@@ -474,6 +480,7 @@ mod tests {
     use super::*;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
     use crate::geometry::{ArrowheadMarker, Face, Label, Scene};
+    use crate::geometry::{Camera, Isometric};
     use crate::layout::{PlacedLevel, Port, Side, Stub};
 
     const SLAB_TOP: f64 = 10.5;
@@ -556,7 +563,7 @@ mod tests {
     fn nested_scene() -> Scene {
         let model = three_nested_levels_model();
         let plans = LevelPlans::three_nested_levels();
-        Scene::project(&model, &plans, &FixedAdvanceMeasure)
+        Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure)
     }
 
     fn solid_of<'a>(group: &'a Group, element: &str) -> &'a Solid {
@@ -598,9 +605,9 @@ mod tests {
         let outer = interior_of(&scene.root, "a");
         let inner = interior_of(outer, "a.b");
         let outer_origin = DVec3::new(100.0, 20.0, SLAB_TOP);
-        let projected_outer_origin = IsometricProjection::project(outer_origin);
+        let projected_outer_origin = Isometric::project(outer_origin);
         let inner_origin_in_outer = DVec3::new(30.0, 30.0, SLAB_TOP);
-        let projected_inner_origin = IsometricProjection::project(inner_origin_in_outer);
+        let projected_inner_origin = Isometric::project(inner_origin_in_outer);
         let outer_offset = projected_outer_origin.to_vec2();
         let inner_offset = projected_inner_origin.to_vec2();
         assert_eq!(outer.frame, Affine::translate(outer_offset));
@@ -616,7 +623,7 @@ mod tests {
         let inner_to_root = scene.root.frame * outer.frame * inner.frame;
         let core_north_corner = inner_to_root * core_north_corner_in_inner;
         let stacked_corner = DVec3::new(150.0, 70.0, SLAB_TOP + SLAB_TOP + BLOCK_TOP);
-        let projected_stacked_corner = IsometricProjection::project(stacked_corner);
+        let projected_stacked_corner = Isometric::project(stacked_corner);
         assert_near(core_north_corner, projected_stacked_corner);
     }
 
@@ -648,8 +655,8 @@ mod tests {
         let (dot_start, dot_end) = dot_path_ends(connection);
         let relay_top = DVec3::new(60.0, 20.0, BLOCK_TOP);
         let raised_core_top = DVec3::new(150.0, 90.0, SLAB_TOP + SLAB_TOP + BLOCK_TOP);
-        let projected_relay_top = IsometricProjection::project(relay_top);
-        let projected_core_top = IsometricProjection::project(raised_core_top);
+        let projected_relay_top = Isometric::project(relay_top);
+        let projected_core_top = Isometric::project(raised_core_top);
         assert_eq!(dot_start, projected_relay_top);
         assert_eq!(dot_end, projected_core_top);
         let outer = interior_of(&scene.root, "a");
@@ -683,8 +690,8 @@ mod tests {
         let (dot_start, dot_end) = dot_path_ends(&outer.connections[0]);
         let dealer_top = DVec3::new(180.0, 60.0, BLOCK_TOP);
         let raised_core_top = DVec3::new(110.0, 70.0, SLAB_TOP + BLOCK_TOP);
-        let projected_dealer_top = IsometricProjection::project(dealer_top);
-        let projected_core_top = IsometricProjection::project(raised_core_top);
+        let projected_dealer_top = Isometric::project(dealer_top);
+        let projected_core_top = Isometric::project(raised_core_top);
         assert_eq!(dot_start, projected_dealer_top);
         assert_eq!(dot_end, projected_core_top);
     }
@@ -745,7 +752,7 @@ mod tests {
         ]);
         let plans = LevelPlans::new(plans_by_level);
 
-        let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
 
         let [trunk] = &scene.root.connections[..] else {
             panic!("the home level arcs the trunk alone");
@@ -782,15 +789,15 @@ mod tests {
         let dot_end = dot_path.segments().last().expect("dot path has a segment");
         let ui_port_on_app_floor = DVec3::new(60.0, 40.0, SLAB_TOP);
         let api_port_on_backend_floor = DVec3::new(240.0, 60.0, SLAB_TOP);
-        let projected_ui_port = IsometricProjection::project(ui_port_on_app_floor);
-        let projected_api_port = IsometricProjection::project(api_port_on_backend_floor);
+        let projected_ui_port = Isometric::project(ui_port_on_app_floor);
+        let projected_api_port = Isometric::project(api_port_on_backend_floor);
         assert_near(dot_start.start(), projected_ui_port);
         assert_near(dot_end.end(), projected_api_port);
         let target_branch_start = target_branch_trace.path.segments().next().expect("segment");
         let backend_to_root = scene.root.frame * backend_interior.frame;
         let target_branch_start_in_root = backend_to_root * target_branch_start.start();
         let backend_slot_on_its_floor = DVec3::new(200.0, 40.0, SLAB_TOP);
-        let projected_backend_slot = IsometricProjection::project(backend_slot_on_its_floor);
+        let projected_backend_slot = Isometric::project(backend_slot_on_its_floor);
         assert_near(target_branch_start_in_root, projected_backend_slot);
     }
 
@@ -823,7 +830,7 @@ mod tests {
 
     /// Assert that `tag`'s plate, mapped back onto its level's floor, lies inside `band`.
     fn assert_plate_lies_inside(tag: &PlatedLabel, band: Rect) {
-        let floor = IsometricProjection::horizontal_plane_at(0.0);
+        let floor = Isometric::horizontal_plane_at(0.0);
         let plate_to_floor = floor.inverse() * tag.label.plane;
         let plate_rect = tag.plate.rect();
         let plate_on_floor = plate_to_floor.transform_rect_bbox(plate_rect);
@@ -883,7 +890,7 @@ mod tests {
         let model = two_boxes_model();
         let plan = LevelPlan::two_boxes_and_one_route();
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
         let painted: Vec<String> = scene
             .root
             .solids
@@ -905,7 +912,7 @@ mod tests {
         let model = two_boxes_model();
         let plan = LevelPlan::two_boxes_and_one_route();
         let plans = LevelPlans::root_only(plan.clone());
-        let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
         let (_edge_id, route) = plan.routes().iter().next().expect("fixture has a route");
         let connection = &scene.root.connections[0];
         let dot_path = connection
@@ -915,11 +922,8 @@ mod tests {
         let dot_segment = dot_path.segments().next().expect("dot path has a segment");
         let source_top = DVec3::new(route.source.point.x, route.source.point.y, 22.5);
         let target_top = DVec3::new(route.target.point.x, route.target.point.y, 25.5);
-        assert_eq!(
-            dot_segment.start(),
-            IsometricProjection::project(source_top)
-        );
-        assert_eq!(dot_segment.end(), IsometricProjection::project(target_top));
+        assert_eq!(dot_segment.start(), Isometric::project(source_top));
+        assert_eq!(dot_segment.end(), Isometric::project(target_top));
         let stroked_segment = connection
             .path
             .segments()
@@ -951,7 +955,7 @@ mod tests {
         let flat_plan = LevelPlan::new(placed, flat_routes, BTreeMap::new());
         let plans = LevelPlans::root_only(flat_plan);
 
-        let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
 
         let is_lifted_connection_drawn = !scene.root.connections.is_empty();
         assert!(
@@ -961,7 +965,7 @@ mod tests {
         let [trace] = &scene.root.traces[..] else {
             panic!("a flat route draws exactly one trace");
         };
-        let floor = IsometricProjection::horizontal_plane_at(0.0);
+        let floor = Isometric::horizontal_plane_at(0.0);
         let floor_corners = plan_corners.map(|plan_corner| floor * plan_corner);
         let [
             source_on_floor,
@@ -1000,7 +1004,7 @@ mod tests {
         let plan = LevelPlan::two_boxes_and_one_route();
         let measure = FixedAdvanceMeasure;
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project(&model, &plans, &measure);
+        let scene = Scene::project::<Isometric>(&model, &plans, &measure);
         for solid in &scene.root.solids {
             for face in &solid.faces {
                 assert_contains(scene.root_view(), face.outline.bounding_box());
@@ -1029,9 +1033,8 @@ mod tests {
         let placed_boundary = placed.boundary();
         let plan = LevelPlan::new(placed, routes, BTreeMap::new());
         let plans = LevelPlans::root_only(plan.clone());
-        let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
-        let floor =
-            IsometricProjection::horizontal_plane_at(0.0).transform_rect_bbox(placed_boundary);
+        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
+        let floor = Isometric::horizontal_plane_at(0.0).transform_rect_bbox(placed_boundary);
         let is_floor_framed = scene.root_view().union(floor) == scene.root_view();
         assert!(
             !is_floor_framed,
@@ -1056,7 +1059,7 @@ mod tests {
         let placed = PlacedLevel::new(extent, footprints);
         let plan = LevelPlan::new(placed, BTreeMap::new(), BTreeMap::new());
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
         let painted: Vec<String> = scene
             .root
             .solids
@@ -1076,14 +1079,15 @@ mod tests {
         let model = builder.build().model.expect("fixture model is valid");
         let plan = LevelPlan::two_boxes_and_one_route();
         let plans = LevelPlans::root_only(plan.clone());
-        let low_scene = Scene::project(&two_boxes_model(), &plans, &FixedAdvanceMeasure);
+        let low_scene =
+            Scene::project::<Isometric>(&two_boxes_model(), &plans, &FixedAdvanceMeasure);
 
-        let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
 
         let (_edge_id, route) = plan.routes().iter().next().expect("fixture has a route");
         let (dot_start, _dot_end) = dot_path_ends(&scene.root.connections[0]);
         let tall_top = DVec3::new(route.source.point.x, route.source.point.y, 84.0);
-        assert_eq!(dot_start, IsometricProjection::project(tall_top));
+        assert_eq!(dot_start, Isometric::project(tall_top));
         let tall_solid = solid_of(&scene.root, "a");
         for face in &tall_solid.faces {
             assert_contains(scene.root_view(), face.outline.bounding_box());
@@ -1110,7 +1114,7 @@ mod tests {
         let placed = PlacedLevel::new(extent, footprints);
         let plan = LevelPlan::new(placed, BTreeMap::new(), BTreeMap::new());
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
         let painted: Vec<String> = scene
             .root
             .solids
@@ -1142,7 +1146,7 @@ mod tests {
         let placed = PlacedLevel::new(extent, footprints);
         let plan = LevelPlan::new(placed, routes, BTreeMap::new());
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
         let connection = &scene.root.connections[0];
         let dot_path = connection
             .dot_path
@@ -1150,7 +1154,7 @@ mod tests {
             .expect("connections carry a dot path");
         let dot_segment = dot_path.segments().next().expect("dot path has a segment");
         let quoter_top_on_the_slab = DVec3::new(100.0, 50.0, SLAB_TOP + BLOCK_TOP);
-        let projected_quoter_top = IsometricProjection::project(quoter_top_on_the_slab);
+        let projected_quoter_top = Isometric::project(quoter_top_on_the_slab);
         assert_eq!(dot_segment.start(), projected_quoter_top);
         assert!(connection.label.is_none());
         let unlabelled_edge = EdgeId::new(
@@ -1185,7 +1189,7 @@ mod tests {
         let plan = LevelPlan::new(placed, routes, BTreeMap::new());
         let measure = FixedAdvanceMeasure;
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project(&model, &plans, &measure);
+        let scene = Scene::project::<Isometric>(&model, &plans, &measure);
         let plates: Vec<Rect> = scene
             .root
             .connections
@@ -1229,7 +1233,8 @@ mod tests {
         let outermost_model = outermost_layer.model();
         let outermost_plans = LevelPlans::lay_out(outermost_model, &measure);
 
-        let scene = Scene::project_disclosed(outermost_layer, &outermost_plans, &measure);
+        let scene =
+            Scene::project_disclosed::<Isometric>(outermost_layer, &outermost_plans, &measure);
 
         let closed_vault = solid_of(&scene.root, "vault");
         let plain_teller = solid_of(&scene.root, "teller");
@@ -1253,8 +1258,8 @@ mod tests {
         let model = two_boxes_model();
         let plan = LevelPlan::two_boxes_and_one_route();
         let plans = LevelPlans::root_only(plan);
-        let first_scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
-        let second_scene = Scene::project(&model, &plans, &FixedAdvanceMeasure);
+        let first_scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
+        let second_scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
         assert_eq!(first_scene, second_scene);
     }
 }

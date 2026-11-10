@@ -2,7 +2,7 @@
 source: crates/svugy/src/render/profile/mod.rs
 expression: markup
 ---
-<svg data-svugy-contract="2" height="205" viewBox="-95.263 -40 285.788 205" width="285.788" xmlns="http://www.w3.org/2000/svg">
+<svg data-svugy-contract="3" height="205" viewBox="-95.263 -40 285.788 205" width="285.788" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <marker id="arrowhead-0" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
 <path d="M0.822,1.451 C3.97,3.08 6.827,4.251 8.892,5.143 M8.392,5.365 C5.964,6.208 3.163,7.676 1.106,8.61" fill="none" stroke="#5c5f66" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4"/>
