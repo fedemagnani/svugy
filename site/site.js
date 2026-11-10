@@ -130,7 +130,8 @@
     const isSketch = pageThemeName === 'sketch';
     if (!isSketch) return;
     const preview = liveContainer.querySelector('object.svugy');
-    preview.data = `models/${exampleName}-sketch.svg#svugy=`;
+    const encodedExampleName = encodeURIComponent(exampleName);
+    preview.data = `models/${encodedExampleName}-sketch.svg#svugy=`;
   }
 
   /** Restyles the page in each theme the live editor's switch picks, and remembers it for the next visit. */

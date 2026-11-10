@@ -38,7 +38,7 @@ impl Hatched {
         let hachure = Self::hachure_of(face);
         let polygon = Self::polygon_of(&face.outline);
         let outline_seed = Seed::from_path(&face.outline);
-        let hachure_seed = outline_seed.salted("hachure");
+        let hachure_seed = outline_seed.derived_for_stroke("hachure");
         let hachure_strokes =
             Self::HACHURE_PENCIL.sketch_hachure_fill(&polygon, &hachure, hachure_seed);
         let hachure_data = PathData(&hachure_strokes).to_string();
@@ -74,7 +74,7 @@ impl Hatched {
     fn polygon_of(outline: &BezPath) -> Vec<Point> {
         let mut polygon = Vec::new();
         for segment in outline.segments() {
-            let is_line = matches!(segment, PathSeg::Line(_));
+            let is_line = matches!(segment, PathSeg::Line(_line));
             let sample_count = if is_line { 1 } else { Self::CURVE_SAMPLE_COUNT };
             let samples = (0..sample_count).map(|sample_index| {
                 let parameter = sample_index as f64 / sample_count as f64;
@@ -119,7 +119,7 @@ impl Shading for Hatched {
 
     /// Keep a palette's ink, chosen for its washed surfaces, but swap an ink derived from an authored base, chosen for the full base, for the canvas text the wash stays close to.
     fn label_ink(solid_ink: Paint) -> Paint {
-        let is_derived_from_authored_base = matches!(solid_ink, Paint::Literal(_));
+        let is_derived_from_authored_base = matches!(solid_ink, Paint::Literal(_authored_color));
         if is_derived_from_authored_base {
             return Paint::Token(Token::Text);
         }

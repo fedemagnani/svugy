@@ -25,9 +25,9 @@ impl Seed {
         Self(hash)
     }
 
-    /// Continue hashing `salt` after this seed, deriving the seed of another stroke of the same geometry.
-    pub(crate) fn salted(self, salt: &str) -> Self {
-        let hash = Self::fnv1a(self.0, salt.bytes());
+    /// Continue hashing `stroke_name` after this seed, deriving the seed of another named stroke of the same geometry.
+    pub(crate) fn derived_for_stroke(self, stroke_name: &str) -> Self {
+        let hash = Self::fnv1a(self.0, stroke_name.bytes());
         Self(hash)
     }
 
