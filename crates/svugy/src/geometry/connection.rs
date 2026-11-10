@@ -4,10 +4,10 @@ use std::iter;
 use std::ops::Range;
 
 use glam::DVec3;
-use kurbo::{BezPath, Line, ParamCurve, ParamCurveDeriv, PathSeg, Point, QuadBez};
+use kurbo::{Affine, BezPath, Line, ParamCurve, ParamCurveDeriv, PathSeg, Point, QuadBez};
 
+use super::camera::Camera;
 use super::obstruction::Obstructions;
-use super::projection::IsometricProjection;
 use super::{ArrowheadMarker, PlatedLabel};
 use crate::metrics::{LabelRole, TextMeasure};
 
@@ -58,8 +58,8 @@ impl LiftedArc {
     /// Parameters a plate may slide within, clear of the ports and the arrowhead.
     const SLIDE_SPAN: Range<f64> = 0.15..0.85;
 
-    /// Lift an arc from `source_end` to `target_end`, plan points raised above the level's floor, through the apex at t = ½: C = 2·apex − (source + target)/2.
-    pub(super) fn between(source_end: DVec3, target_end: DVec3) -> Self {
+    /// Lift an arc from `source_end` to `target_end`, plan points raised above the level's floor, through the apex at t = ½, as camera `C` sees it: C = 2·apex − (source + target)/2.
+    pub(super) fn between<C: Camera>(source_end: DVec3, target_end: DVec3) -> Self {
         let source_ground_point = Point::new(source_end.x, source_end.y);
         let target_ground_point = Point::new(target_end.x, target_end.y);
         let apex_ground_point = source_ground_point.midpoint(target_ground_point);
@@ -67,9 +67,9 @@ impl LiftedArc {
         let higher_end_height = source_end.z.max(target_end.z);
         let apex_height = higher_end_height + Self::BASE_LIFT + Self::LIFT_PER_SPAN * ground_span;
         let apex_plan_point = DVec3::new(apex_ground_point.x, apex_ground_point.y, apex_height);
-        let source = IsometricProjection::project(source_end);
-        let apex = IsometricProjection::project(apex_plan_point);
-        let target = IsometricProjection::project(target_end);
+        let source = C::project(source_end);
+        let apex = C::project(apex_plan_point);
+        let target = C::project(target_end);
         let ends_midpoint = source.midpoint(target);
         let control = apex + (apex - ends_midpoint);
         let curve = QuadBez::new(source, control, target);
@@ -185,12 +185,12 @@ impl FlatTrace {
     /// Fractions of the trace's length a plate may slide within, clear of the ports and the arrowhead.
     const SLIDE_SPAN: Range<f64> = 0.15..0.85;
 
-    /// Trace the polyline through `plan_corners`, in flow order, on the floor `floor_height` above the projected level's.
-    pub(super) fn on_floor_through(
+    /// Trace the polyline through `plan_corners`, in flow order, on the floor `floor_height` above the projected level's, as camera `C` sees it.
+    pub(super) fn on_floor_through<C: Camera>(
         floor_height: f64,
         plan_corners: impl IntoIterator<Item = Point>,
     ) -> Self {
-        let floor = IsometricProjection::horizontal_plane_at(floor_height);
+        let floor = C::horizontal_plane_at(floor_height);
         let ground_corners: Vec<Point> = plan_corners.into_iter().collect();
         let corners = ground_corners
             .iter()
@@ -333,21 +333,33 @@ impl ConnectionShape for FlatTrace {
 }
 
 impl PlatedLabel {
-    /// Place a connection label at the first plate position along `shape` whose plate overlaps the fewest `obstructions`, else at its fallback position, recording it among them.
-    pub(super) fn place_least_obstructed_along(
+    /// Place a connection label, sized as camera `C` sizes them, at the first plate position along `shape` whose plate overlaps the fewest `obstructions`, else at its fallback position, recording it among them.
+    pub(super) fn place_least_obstructed_along<C: Camera>(
         text: &str,
         shape: &impl ConnectionShape,
         obstructions: &mut Obstructions,
         measure: &impl TextMeasure,
     ) -> Self {
-        let role = LabelRole::ConnectionLabel;
         let positions = shape.plate_positions_preferred_first();
         let candidates = positions
             .into_iter()
-            .map(|position| Self::centered_on(text, role, position, measure));
+            .map(|position| Self::connection_label_centered_on::<C>(text, position, measure));
         let fallback_position = shape.fallback_plate_position();
-        let centered_on_fallback = || Self::centered_on(text, role, fallback_position, measure);
+        let centered_on_fallback =
+            || Self::connection_label_centered_on::<C>(text, fallback_position, measure);
         obstructions.place_least_obstructed(candidates, centered_on_fallback)
+    }
+
+    /// Set `text` as a connection label centred on `center`, scaled about it by camera `C`'s connection label scale.
+    fn connection_label_centered_on<C: Camera>(
+        text: &str,
+        center: Point,
+        measure: &impl TextMeasure,
+    ) -> Self {
+        let role = LabelRole::ConnectionLabel;
+        let full_size_label = Self::centered_on(text, role, center, measure);
+        let scaling = Affine::scale_about(C::CONNECTION_LABEL_SCALE, center);
+        full_size_label.with_plane(scaling)
     }
 }
 
@@ -371,13 +383,14 @@ mod tests {
     use kurbo::{ParamCurve, PathSeg};
 
     use super::*;
+    use crate::geometry::camera::Isometric;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
     use crate::metrics::TextAnchor;
 
     fn straight_arc_300_long_on_the_floor() -> LiftedArc {
         let source_end = DVec3::new(0.0, 0.0, 0.0);
         let target_end = DVec3::new(300.0, 0.0, 0.0);
-        LiftedArc::between(source_end, target_end)
+        LiftedArc::between::<Isometric>(source_end, target_end)
     }
 
     fn only_quad(path: &BezPath) -> QuadBez {
@@ -392,10 +405,10 @@ mod tests {
     fn dot_path_runs_from_projected_port_to_projected_port() {
         let source_end = DVec3::new(80.0, 50.0, 22.5);
         let target_end = DVec3::new(140.0, 70.0, 10.5);
-        let arc = LiftedArc::between(source_end, target_end);
+        let arc = LiftedArc::between::<Isometric>(source_end, target_end);
         let dot_arc = only_quad(&arc.port_to_port_path());
-        let projected_source = IsometricProjection::project(DVec3::new(80.0, 50.0, 22.5));
-        let projected_target = IsometricProjection::project(DVec3::new(140.0, 70.0, 10.5));
+        let projected_source = Isometric::project(DVec3::new(80.0, 50.0, 22.5));
+        let projected_target = Isometric::project(DVec3::new(140.0, 70.0, 10.5));
         assert_eq!(dot_arc.p0, projected_source);
         assert_eq!(dot_arc.p2, projected_target);
     }
@@ -404,7 +417,7 @@ mod tests {
     fn stroked_path_stops_where_the_arrowhead_tip_lands_on_the_target_port() {
         let source_end = DVec3::new(0.0, 0.0, 22.5);
         let target_end = DVec3::new(200.0, 40.0, 22.5);
-        let arc = LiftedArc::between(source_end, target_end);
+        let arc = LiftedArc::between::<Isometric>(source_end, target_end);
         let stroked = only_quad(&arc.path_under_target_arrowhead());
         let dot_arc = only_quad(&arc.port_to_port_path());
         let end_tangent = (stroked.p2 - stroked.p1).normalize();
@@ -417,16 +430,16 @@ mod tests {
     fn apex_is_the_arc_midpoint_above_the_ports_midpoint() {
         let source_end = DVec3::new(80.0, 50.0, 22.5);
         let target_end = DVec3::new(140.0, 70.0, 22.5);
-        let arc = LiftedArc::between(source_end, target_end);
+        let arc = LiftedArc::between::<Isometric>(source_end, target_end);
         let dot_arc = only_quad(&arc.port_to_port_path());
         let midpoint = dot_arc.eval(0.5);
         let port_span = (Point::new(140.0, 70.0) - Point::new(80.0, 50.0))
             .hypot2()
             .sqrt();
         let apex_height = 22.5 + LiftedArc::BASE_LIFT + LiftedArc::LIFT_PER_SPAN * port_span;
-        let apex = IsometricProjection::project(DVec3::new(110.0, 60.0, apex_height));
+        let apex = Isometric::project(DVec3::new(110.0, 60.0, apex_height));
         assert!((midpoint - apex).hypot2().sqrt() < 1e-9);
-        let ground_anchor = IsometricProjection::project(DVec3::new(110.0, 60.0, 0.0));
+        let ground_anchor = Isometric::project(DVec3::new(110.0, 60.0, 0.0));
         assert!((apex.x - ground_anchor.x).abs() < 1e-9);
         assert!(apex.y < dot_arc.p0.y);
         assert!(apex.y < dot_arc.p2.y);
@@ -444,8 +457,8 @@ mod tests {
         let source_end = DVec3::new(0.0, 0.0, 0.0);
         let short_target_end = DVec3::new(50.0, 0.0, 0.0);
         let long_target_end = DVec3::new(500.0, 0.0, 0.0);
-        let short_arc = LiftedArc::between(source_end, short_target_end);
-        let long_arc = LiftedArc::between(source_end, long_target_end);
+        let short_arc = LiftedArc::between::<Isometric>(source_end, short_target_end);
+        let long_arc = LiftedArc::between::<Isometric>(source_end, long_target_end);
         let short_rise = rise_of(short_arc);
         let long_rise = rise_of(long_arc);
         assert!(long_rise > short_rise);
@@ -494,14 +507,22 @@ mod tests {
         let arc = straight_arc_300_long_on_the_floor();
         let apex = arc.curve.eval(LiftedArc::APEX_PARAMETER);
         let mut obstructions = Obstructions::around_text_of(&[]);
-        let free =
-            PlatedLabel::place_least_obstructed_along("calls", &arc, &mut obstructions, &measure);
+        let free = PlatedLabel::place_least_obstructed_along::<Isometric>(
+            "calls",
+            &arc,
+            &mut obstructions,
+            &measure,
+        );
         let free_center = free.plate.center();
         assert_eq!(free_center, apex);
         let mut free_only = Obstructions::around_text_of(&[]);
         free_only.record(&free);
-        let slid =
-            PlatedLabel::place_least_obstructed_along("calls", &arc, &mut obstructions, &measure);
+        let slid = PlatedLabel::place_least_obstructed_along::<Isometric>(
+            "calls",
+            &arc,
+            &mut obstructions,
+            &measure,
+        );
         let slid_center = slid.plate.center();
         let slid_obstruction_count = free_only.count_overlapped_by(&slid);
         let is_slid_off_the_apex = slid_center != apex;

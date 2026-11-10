@@ -195,23 +195,26 @@ impl<'a> MarkdownPrinter<'a> {
         printer.finish()
     }
 
-    /// Write the frontmatter holding the title and subtitle, only when the model has either, each value double-quoted.
+    /// Write the frontmatter holding the title, subtitle and view angle, only when the model sets any, the title and subtitle double-quoted.
     fn write_frontmatter(&mut self) {
-        let title = self.model.title();
-        let subtitle = self.model.subtitle();
-        let is_untitled = title.is_none();
-        let is_unsubtitled = subtitle.is_none();
-        let has_no_heading = is_untitled && is_unsubtitled;
-        if has_no_heading {
+        let title = self.model.title().map(Self::spell_yaml_quoted);
+        let subtitle = self.model.subtitle().map(Self::spell_yaml_quoted);
+        let view = self.model.view().map(|view| {
+            let view_spelling: &'static str = view.into();
+            view_spelling.to_owned()
+        });
+        let frontmatter_entries = [("title", title), ("subtitle", subtitle), ("view", view)];
+        let has_no_entry = frontmatter_entries
+            .iter()
+            .all(|(_key, value)| value.is_none());
+        if has_no_entry {
             return;
         }
         self.markdown.push_str("---\n");
-        let frontmatter_entries = [("title", title), ("subtitle", subtitle)];
         for (key, value) in frontmatter_entries {
-            let Some(value) = value else {
+            let Some(yaml_value) = value else {
                 continue;
             };
-            let yaml_value = Self::spell_yaml_quoted(value);
             let entry = format!("{key}: {yaml_value}\n");
             self.markdown.push_str(&entry);
         }

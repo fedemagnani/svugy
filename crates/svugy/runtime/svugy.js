@@ -5,6 +5,7 @@
   const XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
 
   const CONTRACT = 'data-svugy-contract';
+  const CAMERA = 'data-svugy-camera';
   const LAYER = 'data-svugy-layer';
   const SHOWN = 'data-svugy-shown';
   const LEVEL = 'data-svugy-level';
@@ -22,6 +23,7 @@
   const DIMMED = 'data-svugy-dimmed';
   const PANNING = 'data-svugy-panning';
 
+  const CAMERA_SELECTOR = `[${CAMERA}]`;
   const LAYER_SELECTOR = `[${LAYER}]`;
   const LEVEL_SELECTOR = `[${LEVEL}]`;
   const ELEMENT_SELECTOR = `[${ELEMENT}]`;
@@ -51,6 +53,10 @@
 
   const DESCRIPTION_WIDTH_PX = 320;
   const DESCRIPTION_VIEW_MARGIN_PX = 12;
+
+  const CAMERA_SWITCH_WIDTH_PX = 280;
+  const CAMERA_SWITCH_HEIGHT_PX = 36;
+  const CAMERA_SWITCH_VIEW_MARGIN_PX = 12;
   const LIFTED_KIND = 'lifted';
 
   const PARAGRAPH_BLOCK = 'paragraph';
@@ -136,9 +142,11 @@
     return { path, layerIndex };
   }
 
-  /** Wires navigation, the detail and description panels and dimming onto one diagram. */
+  /** Wires navigation, the camera switch, the detail and description panels and dimming onto one diagram. */
   function bindRuntime(svg) {
-    const layers = Layers.of(svg);
+    const cameras = Cameras.of(svg);
+    const initialCamera = cameras.find((camera) => camera.hasAttribute(SHOWN)) ?? cameras[0];
+    const layers = Layers.of(initialCamera);
     const initialLayer = layers[0];
     const deepestLayer = layers[layers.length - 1];
     const rootLevel = Contract.levelAt(initialLayer, ROOT_LEVEL_PATH);
@@ -147,7 +155,7 @@
     }
     const animator = new ViewBoxAnimator(svg);
     const fader = new LayerFader();
-    const navigator = new LayerNavigator(svg, layers, initialLayer, rootLevel, animator, fader);
+    const navigator = new LayerNavigator(svg, initialCamera, layers, initialLayer, rootLevel, animator, fader);
     const panel = new DetailPanel(svg);
     const dimmer = new UnrelatedGroupDimmer(svg);
     const descriptionPanel = new DescriptionPanel(svg, deepestLayer);
@@ -156,6 +164,11 @@
     gestures.bind();
     const headingPins = new HeadingPins(svg);
     headingPins.bind();
+    const hasOtherCameras = cameras.length > 1;
+    if (hasOtherCameras) {
+      const cameraSwitch = new CameraSwitch(svg, cameras, navigator);
+      cameraSwitch.bind();
+    }
     navigator.addNavigationListener((focusedLevel) => {
       panel.hide();
       dimmer.clear();
@@ -170,12 +183,21 @@
     }
   }
 
-  /** Lists the layers a document draws, in increasing depth; a document without layer groups is its own single layer. */
-  const Layers = {
+  /** Lists the cameras a document draws the diagram from; a document without camera groups is its own single camera. */
+  const Cameras = {
     of(svg) {
-      const layerGroups = Array.from(svg.querySelectorAll(LAYER_SELECTOR));
+      const cameraGroups = Array.from(svg.querySelectorAll(CAMERA_SELECTOR));
+      const hasCameraGroups = cameraGroups.length > 0;
+      return hasCameraGroups ? cameraGroups : [svg];
+    },
+  };
+
+  /** Lists the layers a camera draws, in increasing depth; a camera without layer groups is its own single layer. */
+  const Layers = {
+    of(camera) {
+      const layerGroups = Array.from(camera.querySelectorAll(LAYER_SELECTOR));
       const hasLayerGroups = layerGroups.length > 0;
-      return hasLayerGroups ? layerGroups : [svg];
+      return hasLayerGroups ? layerGroups : [camera];
     },
   };
 
@@ -737,9 +759,9 @@
     }
   }
 
-  /** Keeps one layer shown and one of its levels focused, and moves the view to them. */
+  /** Keeps one camera and one of its layers shown and one of its levels focused, and moves the view to them. */
   class LayerNavigator {
-    constructor(svg, layers, initialLayer, rootLevel, animator, fader) {
+    constructor(svg, initialCamera, layers, initialLayer, rootLevel, animator, fader) {
       this.svg = svg;
       this.layers = layers;
       this.animator = animator;
@@ -749,8 +771,10 @@
         node.removeAttribute(SHOWN);
         node.removeAttribute(ENTERED);
       });
+      initialCamera.setAttribute(SHOWN, '');
       initialLayer.setAttribute(SHOWN, '');
       rootLevel.setAttribute(ENTERED, '');
+      this.shownCamera = initialCamera;
       this.shownLayer = initialLayer;
       this.focusedLevel = rootLevel;
       this.navigationListeners = [];
@@ -781,6 +805,41 @@
       if (targetView !== null) {
         this.animator.jumpTo(targetView);
       }
+    }
+
+    /** Shows the diagram from `camera`, on its layer as deep as the shown one, focused on the same level, framed by that level's own view; tells whether the camera changed. */
+    showCamera(camera) {
+      const isShownCamera = camera === this.shownCamera;
+      if (isShownCamera) {
+        return false;
+      }
+      const cameraLayers = Layers.of(camera);
+      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
+      const layer = cameraLayers[shownLayerIndex];
+      const focusedPath = this.focusedLevel.getAttribute(LEVEL);
+      const level = layer === undefined ? null : Contract.levelAt(layer, focusedPath);
+      if (level === null) {
+        return false;
+      }
+      cameraLayers.forEach((cameraLayer) => cameraLayer.removeAttribute(SHOWN));
+      layer.setAttribute(SHOWN, '');
+      const previousCamera = this.shownCamera;
+      const previousLayer = this.shownLayer;
+      this.shownCamera = camera;
+      this.layers = cameraLayers;
+      this.shownLayer = layer;
+      this.moveEnteredMarkTo(level);
+      // swapped, not crossfaded: the cameras project to different coordinates, so the fading one would show misframed
+      this.fader.finishRunningFade();
+      previousCamera.removeAttribute(SHOWN);
+      camera.setAttribute(SHOWN, '');
+      this.announceNavigation();
+      this.carryKeyboardFocus(previousLayer, layer);
+      const targetView = this.viewOf(level);
+      if (targetView !== null) {
+        this.animator.jumpTo(targetView);
+      }
+      return true;
     }
 
     /** Follows a click on `group` and tells whether the view moved; when it did not, the group's details are due. */
@@ -1043,6 +1102,68 @@
     viewOf(level) {
       const viewText = level.getAttribute(VIEW);
       return View.parse(viewText);
+    }
+  }
+
+  /** Lets the reader switch the angle the diagram is seen from: one button per camera, pinned inside the view's bottom-left corner at a constant on-screen size. */
+  class CameraSwitch {
+    constructor(svg, cameras, navigator) {
+      this.svg = svg;
+      this.navigator = navigator;
+      this.body = createXhtmlElement('div', { class: 'svugy-cameras', role: 'group', 'aria-label': 'view angle' });
+      this.buttonsByCamera = new Map(cameras.map((camera) => [camera, this.buttonShowing(camera)]));
+      this.frame = createSvgElement('foreignObject', {
+        class: 'svugy-cameras-frame',
+        width: CAMERA_SWITCH_WIDTH_PX,
+        height: CAMERA_SWITCH_HEIGHT_PX,
+      });
+      this.frame.appendChild(this.body);
+      this.panel = createSvgElement('g', { class: 'svugy-cameras-panel' });
+      this.panel.appendChild(this.frame);
+      this.panel.addEventListener('click', (event) => event.stopPropagation());
+    }
+
+    bind() {
+      this.svg.appendChild(this.panel);
+      const viewBoxObserver = new MutationObserver(() => this.place());
+      viewBoxObserver.observe(this.svg, { attributes: true, attributeFilter: ['viewBox'] });
+      const resizeObserver = new ResizeObserver(() => this.place());
+      resizeObserver.observe(this.svg);
+      this.navigator.addNavigationListener(() => this.pressShownCameraButton());
+      this.pressShownCameraButton();
+      this.place();
+    }
+
+    buttonShowing(camera) {
+      const angle = camera.getAttribute(CAMERA);
+      const button = createXhtmlElement('button', { type: 'button' });
+      button.textContent = angle;
+      button.addEventListener('click', () => this.navigator.showCamera(camera));
+      this.body.appendChild(button);
+      return button;
+    }
+
+    pressShownCameraButton() {
+      this.buttonsByCamera.forEach((button, camera) => {
+        const isShownCamera = camera === this.navigator.shownCamera;
+        button.setAttribute('aria-pressed', String(isShownCamera));
+      });
+    }
+
+    place() {
+      const screenMatrix = this.svg.getScreenCTM();
+      if (screenMatrix === null) {
+        return;
+      }
+      const screenToUserMatrix = screenMatrix.inverse();
+      const svgBounds = this.svg.getBoundingClientRect();
+      const clientCorner = new DOMPoint(svgBounds.left, svgBounds.bottom);
+      const userCorner = clientCorner.matrixTransform(screenToUserMatrix);
+      const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
+      // x = corner.x + m·u, y = corner.y − (m + h)·u, with u user units per pixel, so the switch sits m pixels inside the bottom-left corner
+      const x = userCorner.x + CAMERA_SWITCH_VIEW_MARGIN_PX * userUnitsPerPixel;
+      const y = userCorner.y - (CAMERA_SWITCH_VIEW_MARGIN_PX + CAMERA_SWITCH_HEIGHT_PX) * userUnitsPerPixel;
+      this.panel.setAttribute('transform', `translate(${x} ${y}) scale(${userUnitsPerPixel})`);
     }
   }
 

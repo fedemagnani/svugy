@@ -1,9 +1,8 @@
 ---
 source: crates/svugy/src/render/profile/mod.rs
-assertion_line: 945
 expression: markup
 ---
-<svg data-svugy-contract="2" height="160" viewBox="-20 -20 200 160" width="200" xmlns="http://www.w3.org/2000/svg">
+<svg data-svugy-contract="3" height="160" viewBox="-20 -20 200 160" width="200" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <marker id="arrowhead-0" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
 <path d="M0,1 L9,5 L0,9 Z" fill="#0000ff"/>

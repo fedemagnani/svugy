@@ -89,6 +89,7 @@ impl Document {
         let Frontmatter {
             title,
             subtitle,
+            view,
             styles,
         } = frontmatter.unwrap_or_default();
         let styles = styles
@@ -104,6 +105,7 @@ impl Document {
         Self {
             title,
             subtitle,
+            view,
             description,
             styles,
             components,

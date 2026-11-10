@@ -7,7 +7,7 @@ use serde::de::{self, SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use svugy_model::builder::ModelBuilder;
 use svugy_model::legend::Legend;
-use svugy_model::model::{ByteRange, Edge, EdgeId, Element, Model, Traveler};
+use svugy_model::model::{ByteRange, Edge, EdgeId, Element, Model, Traveler, ViewAngle};
 use svugy_model::path::ElementPath;
 use svugy_model::unique_key_map::UniqueKeyMapVisitor;
 use svugy_model::validate::UncheckedModel;
@@ -27,7 +27,7 @@ pub type JsonImport = Import<JsonLanguage>;
 /// Print a model as pretty-printed, deterministic JSON, which says every model.
 pub struct JsonPrinter;
 
-/// Shape a model as its JSON file: the diagram's title, subtitle, description and legend, elements keyed by path, edges listed with their endpoints and ordinal.
+/// Shape a model as its JSON file: the diagram's title, subtitle, view angle, description and legend, elements keyed by path, edges listed with their endpoints and ordinal.
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ModelDocument {
@@ -35,6 +35,8 @@ struct ModelDocument {
     title: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     subtitle: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    view: Option<ViewAngle>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -141,6 +143,7 @@ impl ModelDocument {
     fn of(model: &Model) -> Self {
         let title = model.title().map(str::to_owned);
         let subtitle = model.subtitle().map(str::to_owned);
+        let view = model.view();
         let description = model.description().map(str::to_owned);
         let legend = model.legend().cloned();
         let elements = model.elements().clone();
@@ -148,6 +151,7 @@ impl ModelDocument {
         Self {
             title,
             subtitle,
+            view,
             description,
             legend,
             elements,
@@ -168,15 +172,20 @@ impl ModelDocument {
         let Self {
             title,
             subtitle,
+            view,
             description,
             legend,
             elements,
             edges,
         } = self;
         let unchecked_model = UncheckedModel::from_parts(title, subtitle, legend, elements, edges);
-        match description {
-            Some(description) => unchecked_model.with_description(description),
+        let viewed_model = match view {
+            Some(view) => unchecked_model.with_view(view),
             None => unchecked_model,
+        };
+        match description {
+            Some(description) => viewed_model.with_description(description),
+            None => viewed_model,
         }
     }
 }

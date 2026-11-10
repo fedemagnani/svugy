@@ -1,8 +1,9 @@
-<svg data-svugy-contract="2" height="1455.521" viewBox="-557.472 36.734 1936.438 1455.521" width="1936.438" xmlns="http://www.w3.org/2000/svg">
+<svg data-svugy-contract="3" height="1455.521" viewBox="-557.472 36.734 1936.438 1455.521" width="1936.438" xmlns="http://www.w3.org/2000/svg">
 <style>/*<![CDATA[*/[data-svugy-contract]{--svugy-canvas:#0a0b10;--svugy-grid-line:#151722;--svugy-face-outline:#0a0b10;--svugy-text:#e6e8ee;--svugy-text-muted:#8b93a5;--svugy-external-outline:#5b6170;--svugy-neutral-top:#3a3f4b;--svugy-neutral-left:#2b2f39;--svugy-neutral-right:#22252d;--svugy-neutral-ink:#e6e8ee;--svugy-container-blue-top:#1b2436;--svugy-container-blue-left:#131a28;--svugy-container-blue-right:#0d131f;--svugy-container-blue-ink:#8aa0c8;font-family:Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif}
 @media (prefers-color-scheme: light){
 [data-svugy-contract]{--svugy-canvas:#f6f8ff;--svugy-grid-line:#e1e4f4;--svugy-face-outline:#f6f8ff;--svugy-text:#14161a;--svugy-text-muted:#535a6a;--svugy-external-outline:#858b9b;--svugy-neutral-top:#acb2c0;--svugy-neutral-left:#868b96;--svugy-neutral-right:#6d717b;--svugy-neutral-ink:#14161a;--svugy-container-blue-top:#c8d4ed;--svugy-container-blue-left:#9da6ba;--svugy-container-blue-right:#808898;--svugy-container-blue-ink:#3c4f72}
 }
+[data-svugy-camera]:not([data-svugy-shown]),
 [data-svugy-layer]:not([data-svugy-shown]) { visibility: hidden; }
 [data-svugy-overlay] { visibility: hidden; }
 [data-svugy-shown] [data-svugy-entered] > [data-svugy-overlay] { visibility: visible; }
@@ -34,6 +35,12 @@
 [data-svugy-contract] .svugy-panel-title { font-size: 12.5px; font-weight: 650; fill: var(--svugy-text); }
 [data-svugy-contract] .svugy-panel-body { font-size: 11.5px; font-weight: 450; fill: var(--svugy-text-muted); }
 
+[data-svugy-contract] .svugy-cameras-frame { overflow: visible; }
+[data-svugy-contract] .svugy-cameras { box-sizing: border-box; display: inline-flex; gap: 2px; padding: 3px; border: 1px solid color-mix(in srgb, var(--svugy-text-muted) 40%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--svugy-canvas) 94%, var(--svugy-text)); box-shadow: 0 4px 16px rgb(0 0 0 / 0.25); font-size: 11px; font-weight: 600; line-height: 1; }
+[data-svugy-contract] .svugy-cameras button { margin: 0; padding: 6px 10px; border: 0; border-radius: 6px; background: none; color: var(--svugy-text-muted); font: inherit; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+[data-svugy-contract] .svugy-cameras button:hover { color: var(--svugy-text); }
+[data-svugy-contract] .svugy-cameras button[aria-pressed="true"] { background: color-mix(in srgb, var(--svugy-text) 14%, transparent); color: var(--svugy-text); }
+[data-svugy-contract] .svugy-cameras button:focus-visible { outline: 1px dashed var(--svugy-text-muted); outline-offset: 1px; }
 [data-svugy-contract] .svugy-description-frame { overflow: visible; }
 [data-svugy-contract] .svugy-description { box-sizing: border-box; max-height: 100%; overflow-y: auto; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--svugy-text-muted) 40%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--svugy-canvas) 94%, var(--svugy-text)); box-shadow: 0 4px 16px rgb(0 0 0 / 0.25); color: var(--svugy-text); font-size: 12.5px; font-weight: 450; line-height: 1.5; overflow-wrap: anywhere; }
 [data-svugy-contract] .svugy-description :is(h3, h4, h5, h6, p, ul, ol, pre, section) { margin: 0 0 8px; }
@@ -81,12 +88,16 @@
 <symbol id="traveler-dot" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" viewBox="-5 -5 10 10">
 <path d="M2.5,0 C2.5,1.381 1.381,2.5 0,2.5 C-1.381,2.5 -2.5,1.381 -2.5,0 C-2.5,-1.381 -1.381,-2.5 0,-2.5 C1.381,-2.5 2.5,-1.381 2.5,0 Z" fill-opacity="1"/>
 </symbol>
-<pattern height="60" id="ground-grid" patternTransform="matrix(0.866 0.5 -0.866 0.5 0 0)" patternUnits="userSpaceOnUse" width="60">
+<pattern height="60" id="ground-grid-isometric" patternTransform="matrix(0.866 0.5 -0.866 0.5 0 0)" patternUnits="userSpaceOnUse" width="60">
 <path d="M0,0 L60,0 L60,60 L0,60 Z" fill="none" stroke="var(--svugy-grid-line)" stroke-width="1.155"/>
+</pattern>
+<pattern height="60" id="ground-grid-top" patternTransform="matrix(1 0 0 1 0 0)" patternUnits="userSpaceOnUse" width="60">
+<path d="M0,0 L60,0 L60,60 L0,60 Z" fill="none" stroke="var(--svugy-grid-line)" stroke-width="1"/>
 </pattern>
 </defs>
 <rect fill="var(--svugy-canvas)" height="1455.521" rx="14" width="1936.438" x="-557.472" y="36.734"/>
-<rect fill="url(#ground-grid)" height="2000000" width="2000000" x="-1000000" y="-1000000"/>
+<g data-svugy-camera="isometric" data-svugy-shown="">
+<rect fill="url(#ground-grid-isometric)" height="2000000" width="2000000" x="-1000000" y="-1000000"/>
 <g data-svugy-layer="0">
 <g data-svugy-heading="">
 <text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="174.242" x="-533.472" y="77.203">svugy · how it is built</text>
@@ -1237,6 +1248,1043 @@
 <g data-svugy-overlay=""/>
 </g>
 </g>
+</g>
+<g data-svugy-camera="top">
+<rect fill="url(#ground-grid-top)" height="2000000" width="2000000" x="-1000000" y="-1000000"/>
+<g data-svugy-layer="0">
+<g data-svugy-heading="">
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="174.242" x="18" y="-26.774">svugy · how it is built</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="266.319" x="18" y="-8.774">text in → model → layout → geometry → SVG out</text>
+</g>
+<text fill="var(--svugy-text)" font-size="12.5" font-weight="700" text-anchor="start" textLength="103.973" x="1764.467" y="-31.133">Read it as a story</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="159.897" x="1764.467" y="-11.133">① your text becomes a model</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="227.595" x="1764.467" y="5.867">② the model becomes boxes in plan space</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="186.538" x="1764.467" y="22.867">③ boxes become isometric shapes</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="248.042" x="1764.467" y="39.867">④ shapes become one SVG file, runtime inside</text>
+<path d="M1764.467,66.867 L1794.467,66.867" fill="none" opacity="0.9" stroke="var(--svugy-text)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="100.042" x="1804.467" y="70.867">data flows this way</text>
+<path d="M1764.467,83.867 L1794.467,83.867" fill="none" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="122.488" x="1804.467" y="87.867">embedded at build time</text>
+<g data-svugy-level="" data-svugy-view="-6 -67.243 2042.51 1155.243">
+<g data-svugy-element="cli" data-svugy-goto="pipeline">
+<title>svugy-cli</title>
+<desc data-svugy-details="">{"kind":"element","path":"cli","label":"svugy-cli","caption":"render · validate · import"}</desc>
+<path d="M18,568 L129.369,568 L129.369,634 L18,634 Z" fill="#9945ff" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="55.371" transform="matrix(1 0 0 1 73.684 601)" x="0" y="-2">svugy-cli</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="99.369" transform="matrix(1 0 0 1 73.684 601)" x="0" y="11">render · validate · import</text>
+</g>
+<g data-svugy-element="contract">
+<title>runtime contract</title>
+<desc data-svugy-details="">{"kind":"element","path":"contract","label":"runtime contract","caption":"data-svugy-*"}</desc>
+<path d="M1578,998 L1688.01,998 L1688.01,1064 L1578,1064 Z" fill="#334566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="98.01" transform="matrix(1 0 0 1 1633.005 1031)" x="0" y="-2">runtime contract</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="54.818" transform="matrix(1 0 0 1 1633.005 1031)" x="0" y="11">data-svugy-*</text>
+</g>
+<a href="https://d2lang.com">
+<g data-svugy-element="d2">
+<title>d2 v0.9.0</title>
+<desc data-svugy-details="">{"kind":"element","path":"d2","label":"d2 v0.9.0","caption":"reference grammar"}</desc>
+<path d="M278,18 L368.65,18 L368.65,84 L278,84 Z" fill="none" stroke="#5b6170" stroke-dasharray="5 4" stroke-width="1"/>
+<text fill="var(--svugy-text-muted)" font-size="12" font-weight="650" text-anchor="middle" textLength="57.152" transform="matrix(1 0 0 1 323.325 51)" x="0" y="-2">d2 v0.9.0</text>
+<text fill="var(--svugy-text-muted)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="78.65" transform="matrix(1 0 0 1 323.325 51)" x="0" y="11">reference grammar</text>
+</g>
+</a>
+<g data-svugy-closed="" data-svugy-element="import">
+<title>svugy-parse</title>
+<desc data-svugy-details="">{"kind":"element","path":"import","label":"svugy-parse","caption":"text → model"}</desc>
+<path d="M278,238 L365.094,238 L365.094,304 L278,304 Z" fill="#2a2418" fill-opacity="0.35" stroke="#ffffff" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M278,238 L365.094,238 L365.094,304 L278,304 Z" fill="#2a2418" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="75.094" transform="matrix(1 0 0 1 321.547 271)" x="0" y="-2">svugy-parse</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="53.229" transform="matrix(1 0 0 1 321.547 271)" x="0" y="11">text → model</text>
+</g>
+<g data-svugy-closed="" data-svugy-element="model">
+<title>svugy-model</title>
+<desc data-svugy-details="">{"kind":"element","path":"model","label":"svugy-model","caption":"the hub"}</desc>
+<path d="M278,568 L368.082,568 L368.082,634 L278,634 Z" fill="#17271f" fill-opacity="0.35" stroke="#ffffff" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M278,568 L368.082,568 L368.082,634 L278,634 Z" fill="#17271f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="78.082" transform="matrix(1 0 0 1 323.041 601)" x="0" y="-2">svugy-model</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="30.746" transform="matrix(1 0 0 1 323.041 601)" x="0" y="11">the hub</text>
+</g>
+<g data-svugy-closed="" data-svugy-element="pipeline">
+<title>svugy</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline","label":"svugy","caption":"the pipeline"}</desc>
+<path d="M778,238 L850,238 L850,304 L778,304 Z" fill="#1b2436" fill-opacity="0.35" stroke="#ffffff" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M778,238 L850,238 L850,304 L778,304 Z" fill="#1b2436" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="36.193" transform="matrix(1 0 0 1 814 271)" x="0" y="-2">svugy</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="47.298" transform="matrix(1 0 0 1 814 271)" x="0" y="11">the pipeline</text>
+</g>
+<g data-svugy-element="runtime">
+<title>runtime</title>
+<desc data-svugy-details="">{"kind":"element","path":"runtime","label":"runtime","caption":"svugy.js · svugy.css"}</desc>
+<path d="M1918,858 L2012.51,858 L2012.51,924 L1918,924 Z" fill="#3a3f4b" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="45.574" transform="matrix(1 0 0 1 1965.255 891)" x="0" y="-2">runtime</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="82.51" transform="matrix(1 0 0 1 1965.255 891)" x="0" y="11">svugy.js · svugy.css</text>
+</g>
+<g data-svugy-element="svg">
+<title>one .svg file</title>
+<desc data-svugy-details="">{"kind":"element","path":"svg","label":"one .svg file"}</desc>
+<path d="M2001.596,601 C2001.596,619.225 1982.882,634 1959.798,634 C1936.714,634 1918,619.225 1918,601 C1918,582.775 1936.714,568 1959.798,568 C1982.882,568 2001.596,582.775 2001.596,601 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="71.596" transform="matrix(1 0 0 1 1959.798 601)" x="0" y="-2">one .svg file</text>
+</g>
+<g data-svugy-element="text">
+<title>your text</title>
+<desc data-svugy-details="">{"kind":"element","path":"text","label":"your text","caption":"Markdown · d2 · JSON"}</desc>
+<path d="M18,278 L121.209,278 L121.209,344 L18,344 Z" fill="#3a3f4b" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="52.682" transform="matrix(1 0 0 1 69.604 311)" x="0" y="-2">your text</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="91.209" transform="matrix(1 0 0 1 69.604 311)" x="0" y="11">Markdown · d2 · JSON</text>
+</g>
+<g data-svugy-edge="(cli -&gt; import)[0]" data-svugy-from="cli" data-svugy-to="import">
+<title>(cli -&gt; import)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cli -&gt; import)[0]","from":"cli","to":"import"}</desc>
+<path d="M92.246,568 Q199.285,436.434 306.324,304.869" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-4)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#9945ff" height="10" href="#traveler-dot" stroke="#9945ff" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M92.246,568 Q199.639,436 307.031,304" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cli -&gt; pipeline)[0]" data-svugy-from="cli" data-svugy-to="pipeline">
+<title>(cli -&gt; pipeline)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cli -&gt; pipeline)[0]","from":"cli","to":"pipeline"}</desc>
+<path d="M129.369,601 Q453.189,430.761 777.009,260.521" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-4)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#9945ff" height="10" href="#traveler-dot" stroke="#9945ff" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M129.369,601 Q453.684,430.5 778,260" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(d2 -&gt; import)[0]" data-svugy-from="d2" data-svugy-to="import">
+<title>grammar</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(d2 -&gt; import)[0]","from":"d2","to":"import","label":"grammar"}</desc>
+<path d="M323.325,84 Q322.442,160.44 321.56,236.88" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-3)" opacity="0.9" stroke="#5b6170" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#5b6170" height="10" href="#traveler-dot" stroke="#5b6170" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M323.325,84 Q322.436,161 321.547,238" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(import -&gt; model)[0]" data-svugy-from="import" data-svugy-to="model">
+<title>①</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(import -&gt; model)[0]","from":"import","to":"model","label":"①"}</desc>
+<path d="M336.063,304 Q329.579,435.441 323.096,566.881" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M336.063,304 Q329.552,436 323.041,568" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(model -&gt; pipeline)[0]" data-svugy-from="model" data-svugy-to="pipeline">
+<title>②</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model -&gt; pipeline)[0]","from":"model","to":"pipeline","label":"②"}</desc>
+<path d="M368.082,601 Q572.599,441.844 777.116,282.688" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M368.082,601 Q573.041,441.5 778,282" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline -&gt; contract)[0]" data-svugy-from="pipeline" data-svugy-to="contract">
+<title>emits</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"pipeline","to":"contract","label":"emits","edges":[{"kind":"edge","edge":"(pipeline.render.writer -&gt; contract)[0]","from":"pipeline.render.writer","to":"contract","label":"emits"}]}</desc>
+<path d="M850,282 Q1213.61,656.098 1577.219,1030.197" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M850,282 Q1214,656.5 1578,1031" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline -&gt; svg)[0]" data-svugy-from="pipeline" data-svugy-to="svg">
+<title>④</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline -&gt; svg)[0]","from":"pipeline","to":"svg","label":"④"}</desc>
+<path d="M850,260 Q1383.467,430.33 1916.933,600.659" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M850,260 Q1384,430.5 1918,601" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(runtime -&gt; contract)[0]" data-svugy-from="runtime" data-svugy-to="contract">
+<title>reads</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(runtime -&gt; contract)[0]","from":"runtime","to":"contract","label":"reads"}</desc>
+<path d="M1918,891 Q1803.483,960.709 1688.966,1030.418" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M1918,891 Q1803.005,961 1688.01,1031" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(runtime -&gt; svg)[0]" data-svugy-from="runtime" data-svugy-to="svg">
+<title>(runtime -&gt; svg)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(runtime -&gt; svg)[0]","from":"runtime","to":"svg"}</desc>
+<path d="M1965.255,858 Q1962.54,746.56 1959.825,635.12" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M1965.255,858 Q1962.526,746 1959.798,634" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(text -&gt; cli)[0]" data-svugy-from="text" data-svugy-to="cli">
+<title>(text -&gt; cli)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(text -&gt; cli)[0]","from":"text","to":"cli"}</desc>
+<path d="M69.604,344 Q62.4,455.441 55.195,566.882" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M69.604,344 Q62.364,456 55.123,568" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(d2 -&gt; import)[0]" data-svugy-from="d2" data-svugy-to="import">
+<title>grammar</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(d2 -&gt; import)[0]","from":"d2","to":"import","label":"grammar"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#5b6170" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 80.609 40.25)" width="65.204" x="289.834" y="153.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="45.204" transform="matrix(0.75 0 0 0.75 80.609 40.25)" x="322.436" y="164.82">grammar</text>
+</g>
+<g data-svugy-edge="(import -&gt; model)[0]" data-svugy-from="import" data-svugy-to="model">
+<title>①</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(import -&gt; model)[0]","from":"import","to":"model","label":"①"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 82.388 109)" width="34.591" x="312.256" y="428.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" transform="matrix(0.75 0 0 0.75 82.388 109)" x="329.552" y="439.82">①</text>
+</g>
+<g data-svugy-edge="(model -&gt; pipeline)[0]" data-svugy-from="model" data-svugy-to="pipeline">
+<title>②</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model -&gt; pipeline)[0]","from":"model","to":"pipeline","label":"②"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 143.26 110.375)" width="34.591" x="555.745" y="433.648"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" transform="matrix(0.75 0 0 0.75 143.26 110.375)" x="573.041" y="445.32">②</text>
+</g>
+<g data-svugy-edge="(pipeline -&gt; contract)[0]" data-svugy-from="pipeline" data-svugy-to="contract">
+<title>emits</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"pipeline","to":"contract","label":"emits","edges":[{"kind":"edge","edge":"(pipeline.render.writer -&gt; contract)[0]","from":"pipeline.render.writer","to":"contract","label":"emits"}]}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 303.5 164.125)" width="47.368" x="1190.316" y="648.648"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="27.368" transform="matrix(0.75 0 0 0.75 303.5 164.125)" x="1214" y="660.32">emits</text>
+</g>
+<g data-svugy-edge="(pipeline -&gt; svg)[0]" data-svugy-from="pipeline" data-svugy-to="svg">
+<title>④</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline -&gt; svg)[0]","from":"pipeline","to":"svg","label":"④"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 346 107.625)" width="34.591" x="1366.704" y="422.648"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" transform="matrix(0.75 0 0 0.75 346 107.625)" x="1384" y="434.32">④</text>
+</g>
+<g data-svugy-edge="(runtime -&gt; contract)[0]" data-svugy-from="runtime" data-svugy-to="contract">
+<title>reads</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(runtime -&gt; contract)[0]","from":"runtime","to":"contract","label":"reads"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 450.751 240.25)" width="48.337" x="1778.837" y="953.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="28.337" transform="matrix(0.75 0 0 0.75 450.751 240.25)" x="1803.005" y="964.82">reads</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+</g>
+<g data-svugy-layer="1">
+<g data-svugy-heading="">
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="174.242" x="18" y="-26.774">svugy · how it is built</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="266.319" x="18" y="-8.774">text in → model → layout → geometry → SVG out</text>
+</g>
+<text fill="var(--svugy-text)" font-size="12.5" font-weight="700" text-anchor="start" textLength="103.973" x="1764.467" y="-31.133">Read it as a story</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="159.897" x="1764.467" y="-11.133">① your text becomes a model</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="227.595" x="1764.467" y="5.867">② the model becomes boxes in plan space</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="186.538" x="1764.467" y="22.867">③ boxes become isometric shapes</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="248.042" x="1764.467" y="39.867">④ shapes become one SVG file, runtime inside</text>
+<path d="M1764.467,66.867 L1794.467,66.867" fill="none" opacity="0.9" stroke="var(--svugy-text)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="100.042" x="1804.467" y="70.867">data flows this way</text>
+<path d="M1764.467,83.867 L1794.467,83.867" fill="none" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="122.488" x="1804.467" y="87.867">embedded at build time</text>
+<path d="M1789.067,103.467 C1789.067,108.327 1784.769,112.267 1779.467,112.267 C1774.165,112.267 1769.867,108.327 1769.867,103.467 C1769.867,98.607 1774.165,94.667 1779.467,94.667 C1784.769,94.667 1789.067,98.607 1789.067,103.467 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="118.121" x="1804.467" y="107.467">reads the bundled font</text>
+<g data-svugy-level="" data-svugy-view="-6 -67.243 2042.51 1155.243">
+<g data-svugy-element="cli" data-svugy-goto="pipeline">
+<title>svugy-cli</title>
+<desc data-svugy-details="">{"kind":"element","path":"cli","label":"svugy-cli","caption":"render · validate · import"}</desc>
+<path d="M18,568 L129.369,568 L129.369,634 L18,634 Z" fill="#9945ff" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="55.371" transform="matrix(1 0 0 1 73.684 601)" x="0" y="-2">svugy-cli</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="99.369" transform="matrix(1 0 0 1 73.684 601)" x="0" y="11">render · validate · import</text>
+</g>
+<g data-svugy-element="contract">
+<title>runtime contract</title>
+<desc data-svugy-details="">{"kind":"element","path":"contract","label":"runtime contract","caption":"data-svugy-*"}</desc>
+<path d="M1578,998 L1688.01,998 L1688.01,1064 L1578,1064 Z" fill="#334566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="98.01" transform="matrix(1 0 0 1 1633.005 1031)" x="0" y="-2">runtime contract</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="54.818" transform="matrix(1 0 0 1 1633.005 1031)" x="0" y="11">data-svugy-*</text>
+</g>
+<a href="https://d2lang.com">
+<g data-svugy-element="d2">
+<title>d2 v0.9.0</title>
+<desc data-svugy-details="">{"kind":"element","path":"d2","label":"d2 v0.9.0","caption":"reference grammar"}</desc>
+<path d="M278,18 L368.65,18 L368.65,84 L278,84 Z" fill="none" stroke="#5b6170" stroke-dasharray="5 4" stroke-width="1"/>
+<text fill="var(--svugy-text-muted)" font-size="12" font-weight="650" text-anchor="middle" textLength="57.152" transform="matrix(1 0 0 1 323.325 51)" x="0" y="-2">d2 v0.9.0</text>
+<text fill="var(--svugy-text-muted)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="78.65" transform="matrix(1 0 0 1 323.325 51)" x="0" y="11">reference grammar</text>
+</g>
+</a>
+<g data-svugy-element="import">
+<title>svugy-parse</title>
+<desc data-svugy-details="">{"kind":"element","path":"import","label":"svugy-parse","caption":"text → model"}</desc>
+<path d="M278,238 L650,238 L650,340 L278,340 Z" fill="#2a2418" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="import" data-svugy-view="272 232 384 114" transform="matrix(1 0 0 1 278 238)">
+<g data-svugy-element="import.d2">
+<title>d2</title>
+<desc data-svugy-details="">{"kind":"element","path":"import.d2","label":"d2","caption":"import"}</desc>
+<path d="M150,18 L222,18 L222,84 L150,84 Z" fill="#f0a020" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1f1101" font-size="12" font-weight="650" text-anchor="middle" textLength="15.123" transform="matrix(1 0 0 1 186 51)" x="0" y="-2">d2</text>
+<text fill="#1f1101" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="26.26" transform="matrix(1 0 0 1 186 51)" x="0" y="11">import</text>
+</g>
+<g data-svugy-element="import.json">
+<title>JSON</title>
+<desc data-svugy-details="">{"kind":"element","path":"import.json","label":"JSON","caption":"load · save"}</desc>
+<path d="M282,18 L354,18 L354,84 L282,84 Z" fill="#f0a020" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1f1101" font-size="12" font-weight="650" text-anchor="middle" textLength="33.264" transform="matrix(1 0 0 1 318 51)" x="0" y="-2">JSON</text>
+<text fill="#1f1101" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="43.749" transform="matrix(1 0 0 1 318 51)" x="0" y="11">load · save</text>
+</g>
+<g data-svugy-element="import.markdown">
+<title>Markdown</title>
+<desc data-svugy-details="">{"kind":"element","path":"import.markdown","label":"Markdown","caption":"parse · print"}</desc>
+<path d="M18,18 L92.59,18 L92.59,84 L18,84 Z" fill="#f0a020" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1f1101" font-size="12" font-weight="650" text-anchor="middle" textLength="62.59" transform="matrix(1 0 0 1 55.295 51)" x="0" y="-2">Markdown</text>
+<text fill="#1f1101" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="48.738" transform="matrix(1 0 0 1 55.295 51)" x="0" y="11">parse · print</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="58.472" transform="matrix(1 0 0 1 278 340)" x="9" y="21.5">svugy-parse</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="53.229" transform="matrix(1 0 0 1 278 340)" x="9" y="34.5">text → model</text>
+</g>
+<g data-svugy-element="model">
+<title>svugy-model</title>
+<desc data-svugy-details="">{"kind":"element","path":"model","label":"svugy-model","caption":"the hub"}</desc>
+<path d="M278,568 L527.448,568 L527.448,832 L278,832 Z" fill="#17271f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="model" data-svugy-view="272 562 261.448 276" transform="matrix(1 0 0 1 278 568)">
+<g data-svugy-edge="(model.graph -&gt; model.validate)[0]" data-svugy-from="model.graph" data-svugy-to="model.validate">
+<title>(model.graph -&gt; model.validate)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model.graph -&gt; model.validate)[0]","from":"model.graph","to":"model.validate"}</desc>
+<path d="M190.724,84 L190.724,132 L61.874,132 L61.874,178.88" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#14f195" height="10" href="#traveler-dot" stroke="#14f195" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M190.724,84 L190.724,132 L61.874,132 L61.874,180" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(model.path -&gt; model.graph)[0]" data-svugy-from="model.path" data-svugy-to="model.graph">
+<title>(model.path -&gt; model.graph)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model.path -&gt; model.graph)[0]","from":"model.path","to":"model.graph"}</desc>
+<path d="M90,51 L148.88,51" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#14f195" height="10" href="#traveler-dot" stroke="#14f195" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M90,51 L150,51" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-element="model.graph">
+<title>model</title>
+<desc data-svugy-details="">{"kind":"element","path":"model.graph","label":"model","caption":"elements · edges"}</desc>
+<path d="M150,18 L231.448,18 L231.448,84 L150,84 Z" fill="#14f195" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#001f0f" font-size="12" font-weight="650" text-anchor="middle" textLength="36.275" transform="matrix(1 0 0 1 190.724 51)" x="0" y="-2">model</text>
+<text fill="#001f0f" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="69.448" transform="matrix(1 0 0 1 190.724 51)" x="0" y="11">elements · edges</text>
+</g>
+<g data-svugy-element="model.path">
+<title>path</title>
+<desc data-svugy-details="">{"kind":"element","path":"model.path","label":"path","caption":"ids"}</desc>
+<path d="M18,18 L90,18 L90,84 L18,84 Z" fill="#14f195" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#001f0f" font-size="12" font-weight="650" text-anchor="middle" textLength="26.396" transform="matrix(1 0 0 1 54 51)" x="0" y="-2">path</text>
+<text fill="#001f0f" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="11.974" transform="matrix(1 0 0 1 54 51)" x="0" y="11">ids</text>
+</g>
+<g data-svugy-element="model.validate">
+<title>validate</title>
+<desc data-svugy-details="">{"kind":"element","path":"model.validate","label":"validate","caption":"problems · bounds"}</desc>
+<path d="M18,180 L105.749,180 L105.749,246 L18,246 Z" fill="#14f195" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#001f0f" font-size="12" font-weight="650" text-anchor="middle" textLength="46.74" transform="matrix(1 0 0 1 61.874 213)" x="0" y="-2">validate</text>
+<text fill="#001f0f" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="75.749" transform="matrix(1 0 0 1 61.874 213)" x="0" y="11">problems · bounds</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="60.727" transform="matrix(1 0 0 1 278 832)" x="9" y="21.5">svugy-model</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="30.746" transform="matrix(1 0 0 1 278 832)" x="9" y="34.5">the hub</text>
+</g>
+<g data-svugy-element="pipeline">
+<title>svugy</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline","label":"svugy","caption":"the pipeline"}</desc>
+<path d="M778,238 L1666,238 L1666,640 L778,640 Z" fill="#1b2436" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="pipeline" data-svugy-view="790 250 864 412.5" transform="matrix(1 0 0 1 778 238)">
+<g data-svugy-edge="(pipeline.geometry -&gt; pipeline.render)[0]" data-svugy-from="pipeline.geometry" data-svugy-to="pipeline.render">
+<title>(pipeline.geometry -&gt; pipeline.render)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry -&gt; pipeline.render)[0]","from":"pipeline.geometry","to":"pipeline.render"}</desc>
+<path d="M108,333 L558.88,333" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M108,333 L560,333" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.layout -&gt; pipeline.geometry)[0]" data-svugy-from="pipeline.layout" data-svugy-to="pipeline.geometry">
+<title>③</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout -&gt; pipeline.geometry)[0]","from":"pipeline.layout","to":"pipeline.geometry","label":"③"}</desc>
+<path d="M72,102 L72,298.88" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M72,102 L72,300" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.metrics -&gt; pipeline.layout)[0]" data-svugy-from="pipeline.metrics" data-svugy-to="pipeline.layout">
+<title>(pipeline.metrics -&gt; pipeline.layout)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.metrics -&gt; pipeline.layout)[0]","from":"pipeline.metrics","to":"pipeline.layout"}</desc>
+<path d="M600,69 L109.12,69" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M600,69 L108,69" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-closed="" data-svugy-element="pipeline.geometry">
+<title>geometry</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.geometry","label":"geometry","caption":"screen space"}</desc>
+<path d="M36,300 L108,300 L108,366 L36,366 Z" fill="#1f3566" fill-opacity="0.35" stroke="#ffffff" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M36,300 L108,300 L108,366 L36,366 Z" fill="#1f3566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="56.695" transform="matrix(1 0 0 1 72 333)" x="0" y="-2">geometry</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="54.694" transform="matrix(1 0 0 1 72 333)" x="0" y="11">screen space</text>
+</g>
+<g data-svugy-element="pipeline.inter">
+<title>Inter</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.inter","label":"Inter"}</desc>
+<path d="M852,87 C852,105.225 835.882,120 816,120 C796.118,120 780,105.225 780,87 C780,68.775 796.118,54 816,54 C835.882,54 852,68.775 852,87 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="27.27" transform="matrix(1 0 0 1 816 87)" x="0" y="4">Inter</text>
+</g>
+<g data-svugy-closed="" data-svugy-element="pipeline.layout">
+<title>layout</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.layout","label":"layout","caption":"plan space"}</desc>
+<path d="M36,36 L108,36 L108,102 L36,102 Z" fill="#1f3566" fill-opacity="0.35" stroke="#ffffff" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M36,36 L108,36 L108,102 L36,102 Z" fill="#1f3566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="36.668" transform="matrix(1 0 0 1 72 69)" x="0" y="-2">layout</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="44.16" transform="matrix(1 0 0 1 72 69)" x="0" y="11">plan space</text>
+</g>
+<g data-svugy-element="pipeline.metrics">
+<title>metrics</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.metrics","label":"metrics","caption":"measures labels"}</desc>
+<path d="M600,36 L678.12,36 L678.12,102 L600,102 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="44.414" transform="matrix(1 0 0 1 639.06 69)" x="0" y="-2">metrics</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="66.12" transform="matrix(1 0 0 1 639.06 69)" x="0" y="11">measures labels</text>
+<g data-svugy-edge="(pipeline.metrics -&gt; pipeline.inter)[0]" data-svugy-from="pipeline.metrics" data-svugy-to="pipeline.inter">
+<title>measures</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.metrics -&gt; pipeline.inter)[0]","from":"pipeline.metrics","to":"pipeline.inter","label":"measures"}</desc>
+<path d="M675.12,47.8 C675.12,52.66 670.822,56.6 665.52,56.6 C660.218,56.6 655.92,52.66 655.92,47.8 C655.92,42.94 660.218,39 665.52,39 C670.822,39 675.12,42.94 675.12,47.8 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+</g>
+</g>
+<g data-svugy-closed="" data-svugy-element="pipeline.render">
+<title>render</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.render","label":"render","caption":"markup"}</desc>
+<path d="M560,300 L632,300 L632,366 L560,366 Z" fill="#1f3566" fill-opacity="0.35" stroke="#ffffff" stroke-opacity="0.3" stroke-width="0.8"/>
+<path d="M560,300 L632,300 L632,366 L560,366 Z" fill="#1f3566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="39.105" transform="matrix(1 0 0 1 596 333)" x="0" y="-2">render</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="30.783" transform="matrix(1 0 0 1 596 333)" x="0" y="11">markup</text>
+<g data-svugy-edge="(pipeline.render -&gt; pipeline.inter)[0]" data-svugy-from="pipeline.render" data-svugy-to="pipeline.inter">
+<title>outlines</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"pipeline.render","to":"pipeline.inter","label":"outlines","edges":[{"kind":"edge","edge":"(pipeline.render.profile -&gt; pipeline.inter)[0]","from":"pipeline.render.profile","to":"pipeline.inter","label":"outlines"}]}</desc>
+<path d="M629,353 C629,357.86 624.702,361.8 619.4,361.8 C614.098,361.8 609.8,357.86 609.8,353 C609.8,348.14 614.098,344.2 619.4,344.2 C624.702,344.2 629,348.14 629,353 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+</g>
+</g>
+<g data-svugy-edge="(pipeline.layout -&gt; pipeline.geometry)[0]" data-svugy-from="pipeline.layout" data-svugy-to="pipeline.geometry">
+<title>③</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout -&gt; pipeline.geometry)[0]","from":"pipeline.layout","to":"pipeline.geometry","label":"③"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 18 50.25)" width="34.591" x="54.704" y="193.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" transform="matrix(0.75 0 0 0.75 18 50.25)" x="72" y="204.82">③</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="" data-svugy-stub="contract">
+<title>to runtime contract</title>
+<desc data-svugy-details="">{"kind":"stub","target":"contract","edges":[{"kind":"lifted","from":"pipeline.render","to":"contract","label":"emits","edges":[{"kind":"edge","edge":"(pipeline.render.writer -&gt; contract)[0]","from":"pipeline.render.writer","to":"contract","label":"emits"}]}]}</desc>
+<rect fill="#1b2436" height="15.705" rx="7.852" stroke="#ffffff" stroke-opacity="0.55" transform="matrix(1 0 0 1 619.665 392.648)" width="103.154" x="-51.577" y="-7.852"/>
+<text fill="#ffffff" font-size="10.5" font-weight="500" text-anchor="middle" textLength="83.154" transform="matrix(1 0 0 1 619.665 392.648)" x="0" y="3.82">runtime contract</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="27.862" transform="matrix(1 0 0 1 778 640)" x="9" y="21.5">svugy</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="47.298" transform="matrix(1 0 0 1 778 640)" x="9" y="34.5">the pipeline</text>
+</g>
+<g data-svugy-element="runtime">
+<title>runtime</title>
+<desc data-svugy-details="">{"kind":"element","path":"runtime","label":"runtime","caption":"svugy.js · svugy.css"}</desc>
+<path d="M1918,858 L2012.51,858 L2012.51,924 L1918,924 Z" fill="#3a3f4b" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="45.574" transform="matrix(1 0 0 1 1965.255 891)" x="0" y="-2">runtime</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="82.51" transform="matrix(1 0 0 1 1965.255 891)" x="0" y="11">svugy.js · svugy.css</text>
+</g>
+<g data-svugy-element="svg">
+<title>one .svg file</title>
+<desc data-svugy-details="">{"kind":"element","path":"svg","label":"one .svg file"}</desc>
+<path d="M2001.596,601 C2001.596,619.225 1982.882,634 1959.798,634 C1936.714,634 1918,619.225 1918,601 C1918,582.775 1936.714,568 1959.798,568 C1982.882,568 2001.596,582.775 2001.596,601 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="71.596" transform="matrix(1 0 0 1 1959.798 601)" x="0" y="-2">one .svg file</text>
+</g>
+<g data-svugy-element="text">
+<title>your text</title>
+<desc data-svugy-details="">{"kind":"element","path":"text","label":"your text","caption":"Markdown · d2 · JSON"}</desc>
+<path d="M18,278 L121.209,278 L121.209,344 L18,344 Z" fill="#3a3f4b" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="52.682" transform="matrix(1 0 0 1 69.604 311)" x="0" y="-2">your text</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="91.209" transform="matrix(1 0 0 1 69.604 311)" x="0" y="11">Markdown · d2 · JSON</text>
+</g>
+<g data-svugy-edge="(cli -&gt; import)[0]" data-svugy-from="cli" data-svugy-to="import">
+<title>(cli -&gt; import)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cli -&gt; import)[0]","from":"cli","to":"import"}</desc>
+<path d="M129.369,590 Q203.436,440.002 277.504,290.004" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-4)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#9945ff" height="10" href="#traveler-dot" stroke="#9945ff" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M129.369,590 Q203.684,439.5 278,289" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cli -&gt; pipeline)[0]" data-svugy-from="cli" data-svugy-to="pipeline">
+<title>(cli -&gt; pipeline)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cli -&gt; pipeline)[0]","from":"cli","to":"pipeline"}</desc>
+<path d="M129.369,612 Q453.159,492.194 776.95,372.389" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-4)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#9945ff" height="10" href="#traveler-dot" stroke="#9945ff" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M129.369,612 Q453.684,492 778,372" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(d2 -&gt; import)[0]" data-svugy-from="d2" data-svugy-to="import">
+<title>grammar</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(d2 -&gt; import)[0]","from":"d2","to":"import","label":"grammar"}</desc>
+<path d="M323.325,84 Q393.285,160.587 463.245,237.173" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-3)" opacity="0.9" stroke="#5b6170" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#5b6170" height="10" href="#traveler-dot" stroke="#5b6170" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M323.325,84 Q393.662,161 464,238" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(import -&gt; model)[0]" data-svugy-from="import" data-svugy-to="model">
+<title>①</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(import -&gt; model)[0]","from":"import","to":"model","label":"①"}</desc>
+<path d="M464,340 Q433.507,453.459 403.015,566.918" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M464,340 Q433.362,454 402.724,568" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(model -&gt; pipeline)[0]" data-svugy-from="model" data-svugy-to="pipeline">
+<title>②</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model -&gt; pipeline)[0]","from":"model","to":"pipeline","label":"②"}</desc>
+<path d="M527.448,700 Q652.281,603.343 777.114,506.686" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M527.448,700 Q652.724,603 778,506" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline -&gt; svg)[0]" data-svugy-from="pipeline" data-svugy-to="svg">
+<title>④</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline -&gt; svg)[0]","from":"pipeline","to":"svg","label":"④"}</desc>
+<path d="M1666,439 Q1791.529,519.697 1917.058,600.394" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M1666,439 Q1792,520 1918,601" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.render -&gt; contract)[0]" data-svugy-from="pipeline.render" data-svugy-to="contract">
+<title>emits</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"pipeline.render","to":"contract","label":"emits","edges":[{"kind":"edge","edge":"(pipeline.render.writer -&gt; contract)[0]","from":"pipeline.render.writer","to":"contract","label":"emits"}]}</desc>
+<path d="M1374,604 Q1503.195,800.532 1632.39,997.064" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M1374,604 Q1503.502,801 1633.005,998" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(runtime -&gt; contract)[0]" data-svugy-from="runtime" data-svugy-to="contract">
+<title>reads</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(runtime -&gt; contract)[0]","from":"runtime","to":"contract","label":"reads"}</desc>
+<path d="M1918,891 Q1803.483,960.709 1688.966,1030.418" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M1918,891 Q1803.005,961 1688.01,1031" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(runtime -&gt; svg)[0]" data-svugy-from="runtime" data-svugy-to="svg">
+<title>(runtime -&gt; svg)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(runtime -&gt; svg)[0]","from":"runtime","to":"svg"}</desc>
+<path d="M1965.255,858 Q1962.54,746.56 1959.825,635.12" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M1965.255,858 Q1962.526,746 1959.798,634" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(text -&gt; cli)[0]" data-svugy-from="text" data-svugy-to="cli">
+<title>(text -&gt; cli)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(text -&gt; cli)[0]","from":"text","to":"cli"}</desc>
+<path d="M69.604,344 Q71.634,455.44 73.664,566.88" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M69.604,344 Q71.644,456 73.684,568" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(d2 -&gt; import)[0]" data-svugy-from="d2" data-svugy-to="import">
+<title>grammar</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(d2 -&gt; import)[0]","from":"d2","to":"import","label":"grammar"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#5b6170" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 98.416 40.25)" width="65.204" x="361.06" y="153.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="45.204" transform="matrix(0.75 0 0 0.75 98.416 40.25)" x="393.662" y="164.82">grammar</text>
+</g>
+<g data-svugy-edge="(import -&gt; model)[0]" data-svugy-from="import" data-svugy-to="model">
+<title>①</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(import -&gt; model)[0]","from":"import","to":"model","label":"①"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 108.341 113.5)" width="34.591" x="416.066" y="446.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" transform="matrix(0.75 0 0 0.75 108.341 113.5)" x="433.362" y="457.82">①</text>
+</g>
+<g data-svugy-edge="(model -&gt; pipeline)[0]" data-svugy-from="model" data-svugy-to="pipeline">
+<title>②</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model -&gt; pipeline)[0]","from":"model","to":"pipeline","label":"②"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 163.181 150.75)" width="34.591" x="635.429" y="595.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" transform="matrix(0.75 0 0 0.75 163.181 150.75)" x="652.724" y="606.82">②</text>
+</g>
+<g data-svugy-edge="(pipeline -&gt; svg)[0]" data-svugy-from="pipeline" data-svugy-to="svg">
+<title>④</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline -&gt; svg)[0]","from":"pipeline","to":"svg","label":"④"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 448 130)" width="34.591" x="1774.704" y="512.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" transform="matrix(0.75 0 0 0.75 448 130)" x="1792" y="523.82">④</text>
+</g>
+<g data-svugy-edge="(pipeline.render -&gt; contract)[0]" data-svugy-from="pipeline.render" data-svugy-to="contract">
+<title>emits</title>
+<desc data-svugy-details="">{"kind":"lifted","from":"pipeline.render","to":"contract","label":"emits","edges":[{"kind":"edge","edge":"(pipeline.render.writer -&gt; contract)[0]","from":"pipeline.render.writer","to":"contract","label":"emits"}]}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 375.876 200.25)" width="47.368" x="1479.819" y="793.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="27.368" transform="matrix(0.75 0 0 0.75 375.876 200.25)" x="1503.502" y="804.82">emits</text>
+</g>
+<g data-svugy-edge="(runtime -&gt; contract)[0]" data-svugy-from="runtime" data-svugy-to="contract">
+<title>reads</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(runtime -&gt; contract)[0]","from":"runtime","to":"contract","label":"reads"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 450.751 240.25)" width="48.337" x="1778.837" y="953.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="28.337" transform="matrix(0.75 0 0 0.75 450.751 240.25)" x="1803.005" y="964.82">reads</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+</g>
+<g data-svugy-layer="2" data-svugy-shown="">
+<g data-svugy-heading="">
+<text fill="var(--svugy-text)" font-size="17" font-weight="700" text-anchor="start" textLength="174.242" x="18" y="-26.774">svugy · how it is built</text>
+<text fill="var(--svugy-text-muted)" font-size="11.5" font-weight="400" text-anchor="start" textLength="266.319" x="18" y="-8.774">text in → model → layout → geometry → SVG out</text>
+</g>
+<text fill="var(--svugy-text)" font-size="12.5" font-weight="700" text-anchor="start" textLength="103.973" x="1764.467" y="-31.133">Read it as a story</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="159.897" x="1764.467" y="-11.133">① your text becomes a model</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="227.595" x="1764.467" y="5.867">② the model becomes boxes in plan space</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="186.538" x="1764.467" y="22.867">③ boxes become isometric shapes</text>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="248.042" x="1764.467" y="39.867">④ shapes become one SVG file, runtime inside</text>
+<path d="M1764.467,66.867 L1794.467,66.867" fill="none" opacity="0.9" stroke="var(--svugy-text)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="100.042" x="1804.467" y="70.867">data flows this way</text>
+<path d="M1764.467,83.867 L1794.467,83.867" fill="none" opacity="0.9" stroke="var(--svugy-text)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="122.488" x="1804.467" y="87.867">embedded at build time</text>
+<path d="M1789.067,103.467 C1789.067,108.327 1784.769,112.267 1779.467,112.267 C1774.165,112.267 1769.867,108.327 1769.867,103.467 C1769.867,98.607 1774.165,94.667 1779.467,94.667 C1784.769,94.667 1789.067,98.607 1789.067,103.467 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="var(--svugy-text-muted)" font-size="11" font-weight="400" text-anchor="start" textLength="118.121" x="1804.467" y="107.467">reads the bundled font</text>
+<g data-svugy-level="" data-svugy-view="-6 -67.243 2042.51 1155.243">
+<g data-svugy-element="cli" data-svugy-goto="pipeline">
+<title>svugy-cli</title>
+<desc data-svugy-details="">{"kind":"element","path":"cli","label":"svugy-cli","caption":"render · validate · import"}</desc>
+<path d="M18,568 L129.369,568 L129.369,634 L18,634 Z" fill="#9945ff" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="55.371" transform="matrix(1 0 0 1 73.684 601)" x="0" y="-2">svugy-cli</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="99.369" transform="matrix(1 0 0 1 73.684 601)" x="0" y="11">render · validate · import</text>
+</g>
+<g data-svugy-element="contract">
+<title>runtime contract</title>
+<desc data-svugy-details="">{"kind":"element","path":"contract","label":"runtime contract","caption":"data-svugy-*"}</desc>
+<path d="M1578,998 L1688.01,998 L1688.01,1064 L1578,1064 Z" fill="#334566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="98.01" transform="matrix(1 0 0 1 1633.005 1031)" x="0" y="-2">runtime contract</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="54.818" transform="matrix(1 0 0 1 1633.005 1031)" x="0" y="11">data-svugy-*</text>
+</g>
+<a href="https://d2lang.com">
+<g data-svugy-element="d2">
+<title>d2 v0.9.0</title>
+<desc data-svugy-details="">{"kind":"element","path":"d2","label":"d2 v0.9.0","caption":"reference grammar"}</desc>
+<path d="M278,18 L368.65,18 L368.65,84 L278,84 Z" fill="none" stroke="#5b6170" stroke-dasharray="5 4" stroke-width="1"/>
+<text fill="var(--svugy-text-muted)" font-size="12" font-weight="650" text-anchor="middle" textLength="57.152" transform="matrix(1 0 0 1 323.325 51)" x="0" y="-2">d2 v0.9.0</text>
+<text fill="var(--svugy-text-muted)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="78.65" transform="matrix(1 0 0 1 323.325 51)" x="0" y="11">reference grammar</text>
+</g>
+</a>
+<g data-svugy-element="import">
+<title>svugy-parse</title>
+<desc data-svugy-details="">{"kind":"element","path":"import","label":"svugy-parse","caption":"text → model"}</desc>
+<path d="M278,238 L650,238 L650,340 L278,340 Z" fill="#2a2418" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="import" data-svugy-view="272 232 384 114" transform="matrix(1 0 0 1 278 238)">
+<g data-svugy-element="import.d2">
+<title>d2</title>
+<desc data-svugy-details="">{"kind":"element","path":"import.d2","label":"d2","caption":"import"}</desc>
+<path d="M150,18 L222,18 L222,84 L150,84 Z" fill="#f0a020" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1f1101" font-size="12" font-weight="650" text-anchor="middle" textLength="15.123" transform="matrix(1 0 0 1 186 51)" x="0" y="-2">d2</text>
+<text fill="#1f1101" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="26.26" transform="matrix(1 0 0 1 186 51)" x="0" y="11">import</text>
+</g>
+<g data-svugy-element="import.json">
+<title>JSON</title>
+<desc data-svugy-details="">{"kind":"element","path":"import.json","label":"JSON","caption":"load · save"}</desc>
+<path d="M282,18 L354,18 L354,84 L282,84 Z" fill="#f0a020" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1f1101" font-size="12" font-weight="650" text-anchor="middle" textLength="33.264" transform="matrix(1 0 0 1 318 51)" x="0" y="-2">JSON</text>
+<text fill="#1f1101" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="43.749" transform="matrix(1 0 0 1 318 51)" x="0" y="11">load · save</text>
+</g>
+<g data-svugy-element="import.markdown">
+<title>Markdown</title>
+<desc data-svugy-details="">{"kind":"element","path":"import.markdown","label":"Markdown","caption":"parse · print"}</desc>
+<path d="M18,18 L92.59,18 L92.59,84 L18,84 Z" fill="#f0a020" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1f1101" font-size="12" font-weight="650" text-anchor="middle" textLength="62.59" transform="matrix(1 0 0 1 55.295 51)" x="0" y="-2">Markdown</text>
+<text fill="#1f1101" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="48.738" transform="matrix(1 0 0 1 55.295 51)" x="0" y="11">parse · print</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="58.472" transform="matrix(1 0 0 1 278 340)" x="9" y="21.5">svugy-parse</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="53.229" transform="matrix(1 0 0 1 278 340)" x="9" y="34.5">text → model</text>
+</g>
+<g data-svugy-element="model">
+<title>svugy-model</title>
+<desc data-svugy-details="">{"kind":"element","path":"model","label":"svugy-model","caption":"the hub"}</desc>
+<path d="M278,568 L527.448,568 L527.448,832 L278,832 Z" fill="#17271f" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="model" data-svugy-view="272 562 261.448 276" transform="matrix(1 0 0 1 278 568)">
+<g data-svugy-edge="(model.graph -&gt; model.validate)[0]" data-svugy-from="model.graph" data-svugy-to="model.validate">
+<title>(model.graph -&gt; model.validate)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model.graph -&gt; model.validate)[0]","from":"model.graph","to":"model.validate"}</desc>
+<path d="M190.724,84 L190.724,132 L61.874,132 L61.874,178.88" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#14f195" height="10" href="#traveler-dot" stroke="#14f195" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M190.724,84 L190.724,132 L61.874,132 L61.874,180" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(model.path -&gt; model.graph)[0]" data-svugy-from="model.path" data-svugy-to="model.graph">
+<title>(model.path -&gt; model.graph)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model.path -&gt; model.graph)[0]","from":"model.path","to":"model.graph"}</desc>
+<path d="M90,51 L148.88,51" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-1)" opacity="0.9" stroke="#14f195" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#14f195" height="10" href="#traveler-dot" stroke="#14f195" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M90,51 L150,51" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-element="model.graph">
+<title>model</title>
+<desc data-svugy-details="">{"kind":"element","path":"model.graph","label":"model","caption":"elements · edges"}</desc>
+<path d="M150,18 L231.448,18 L231.448,84 L150,84 Z" fill="#14f195" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#001f0f" font-size="12" font-weight="650" text-anchor="middle" textLength="36.275" transform="matrix(1 0 0 1 190.724 51)" x="0" y="-2">model</text>
+<text fill="#001f0f" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="69.448" transform="matrix(1 0 0 1 190.724 51)" x="0" y="11">elements · edges</text>
+</g>
+<g data-svugy-element="model.path">
+<title>path</title>
+<desc data-svugy-details="">{"kind":"element","path":"model.path","label":"path","caption":"ids"}</desc>
+<path d="M18,18 L90,18 L90,84 L18,84 Z" fill="#14f195" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#001f0f" font-size="12" font-weight="650" text-anchor="middle" textLength="26.396" transform="matrix(1 0 0 1 54 51)" x="0" y="-2">path</text>
+<text fill="#001f0f" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="11.974" transform="matrix(1 0 0 1 54 51)" x="0" y="11">ids</text>
+</g>
+<g data-svugy-element="model.validate">
+<title>validate</title>
+<desc data-svugy-details="">{"kind":"element","path":"model.validate","label":"validate","caption":"problems · bounds"}</desc>
+<path d="M18,180 L105.749,180 L105.749,246 L18,246 Z" fill="#14f195" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#001f0f" font-size="12" font-weight="650" text-anchor="middle" textLength="46.74" transform="matrix(1 0 0 1 61.874 213)" x="0" y="-2">validate</text>
+<text fill="#001f0f" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="75.749" transform="matrix(1 0 0 1 61.874 213)" x="0" y="11">problems · bounds</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="60.727" transform="matrix(1 0 0 1 278 832)" x="9" y="21.5">svugy-model</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="30.746" transform="matrix(1 0 0 1 278 832)" x="9" y="34.5">the hub</text>
+</g>
+<g data-svugy-element="pipeline">
+<title>svugy</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline","label":"svugy","caption":"the pipeline"}</desc>
+<path d="M778,238 L1802.58,238 L1802.58,712 L778,712 Z" fill="#1b2436" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="pipeline" data-svugy-view="790 250 1000.58 486.55" transform="matrix(1 0 0 1 778 238)">
+<g data-svugy-edge="(pipeline.geometry -&gt; pipeline.render)[0]" data-svugy-from="pipeline.geometry" data-svugy-to="pipeline.render">
+<title>(pipeline.geometry -&gt; pipeline.render)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry -&gt; pipeline.render)[0]","from":"pipeline.geometry","to":"pipeline.render"}</desc>
+<path d="M408,360 L558.88,360" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M408,360 L560,360" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.layout -&gt; pipeline.geometry)[0]" data-svugy-from="pipeline.layout" data-svugy-to="pipeline.geometry">
+<title>③</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout -&gt; pipeline.geometry)[0]","from":"pipeline.layout","to":"pipeline.geometry","label":"③"}</desc>
+<path d="M222.116,138 L222.116,298.88" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M222.116,138 L222.116,300" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.metrics -&gt; pipeline.layout)[0]" data-svugy-from="pipeline.metrics" data-svugy-to="pipeline.layout">
+<title>(pipeline.metrics -&gt; pipeline.layout)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.metrics -&gt; pipeline.layout)[0]","from":"pipeline.metrics","to":"pipeline.layout"}</desc>
+<path d="M600,78 L409.583,78" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M600,78 L408.463,78" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-element="pipeline.geometry">
+<title>geometry</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.geometry","label":"geometry","caption":"screen space"}</desc>
+<path d="M36,300 L408,300 L408,402 L36,402 Z" fill="#1f3566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="pipeline.geometry" data-svugy-view="808 532 384 114" transform="matrix(1 0 0 1 36 300)">
+<g data-svugy-edge="(pipeline.geometry.primitive -&gt; pipeline.geometry.depth)[0]" data-svugy-from="pipeline.geometry.primitive" data-svugy-to="pipeline.geometry.depth">
+<title>(pipeline.geometry.primitive -&gt; pipeline.geometry.depth)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry.primitive -&gt; pipeline.geometry.depth)[0]","from":"pipeline.geometry.primitive","to":"pipeline.geometry.depth"}</desc>
+<path d="M222,51 L280.88,51" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M222,51 L282,51" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.geometry.projection -&gt; pipeline.geometry.primitive)[0]" data-svugy-from="pipeline.geometry.projection" data-svugy-to="pipeline.geometry.primitive">
+<title>(pipeline.geometry.projection -&gt; pipeline.geometry.primitive)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.geometry.projection -&gt; pipeline.geometry.primitive)[0]","from":"pipeline.geometry.projection","to":"pipeline.geometry.primitive"}</desc>
+<path d="M94.655,51 L148.88,51" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M94.655,51 L150,51" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-element="pipeline.geometry.depth">
+<title>depth</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.geometry.depth","label":"depth","caption":"painter's order"}</desc>
+<path d="M282,18 L354,18 L354,84 L282,84 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="34.143" transform="matrix(1 0 0 1 318 51)" x="0" y="-2">depth</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="59.969" transform="matrix(1 0 0 1 318 51)" x="0" y="11">painter's order</text>
+</g>
+<g data-svugy-element="pipeline.geometry.primitive">
+<title>primitive</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.geometry.primitive","label":"primitive","caption":"4 primitives"}</desc>
+<path d="M150,18 L222,18 L222,84 L150,84 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="51.896" transform="matrix(1 0 0 1 186 51)" x="0" y="-2">primitive</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="47.709" transform="matrix(1 0 0 1 186 51)" x="0" y="11">4 primitives</text>
+</g>
+<g data-svugy-element="pipeline.geometry.projection">
+<title>projection</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.geometry.projection","label":"projection","caption":"exact constants"}</desc>
+<path d="M18,18 L94.655,18 L94.655,84 L18,84 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="59.748" transform="matrix(1 0 0 1 56.327 51)" x="0" y="-2">projection</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="64.655" transform="matrix(1 0 0 1 56.327 51)" x="0" y="11">exact constants</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+<text fill="#ffffff" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="44.002" transform="matrix(1 0 0 1 36 402)" x="9" y="21.5">geometry</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="54.694" transform="matrix(1 0 0 1 36 402)" x="9" y="34.5">screen space</text>
+</g>
+<g data-svugy-element="pipeline.inter">
+<title>Inter</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.inter","label":"Inter"}</desc>
+<path d="M852,87 C852,105.225 835.882,120 816,120 C796.118,120 780,105.225 780,87 C780,68.775 796.118,54 816,54 C835.882,54 852,68.775 852,87 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="27.27" transform="matrix(1 0 0 1 816 87)" x="0" y="4">Inter</text>
+</g>
+<g data-svugy-element="pipeline.layout">
+<title>layout</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.layout","label":"layout","caption":"plan space"}</desc>
+<path d="M36,36 L408.463,36 L408.463,138 L36,138 Z" fill="#1f3566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="pipeline.layout" data-svugy-view="808 268 384.463 114" transform="matrix(1 0 0 1 36 36)">
+<g data-svugy-edge="(pipeline.layout.place -&gt; pipeline.layout.route)[0]" data-svugy-from="pipeline.layout.place" data-svugy-to="pipeline.layout.route">
+<title>(pipeline.layout.place -&gt; pipeline.layout.route)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout.place -&gt; pipeline.layout.route)[0]","from":"pipeline.layout.place","to":"pipeline.layout.route"}</desc>
+<path d="M103.993,51 L148.88,51" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M103.993,51 L150,51" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.layout.route -&gt; pipeline.layout.stub)[0]" data-svugy-from="pipeline.layout.route" data-svugy-to="pipeline.layout.stub">
+<title>(pipeline.layout.route -&gt; pipeline.layout.stub)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout.route -&gt; pipeline.layout.stub)[0]","from":"pipeline.layout.route","to":"pipeline.layout.stub"}</desc>
+<path d="M222,51 L280.88,51" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M222,51 L282,51" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-element="pipeline.layout.place">
+<title>place</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.layout.place","label":"place","caption":"dagre · taffy · pins"}</desc>
+<path d="M18,18 L103.993,18 L103.993,84 L18,84 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="31.992" transform="matrix(1 0 0 1 60.997 51)" x="0" y="-2">place</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="73.993" transform="matrix(1 0 0 1 60.997 51)" x="0" y="11">dagre · taffy · pins</text>
+</g>
+<g data-svugy-element="pipeline.layout.route">
+<title>route</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.layout.route","label":"route","caption":"ports"}</desc>
+<path d="M150,18 L222,18 L222,84 L150,84 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="31.26" transform="matrix(1 0 0 1 186 51)" x="0" y="-2">route</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="21.146" transform="matrix(1 0 0 1 186 51)" x="0" y="11">ports</text>
+</g>
+<g data-svugy-element="pipeline.layout.stub">
+<title>stub</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.layout.stub","label":"stub","caption":"boundary slots"}</desc>
+<path d="M282,18 L354.463,18 L354.463,84 L282,84 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="26.15" transform="matrix(1 0 0 1 318.231 51)" x="0" y="-2">stub</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="60.463" transform="matrix(1 0 0 1 318.231 51)" x="0" y="11">boundary slots</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+<text fill="#ffffff" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="28.487" transform="matrix(1 0 0 1 36 138)" x="9" y="21.5">layout</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="44.16" transform="matrix(1 0 0 1 36 138)" x="9" y="34.5">plan space</text>
+</g>
+<g data-svugy-element="pipeline.metrics">
+<title>metrics</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.metrics","label":"metrics","caption":"measures labels"}</desc>
+<path d="M600,36 L678.12,36 L678.12,102 L600,102 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="44.414" transform="matrix(1 0 0 1 639.06 69)" x="0" y="-2">metrics</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="66.12" transform="matrix(1 0 0 1 639.06 69)" x="0" y="11">measures labels</text>
+<g data-svugy-edge="(pipeline.metrics -&gt; pipeline.inter)[0]" data-svugy-from="pipeline.metrics" data-svugy-to="pipeline.inter">
+<title>measures</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.metrics -&gt; pipeline.inter)[0]","from":"pipeline.metrics","to":"pipeline.inter","label":"measures"}</desc>
+<path d="M675.12,47.8 C675.12,52.66 670.822,56.6 665.52,56.6 C660.218,56.6 655.92,52.66 655.92,47.8 C655.92,42.94 660.218,39 665.52,39 C670.822,39 675.12,42.94 675.12,47.8 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+</g>
+</g>
+<g data-svugy-element="pipeline.render">
+<title>render</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.render","label":"render","caption":"markup"}</desc>
+<path d="M560,300 L988.58,300 L988.58,438 L560,438 Z" fill="#1f3566" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<g data-svugy-level="pipeline.render" data-svugy-view="1350 515.5 404.71 183" transform="matrix(1 0 0 1 560 300)">
+<g data-svugy-edge="(pipeline.render.profile -&gt; pipeline.render.writer)[0]" data-svugy-from="pipeline.render.profile" data-svugy-to="pipeline.render.writer">
+<title>(pipeline.render.profile -&gt; pipeline.render.writer)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.profile -&gt; pipeline.render.writer)[0]","from":"pipeline.render.profile","to":"pipeline.render.writer"}</desc>
+<path d="M252.42,69 L298.88,69" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M252.42,69 L300,69" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.render.theme -&gt; pipeline.render.profile)[0]" data-svugy-from="pipeline.render.theme" data-svugy-to="pipeline.render.profile">
+<title>(pipeline.render.theme -&gt; pipeline.render.profile)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.theme -&gt; pipeline.render.profile)[0]","from":"pipeline.render.theme","to":"pipeline.render.profile"}</desc>
+<path d="M108,69 L166.88,69" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M108,69 L168,69" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-element="pipeline.render.profile">
+<title>profile</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.render.profile","label":"profile","caption":"static · interactive"}</desc>
+<path d="M168,36 L252.42,36 L252.42,102 L168,102 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="38.238" transform="matrix(1 0 0 1 210.21 69)" x="0" y="-2">profile</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="72.42" transform="matrix(1 0 0 1 210.21 69)" x="0" y="11">static · interactive</text>
+<g data-svugy-edge="(pipeline.render.profile -&gt; pipeline.inter)[0]" data-svugy-from="pipeline.render.profile" data-svugy-to="pipeline.inter">
+<title>outlines</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.profile -&gt; pipeline.inter)[0]","from":"pipeline.render.profile","to":"pipeline.inter","label":"outlines"}</desc>
+<path d="M249.42,47.8 C249.42,52.66 245.122,56.6 239.82,56.6 C234.518,56.6 230.22,52.66 230.22,47.8 C230.22,42.94 234.518,39 239.82,39 C245.122,39 249.42,42.94 249.42,47.8 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+</g>
+</g>
+<g data-svugy-element="pipeline.render.theme">
+<title>theme</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.render.theme","label":"theme","caption":"tokens · Oklab"}</desc>
+<path d="M36,36 L108,36 L108,102 L36,102 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="37.113" transform="matrix(1 0 0 1 72 69)" x="0" y="-2">theme</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="58.064" transform="matrix(1 0 0 1 72 69)" x="0" y="11">tokens · Oklab</text>
+</g>
+<g data-svugy-element="pipeline.render.writer">
+<title>writer</title>
+<desc data-svugy-details="">{"kind":"element","path":"pipeline.render.writer","label":"writer","caption":"escaping · decimals"}</desc>
+<path d="M300,36 L392.58,36 L392.58,102 L300,102 Z" fill="#3478f6" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="34.77" transform="matrix(1 0 0 1 346.29 69)" x="0" y="-2">writer</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="80.58" transform="matrix(1 0 0 1 346.29 69)" x="0" y="11">escaping · decimals</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="" data-svugy-stub="contract">
+<title>to runtime contract</title>
+<desc data-svugy-details="">{"kind":"stub","target":"contract","edges":[{"kind":"edge","edge":"(pipeline.render.writer -&gt; contract)[0]","from":"pipeline.render.writer","to":"contract","label":"emits"}]}</desc>
+<rect fill="#1f3566" height="15.705" rx="7.852" stroke="#ffffff" stroke-opacity="0.55" transform="matrix(1 0 0 1 341.133 128.648)" width="103.154" x="-51.577" y="-7.852"/>
+<text fill="#ffffff" font-size="10.5" font-weight="500" text-anchor="middle" textLength="83.154" transform="matrix(1 0 0 1 341.133 128.648)" x="0" y="3.82">runtime contract</text>
+</g>
+<g data-svugy-goto="pipeline" data-svugy-stub="pipeline.inter">
+<title>to Inter</title>
+<desc data-svugy-details="">{"kind":"stub","target":"pipeline.inter","edges":[{"kind":"edge","edge":"(pipeline.render.profile -&gt; pipeline.inter)[0]","from":"pipeline.render.profile","to":"pipeline.inter","label":"outlines"}]}</desc>
+<rect fill="#1f3566" height="15.705" rx="7.852" stroke="#ffffff" stroke-opacity="0.55" transform="matrix(1 0 0 1 221.414 9.352)" width="42.979" x="-21.49" y="-7.852"/>
+<text fill="#ffffff" font-size="10.5" font-weight="500" text-anchor="middle" textLength="22.979" transform="matrix(1 0 0 1 221.414 9.352)" x="0" y="3.82">Inter</text>
+</g>
+</g>
+</g>
+<text fill="#ffffff" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="30.412" transform="matrix(1 0 0 1 560 438)" x="9" y="21.5">render</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="30.783" transform="matrix(1 0 0 1 560 438)" x="9" y="34.5">markup</text>
+</g>
+<g data-svugy-edge="(pipeline.layout -&gt; pipeline.geometry)[0]" data-svugy-from="pipeline.layout" data-svugy-to="pipeline.geometry">
+<title>③</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.layout -&gt; pipeline.geometry)[0]","from":"pipeline.layout","to":"pipeline.geometry","label":"③"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 55.529 54.75)" width="34.591" x="204.82" y="211.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" transform="matrix(0.75 0 0 0.75 55.529 54.75)" x="222.116" y="222.82">③</text>
+</g>
+<g data-svugy-overlay="">
+<g data-svugy-goto="" data-svugy-stub="contract">
+<title>to runtime contract</title>
+<desc data-svugy-details="">{"kind":"stub","target":"contract","edges":[{"kind":"edge","edge":"(pipeline.render.writer -&gt; contract)[0]","from":"pipeline.render.writer","to":"contract","label":"emits"}]}</desc>
+<rect fill="#1b2436" height="15.705" rx="7.852" stroke="#ffffff" stroke-opacity="0.55" transform="matrix(1 0 0 1 895.976 464.648)" width="103.154" x="-51.577" y="-7.852"/>
+<text fill="#ffffff" font-size="10.5" font-weight="500" text-anchor="middle" textLength="83.154" transform="matrix(1 0 0 1 895.976 464.648)" x="0" y="3.82">runtime contract</text>
+</g>
+</g>
+</g>
+<text fill="var(--svugy-text)" font-size="9" font-weight="600" letter-spacing="0.3" text-anchor="start" textLength="27.862" transform="matrix(1 0 0 1 778 712)" x="9" y="21.5">svugy</text>
+<text fill="var(--svugy-text)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="start" textLength="47.298" transform="matrix(1 0 0 1 778 712)" x="9" y="34.5">the pipeline</text>
+</g>
+<g data-svugy-element="runtime">
+<title>runtime</title>
+<desc data-svugy-details="">{"kind":"element","path":"runtime","label":"runtime","caption":"svugy.js · svugy.css"}</desc>
+<path d="M1918,858 L2012.51,858 L2012.51,924 L1918,924 Z" fill="#3a3f4b" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="45.574" transform="matrix(1 0 0 1 1965.255 891)" x="0" y="-2">runtime</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="82.51" transform="matrix(1 0 0 1 1965.255 891)" x="0" y="11">svugy.js · svugy.css</text>
+</g>
+<g data-svugy-element="svg">
+<title>one .svg file</title>
+<desc data-svugy-details="">{"kind":"element","path":"svg","label":"one .svg file"}</desc>
+<path d="M2001.596,601 C2001.596,619.225 1982.882,634 1959.798,634 C1936.714,634 1918,619.225 1918,601 C1918,582.775 1936.714,568 1959.798,568 C1982.882,568 2001.596,582.775 2001.596,601 Z" fill="#d5dcea" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#1a1b1e" font-size="12" font-weight="650" text-anchor="middle" textLength="71.596" transform="matrix(1 0 0 1 1959.798 601)" x="0" y="-2">one .svg file</text>
+</g>
+<g data-svugy-element="text">
+<title>your text</title>
+<desc data-svugy-details="">{"kind":"element","path":"text","label":"your text","caption":"Markdown · d2 · JSON"}</desc>
+<path d="M18,278 L121.209,278 L121.209,344 L18,344 Z" fill="#3a3f4b" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
+<text fill="#ffffff" font-size="12" font-weight="650" text-anchor="middle" textLength="52.682" transform="matrix(1 0 0 1 69.604 311)" x="0" y="-2">your text</text>
+<text fill="#ffffff" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="91.209" transform="matrix(1 0 0 1 69.604 311)" x="0" y="11">Markdown · d2 · JSON</text>
+</g>
+<g data-svugy-edge="(cli -&gt; import)[0]" data-svugy-from="cli" data-svugy-to="import">
+<title>(cli -&gt; import)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cli -&gt; import)[0]","from":"cli","to":"import"}</desc>
+<path d="M129.369,590 Q203.436,440.002 277.504,290.004" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-4)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#9945ff" height="10" href="#traveler-dot" stroke="#9945ff" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M129.369,590 Q203.684,439.5 278,289" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(cli -&gt; pipeline)[0]" data-svugy-from="cli" data-svugy-to="pipeline">
+<title>(cli -&gt; pipeline)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cli -&gt; pipeline)[0]","from":"cli","to":"pipeline"}</desc>
+<path d="M129.369,612 Q453.153,504.177 776.937,396.354" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-4)" opacity="0.9" stroke="#9945ff" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#9945ff" height="10" href="#traveler-dot" stroke="#9945ff" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M129.369,612 Q453.684,504 778,396" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(d2 -&gt; import)[0]" data-svugy-from="d2" data-svugy-to="import">
+<title>grammar</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(d2 -&gt; import)[0]","from":"d2","to":"import","label":"grammar"}</desc>
+<path d="M323.325,84 Q393.285,160.587 463.245,237.173" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-3)" opacity="0.9" stroke="#5b6170" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#5b6170" height="10" href="#traveler-dot" stroke="#5b6170" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M323.325,84 Q393.662,161 464,238" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(import -&gt; model)[0]" data-svugy-from="import" data-svugy-to="model">
+<title>①</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(import -&gt; model)[0]","from":"import","to":"model","label":"①"}</desc>
+<path d="M464,340 Q433.507,453.459 403.015,566.918" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M464,340 Q433.362,454 402.724,568" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(model -&gt; pipeline)[0]" data-svugy-from="model" data-svugy-to="pipeline">
+<title>②</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model -&gt; pipeline)[0]","from":"model","to":"pipeline","label":"②"}</desc>
+<path d="M527.448,700 Q652.24,627.282 777.032,554.564" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M527.448,700 Q652.724,627 778,554" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline -&gt; svg)[0]" data-svugy-from="pipeline" data-svugy-to="svg">
+<title>④</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline -&gt; svg)[0]","from":"pipeline","to":"svg","label":"④"}</desc>
+<path d="M1802.58,475 Q1859.912,537.587 1917.243,600.174" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M1802.58,475 Q1860.29,538 1918,601" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(pipeline.render.writer -&gt; contract)[0]" data-svugy-from="pipeline.render.writer" data-svugy-to="contract">
+<title>emits</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.writer -&gt; contract)[0]","from":"pipeline.render.writer","to":"contract","label":"emits"}</desc>
+<path d="M1684.29,640 Q1658.727,818.446 1633.164,996.891" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-2)" opacity="0.9" stroke="#3478f6" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="#3478f6" height="10" href="#traveler-dot" stroke="#3478f6" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M1684.29,640 Q1658.647,819 1633.005,998" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(runtime -&gt; contract)[0]" data-svugy-from="runtime" data-svugy-to="contract">
+<title>reads</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(runtime -&gt; contract)[0]","from":"runtime","to":"contract","label":"reads"}</desc>
+<path d="M1918,891 Q1803.483,960.709 1688.966,1030.418" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M1918,891 Q1803.005,961 1688.01,1031" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(runtime -&gt; svg)[0]" data-svugy-from="runtime" data-svugy-to="svg">
+<title>(runtime -&gt; svg)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(runtime -&gt; svg)[0]","from":"runtime","to":"svg"}</desc>
+<path d="M1965.255,858 Q1962.54,746.56 1959.825,635.12" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="2 4" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M1965.255,858 Q1962.526,746 1959.798,634" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(text -&gt; cli)[0]" data-svugy-from="text" data-svugy-to="cli">
+<title>(text -&gt; cli)[0]</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(text -&gt; cli)[0]","from":"text","to":"cli"}</desc>
+<path d="M69.604,344 Q71.634,455.44 73.664,566.88" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
+<use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
+<animateMotion dur="2.4s" path="M69.604,344 Q71.644,456 73.684,568" repeatCount="indefinite"/>
+</use>
+</g>
+<g data-svugy-edge="(d2 -&gt; import)[0]" data-svugy-from="d2" data-svugy-to="import">
+<title>grammar</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(d2 -&gt; import)[0]","from":"d2","to":"import","label":"grammar"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#5b6170" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 98.416 40.25)" width="65.204" x="361.06" y="153.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="45.204" transform="matrix(0.75 0 0 0.75 98.416 40.25)" x="393.662" y="164.82">grammar</text>
+</g>
+<g data-svugy-edge="(import -&gt; model)[0]" data-svugy-from="import" data-svugy-to="model">
+<title>①</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(import -&gt; model)[0]","from":"import","to":"model","label":"①"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 108.341 113.5)" width="34.591" x="416.066" y="446.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" transform="matrix(0.75 0 0 0.75 108.341 113.5)" x="433.362" y="457.82">①</text>
+</g>
+<g data-svugy-edge="(model -&gt; pipeline)[0]" data-svugy-from="model" data-svugy-to="pipeline">
+<title>②</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(model -&gt; pipeline)[0]","from":"model","to":"pipeline","label":"②"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 163.181 156.75)" width="34.591" x="635.429" y="619.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" transform="matrix(0.75 0 0 0.75 163.181 156.75)" x="652.724" y="630.82">②</text>
+</g>
+<g data-svugy-edge="(pipeline -&gt; svg)[0]" data-svugy-from="pipeline" data-svugy-to="svg">
+<title>④</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline -&gt; svg)[0]","from":"pipeline","to":"svg","label":"④"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 465.072 134.5)" width="34.591" x="1842.994" y="530.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="14.591" transform="matrix(0.75 0 0 0.75 465.072 134.5)" x="1860.29" y="541.82">④</text>
+</g>
+<g data-svugy-edge="(pipeline.render.writer -&gt; contract)[0]" data-svugy-from="pipeline.render.writer" data-svugy-to="contract">
+<title>emits</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.writer -&gt; contract)[0]","from":"pipeline.render.writer","to":"contract","label":"emits"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="#3478f6" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 414.662 204.75)" width="47.368" x="1634.964" y="811.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="27.368" transform="matrix(0.75 0 0 0.75 414.662 204.75)" x="1658.647" y="822.82">emits</text>
+</g>
+<g data-svugy-edge="(runtime -&gt; contract)[0]" data-svugy-from="runtime" data-svugy-to="contract">
+<title>reads</title>
+<desc data-svugy-details="">{"kind":"edge","edge":"(runtime -&gt; contract)[0]","from":"runtime","to":"contract","label":"reads"}</desc>
+<rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 450.751 240.25)" width="48.337" x="1778.837" y="953.148"/>
+<text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="28.337" transform="matrix(0.75 0 0 0.75 450.751 240.25)" x="1803.005" y="964.82">reads</text>
+</g>
+<g data-svugy-overlay=""/>
+</g>
+</g>
+</g>
 <script>//<![CDATA[
 (() => {
   'use strict';
@@ -1245,6 +2293,7 @@
   const XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
 
   const CONTRACT = 'data-svugy-contract';
+  const CAMERA = 'data-svugy-camera';
   const LAYER = 'data-svugy-layer';
   const SHOWN = 'data-svugy-shown';
   const LEVEL = 'data-svugy-level';
@@ -1262,6 +2311,7 @@
   const DIMMED = 'data-svugy-dimmed';
   const PANNING = 'data-svugy-panning';
 
+  const CAMERA_SELECTOR = `[${CAMERA}]`;
   const LAYER_SELECTOR = `[${LAYER}]`;
   const LEVEL_SELECTOR = `[${LEVEL}]`;
   const ELEMENT_SELECTOR = `[${ELEMENT}]`;
@@ -1291,6 +2341,10 @@
 
   const DESCRIPTION_WIDTH_PX = 320;
   const DESCRIPTION_VIEW_MARGIN_PX = 12;
+
+  const CAMERA_SWITCH_WIDTH_PX = 280;
+  const CAMERA_SWITCH_HEIGHT_PX = 36;
+  const CAMERA_SWITCH_VIEW_MARGIN_PX = 12;
   const LIFTED_KIND = 'lifted';
 
   const PARAGRAPH_BLOCK = 'paragraph';
@@ -1376,9 +2430,11 @@
     return { path, layerIndex };
   }
 
-  /** Wires navigation, the detail and description panels and dimming onto one diagram. */
+  /** Wires navigation, the camera switch, the detail and description panels and dimming onto one diagram. */
   function bindRuntime(svg) {
-    const layers = Layers.of(svg);
+    const cameras = Cameras.of(svg);
+    const initialCamera = cameras.find((camera) => camera.hasAttribute(SHOWN)) ?? cameras[0];
+    const layers = Layers.of(initialCamera);
     const initialLayer = layers[0];
     const deepestLayer = layers[layers.length - 1];
     const rootLevel = Contract.levelAt(initialLayer, ROOT_LEVEL_PATH);
@@ -1387,7 +2443,7 @@
     }
     const animator = new ViewBoxAnimator(svg);
     const fader = new LayerFader();
-    const navigator = new LayerNavigator(svg, layers, initialLayer, rootLevel, animator, fader);
+    const navigator = new LayerNavigator(svg, initialCamera, layers, initialLayer, rootLevel, animator, fader);
     const panel = new DetailPanel(svg);
     const dimmer = new UnrelatedGroupDimmer(svg);
     const descriptionPanel = new DescriptionPanel(svg, deepestLayer);
@@ -1396,6 +2452,11 @@
     gestures.bind();
     const headingPins = new HeadingPins(svg);
     headingPins.bind();
+    const hasOtherCameras = cameras.length > 1;
+    if (hasOtherCameras) {
+      const cameraSwitch = new CameraSwitch(svg, cameras, navigator);
+      cameraSwitch.bind();
+    }
     navigator.addNavigationListener((focusedLevel) => {
       panel.hide();
       dimmer.clear();
@@ -1410,12 +2471,21 @@
     }
   }
 
-  /** Lists the layers a document draws, in increasing depth; a document without layer groups is its own single layer. */
-  const Layers = {
+  /** Lists the cameras a document draws the diagram from; a document without camera groups is its own single camera. */
+  const Cameras = {
     of(svg) {
-      const layerGroups = Array.from(svg.querySelectorAll(LAYER_SELECTOR));
+      const cameraGroups = Array.from(svg.querySelectorAll(CAMERA_SELECTOR));
+      const hasCameraGroups = cameraGroups.length > 0;
+      return hasCameraGroups ? cameraGroups : [svg];
+    },
+  };
+
+  /** Lists the layers a camera draws, in increasing depth; a camera without layer groups is its own single layer. */
+  const Layers = {
+    of(camera) {
+      const layerGroups = Array.from(camera.querySelectorAll(LAYER_SELECTOR));
       const hasLayerGroups = layerGroups.length > 0;
-      return hasLayerGroups ? layerGroups : [svg];
+      return hasLayerGroups ? layerGroups : [camera];
     },
   };
 
@@ -1977,9 +3047,9 @@
     }
   }
 
-  /** Keeps one layer shown and one of its levels focused, and moves the view to them. */
+  /** Keeps one camera and one of its layers shown and one of its levels focused, and moves the view to them. */
   class LayerNavigator {
-    constructor(svg, layers, initialLayer, rootLevel, animator, fader) {
+    constructor(svg, initialCamera, layers, initialLayer, rootLevel, animator, fader) {
       this.svg = svg;
       this.layers = layers;
       this.animator = animator;
@@ -1989,8 +3059,10 @@
         node.removeAttribute(SHOWN);
         node.removeAttribute(ENTERED);
       });
+      initialCamera.setAttribute(SHOWN, '');
       initialLayer.setAttribute(SHOWN, '');
       rootLevel.setAttribute(ENTERED, '');
+      this.shownCamera = initialCamera;
       this.shownLayer = initialLayer;
       this.focusedLevel = rootLevel;
       this.navigationListeners = [];
@@ -2021,6 +3093,41 @@
       if (targetView !== null) {
         this.animator.jumpTo(targetView);
       }
+    }
+
+    /** Shows the diagram from `camera`, on its layer as deep as the shown one, focused on the same level, framed by that level's own view; tells whether the camera changed. */
+    showCamera(camera) {
+      const isShownCamera = camera === this.shownCamera;
+      if (isShownCamera) {
+        return false;
+      }
+      const cameraLayers = Layers.of(camera);
+      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
+      const layer = cameraLayers[shownLayerIndex];
+      const focusedPath = this.focusedLevel.getAttribute(LEVEL);
+      const level = layer === undefined ? null : Contract.levelAt(layer, focusedPath);
+      if (level === null) {
+        return false;
+      }
+      cameraLayers.forEach((cameraLayer) => cameraLayer.removeAttribute(SHOWN));
+      layer.setAttribute(SHOWN, '');
+      const previousCamera = this.shownCamera;
+      const previousLayer = this.shownLayer;
+      this.shownCamera = camera;
+      this.layers = cameraLayers;
+      this.shownLayer = layer;
+      this.moveEnteredMarkTo(level);
+      // swapped, not crossfaded: the cameras project to different coordinates, so the fading one would show misframed
+      this.fader.finishRunningFade();
+      previousCamera.removeAttribute(SHOWN);
+      camera.setAttribute(SHOWN, '');
+      this.announceNavigation();
+      this.carryKeyboardFocus(previousLayer, layer);
+      const targetView = this.viewOf(level);
+      if (targetView !== null) {
+        this.animator.jumpTo(targetView);
+      }
+      return true;
     }
 
     /** Follows a click on `group` and tells whether the view moved; when it did not, the group's details are due. */
@@ -2283,6 +3390,68 @@
     viewOf(level) {
       const viewText = level.getAttribute(VIEW);
       return View.parse(viewText);
+    }
+  }
+
+  /** Lets the reader switch the angle the diagram is seen from: one button per camera, pinned inside the view's bottom-left corner at a constant on-screen size. */
+  class CameraSwitch {
+    constructor(svg, cameras, navigator) {
+      this.svg = svg;
+      this.navigator = navigator;
+      this.body = createXhtmlElement('div', { class: 'svugy-cameras', role: 'group', 'aria-label': 'view angle' });
+      this.buttonsByCamera = new Map(cameras.map((camera) => [camera, this.buttonShowing(camera)]));
+      this.frame = createSvgElement('foreignObject', {
+        class: 'svugy-cameras-frame',
+        width: CAMERA_SWITCH_WIDTH_PX,
+        height: CAMERA_SWITCH_HEIGHT_PX,
+      });
+      this.frame.appendChild(this.body);
+      this.panel = createSvgElement('g', { class: 'svugy-cameras-panel' });
+      this.panel.appendChild(this.frame);
+      this.panel.addEventListener('click', (event) => event.stopPropagation());
+    }
+
+    bind() {
+      this.svg.appendChild(this.panel);
+      const viewBoxObserver = new MutationObserver(() => this.place());
+      viewBoxObserver.observe(this.svg, { attributes: true, attributeFilter: ['viewBox'] });
+      const resizeObserver = new ResizeObserver(() => this.place());
+      resizeObserver.observe(this.svg);
+      this.navigator.addNavigationListener(() => this.pressShownCameraButton());
+      this.pressShownCameraButton();
+      this.place();
+    }
+
+    buttonShowing(camera) {
+      const angle = camera.getAttribute(CAMERA);
+      const button = createXhtmlElement('button', { type: 'button' });
+      button.textContent = angle;
+      button.addEventListener('click', () => this.navigator.showCamera(camera));
+      this.body.appendChild(button);
+      return button;
+    }
+
+    pressShownCameraButton() {
+      this.buttonsByCamera.forEach((button, camera) => {
+        const isShownCamera = camera === this.navigator.shownCamera;
+        button.setAttribute('aria-pressed', String(isShownCamera));
+      });
+    }
+
+    place() {
+      const screenMatrix = this.svg.getScreenCTM();
+      if (screenMatrix === null) {
+        return;
+      }
+      const screenToUserMatrix = screenMatrix.inverse();
+      const svgBounds = this.svg.getBoundingClientRect();
+      const clientCorner = new DOMPoint(svgBounds.left, svgBounds.bottom);
+      const userCorner = clientCorner.matrixTransform(screenToUserMatrix);
+      const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
+      // x = corner.x + m·u, y = corner.y − (m + h)·u, with u user units per pixel, so the switch sits m pixels inside the bottom-left corner
+      const x = userCorner.x + CAMERA_SWITCH_VIEW_MARGIN_PX * userUnitsPerPixel;
+      const y = userCorner.y - (CAMERA_SWITCH_VIEW_MARGIN_PX + CAMERA_SWITCH_HEIGHT_PX) * userUnitsPerPixel;
+      this.panel.setAttribute('transform', `translate(${x} ${y}) scale(${userUnitsPerPixel})`);
     }
   }
 

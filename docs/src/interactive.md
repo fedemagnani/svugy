@@ -14,9 +14,11 @@
 | drag | pan |
 | pinch, or Ctrl/⌘ + scroll | zoom |
 | hover | the element's details; everything unrelated dims |
+| the bottom-left buttons | switch between the `isometric` view and the flat `top` view |
 
 - Tab moves between elements, Enter or Space clicks, Esc steps out. Reduced-motion settings turn animations into jumps.
 - The colours follow the reader's light or dark preference.
+- It opens on the frontmatter's [`view`](run/markdown.md#frontmatter). Both views show the same layout; switching keeps the focused level.
 - Link to a level by appending `#svugy=PATH` to the SVG's URL, optionally `&layer=K`: `webapp.svg#svugy=backend`.
 
 ## Descriptions

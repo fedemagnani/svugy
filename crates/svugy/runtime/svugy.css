@@ -1,3 +1,4 @@
+[data-svugy-camera]:not([data-svugy-shown]),
 [data-svugy-layer]:not([data-svugy-shown]) { visibility: hidden; }
 [data-svugy-overlay] { visibility: hidden; }
 [data-svugy-shown] [data-svugy-entered] > [data-svugy-overlay] { visibility: visible; }
@@ -29,6 +30,12 @@
 [data-svugy-contract] .svugy-panel-title { font-size: 12.5px; font-weight: 650; fill: var(--svugy-text); }
 [data-svugy-contract] .svugy-panel-body { font-size: 11.5px; font-weight: 450; fill: var(--svugy-text-muted); }
 
+[data-svugy-contract] .svugy-cameras-frame { overflow: visible; }
+[data-svugy-contract] .svugy-cameras { box-sizing: border-box; display: inline-flex; gap: 2px; padding: 3px; border: 1px solid color-mix(in srgb, var(--svugy-text-muted) 40%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--svugy-canvas) 94%, var(--svugy-text)); box-shadow: 0 4px 16px rgb(0 0 0 / 0.25); font-size: 11px; font-weight: 600; line-height: 1; }
+[data-svugy-contract] .svugy-cameras button { margin: 0; padding: 6px 10px; border: 0; border-radius: 6px; background: none; color: var(--svugy-text-muted); font: inherit; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+[data-svugy-contract] .svugy-cameras button:hover { color: var(--svugy-text); }
+[data-svugy-contract] .svugy-cameras button[aria-pressed="true"] { background: color-mix(in srgb, var(--svugy-text) 14%, transparent); color: var(--svugy-text); }
+[data-svugy-contract] .svugy-cameras button:focus-visible { outline: 1px dashed var(--svugy-text-muted); outline-offset: 1px; }
 [data-svugy-contract] .svugy-description-frame { overflow: visible; }
 [data-svugy-contract] .svugy-description { box-sizing: border-box; max-height: 100%; overflow-y: auto; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--svugy-text-muted) 40%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--svugy-canvas) 94%, var(--svugy-text)); box-shadow: 0 4px 16px rgb(0 0 0 / 0.25); color: var(--svugy-text); font-size: 12.5px; font-weight: 450; line-height: 1.5; overflow-wrap: anywhere; }
 [data-svugy-contract] .svugy-description :is(h3, h4, h5, h6, p, ul, ol, pre, section) { margin: 0 0 8px; }

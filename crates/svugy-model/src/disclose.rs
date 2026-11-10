@@ -50,12 +50,14 @@ impl DisclosedModel {
             .collect();
         let title = model.title.clone();
         let subtitle = model.subtitle.clone();
+        let view = model.view;
         let description = model.description.clone();
         let legend = model.legend.clone();
         let edges = BTreeMap::new();
         let mut disclosed_model = Model {
             title,
             subtitle,
+            view,
             description,
             legend,
             elements: shown_elements,

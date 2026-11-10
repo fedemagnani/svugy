@@ -20,6 +20,7 @@ pub trait RenderSvg {
 mod tests {
     use svugy_model::model::Model;
 
+    use crate::geometry::Isometric;
     use crate::geometry::Scene;
     use crate::layout::LevelPlans;
     use crate::metrics::{BundledFont, InterFaces};
@@ -79,8 +80,8 @@ mod tests {
         let plans = LevelPlans::lay_out(&model, &font);
         let stubless_plans = plans.clone().without_stubs();
 
-        let scene = Scene::project(&model, &plans, &font);
-        let stubless_scene = Scene::project(&model, &stubless_plans, &font);
+        let scene = Scene::project::<Isometric>(&model, &plans, &font);
+        let stubless_scene = Scene::project::<Isometric>(&model, &stubless_plans, &font);
 
         let stubbed_level_count = scene
             .root
@@ -138,8 +139,8 @@ mod tests {
         let plans = LevelPlans::lay_out(&model, &font);
         let unbadged_plans = LevelPlans::lay_out(&unbadged_model, &font);
 
-        let scene = Scene::project(&model, &plans, &font);
-        let unbadged_scene = Scene::project(&unbadged_model, &unbadged_plans, &font);
+        let scene = Scene::project::<Isometric>(&model, &plans, &font);
+        let unbadged_scene = Scene::project::<Isometric>(&unbadged_model, &unbadged_plans, &font);
 
         let stubless_plans = plans.clone().without_stubs();
         let unbadged_stubless_plans = unbadged_plans.clone().without_stubs();
@@ -183,8 +184,9 @@ mod tests {
         let unwritten_plans = LevelPlans::lay_out(&unwritten_model, &font);
 
         assert_eq!(badged_plans, unwritten_plans);
-        let badged_scene = Scene::project(&badged_model, &badged_plans, &font);
-        let unwritten_scene = Scene::project(&unwritten_model, &unwritten_plans, &font);
+        let badged_scene = Scene::project::<Isometric>(&badged_model, &badged_plans, &font);
+        let unwritten_scene =
+            Scene::project::<Isometric>(&unwritten_model, &unwritten_plans, &font);
         let badged_connections = connections_of_every_level(&badged_scene);
         let unwritten_connections = connections_of_every_level(&unwritten_scene);
         assert_eq!(badged_connections, unwritten_connections);
@@ -202,7 +204,7 @@ mod tests {
         let font = BundledFont::<InterFaces>::new();
 
         let plans = LevelPlans::lay_out(&model, &font);
-        let scene = Scene::project(&model, &plans, &font);
+        let scene = Scene::project::<Isometric>(&model, &plans, &font);
 
         let root_plan = plans
             .level(&ElementPath::root())

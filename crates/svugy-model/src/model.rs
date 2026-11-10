@@ -16,11 +16,12 @@ use crate::unique_key_map::UniqueKeyMapVisitor;
 /// Largest magnitude a numeric style value, a position coordinate or a height may take, so no valid model can explode the output.
 pub const MAX_MAGNITUDE: f64 = 1_000_000.0;
 
-/// Model a system as the diagram's title, subtitle, description and legend, elements keyed by path and edges keyed by id; every model handed out of this crate has its edge endpoints and ancestors declared.
+/// Model a system as the diagram's title, subtitle, view angle, description and legend, elements keyed by path and edges keyed by id; every model handed out of this crate has its edge endpoints and ancestors declared.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Model {
     pub(crate) title: Option<String>,
     pub(crate) subtitle: Option<String>,
+    pub(crate) view: Option<ViewAngle>,
     pub(crate) description: Option<String>,
     pub(crate) legend: Option<Legend>,
     pub(crate) elements: BTreeMap<ElementPath, Element>,
@@ -122,6 +123,11 @@ impl Model {
     /// Return the diagram's subtitle, drawn under its title.
     pub fn subtitle(&self) -> Option<&str> {
         self.subtitle.as_deref()
+    }
+
+    /// Return the angle the diagram is first seen from, if the author picked one.
+    pub fn view(&self) -> Option<ViewAngle> {
+        self.view
     }
 
     /// Return the diagram's description, Markdown shown in the side panel while nothing is focused.
@@ -382,6 +388,21 @@ pub enum Shape {
     Slab,
     Cylinder,
     Disc,
+}
+
+/// Name the angle a diagram is seen from.
+#[derive(
+    Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
+)]
+#[serde(rename_all = "lowercase")]
+#[derive(EnumString, IntoStaticStr, VariantNames)]
+#[strum(serialize_all = "lowercase")]
+pub enum ViewAngle {
+    /// From above a ground corner, both ground axes receding.
+    #[default]
+    Isometric,
+    /// From straight above, flat.
+    Top,
 }
 
 /// Name the symbol an animated edge carries along its path.

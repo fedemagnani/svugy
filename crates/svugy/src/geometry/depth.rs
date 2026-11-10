@@ -1,16 +1,20 @@
 //! Order one level's solids for the painter's algorithm.
 
 use std::collections::BTreeMap;
+use std::marker::PhantomData;
 
 use kurbo::Rect;
 use svugy_model::path::ElementPath;
 
-/// Orders disjoint ground footprints back to front, so nearer solids are painted over farther ones whatever their heights.
-pub(super) struct DepthOrder<'a> {
+use super::camera::Camera;
+
+/// Orders disjoint ground footprints back to front as camera `C` sees them, so nearer solids are painted over farther ones whatever their heights.
+pub(super) struct DepthOrder<'a, C> {
     pending: Vec<(&'a ElementPath, Rect)>,
+    camera: PhantomData<C>,
 }
 
-impl<'a> DepthOrder<'a> {
+impl<'a, C: Camera> DepthOrder<'a, C> {
     /// Return every path of `footprints` back to front: each next one is the first in path order that no pending footprint must precede, else the first pending.
     pub(super) fn back_to_front(
         footprints: &'a BTreeMap<ElementPath, Rect>,
@@ -19,7 +23,10 @@ impl<'a> DepthOrder<'a> {
             .iter()
             .map(|(path, footprint)| (path, *footprint))
             .collect();
-        let mut depth_order = Self { pending };
+        let mut depth_order = Self {
+            pending,
+            camera: PhantomData,
+        };
         let footprint_count = footprints.len();
         let mut ordered = Vec::with_capacity(footprint_count);
         for _ordered_count in 0..footprint_count {
@@ -50,22 +57,41 @@ impl<'a> DepthOrder<'a> {
         !has_pending_footprint_behind
     }
 
-    /// Tell whether some sight line, a ground line x − y = k, meets `behind` before `front`: their x − y spans overlap and `behind` lies wholly at lower x or lower y.
+    /// Tell whether some sight line, a ground line r·q = k with r = (v_y, −v_x) across the sight direction v, meets `behind` before `front`: their r·q spans overlap and `behind` lies wholly farther along an axis v climbs.
     fn must_paint_before(behind: Rect, front: Rect) -> bool {
-        let behind_starts_before_front_ends = behind.x0 - behind.y1 < front.x1 - front.y0;
-        let front_starts_before_behind_ends = front.x0 - front.y1 < behind.x1 - behind.y0;
+        let (behind_across_start, behind_across_end) = Self::across_sight_span(behind);
+        let (front_across_start, front_across_end) = Self::across_sight_span(front);
+        let behind_starts_before_front_ends = behind_across_start < front_across_end;
+        let front_starts_before_behind_ends = front_across_start < behind_across_end;
         let is_screen_x_overlap =
             behind_starts_before_front_ends && front_starts_before_behind_ends;
+        let toward_viewer = C::TOWARD_VIEWER;
+        let is_x_receding = toward_viewer.x > 0.0;
+        let is_y_receding = toward_viewer.y > 0.0;
         let is_wholly_at_lower_x = behind.x1 <= front.x0;
         let is_wholly_at_lower_y = behind.y1 <= front.y0;
-        let is_wholly_farther = is_wholly_at_lower_x || is_wholly_at_lower_y;
+        let is_farther_along_x = is_x_receding && is_wholly_at_lower_x;
+        let is_farther_along_y = is_y_receding && is_wholly_at_lower_y;
+        let is_wholly_farther = is_farther_along_x || is_farther_along_y;
         is_screen_x_overlap && is_wholly_farther
+    }
+
+    /// Return the span of r·q = v_y·x − v_x·y over `footprint`, from its smallest to its largest corner value.
+    fn across_sight_span(footprint: Rect) -> (f64, f64) {
+        let toward_viewer = C::TOWARD_VIEWER;
+        let Rect { x0, y0, x1, y1 } = footprint;
+        let corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)];
+        let across_values = corners.map(|(x, y)| toward_viewer.y * x - toward_viewer.x * y);
+        let smallest = across_values.into_iter().fold(f64::INFINITY, f64::min);
+        let largest = across_values.into_iter().fold(f64::NEG_INFINITY, f64::max);
+        (smallest, largest)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::geometry::camera::Isometric;
 
     fn footprints(rects: &[(&str, Rect)]) -> BTreeMap<ElementPath, Rect> {
         rects
@@ -79,12 +105,14 @@ mod tests {
     }
 
     fn assert_no_footprint_painted_over_a_nearer_one(footprints: &BTreeMap<ElementPath, Rect>) {
-        let order = DepthOrder::back_to_front(footprints);
+        let order = DepthOrder::<Isometric>::back_to_front(footprints);
         assert_eq!(order.len(), footprints.len());
         for (earlier_index, earlier) in order.iter().enumerate() {
             for later in &order[earlier_index + 1..] {
-                let is_order_inverted =
-                    DepthOrder::must_paint_before(footprints[*later], footprints[*earlier]);
+                let is_order_inverted = DepthOrder::<Isometric>::must_paint_before(
+                    footprints[*later],
+                    footprints[*earlier],
+                );
                 assert!(
                     !is_order_inverted,
                     "{later} must be painted before {earlier}"
@@ -99,7 +127,7 @@ mod tests {
             ("a_small_front", Rect::new(10.0, 10.0, 20.0, 20.0)),
             ("z_long_back", Rect::new(0.0, 0.0, 100.0, 10.0)),
         ]);
-        let order = DepthOrder::back_to_front(&set);
+        let order = DepthOrder::<Isometric>::back_to_front(&set);
         assert_eq!(names(&order), ["z_long_back", "a_small_front"]);
         assert_no_footprint_painted_over_a_nearer_one(&set);
     }
@@ -110,7 +138,7 @@ mod tests {
             ("a_long_front", Rect::new(0.0, 10.0, 100.0, 20.0)),
             ("z_small_back", Rect::new(50.0, 0.0, 60.0, 10.0)),
         ]);
-        let order = DepthOrder::back_to_front(&set);
+        let order = DepthOrder::<Isometric>::back_to_front(&set);
         assert_eq!(names(&order), ["z_small_back", "a_long_front"]);
         assert_no_footprint_painted_over_a_nearer_one(&set);
     }
@@ -145,8 +173,8 @@ mod tests {
     fn footprints_apart_on_screen_impose_no_order() {
         let back_left = Rect::new(0.0, 100.0, 10.0, 110.0);
         let back_right = Rect::new(100.0, 0.0, 110.0, 10.0);
-        let is_left_first = DepthOrder::must_paint_before(back_left, back_right);
-        let is_right_first = DepthOrder::must_paint_before(back_right, back_left);
+        let is_left_first = DepthOrder::<Isometric>::must_paint_before(back_left, back_right);
+        let is_right_first = DepthOrder::<Isometric>::must_paint_before(back_right, back_left);
         assert!(!is_left_first);
         assert!(!is_right_first);
     }
@@ -167,8 +195,8 @@ mod tests {
             .map(|(name, rect)| (name.as_str(), *rect))
             .collect();
         let set = footprints(&borrowed);
-        let first_run = names(&DepthOrder::back_to_front(&set));
-        let second_run = names(&DepthOrder::back_to_front(&set));
+        let first_run = names(&DepthOrder::<Isometric>::back_to_front(&set));
+        let second_run = names(&DepthOrder::<Isometric>::back_to_front(&set));
         assert_eq!(first_run, second_run);
         assert_no_footprint_painted_over_a_nearer_one(&set);
     }

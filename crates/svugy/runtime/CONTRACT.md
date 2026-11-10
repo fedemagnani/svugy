@@ -1,26 +1,36 @@
 # Runtime contract
 
-*Version 2. Attribute names are spelled once, in `RuntimeContract` (`crates/svugy/src/render/contract/mod.rs`).*
+*Version 3. Attribute names are spelled once, in `RuntimeContract` (`crates/svugy/src/render/contract/mod.rs`).*
 
 The renderer and the runtime (`crates/svugy/runtime/svugy.js`, `svugy.css`) communicate only through the `data-svugy-*` attributes below. Preview tools and agents can rely on them too.
 
 - **Both profiles write them**; without script they do nothing.
 - **Versioned:** a rename, removal or change of meaning bumps the version. The embedded runtime always matches its file; the version is for outside readers.
-- **Paths are never selectors:** no path becomes an id, a class or part of a selector. The runtime finds elements by comparing `getAttribute()` results. The only ids are synthetic `<defs>` targets such as `arrowhead-0`, `traveler-envelope` and `ground-grid`.
+- **Paths are never selectors:** no path becomes an id, a class or part of a selector. The runtime finds elements by comparing `getAttribute()` results. The only ids are synthetic `<defs>` targets such as `arrowhead-0`, `traveler-envelope` and `ground-grid-isometric`.
 - **No markup from data:** the detail and description panels are built with `textContent` and DOM calls, never `innerHTML`.
 
 ## Document
 
-The root is `<svg data-svugy-contract="2">`; its viewBox, width and height are the canvas: the union of every layer's root view. Its children, in order:
+The root is `<svg data-svugy-contract="3">`; its viewBox, width and height are the canvas: the union of every layer's root view from the shown camera. Its children, in order:
 
 1. the runtime's `<style>`
 2. `<title>TITLE</title>`, if the diagram has a title: the document's tooltip
 3. `<desc data-svugy-details="">JSON</desc>`, if the diagram has a description: the diagram details (see [Details](#details))
-4. `<defs>`, shared by all layers: arrowhead markers, traveler symbols and the `ground-grid` pattern
-5. one canvas `<rect>` covering every layer's root view
-6. the ground: one `<rect>` filled with `ground-grid`, one projected grid cell repeated 10⁶ user units past the origin on every side, so the grid never ends when the reader moves the view; the runtime CSS paints the canvas color behind it
-7. the layers
-8. the runtime's `<script>`
+4. `<defs>`, shared by all cameras: arrowhead markers, traveler symbols and one `ground-grid-ANGLE` pattern per camera
+5. one canvas `<rect>` covering the canvas
+6. the cameras
+7. the runtime's `<script>`
+
+## Cameras
+
+The interactive document draws the diagram from two angles, each a `<g data-svugy-camera="ANGLE">`, ANGLE being `isometric` or `top`, in that order. The author picks the shown one with the frontmatter's `view` key, `isometric` by default; the renderer writes `data-svugy-shown=""` on its group, and the CSS hides every camera without it.
+
+Every camera projects the same layout, laid out once from the author's angle: an element keeps its plan position whichever camera shows it. Each holds:
+
+1. the ground: one `<rect>` filled with `ground-grid-ANGLE`, one projected grid cell repeated 10⁶ user units past the origin on every side, so the grid never ends when the reader moves the view; the runtime CSS paints the canvas color behind it
+2. its layers
+
+Cameras share one coordinate system but project independently: an element's coordinates differ per camera, and a path is unique within a layer of one camera only. `top` looks straight down: it drops every side face, lays container tags flat on the ground below their slab instead of hanging them, and draws connection labels at three quarters of their size.
 
 The runtime's CSS and JavaScript use the writer's CDATA form.
 
@@ -33,11 +43,11 @@ A path's depth is its segment count: root 0, top-level element 1. Layer K shows 
 - an edge with both endpoints shown is drawn as written;
 - an edge with a hidden endpoint is drawn from that endpoint's ancestor of depth K + 1; if both ends land on one element it disappears; lifted edges joining the same ordered pair merge into one.
 
-With D the depth of the deepest container (0 without containers), the interactive document has layers 0 to D; layer D is the whole diagram. Each is a `<g data-svugy-layer="K">`, in increasing K, holding the diagram's title and subtitle inside `<g data-svugy-heading="">`, the legend (document coordinates, no data attributes; a click on it counts as a click on empty canvas), then the root level `<g data-svugy-level="" data-svugy-view="…">`. The root's path is the empty string.
+With D the depth of the deepest container (0 without containers), every camera has layers 0 to D; layer D is the whole diagram. Each is a `<g data-svugy-layer="K">`, in increasing K, holding the diagram's title and subtitle inside `<g data-svugy-heading="">`, the legend (document coordinates, no data attributes; a click on it counts as a click on empty canvas), then the root level `<g data-svugy-level="" data-svugy-view="…">`. The root's path is the empty string.
 
-Layers share one coordinate system but are laid out independently: an element's coordinates differ per layer, and a path is unique within a layer only. The renderer writes `data-svugy-shown=""` on layer D, and the CSS hides every layer without it, so a document whose script never runs (inside `<img>`, in an editor preview) shows the whole diagram.
+Layers share one coordinate system but are laid out independently: an element's coordinates differ per layer, and a path is unique within a layer only. The renderer writes `data-svugy-shown=""` on every camera's layer D, and the CSS hides every layer without it, so a document whose script never runs (inside `<img>`, in an editor preview) shows the whole diagram from the author's angle.
 
-The static profile draws layer D alone and unwrapped: ground grid, heading, legend and root level are direct children of the root, after the canvas; the viewBox is layer D's root view; there is no root title, no diagram details, no heading group, no overlay, no traveler and no endless ground: its ground grid ends one cell past the diagram. Its groups carry the same attributes as the interactive layer D, `data-svugy-from` and `data-svugy-to` included. A document without `data-svugy-layer` is one fully disclosed layer.
+The static profile draws layer D from the author's angle alone and unwrapped: ground grid, heading, legend and root level are direct children of the root, after the canvas; the viewBox is layer D's root view; there is no camera group, no root title, no diagram details, no heading group, no overlay, no traveler and no endless ground: its ground grid ends one cell past the diagram. Its groups carry the same attributes as the interactive layer D, `data-svugy-from` and `data-svugy-to` included. A document without `data-svugy-camera` is one camera; one without `data-svugy-layer` is one fully disclosed layer.
 
 ## Groups
 
@@ -85,7 +95,7 @@ A `description` is the author's Markdown, unrendered. Only the interactive profi
 
 ## Runtime state
 
-- **`data-svugy-shown`:** rendered on layer D; at start the runtime moves it to layer 0, or to a level link's layer, then to the layer it shows. Two layers carry it during a crossfade.
+- **`data-svugy-shown`:** rendered on the author's camera and on every camera's layer D; at start the runtime keeps it on that camera and moves it to its layer 0, or to a level link's layer, then to the camera and the layer it shows. Two layers carry it during a crossfade.
 - **`data-svugy-entered=""`:** on exactly one level group of the shown layer, the focused one; `[data-svugy-shown] [data-svugy-entered] > [data-svugy-overlay]` is visible. Never rendered.
 - **`data-svugy-dimmed=""`:** on the element and edge groups the hovered group dims. Never rendered.
 - **Heading `transform`:** on every `data-svugy-heading` group, set at start and whenever the viewBox or the SVG's size changes, so the heading sits 20 px inside the top-left corner of the SVG's on-screen box at 1.2 times its rendered size, wherever the view moves. Without script the heading stays where rendered.
@@ -98,13 +108,15 @@ The CSS toggles `visibility`, never `display:none`, so the runtime can measure a
 - `role="button"` on every element, edge and stub group;
 - an `aria-label` from each group's title;
 - `tabindex="0"`, `role="button"` and `aria-label="diagram description"` on each heading group;
-- the `svugy-panel*` classes (detail panel) and `svugy-description*` classes (description panel); both panels take the root's `font-family` and derive their colours from `--svugy-canvas`, `--svugy-text` and `--svugy-text-muted`.
+- the `svugy-panel*` classes (detail panel), `svugy-description*` classes (description panel) and `svugy-cameras*` classes (camera switch); all three take the root's `font-family` and derive their colours from `--svugy-canvas`, `--svugy-text` and `--svugy-text-muted`.
 
 The runtime binds only to the SVG it lives in.
 
 ## Navigation
 
-The runtime keeps the shown layer K and the focused level F, whose view fills the screen. F is open in layer K, so depth(F) ≤ K. Start: K = 0, F = root, unless the URL links a level.
+The runtime keeps the shown camera C, its shown layer K and the focused level F, whose view fills the screen. F is open in layer K, so depth(F) ≤ K. Start: C = the author's camera, K = 0, F = root, unless the URL links a level.
+
+**Camera switch:** with more than one camera, the runtime pins one `<button>` per camera, labelled with its ANGLE and `aria-pressed` on C's, 12 px inside the bottom-left corner of the SVG's on-screen box at a constant on-screen size. Pressing another camera's button swaps C for it at once, keeps K and F, and jumps the view to F's view in the new camera, discarding any pan or zoom.
 
 **Level link:** a URL fragment `#svugy=PATH&layer=K`, PATH being a level's `data-svugy-level` encoded by `encodeURIComponent`, `&layer=K` optional. At start, F becomes the level and K becomes layer K if that layer holds the level, else the first layer holding it; F's view shows without animation. A PATH that names no level, or any other fragment, leaves the start as it is. `#svugy=&layer=1` starts at the root with layer 1 shown. The runtime reads the fragment of the document it runs in: the SVG file's URL, or the page's for an SVG inlined in HTML.
 

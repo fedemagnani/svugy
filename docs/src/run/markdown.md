@@ -35,6 +35,7 @@ Every rule below is an error unless it says warning. `svugy validate FILE` repor
 ---
 title: A web app
 subtitle: from the browser to the database and back
+view: top
 styles:
   service: (color=#3478f6)
   store: (shape=cylinder, color=#d5dcea)
@@ -45,6 +46,7 @@ styles:
 |---|---|---|
 | `title` | text | drawn top-left |
 | `subtitle` | text | drawn under the title |
+| `view` | `isometric` or `top` | the angle the diagram is seen from: `top` draws it flat, as a 2D plan; `isometric` by default |
 | `styles` | name → properties list | each name becomes usable in any properties list |
 
 ## Components

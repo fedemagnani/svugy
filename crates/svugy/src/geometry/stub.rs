@@ -2,14 +2,15 @@
 
 use std::collections::BTreeMap;
 use std::iter;
+use std::marker::PhantomData;
 
 use glam::DVec3;
 use kurbo::{Affine, Point, Size};
 use svugy_model::model::Model;
 use svugy_model::path::ElementPath;
 
+use super::camera::Camera;
 use super::obstruction::Obstructions;
-use super::projection::IsometricProjection;
 use super::{Group, PlatedLabel, StubMarker};
 use crate::layout::{LevelPlacement, LevelPlan, LevelPlans, Port, Side};
 use crate::metrics::{LabelRole, TextMeasure};
@@ -18,12 +19,12 @@ use crate::metrics::{LabelRole, TextMeasure};
 pub(super) type StubMarkersByContainer = BTreeMap<ElementPath, BTreeMap<ElementPath, StubMarker>>;
 
 impl Group {
-    /// Plate the stub markers of every nested container its plan stubs edges for, keyed by container, clear of everything its entered view draws.
-    pub(super) fn plate_stub_markers_per_container(
+    /// Plate the stub markers of every nested container its plan stubs edges for, keyed by container, clear of everything its entered view draws, as camera `C` sees them.
+    pub(super) fn plate_stub_markers_per_container<M: TextMeasure, C: Camera>(
         &self,
         model: &Model,
         plans: &LevelPlans,
-        measure: &impl TextMeasure,
+        measure: &M,
     ) -> StubMarkersByContainer {
         self.nested_interiors()
             .filter_map(|interior| {
@@ -33,7 +34,7 @@ impl Group {
                     return None;
                 }
                 let obstructions = Obstructions::around_stubs_of(self, &interior);
-                let stub_plater = StubPlater::new(model, plan, obstructions, measure);
+                let stub_plater = StubPlater::<M, C>::new(model, plan, obstructions, measure);
                 let stub_markers = stub_plater.plate_stub_markers();
                 let container = interior.container.clone();
                 Some((container, stub_markers))
@@ -59,15 +60,16 @@ impl Group {
     }
 }
 
-/// Plates one container's stub tags flat on its slab, each in its slot's stub band as near the slot as the entered view's obstructions allow.
-struct StubPlater<'a, M> {
+/// Plates one container's stub tags flat on its slab, as camera `C` sees it, each in its slot's stub band as near the slot as the entered view's obstructions allow.
+struct StubPlater<'a, M, C> {
     model: &'a Model,
     plan: &'a LevelPlan,
     obstructions: Obstructions,
     measure: &'a M,
+    camera: PhantomData<C>,
 }
 
-impl<'a, M: TextMeasure> StubPlater<'a, M> {
+impl<'a, M: TextMeasure, C: Camera> StubPlater<'a, M, C> {
     /// Plan gap between a plate and the slab borders it rests against.
     const BORDER_GAP: f64 = 1.5;
     /// Plan distance between neighbouring plate centres along a side.
@@ -85,6 +87,7 @@ impl<'a, M: TextMeasure> StubPlater<'a, M> {
             plan,
             obstructions,
             measure,
+            camera: PhantomData,
         }
     }
 
@@ -112,11 +115,11 @@ impl<'a, M: TextMeasure> StubPlater<'a, M> {
         let plate_size = upright_tag.plate.rect().size();
         let plate_centers = self.plate_centers_sliding_from(slot, plate_size);
         let candidates = plate_centers.into_iter().map(|plate_center| {
-            let plate_plane = slot.side.slab_top_plane_reading_along(plate_center);
+            let plate_plane = slot.side.slab_top_plane_reading_along::<C>(plate_center);
             upright_tag.clone().with_plane(plate_plane)
         });
         let centered_on_slot = || {
-            let slot_plane = slot.side.slab_top_plane_reading_along(slot.point);
+            let slot_plane = slot.side.slab_top_plane_reading_along::<C>(slot.point);
             upright_tag.clone().with_plane(slot_plane)
         };
         self.obstructions
@@ -159,12 +162,12 @@ impl<'a, M: TextMeasure> StubPlater<'a, M> {
 }
 
 impl Side {
-    /// Map plate coordinates onto the slab's top around plan point `center`, the text reading along this side: toward +x on north and south, toward −y on east and west.
-    fn slab_top_plane_reading_along(self, center: Point) -> Affine {
+    /// Map plate coordinates onto the slab's top around plan point `center`, as camera `C` sees it, the text reading along this side: toward +x on north and south, toward −y on east and west.
+    fn slab_top_plane_reading_along<C: Camera>(self, center: Point) -> Affine {
         let origin = DVec3::new(center.x, center.y, 0.0);
         match self {
-            Self::North | Self::South => IsometricProjection::plane(origin, DVec3::X, DVec3::Y),
-            Self::East | Self::West => IsometricProjection::plane(origin, DVec3::NEG_Y, DVec3::X),
+            Self::North | Self::South => C::plane(origin, DVec3::X, DVec3::Y),
+            Self::East | Self::West => C::plane(origin, DVec3::NEG_Y, DVec3::X),
         }
     }
 }
@@ -178,6 +181,7 @@ mod tests {
     use svugy_model::builder::ModelBuilder;
 
     use super::*;
+    use crate::geometry::camera::Isometric;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
     use crate::geometry::{NestedInterior, Scene};
     use crate::layout::{PlacedLevel, Stub};
@@ -195,7 +199,7 @@ mod tests {
 
     /// Return the plan rectangle `tag`'s plate covers on its level's floor, the slab's top.
     fn plate_plan_rect(tag: &PlatedLabel) -> Rect {
-        let floor = IsometricProjection::horizontal_plane_at(0.0);
+        let floor = Isometric::horizontal_plane_at(0.0);
         let plate_to_plan = floor.inverse() * tag.label.plane;
         let plate_rect = tag.plate.rect();
         plate_to_plan.transform_rect_bbox(plate_rect)
@@ -217,7 +221,7 @@ mod tests {
             let model = SvugyExample::model();
             let font = BundledFont::<InterFaces>::new();
             let plans = LevelPlans::lay_out(&model, &font);
-            let scene = Scene::project(&model, &plans, &font);
+            let scene = Scene::project::<Isometric>(&model, &plans, &font);
             Self { plans, scene }
         }
 
@@ -266,13 +270,13 @@ mod tests {
             let tag = &stub_marker.tag;
             let slot = plan.stubs()[external_endpoint].slot;
             let overlap_count = obstructions.count_overlapped_by(tag);
-            let stub_plater = StubPlater::new(&model, plan, obstructions, &font);
+            let stub_plater = StubPlater::<_, Isometric>::new(&model, plan, obstructions, &font);
             let plate_size = tag.plate.rect().size();
             let candidate_centers = stub_plater.plate_centers_sliding_from(slot, plate_size);
             let least_overlap_count = candidate_centers
                 .into_iter()
                 .map(|center| {
-                    let plane = slot.side.slab_top_plane_reading_along(center);
+                    let plane = slot.side.slab_top_plane_reading_along::<Isometric>(center);
                     let candidate = tag.clone().with_plane(plane);
                     stub_plater.obstructions.count_overlapped_by(&candidate)
                 })
@@ -369,14 +373,18 @@ mod tests {
         let plan = plan_with_one_stub(slot);
         let obstructions = Obstructions::around_text_of(&[]);
         let model = empty_model();
-        let mut stub_plater = StubPlater::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
+        let mut stub_plater =
+            StubPlater::<_, Isometric>::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
 
         let tag = stub_plater.place_flat_beside(slot, "browser");
 
         let plan_rect = plate_plan_rect(&tag);
         let plate_center = plan_rect.center();
         assert!((plate_center.x - 150.0).abs() < TOLERANCE);
-        assert!((plan_rect.y0 - StubPlater::<FixedAdvanceMeasure>::BORDER_GAP).abs() < TOLERANCE);
+        assert!(
+            (plan_rect.y0 - StubPlater::<FixedAdvanceMeasure, Isometric>::BORDER_GAP).abs()
+                < TOLERANCE
+        );
         assert_inside(plan.stub_band(Side::North), plan_rect, "north");
     }
 
@@ -386,7 +394,8 @@ mod tests {
         let plan = plan_with_one_stub(slot);
         let obstructions = Obstructions::around_text_of(&[]);
         let model = empty_model();
-        let mut stub_plater = StubPlater::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
+        let mut stub_plater =
+            StubPlater::<_, Isometric>::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
 
         let tag = stub_plater.place_flat_beside(slot, "browser");
 
@@ -402,12 +411,13 @@ mod tests {
         let model = empty_model();
         let unobstructed = Obstructions::around_text_of(&[]);
         let mut blocking_stub_plater =
-            StubPlater::new(&model, &plan, unobstructed, &FixedAdvanceMeasure);
+            StubPlater::<_, Isometric>::new(&model, &plan, unobstructed, &FixedAdvanceMeasure);
         let blocking_tag = blocking_stub_plater.place_flat_beside(slot, "browser");
         let mut blocking_only = Obstructions::around_text_of(&[]);
         blocking_only.record(&blocking_tag);
         let blocked = blocking_stub_plater.obstructions;
-        let mut stub_plater = StubPlater::new(&model, &plan, blocked, &FixedAdvanceMeasure);
+        let mut stub_plater =
+            StubPlater::<_, Isometric>::new(&model, &plan, blocked, &FixedAdvanceMeasure);
 
         let tag = stub_plater.place_flat_beside(slot, "browser");
 
@@ -416,7 +426,7 @@ mod tests {
         let first_clear_center = candidate_centers
             .into_iter()
             .find(|&center| {
-                let plane = Side::North.slab_top_plane_reading_along(center);
+                let plane = Side::North.slab_top_plane_reading_along::<Isometric>(center);
                 let candidate = tag.clone().with_plane(plane);
                 blocking_only.count_overlapped_by(&candidate) == 0
             })
@@ -444,7 +454,8 @@ mod tests {
         let covering_everything = PlatedLabel::new(anything.label, everywhere_plate);
         obstructions.record(&covering_everything);
         let model = empty_model();
-        let mut stub_plater = StubPlater::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
+        let mut stub_plater =
+            StubPlater::<_, Isometric>::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
 
         let tag = stub_plater.place_flat_beside(slot, "browser");
 
@@ -459,12 +470,13 @@ mod tests {
         let plan = plan_with_one_stub(slot);
         let obstructions = Obstructions::around_text_of(&[]);
         let model = empty_model();
-        let mut stub_plater = StubPlater::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
+        let mut stub_plater =
+            StubPlater::<_, Isometric>::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
 
         let tag = stub_plater.place_flat_beside(slot, "browser");
 
         let plan_rect = plate_plan_rect(&tag);
-        let border_gap = StubPlater::<FixedAdvanceMeasure>::BORDER_GAP;
+        let border_gap = StubPlater::<FixedAdvanceMeasure, Isometric>::BORDER_GAP;
         assert!((plan_rect.x0 - border_gap).abs() < TOLERANCE);
         assert_inside(plan.stub_band(Side::North), plan_rect, "north");
     }
@@ -475,7 +487,8 @@ mod tests {
         let plan = plan_with_one_stub(slot);
         let obstructions = Obstructions::around_text_of(&[]);
         let model = empty_model();
-        let mut stub_plater = StubPlater::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
+        let mut stub_plater =
+            StubPlater::<_, Isometric>::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
         let long_text = "a label far longer than the three hundred units of its side";
 
         let tag = stub_plater.place_flat_beside(slot, long_text);

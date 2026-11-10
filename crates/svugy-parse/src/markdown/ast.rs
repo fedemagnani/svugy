@@ -4,6 +4,7 @@ use std::fmt;
 use std::ops::Range;
 
 use chumsky::span::{SimpleSpan, Spanned};
+use svugy_model::model::ViewAngle;
 
 /// Span a piece of the diagram file as a byte range of its source.
 pub(crate) type Span = SimpleSpan<usize>;
@@ -13,6 +14,7 @@ pub(crate) type Span = SimpleSpan<usize>;
 pub(crate) struct Document {
     pub(crate) title: Option<String>,
     pub(crate) subtitle: Option<String>,
+    pub(crate) view: Option<ViewAngle>,
     pub(crate) description: Option<DescriptionBlock>,
     pub(crate) styles: Vec<StyleDefinition>,
     pub(crate) components: Vec<ComponentItem>,

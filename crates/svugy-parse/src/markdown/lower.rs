@@ -56,6 +56,7 @@ impl MarkdownParse {
         let Document {
             title,
             subtitle,
+            view,
             description,
             styles,
             components,
@@ -71,6 +72,9 @@ impl MarkdownParse {
         }
         if let Some(subtitle) = subtitle {
             builder = builder.with_subtitle(subtitle);
+        }
+        if let Some(view) = view {
+            builder = builder.with_view(view);
         }
         let mut lowering = Lowering::new(style_book, suffix_index, builder, diagnostics);
         if let Some(description) = description {

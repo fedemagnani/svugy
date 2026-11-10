@@ -276,8 +276,8 @@ mod tests {
     use svugy_model::path::ElementPath;
 
     use super::*;
+    use crate::geometry::camera::{Camera, Isometric};
     use crate::geometry::fixtures::FixedAdvanceMeasure;
-    use crate::geometry::projection::IsometricProjection;
     use crate::metrics::{LabelRole, TextAnchor};
 
     fn plate_at(center: Point) -> PlatedLabel {
@@ -291,7 +291,7 @@ mod tests {
 
     #[test]
     fn a_rect_inside_a_slanted_quads_bounding_box_overlaps_it_only_on_the_quad() {
-        let slanted_plane = IsometricProjection::plane(DVec3::ZERO, DVec3::X, DVec3::Y);
+        let slanted_plane = Isometric::plane(DVec3::ZERO, DVec3::X, DVec3::Y);
         let line_box = Rect::new(0.0, 0.0, 200.0, 10.0);
         let slanted = ScreenPolygon::mapped_rect(line_box, slanted_plane);
         let small_size = Size::new(4.0, 4.0);
@@ -336,7 +336,7 @@ mod tests {
     #[test]
     fn a_plate_laid_on_a_plane_obstructs_along_its_plane_not_its_bounding_box() {
         let mut obstructions = Obstructions::around_text_of(&[]);
-        let ground = IsometricProjection::horizontal_plane_at(0.0);
+        let ground = Isometric::horizontal_plane_at(0.0);
         let flat = plate_at(Point::ORIGIN).with_plane(ground);
         obstructions.record(&flat);
         let flat_bounds = flat.bounds();

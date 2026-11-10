@@ -1,63 +1,63 @@
 ---
 source: crates/svugy-parse/tests/markdown.rs
-assertion_line: 40
 expression: model_json
 ---
 {
   "title": "Order desk",
   "subtitle": "How an order becomes a trade, from click to ledger.",
+  "view": "top",
   "description": "Orders arrive from the **client** and settle in [the store](#ledger.store).\n\n- the desk matches them\n- the ledger records them",
   "elements": {
     "client": {
       "label": "client",
       "description": "Sends orders over [FIX](https://www.fixtrading.org) to [the API](#desk.api).",
       "span": {
-        "start": 628,
-        "end": 634
+        "start": 644,
+        "end": 650
       }
     },
     "desk": {
       "label": "Order desk",
       "description": "Matches orders *during* market hours.\n\n> Closed on weekends.",
       "span": {
-        "start": 734,
-        "end": 750
+        "start": 750,
+        "end": 766
       }
     },
     "desk.api": {
       "label": "api",
       "span": {
-        "start": 845,
-        "end": 848
+        "start": 861,
+        "end": 864
       }
     },
     "desk.engine": {
       "label": "Matching engine",
       "span": {
-        "start": 853,
-        "end": 878
+        "start": 869,
+        "end": 894
       }
     },
     "desk.engine.book": {
       "label": "book",
       "description": "Price levels, best first:\n\n```\n[bid](#bid) | ask\n```",
       "span": {
-        "start": 885,
-        "end": 889
+        "start": 901,
+        "end": 905
       }
     },
     "ledger": {
       "label": "Ledger (append-only)",
       "span": {
-        "start": 1003,
-        "end": 1033
+        "start": 1019,
+        "end": 1049
       }
     },
     "ledger.store": {
       "label": "store",
       "span": {
-        "start": 1038,
-        "end": 1043
+        "start": 1054,
+        "end": 1059
       }
     }
   },
