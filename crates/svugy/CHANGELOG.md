@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5](https://github.com/fedemagnani/svugy/compare/svugy-v0.1.4...svugy-v0.1.5) - 2026-11-10
+
+### Other
+
+- sketch theme ([#29](https://github.com/fedemagnani/svugy/pull/29))
+
 ## [0.1.4](https://github.com/fedemagnani/svugy/compare/svugy-v0.1.3...svugy-v0.1.4) - 2026-11-09
 
 ### Other
