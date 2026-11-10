@@ -4,7 +4,7 @@ resolver = "3"
 
 [workspace.package]
 edition = "2024"
-version = "0.1.5"
+version = "0.1.6"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/fedemagnani/svugy"
 
@@ -14,10 +14,10 @@ self_named_module_files = "deny"
 unnecessary_lazy_evaluations = "allow"
 
 [workspace.dependencies]
-svugy-model = { path = "crates/svugy-model", version = "0.1.5" }
-svugy-parse = { path = "crates/svugy-parse", version = "0.1.5" }
-svugy = { path = "crates/svugy", version = "0.1.5" }
-svugy-dagre = { path = "crates/svugy-dagre", version = "0.1.5" }
+svugy-model = { path = "crates/svugy-model", version = "0.1.6" }
+svugy-parse = { path = "crates/svugy-parse", version = "0.1.6" }
+svugy = { path = "crates/svugy", version = "0.1.6" }
+svugy-dagre = { path = "crates/svugy-dagre", version = "0.1.6" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

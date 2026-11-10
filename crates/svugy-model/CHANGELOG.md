@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6](https://github.com/fedemagnani/svugy/compare/svugy-model-v0.1.5...svugy-model-v0.1.6) - 2026-11-10
+
+### Other
+
+- top view ([#31](https://github.com/fedemagnani/svugy/pull/31))
+
 ## [0.1.0](https://github.com/fedemagnani/svugy/releases/tag/svugy-model-v0.1.0) - 2026-11-07
 
 ### Added
