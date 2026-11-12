@@ -97,6 +97,59 @@ fn a_broken_model_exits_1_with_its_error_code_in_the_json_report() {
 }
 
 #[test]
+fn only_validate_reads_the_tree_and_fails_on_each_code_reference_it_no_longer_backs() {
+    let diagram_argument = fixture("code_references.md");
+    let source = fs::read_to_string(&diagram_argument).expect("the fixture reads");
+    let svg_argument = scratch_file("code_references.svg");
+
+    let validate_run = run_svugy(&["validate", &diagram_argument, "--format", "json"]);
+    let render_run = run_svugy(&["render", &diagram_argument, "-o", &svg_argument]);
+
+    let json_report = parse_json_report(&validate_run.stdout);
+    let codes = related_codes(&json_report);
+    let missing_file_message = json_report["related"][0]["message"]
+        .as_str()
+        .unwrap_or_default();
+    let unspelled_symbol_message = json_report["related"][1]["message"]
+        .as_str()
+        .unwrap_or_default();
+    let missing_file_label_span = &json_report["related"][0]["labels"][0]["span"];
+    let missing_file_value = "crates/svugy-cli/src/removed.rs";
+    let missing_file_offset = source
+        .find(missing_file_value)
+        .expect("the fixture names the removed file");
+    assert_eq!(validate_run.status.code(), Some(1));
+    assert_eq!(
+        codes,
+        ["svugy::stale_code_reference", "svugy::stale_code_reference"]
+    );
+    assert!(
+        missing_file_message.contains("`gone`"),
+        "{missing_file_message}"
+    );
+    assert!(
+        missing_file_message.contains("is not a readable file"),
+        "{missing_file_message}"
+    );
+    assert!(
+        unspelled_symbol_message.contains("`renamed`"),
+        "{unspelled_symbol_message}"
+    );
+    assert!(
+        unspelled_symbol_message.contains("does not spell"),
+        "{unspelled_symbol_message}"
+    );
+    assert_eq!(missing_file_label_span["offset"], missing_file_offset);
+    assert_eq!(missing_file_label_span["length"], missing_file_value.len());
+    assert_eq!(
+        render_run.status.code(),
+        Some(0),
+        "render must never read the tree: {}",
+        stderr_text(&render_run)
+    );
+}
+
+#[test]
 fn a_d2_syntax_error_reports_its_byte_offset_line_column_and_source_name() {
     let d2_argument = fixture("syntax_error.d2");
 

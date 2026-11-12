@@ -37,6 +37,7 @@ pub(crate) enum PropertyKey {
     Layout,
     Columns,
     Link,
+    Code,
     Traveler,
     Target,
     #[strum(disabled)]
@@ -63,6 +64,7 @@ pub(crate) enum PropertyValue {
     Layout(PlacementHint),
     Columns(u32),
     Link(Spanned<String>),
+    Code(Spanned<String>),
     Traveler(Traveler),
     Target(Reference),
     Meta { name: String, value: String },
@@ -114,6 +116,13 @@ impl PropertyKey {
                 };
                 PropertyValue::Link(spanned_link)
             }),
+            Self::Code => value.read_text().map(|code| {
+                let spanned_code = Spanned {
+                    inner: code,
+                    span: value_span,
+                };
+                PropertyValue::Code(spanned_code)
+            }),
             Self::Traveler => value.read_keyword(self).map(PropertyValue::Traveler),
             Self::Target => value.read_text().map(|target| {
                 let reference = Reference::from_dotted(&target, value_span);
@@ -141,6 +150,7 @@ impl PropertyValue {
             Self::Layout(..) => PropertyKey::Layout,
             Self::Columns(..) => PropertyKey::Columns,
             Self::Link(..) => PropertyKey::Link,
+            Self::Code(..) => PropertyKey::Code,
             Self::Traveler(..) => PropertyKey::Traveler,
             Self::Target(..) => PropertyKey::Target,
             Self::Meta { name, .. } => PropertyKey::Meta(name.clone()),

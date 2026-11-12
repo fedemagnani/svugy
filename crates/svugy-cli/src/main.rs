@@ -7,6 +7,7 @@ mod input;
 mod output;
 mod report;
 mod skill;
+mod tree;
 mod view;
 
 use std::process::ExitCode;
@@ -21,6 +22,7 @@ use crate::input::{LoadedInput, ModelInput};
 use crate::output::{ModelFile, OutputTarget};
 use crate::report::InputReport;
 use crate::skill::SkillCommand;
+use crate::tree::SourceTree;
 use crate::view::{LIVE_VIEW_HELP, ViewCommand};
 
 /// Point a new user at the example, then explain the input formats, where diagnostics go and the exit codes, after the top-level help.
@@ -36,13 +38,21 @@ always do.
 Exit codes, identical for every subcommand:
   0  success, warnings included
   1  the input has errors: Markdown syntax, d2 syntax, malformed JSON or model
-     validation; or import -o FILE.md meets a model Markdown cannot say
+     validation; or validate finds a stale code reference; or import -o FILE.md
+     meets a model Markdown cannot say
   2  usage error: unknown flag, missing argument, INPUT not .md, .d2 or .json
   3  I/O failure: a file cannot be read, written or opened, or view cannot
      listen on its port";
 
-/// Explain the validate report's formats and its JSON report's fields, after validate's help.
+/// Explain the code reference check, the validate report's formats and its JSON report's fields, after validate's help.
 const VALIDATE_REPORT_HELP: &str = "\
+Code references:
+  Each component's code=FILE#SYMBOL is checked against the files on disk, FILE
+  relative to the git checkout holding INPUT (else INPUT's directory). FILE
+  must exist, and it must spell each `::`- or `.`-separated segment of SYMBOL
+  as a whole identifier. A miss is a svugy::stale_code_reference error. Only
+  validate runs this check; render, view and import never read the tree.
+
 Formats:
   human  miette's graphical report on stderr, with source snippets for .md and
          d2 input
@@ -53,7 +63,8 @@ The json report is miette's JSON report of the whole input:
   code      \"svugy::input_report\"
   severity  \"error\" if any diagnostic is one, else \"warning\", or \"advice\" when clean
   related   one object per diagnostic: Markdown errors, d2 syntax errors then
-            d2 subset warnings, or the malformed-JSON error; then model problems
+            d2 subset warnings, or the malformed-JSON error; then model
+            problems; then stale code references
 Each related object:
   message   what is wrong; a Markdown error ends with its did-you-mean
   code      stable diagnostic code, e.g. \"svugy::markdown\", \"svugy::d2::syntax\",
@@ -87,7 +98,7 @@ enum Command {
     /// Serve the interactive SVG in the default browser, reloading it whenever INPUT changes.
     #[command(after_long_help = LIVE_VIEW_HELP)]
     View(ViewCommand),
-    /// Validate a model and print every diagnostic, errors and warnings alike.
+    /// Validate a model, check its code references against the source tree, and print every diagnostic, errors and warnings alike.
     #[command(after_long_help = VALIDATE_REPORT_HELP)]
     Validate(ValidateCommand),
     /// Import a diagram as Markdown or model JSON, chosen by the output's extension.
@@ -182,12 +193,16 @@ impl RenderCommand {
 }
 
 impl ValidateCommand {
-    /// Run `validate`: print the input's report in the format, failing when it holds an error.
+    /// Run `validate`: check an admitted model's code references against the source tree, print the input's report in the format, failing when it holds an error.
     fn run(self) -> Result<(), Failure> {
-        let LoadedInput {
-            model: _admitted_model,
-            report,
-        } = self.input.load()?;
+        let LoadedInput { model, report } = self.input.load()?;
+        let input_path = self.input.path();
+        let source_tree = SourceTree::holding(input_path);
+        let stale_code_references = match &model {
+            Some(admitted_model) => source_tree.find_stale_code_references(admitted_model),
+            None => Vec::new(),
+        };
+        let report = report.with_stale_code_references(stale_code_references);
         self.format.print(&report)?;
         let has_errors = report.has_errors();
         if has_errors {

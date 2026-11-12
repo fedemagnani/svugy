@@ -12,7 +12,7 @@ use super::RuntimeContract;
 use crate::render::writer::url::SafeUrl;
 use crate::render::writer::{Attributes, SvgWriter};
 
-/// Annotates element, edge and stub groups with the contract, reading labels, captions, metadata, links and descriptions from the source model, and closed containers and merged edges from the layer's disclosure.
+/// Annotates element, edge and stub groups with the contract, reading labels, captions, code references, metadata, links and descriptions from the source model, and closed containers and merged edges from the layer's disclosure.
 pub(crate) struct ContractAnnotator<'m> {
     model: &'m Model,
     disclosure: Option<&'m DisclosedModel>,
@@ -43,6 +43,8 @@ struct ElementDetails<'a> {
     label: &'a str,
     #[serde(skip_serializing_if = "str::is_empty")]
     caption: &'a str,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    code: &'a str,
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     metadata: &'a BTreeMap<String, String>,
     #[serde(skip_serializing_if = "str::is_empty")]
@@ -372,16 +374,19 @@ fn write_details_carrier(writer: &mut SvgWriter, details: &str) {
 }
 
 impl<'a> ElementDetails<'a> {
-    /// Describe `element`, held at `path`, by its label, caption, metadata and the `description` carried for it.
+    /// Describe `element`, held at `path`, by its label, caption, code, metadata and the `description` carried for it.
     fn of(path: &'a ElementPath, element: &'a Element, description: &'a str) -> Self {
         let label = element.label();
         let authored_caption = element.caption();
         let caption = authored_caption.unwrap_or_default();
+        let authored_code = element.code();
+        let code = authored_code.unwrap_or_default();
         let metadata = element.metadata();
         Self {
             path,
             label,
             caption,
+            code,
             metadata,
             description,
         }
@@ -394,6 +399,7 @@ impl<'a> ElementDetails<'a> {
             path,
             label: "",
             caption: "",
+            code: "",
             metadata: &NO_METADATA,
             description: "",
         }

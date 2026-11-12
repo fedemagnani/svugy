@@ -144,10 +144,12 @@ A link naming nothing, or several things, is a warning and shows as plain text.
 | `layout` | `layered` (default), `grid`, `row`, `column` | how a container places its children; without it, children with no edges among them line up facing the container's edges, near the neighbours they connect to |
 | `columns` | integer > 0 | column count, required by `layout=grid` |
 | `link` | component REF or URL | a click goes to that component, or opens the URL |
+| `code` | `FILE` or `FILE#SYMBOL` | a `code: value` line in the hover panel; `svugy validate` checks it against the repository |
 | `meta.NAME` | text | a `NAME: value` line in the hover panel |
 
 - A colour is `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, a CSS colour name or `transparent`.
 - A `link` holding `:`, `/`, `?` or `#` is a URL; anything else is a REF. Write a relative page as `./guide.html`.
+- A `code` FILE is relative to the root of the git checkout holding the diagram (else the diagram's directory): no leading `/`, no `..`. SYMBOL is `NAME`, `Type::NAME` or `Type.NAME`. `svugy validate` fails when FILE is missing or does not spell each SYMBOL segment as a whole identifier; `render` never reads the repository.
 - Warnings: `shape` or `height` on a container (always a slab), `layout` on a leaf.
 
 ### On an edge

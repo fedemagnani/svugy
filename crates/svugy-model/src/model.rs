@@ -192,6 +192,10 @@ pub struct Element {
     link: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     link_span: Option<ByteRange>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    code: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    code_span: Option<ByteRange>,
     #[serde(
         default,
         skip_serializing_if = "BTreeMap::is_empty",
@@ -219,6 +223,8 @@ impl Element {
             position: None,
             link: None,
             link_span: None,
+            code: None,
+            code_span: None,
             metadata: BTreeMap::new(),
             span: None,
             moved_badge: MovedElementBadge,
@@ -290,6 +296,19 @@ impl Element {
         self
     }
 
+    /// Point the element at a place in the source tree, written `FILE` or `FILE#SYMBOL` relative to the repository root; validation checks its shape.
+    pub fn with_code(mut self, code: impl Into<String>) -> Self {
+        let code = code.into();
+        self.code = Some(code);
+        self
+    }
+
+    /// Record where in an imported source this element's code value was written.
+    pub fn with_code_span(mut self, code_span: ByteRange) -> Self {
+        self.code_span = Some(code_span);
+        self
+    }
+
     /// Record a free-form metadata entry, carried into the rendered element's annotations.
     pub fn with_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         let key = key.into();
@@ -352,6 +371,16 @@ impl Element {
     /// Return where in an imported source the link value was written, as a byte range.
     pub fn link_span(&self) -> Option<ByteRange> {
         self.link_span
+    }
+
+    /// Return the unchecked `FILE#SYMBOL` place in the source tree the element points at, if any.
+    pub fn code(&self) -> Option<&str> {
+        self.code.as_deref()
+    }
+
+    /// Return where in an imported source the code value was written, as a byte range.
+    pub fn code_span(&self) -> Option<ByteRange> {
+        self.code_span
     }
 
     /// Return the element's metadata entries, keyed by name.
