@@ -13,8 +13,8 @@ expression: model_json
         "fill": "#d5dcea80"
       },
       "span": {
-        "start": 410,
-        "end": 515
+        "start": 457,
+        "end": 562
       }
     },
     "gateway": {
@@ -34,13 +34,18 @@ expression: model_json
         "start": 279,
         "end": 298
       },
+      "code": "crates/gateway/src/lib.rs#Gateway::route",
+      "code_span": {
+        "start": 305,
+        "end": 345
+      },
       "metadata": {
         "owner": "platform team",
         "tier": "1"
       },
       "span": {
         "start": 167,
-        "end": 340
+        "end": 387
       }
     },
     "queue": {
@@ -55,8 +60,8 @@ expression: model_json
         "y": 0.0
       },
       "span": {
-        "start": 343,
-        "end": 407
+        "start": 390,
+        "end": 454
       }
     },
     "services": {
@@ -68,41 +73,41 @@ expression: model_json
         }
       },
       "span": {
-        "start": 518,
-        "end": 573
+        "start": 565,
+        "end": 620
       }
     },
     "services.a": {
       "label": "a",
       "span": {
-        "start": 578,
-        "end": 579
+        "start": 625,
+        "end": 626
       }
     },
     "services.b": {
       "label": "b",
       "link": "queue",
       "link_span": {
-        "start": 592,
-        "end": 597
+        "start": 639,
+        "end": 644
       },
       "span": {
-        "start": 584,
-        "end": 598
+        "start": 631,
+        "end": 645
       }
     },
     "services.c": {
       "label": "c",
       "span": {
-        "start": 603,
-        "end": 604
+        "start": 650,
+        "end": 651
       }
     },
     "services.d": {
       "label": "d",
       "span": {
-        "start": 609,
-        "end": 610
+        "start": 656,
+        "end": 657
       }
     }
   },

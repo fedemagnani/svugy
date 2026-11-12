@@ -261,6 +261,10 @@ impl Lowering {
                     None => element,
                 }
             }
+            PropertyValue::Code(code) => {
+                let code_range = ByteRange::new(code.span.start, code.span.end);
+                element.with_code(code.inner).with_code_span(code_range)
+            }
             PropertyValue::Meta { name, value } => element.with_metadata(name, value),
             PropertyValue::Unreadable(PropertyKey::Layout | PropertyKey::Columns) => {
                 draft.has_unreadable_placement = true;
@@ -384,6 +388,7 @@ impl Lowering {
                 | PropertyValue::Layout(..)
                 | PropertyValue::Columns(..)
                 | PropertyValue::Link(..)
+                | PropertyValue::Code(..)
                 | PropertyValue::Target(..)
                 | PropertyValue::Meta { .. }) => {
                     let key = edge_inapplicable.key();
@@ -508,6 +513,7 @@ impl Lowering {
                 | PropertyValue::Layout(..)
                 | PropertyValue::Columns(..)
                 | PropertyValue::Link(..)
+                | PropertyValue::Code(..)
                 | PropertyValue::Traveler(..)
                 | PropertyValue::Meta { .. }) => {
                     let key = key_row_inapplicable.key();

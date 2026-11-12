@@ -538,7 +538,10 @@ fn every_problem_kind_reaches_the_machine_readable_report_with_its_severity() {
         "quoter",
         Element::new("again").with_span(ByteRange::new(20, 26)),
     );
-    let _db = builder.add_top_level("db", Element::new("db"));
+    let db_element = Element::new("db")
+        .with_code("../store/db.rs#Db")
+        .with_code_span(ByteRange::new(80, 97));
+    let _db = builder.add_top_level("db", db_element);
     let pinned_nowhere = Position {
         x: f64::INFINITY,
         y: 0.0,

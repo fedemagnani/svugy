@@ -5,6 +5,7 @@ use std::fmt;
 use miette::{Diagnostic, Severity, SourceSpan};
 use thiserror::Error;
 
+use crate::code::MalformedCodeReason;
 use crate::description::DescriptionOwner;
 use crate::legend::DashKey;
 use crate::model::{EdgeId, MAX_MAGNITUDE, PlacementHint, Position, Shape};
@@ -47,6 +48,9 @@ pub enum Problem {
     #[error(transparent)]
     #[diagnostic(transparent)]
     UnresolvedLink(UnresolvedLink),
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    MalformedCodeReference(MalformedCodeReference),
     #[error(transparent)]
     #[diagnostic(transparent)]
     UnresolvedDescriptionTarget(UnresolvedDescriptionTarget),
@@ -255,6 +259,18 @@ pub struct UnresolvedLink {
     #[help]
     pub suggestion: Option<Suggestion<ElementPath>>,
     #[label("linked here")]
+    pub span: Option<SourceSpan>,
+}
+
+/// Report a `code` value that names no place in the repository, so no tree check could resolve it.
+#[derive(Debug, Error, Diagnostic)]
+#[error("element `{element}` points at code `{code}`, but {reason}")]
+#[diagnostic(code(svugy::malformed_code_reference))]
+pub struct MalformedCodeReference {
+    pub element: ElementPath,
+    pub code: String,
+    pub reason: MalformedCodeReason,
+    #[label("pointed here")]
     pub span: Option<SourceSpan>,
 }
 

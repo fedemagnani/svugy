@@ -6,7 +6,7 @@ expression: pretty
   "causes": [],
   "code": "svugy::model_report",
   "labels": [],
-  "message": "the model has 10 error(s) and 7 warning(s)",
+  "message": "the model has 11 error(s) and 7 warning(s)",
   "related": [
     {
       "causes": [],
@@ -194,6 +194,22 @@ expression: pretty
       "message": "element `desk.quoter` links to `desk.quoterr`, which is not an element; write `./desk.quoterr` if it is a relative URL",
       "related": [],
       "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::malformed_code_reference",
+      "labels": [
+        {
+          "label": "pointed here",
+          "span": {
+            "length": 17,
+            "offset": 80
+          }
+        }
+      ],
+      "message": "element `db` points at code `../store/db.rs#Db`, but its file climbs out with `..`; write it relative to the repository root",
+      "related": [],
+      "severity": "error"
     },
     {
       "causes": [],

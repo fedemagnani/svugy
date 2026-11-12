@@ -150,6 +150,8 @@ pub enum TextField {
     Caption,
     #[strum(to_string = "link")]
     Link,
+    #[strum(to_string = "code")]
+    Code,
     #[strum(to_string = "metadata value")]
     MetadataValue,
     #[strum(to_string = "label")]
@@ -343,6 +345,12 @@ impl<'a> MarkdownPrinter<'a> {
             let link_spelling = self.spell_link(raw_link);
             let link_target = Self::spelling_or_push_reason(link_spelling, reasons);
             let property = format!("link={link_target}");
+            properties.push(property);
+        }
+        if let Some(code) = element.code() {
+            let code_spelling = Self::spell_value(code, TextField::Code);
+            let code_value = Self::spelling_or_push_reason(code_spelling, reasons);
+            let property = format!("code={code_value}");
             properties.push(property);
         }
         for (name, value) in element.metadata() {

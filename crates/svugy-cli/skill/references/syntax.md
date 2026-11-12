@@ -16,6 +16,7 @@ Rules SKILL.md's example and rules leave out.
 - Path: IDs from the top, dot-joined: `shop.api`.
 - A container ignores `shape` and `height`, with a warning.
 - `link=VALUE`: a value holding `:`, `/`, `?` or `#` is a URL; anything else is a REF. Write a relative page as `./guide.html`; bare `guide.html` is read as a REF.
+- `code=FILE` or `code=FILE#SYMBOL`: FILE relative to the root of the git checkout holding the diagram, no leading `/`, no `..`; SYMBOL is `NAME`, `Type::NAME` or `Type.NAME`. `svugy validate` errors when FILE is missing or does not spell each SYMBOL segment as a whole identifier. Use it instead of `meta.code`, which nothing checks.
 - `meta.NAME=VALUE`: any number of distinct names.
 - `position=X,Y` (or `X;Y`): top-left corner relative to the parent's interior. Prefer `layout=row|column|grid` on the parent.
 

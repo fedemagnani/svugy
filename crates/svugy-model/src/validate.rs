@@ -5,6 +5,7 @@ use std::fmt;
 
 use miette::{Diagnostic, JSONReportHandler, Severity, SourceSpan};
 
+use crate::code::CodeReference;
 use crate::description::{DescriptionOwner, DescriptionTarget, TargetLink};
 use crate::legend::{DashKey, Legend};
 use crate::link::Link;
@@ -13,9 +14,10 @@ use crate::path::ElementPath;
 use crate::problem::{
     AncestorDescendantEdge, BadgeEdgeOnContainer, ChildPlacementWithoutChildren,
     DanglingEdgeEndpoint, DuplicateElement, EmptyGridHint, ErrorSeverity, IgnoredContainerHeight,
-    IgnoredContainerShape, ImpossibleHeight, LegendKey, MalformedLegendDash, MismatchedStyleValue,
-    MissingAncestor, Problem, StyleOwner, Suggestion, UnboundedPosition, UncountablePackedTracks,
-    UndrawnLegendKey, UnknownStyleKey, UnresolvedDescriptionTarget, UnresolvedLink,
+    IgnoredContainerShape, ImpossibleHeight, LegendKey, MalformedCodeReference,
+    MalformedLegendDash, MismatchedStyleValue, MissingAncestor, Problem, StyleOwner, Suggestion,
+    UnboundedPosition, UncountablePackedTracks, UndrawnLegendKey, UnknownStyleKey,
+    UnresolvedDescriptionTarget, UnresolvedLink,
 };
 use crate::style::AnyStyleKey;
 
@@ -94,6 +96,7 @@ impl UncheckedModel {
         let ignored_container_bodies = model.find_ignored_container_bodies();
         let badge_edges_on_containers = model.find_badge_edges_on_containers();
         let unresolved_links = model.find_unresolved_links();
+        let malformed_code_references = model.find_malformed_code_references();
         let unresolved_description_targets = model.find_unresolved_description_targets();
         let legend_problems = model.find_legend_problems();
         let problems = duplicate_elements
@@ -108,6 +111,7 @@ impl UncheckedModel {
             .chain(ignored_container_bodies)
             .chain(badge_edges_on_containers)
             .chain(unresolved_links)
+            .chain(malformed_code_references)
             .chain(unresolved_description_targets)
             .chain(legend_problems)
             .collect();
@@ -391,6 +395,35 @@ impl Model {
             span,
         };
         let problem = Problem::UnresolvedLink(unresolved_link);
+        Some(problem)
+    }
+
+    /// Report each `code` value that names no place in the repository, in path order.
+    fn find_malformed_code_references(&self) -> Vec<Problem> {
+        let elements = self.elements().iter();
+        let problems =
+            elements.filter_map(|(path, element)| Self::check_code_is_well_formed(path, element));
+        problems.collect()
+    }
+
+    /// Check that the element's code value, if any, parses as a repo-relative `FILE` or `FILE#SYMBOL`.
+    fn check_code_is_well_formed(path: &ElementPath, element: &Element) -> Option<Problem> {
+        let raw_code = element.code()?;
+        let parsed_code = CodeReference::parse(raw_code);
+        let Err(reason) = parsed_code else {
+            return None;
+        };
+        let code_span = element.code_span().map(SourceSpan::from);
+        let span = code_span.or_else(|| element.source_span());
+        let malformed_raw_code = raw_code.to_owned();
+        let pointing_path = path.clone();
+        let malformed_code_reference = MalformedCodeReference {
+            element: pointing_path,
+            code: malformed_raw_code,
+            reason,
+            span,
+        };
+        let problem = Problem::MalformedCodeReference(malformed_code_reference);
         Some(problem)
     }
 

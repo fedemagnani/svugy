@@ -3564,12 +3564,14 @@
       const captionLine = DetailLines.line('body', details.caption);
       const hasLabel = details.label !== undefined;
       const pathLine = hasLabel ? DetailLines.line('body', details.path) : null;
+      const hasCode = typeof details.code === 'string';
+      const codeLine = hasCode ? DetailLines.line('body', `code: ${details.code}`) : null;
       const metadata = DetailLines.isPlainObject(details.metadata) ? details.metadata : {};
       const metadataLines = Object.entries(metadata).map(([key, value]) => {
         const valueText = typeof value === 'string' ? value : JSON.stringify(value);
         return DetailLines.line('body', `${key}: ${valueText}`);
       });
-      return [titleLine, captionLine, pathLine, ...metadataLines];
+      return [titleLine, captionLine, pathLine, codeLine, ...metadataLines];
     },
 
     ofEdge(details) {

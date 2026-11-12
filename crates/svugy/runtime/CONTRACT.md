@@ -85,7 +85,7 @@ Every element, edge and stub group starts with `<title>LABEL</title><desc data-s
 
 One JSON object per group, plus one for the diagram, empty keys omitted:
 
-- element: `{"kind":"element","path":…,"label":…,"caption":…,"metadata":{…},"description":…}`
+- element: `{"kind":"element","path":…,"label":…,"caption":…,"code":…,"metadata":{…},"description":…}`
 - edge: `{"kind":"edge","edge":…,"from":…,"to":…,"label":…,"description":…}`
 - lifted: `{"kind":"lifted","from":…,"to":…,"label":…,"edges":[edge objects]}`
 - stub: `{"kind":"stub","target":…,"edges":[edge or lifted objects]}`

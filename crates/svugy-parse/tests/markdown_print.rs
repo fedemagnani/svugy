@@ -154,7 +154,7 @@ fn print_json_model(json: &str) -> Result<String, String> {
     printed.map_err(|unprintable| unprintable.to_string())
 }
 
-/// Re-print model JSON without the `span` and `link_span` of each element and edge, the provenance a reprint moves.
+/// Re-print model JSON without the `span`, `link_span` and `code_span` of each element and edge, the provenance a reprint moves.
 fn without_spans(model_json: &str) -> String {
     let mut model: Value = serde_json::from_str(model_json).expect("a model saves as JSON");
     let elements = model["elements"]
@@ -178,4 +178,5 @@ fn remove_span(record: &mut Value) {
     };
     fields.remove("span");
     fields.remove("link_span");
+    fields.remove("code_span");
 }

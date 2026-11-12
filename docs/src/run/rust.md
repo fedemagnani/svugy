@@ -24,7 +24,7 @@ Each Markdown property is one `with_*` call:
 | Markdown | Rust |
 |---|---|
 | `: DISPLAY NAME` | `Element::new(label)` |
-| `caption`, `height`, `shape`, `position`, `link` | `with_caption`, `with_height`, `with_shape`, `with_position`, `with_link` |
+| `caption`, `height`, `shape`, `position`, `link`, `code` | `with_caption`, `with_height`, `with_shape`, `with_position`, `with_link`, `with_code` |
 | `meta.NAME` | `with_metadata(name, value)` |
 | `layout`, `columns` | `with_child_placement(PlacementHint::…)` |
 | `color`, `stroke` | `with_style("fill", …)`, `with_style("stroke", …)` |

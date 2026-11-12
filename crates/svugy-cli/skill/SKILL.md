@@ -80,6 +80,7 @@ Checkout turns a cart into a charged card.
 | `columns` | container | integer > 0; requires `layout=grid` |
 | `traveler` | edge | `dot` (default), `envelope`, `parcel`, `document`, `key` |
 | `link` | component | a URL (holds `:`, `/`, `?` or `#`) or a component REF; opened on click |
+| `code` | component | `FILE#SYMBOL`, FILE relative to the repository root; `svugy validate` fails when the file or symbol is gone |
 | `meta.NAME` | component | text shown as `NAME: value` in the detail panel |
 
 ## Rules

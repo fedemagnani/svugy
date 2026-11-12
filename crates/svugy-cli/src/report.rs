@@ -10,16 +10,19 @@ use serde_json::Value;
 use svugy_model::problem::ErrorSeverity;
 use svugy_model::validate::ModelReport;
 
+use crate::tree::StaleCodeReference;
+
 /// Box an importer diagnostic so diagnostics of every importer stage share one list.
 pub type BoxedDiagnostic = Box<dyn Diagnostic + Send + Sync>;
 
-/// Collect an input's importer diagnostics and model problems into one report whose severity is its worst diagnostic's.
+/// Collect an input's importer diagnostics, model problems and stale code references into one report whose severity is its worst diagnostic's.
 #[derive(Debug)]
 pub struct InputReport {
     input_name: String,
     importer_diagnostics: Vec<BoxedDiagnostic>,
     source_code: Option<NamedSource<String>>,
     model_report: Option<ModelReport>,
+    stale_code_references: Vec<StaleCodeReference>,
 }
 
 impl InputReport {
@@ -30,6 +33,7 @@ impl InputReport {
             importer_diagnostics,
             source_code: None,
             model_report: None,
+            stale_code_references: Vec::new(),
         }
     }
 
@@ -42,6 +46,15 @@ impl InputReport {
     /// Set the model report whose problems follow the importer diagnostics.
     pub fn with_model_report(mut self, model_report: ModelReport) -> Self {
         self.model_report = Some(model_report);
+        self
+    }
+
+    /// Set the code references the source tree no longer backs, which follow the model problems.
+    pub fn with_stale_code_references(
+        mut self,
+        stale_code_references: Vec<StaleCodeReference>,
+    ) -> Self {
+        self.stale_code_references = stale_code_references;
         self
     }
 
@@ -119,7 +132,7 @@ impl InputReport {
         self.diagnostics().any(|diagnostic| diagnostic.is_error())
     }
 
-    /// List every diagnostic: the importer's first, then the model's problems.
+    /// List every diagnostic: the importer's first, then the model's problems, then the stale code references.
     fn diagnostics(&self) -> impl Iterator<Item = &dyn Diagnostic> {
         let importer_diagnostics = self
             .importer_diagnostics
@@ -130,7 +143,13 @@ impl InputReport {
             .iter()
             .flat_map(ModelReport::problems)
             .map(|problem| problem as &dyn Diagnostic);
-        importer_diagnostics.chain(model_problems)
+        let stale_code_references = self
+            .stale_code_references
+            .iter()
+            .map(|stale_code_reference| stale_code_reference as &dyn Diagnostic);
+        importer_diagnostics
+            .chain(model_problems)
+            .chain(stale_code_references)
     }
 }
 
