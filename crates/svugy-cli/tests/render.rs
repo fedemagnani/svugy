@@ -1,4 +1,4 @@
-//! Prove `svugy render` writes the interactive or static SVG in either theme from JSON and d2 input, and exits with the documented codes.
+//! Prove `svugy render` writes the interactive or static SVG in either theme, or its PNG per layer, from JSON and d2 input, and exits with the documented codes.
 
 mod support;
 
@@ -15,6 +15,8 @@ const SVUGY_EXAMPLE_JSON: &str = concat!(
 const SCRIPT_OPENING: &str = "<script>";
 
 const HACHURE_ATTRIBUTE: &str = " data-svugy-hachure=";
+
+const PNG_SIGNATURE: &[u8] = b"\x89PNG\r\n\x1a\n";
 
 fn stdout_text(run: &Output) -> String {
     let stdout = run.stdout.clone();
@@ -97,6 +99,53 @@ fn render_writes_the_same_svg_to_stdout_and_to_the_output_file() {
     assert!(stdout_run.stdout.starts_with(b"<svg "));
     assert!(file_run.stdout.is_empty());
     assert_eq!(written_svg, stdout_run.stdout);
+}
+
+#[test]
+fn all_depths_writes_one_png_per_layer_the_deepest_being_the_whole_png() {
+    let d2_argument = fixture("nesting.d2");
+    let whole_png_argument = scratch_file("nesting.png");
+    let layers_png_argument = scratch_file("nesting-layers.png");
+
+    let whole_run = run_svugy(&["render", &d2_argument, "--png", "-o", &whole_png_argument]);
+    let layers_run = run_svugy(&[
+        "render",
+        &d2_argument,
+        "--png",
+        "--all-depths",
+        "-o",
+        &layers_png_argument,
+    ]);
+    let top_level_run = run_svugy(&["render", &d2_argument, "--png", "--depth", "0"]);
+
+    assert!(whole_run.status.success());
+    assert!(layers_run.status.success());
+    let whole_png = fs::read(&whole_png_argument).expect("--png wrote the output file");
+    let top_level_png = fs::read(scratch_file("nesting-layers-depth-0.png")).expect("layer 0");
+    let deepest_png = fs::read(scratch_file("nesting-layers-depth-2.png")).expect("layer 2");
+    let is_past_deepest_layer_written = fs::exists(scratch_file("nesting-layers-depth-3.png"));
+    assert!(whole_png.starts_with(PNG_SIGNATURE));
+    assert_eq!(
+        top_level_run.stdout, top_level_png,
+        "--depth 0 on stdout is layer 0"
+    );
+    assert_eq!(
+        deepest_png, whole_png,
+        "the deepest layer shows the whole model"
+    );
+    assert!(!is_past_deepest_layer_written.expect("scratch directory is readable"));
+}
+
+#[test]
+fn a_depth_past_the_deepest_layer_is_a_usage_error_naming_the_layers() {
+    let d2_argument = fixture("nesting.d2");
+
+    let run = run_svugy(&["render", &d2_argument, "--png", "--depth", "3"]);
+
+    let report = stderr_text(&run);
+    assert_eq!(run.status.code(), Some(2));
+    assert!(run.stdout.is_empty());
+    assert!(report.contains("layers 0 to 2"), "{report}");
 }
 
 #[test]

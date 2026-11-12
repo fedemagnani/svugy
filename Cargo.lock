@@ -1316,11 +1316,13 @@ version = "0.1.6"
 dependencies = [
  "clap",
  "miette",
+ "resvg",
  "serde_json",
  "svugy",
  "svugy-model",
  "svugy-parse",
  "thiserror",
+ "usvg",
 ]
 
 [[package]]

@@ -15,6 +15,8 @@ svugy-model.workspace = true
 svugy.workspace = true
 svugy-parse.workspace = true
 clap.workspace = true
+resvg.workspace = true
+usvg.workspace = true
 miette = { workspace = true, features = ["fancy"] }
 serde_json.workspace = true
 thiserror.workspace = true

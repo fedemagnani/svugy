@@ -9,13 +9,14 @@ use miette::Report;
 pub enum Failure {
     InvalidInput,
     UnprintableModel(Report),
+    Usage(Report),
     Io(Report),
 }
 
 impl Failure {
     /// Print on stderr what the failure has not shown yet; an invalid input already printed its diagnostics.
     pub fn eprint(&self) {
-        let (Self::UnprintableModel(report) | Self::Io(report)) = self else {
+        let (Self::UnprintableModel(report) | Self::Usage(report) | Self::Io(report)) = self else {
             return;
         };
         eprintln!("{report:?}");
@@ -26,6 +27,7 @@ impl Failure {
         match self {
             Self::InvalidInput => ExitCode::from(1),
             Self::UnprintableModel(_report) => ExitCode::from(1),
+            Self::Usage(_report) => ExitCode::from(2),
             Self::Io(_report) => ExitCode::from(3),
         }
     }

@@ -29,12 +29,15 @@ To let your agent do both, paste it the [installation prompt](https://svugy.dev/
   - static: no CSS or JS, the deepest layer only.
   - interactive: every layer, with the embedded [runtime](crates/svugy/runtime/svugy.js) driving the interactive feature.
 
-## Export SVG and rendering
+## Export SVG, PNG and rendering
 
 ```sh
 svugy render my.md -o my.svg                    # export interactive SVG
 svugy render my.md --profile static -o my.svg   # export static SVG
 svugy render my.md --theme sketch -o my.svg     # hand-drawn look, with either profile
+svugy render my.md --png -o my.png              # export PNG of the static SVG
+svugy render my.md --png --depth 0 -o my.png    # export PNG of layer 0 only
+svugy render my.md --png --all-depths -o my.png # export my-depth-0.png, my-depth-1.png, ...
 svugy view my.md                                # live rendering in the browser, reloaded on every save
 ```
 

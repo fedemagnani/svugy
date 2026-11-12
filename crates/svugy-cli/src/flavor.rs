@@ -1,7 +1,9 @@
 //! Render a model as the SVG flavor the command line's profile and theme pick.
 
 use clap::{Args, ValueEnum};
-use svugy::{InteractiveSvg, RenderSvg, SketchInteractiveSvg, SketchStaticSvg, StaticSvg};
+use svugy::{
+    InteractiveSvg, RenderSvg, RenderSvgLayers, SketchInteractiveSvg, SketchStaticSvg, StaticSvg,
+};
 use svugy_model::model::Model;
 
 /// Render a model as the SVG of the chosen profile and theme.
@@ -46,8 +48,30 @@ impl SvgFlavor {
             (RenderProfile::Interactive, RenderTheme::Sketch) => {
                 SketchInteractiveSvg::render(model)
             }
-            (RenderProfile::Static, RenderTheme::Standard) => StaticSvg::render(model),
-            (RenderProfile::Static, RenderTheme::Sketch) => SketchStaticSvg::render(model),
+            (RenderProfile::Static, theme) => theme.render_static(model),
+        }
+    }
+
+    /// Return the theme this flavor draws in.
+    pub fn theme(self) -> RenderTheme {
+        self.theme
+    }
+}
+
+impl RenderTheme {
+    /// Render `model` as the static SVG drawn in this theme.
+    pub fn render_static(self, model: &Model) -> String {
+        match self {
+            Self::Standard => StaticSvg::render(model),
+            Self::Sketch => SketchStaticSvg::render(model),
+        }
+    }
+
+    /// Render every disclosure layer of `model` as a static SVG drawn in this theme, layer 0 first.
+    pub fn render_every_static_layer(self, model: &Model) -> Vec<String> {
+        match self {
+            Self::Standard => StaticSvg::render_every_layer(model),
+            Self::Sketch => SketchStaticSvg::render_every_layer(model),
         }
     }
 }
