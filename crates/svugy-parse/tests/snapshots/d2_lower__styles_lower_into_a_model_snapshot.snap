@@ -1,6 +1,6 @@
 ---
 source: crates/svugy-parse/tests/d2_lower.rs
-expression: import.model.to_json()
+expression: model_json
 ---
 {
   "elements": {
@@ -32,18 +32,39 @@ expression: import.model.to_json()
       }
     }
   },
-  "edges": [
+  "workflows": [
     {
-      "from": "api",
-      "to": "db",
-      "ordinal": 0,
-      "style": {
-        "animated": "true"
-      },
-      "span": {
-        "start": 264,
-        "end": 273
-      }
+      "id": "main",
+      "title": "main",
+      "edges": [
+        {
+          "from": "api",
+          "to": "db",
+          "ordinal": 0,
+          "style": {
+            "animated": "true"
+          },
+          "span": {
+            "start": 264,
+            "end": 273
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "main",
+          "title": "Every edge",
+          "items": [
+            {
+              "edge": {
+                "from": "api",
+                "to": "db",
+                "ordinal": 0
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

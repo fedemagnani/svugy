@@ -13,8 +13,8 @@ expression: model_json
         "fill": "#d5dcea80"
       },
       "span": {
-        "start": 457,
-        "end": 562
+        "start": 515,
+        "end": 620
       }
     },
     "gateway": {
@@ -25,27 +25,23 @@ expression: model_json
         "stroke": "navy",
         "stroke-dash": "5"
       },
-      "position": {
-        "x": 0.0,
-        "y": 40.0
-      },
       "link": "https://example.com",
       "link_span": {
-        "start": 279,
-        "end": 298
+        "start": 353,
+        "end": 372
       },
       "code": "crates/gateway/src/lib.rs#Gateway::route",
       "code_span": {
-        "start": 305,
-        "end": 345
+        "start": 379,
+        "end": 419
       },
       "metadata": {
         "owner": "platform team",
         "tier": "1"
       },
       "span": {
-        "start": 167,
-        "end": 387
+        "start": 256,
+        "end": 461
       }
     },
     "queue": {
@@ -55,61 +51,156 @@ expression: model_json
       "style": {
         "fill": "transparent"
       },
-      "position": {
-        "x": 260.0,
-        "y": 0.0
-      },
       "span": {
-        "start": 390,
-        "end": 454
+        "start": 464,
+        "end": 512
       }
     },
     "services": {
       "label": "services",
       "caption": "four of them",
-      "child_placement": {
-        "grid": {
-          "columns": 2
-        }
-      },
       "span": {
-        "start": 565,
-        "end": 620
+        "start": 623,
+        "end": 654
       }
     },
     "services.a": {
       "label": "a",
       "span": {
-        "start": 625,
-        "end": 626
+        "start": 659,
+        "end": 660
       }
     },
     "services.b": {
       "label": "b",
       "link": "queue",
       "link_span": {
-        "start": 639,
-        "end": 644
+        "start": 673,
+        "end": 678
       },
       "span": {
-        "start": 631,
-        "end": 645
+        "start": 665,
+        "end": 679
       }
     },
     "services.c": {
       "label": "c",
       "span": {
-        "start": 650,
-        "end": 651
+        "start": 684,
+        "end": 685
       }
     },
     "services.d": {
       "label": "d",
       "span": {
-        "start": 656,
-        "end": 657
+        "start": 690,
+        "end": 691
       }
     }
   },
-  "edges": []
+  "workflows": [
+    {
+      "id": "deploy",
+      "title": "Everything deployed",
+      "subtitle": "pinned, gridded, recoloured",
+      "overrides": {
+        "cache": {
+          "shape": "box",
+          "height": 20.0,
+          "style": {
+            "stroke-dash": "2"
+          },
+          "code": "crates/cache/src/lib.rs",
+          "code_span": {
+            "start": 982,
+            "end": 1005
+          },
+          "span": {
+            "start": 935,
+            "end": 1006
+          }
+        },
+        "gateway": {
+          "position": {
+            "x": 0.0,
+            "y": 40.0
+          },
+          "span": {
+            "start": 781,
+            "end": 804
+          }
+        },
+        "queue": {
+          "caption": "drained nightly",
+          "position": {
+            "x": 260.0,
+            "y": 0.0
+          },
+          "metadata": {
+            "tier": "2"
+          },
+          "span": {
+            "start": 807,
+            "end": 867
+          }
+        },
+        "services": {
+          "style": {
+            "fill": "#14f195"
+          },
+          "child_placement": {
+            "grid": {
+              "columns": 2
+            }
+          },
+          "link": "gateway",
+          "link_span": {
+            "start": 924,
+            "end": 931
+          },
+          "span": {
+            "start": 870,
+            "end": 932
+          }
+        }
+      },
+      "steps": [
+        {
+          "id": "all",
+          "title": "Every component",
+          "items": [
+            {
+              "element": "gateway"
+            },
+            {
+              "element": "queue"
+            },
+            {
+              "element": "cache"
+            },
+            {
+              "element": "services.a"
+            },
+            {
+              "element": "services.b"
+            },
+            {
+              "element": "services.c"
+            },
+            {
+              "element": "services.d"
+            }
+          ],
+          "span": {
+            "start": 1013,
+            "end": 1016
+          }
+        }
+      ],
+      "span": {
+        "start": 710,
+        "end": 716
+      }
+    }
+  ]
 }

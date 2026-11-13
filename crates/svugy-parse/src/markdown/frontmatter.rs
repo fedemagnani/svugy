@@ -1,4 +1,4 @@
-//! Read the YAML frontmatter into the diagram's title, subtitle, view angle and style sources, reporting every unknown key.
+//! Read the YAML frontmatter into the diagram's view angle and style sources, reporting every unknown key and every v3 key with its fix.
 
 use std::collections::HashMap;
 use std::fmt;
@@ -17,12 +17,12 @@ use crate::prose::ProseList;
 
 /// List the quotes a YAML flow scalar may open and close with.
 const QUOTES: [char; 2] = ['"', '\''];
+/// List the v3 frontmatter keys whose values moved into the first workflow's heading.
+const MOVED_KEYS: [&str; 2] = ["title", "subtitle"];
 
-/// Hold what the frontmatter sets: the title, the subtitle, the view angle, and each style's verbatim properties list.
+/// Hold what the frontmatter sets: the view angle, and each style's verbatim properties list.
 #[derive(Debug, Default)]
 pub(crate) struct Frontmatter {
-    pub(crate) title: Option<String>,
-    pub(crate) subtitle: Option<String>,
     pub(crate) view: Option<ViewAngle>,
     pub(crate) styles: Vec<StyleSource>,
 }
@@ -40,8 +40,6 @@ pub(crate) struct StyleSource {
 #[derive(Debug, Clone, Copy, EnumString, VariantNames)]
 #[strum(serialize_all = "lowercase")]
 enum FrontmatterKey {
-    Title,
-    Subtitle,
     View,
     Styles,
 }
@@ -49,15 +47,13 @@ enum FrontmatterKey {
 /// Collect the frontmatter's fields as YAML spells them, each value read as its key decides, unknown keys kept for reporting.
 #[derive(Default)]
 struct FrontmatterFields {
-    title: Option<String>,
-    subtitle: Option<String>,
     view: Option<ViewAngle>,
     styles: HashMap<YamlSpanned<String>, YamlSpanned<String>>,
     unknown_keys: Vec<YamlSpanned<String>>,
 }
 
 impl Frontmatter {
-    /// Read the frontmatter YAML of `body`, recording malformed YAML and every unknown key.
+    /// Read the frontmatter YAML of `body`, recording malformed YAML, every unknown key and every v3 key.
     pub(crate) fn read(body: SourceText<'_>, diagnostics: &mut Diagnostics) -> Self {
         let is_blank = body.text.trim().is_empty();
         if is_blank {
@@ -78,14 +74,21 @@ impl Frontmatter {
             }
         };
         let FrontmatterFields {
-            title,
-            subtitle,
             view,
             styles,
             unknown_keys,
         } = fields;
         for unknown_key in unknown_keys {
             let key_span = Self::source_span(body, unknown_key.referenced);
+            let key = unknown_key.value.as_str();
+            let is_moved_key = MOVED_KEYS.contains(&key);
+            if is_moved_key {
+                let message = format!(
+                    "frontmatter `{key}` is v3: write it in the first workflow's heading, `### main: TITLE (subtitle=SUBTITLE)`"
+                );
+                diagnostics.record_error(message, key_span);
+                continue;
+            }
             let known_spellings = FrontmatterKey::VARIANTS;
             let prefix = "unknown frontmatter key";
             diagnostics.record_unknown(prefix, &unknown_key.value, known_spellings, key_span);
@@ -95,12 +98,7 @@ impl Frontmatter {
             .map(|(name, properties)| Self::style_source(body, name, properties))
             .collect();
         styles.sort_by_key(|style| style.name.span.start);
-        Self {
-            title,
-            subtitle,
-            view,
-            styles,
-        }
+        Self { view, styles }
     }
 
     /// Pair a style's spanned name with its properties list as YAML decodes it, verbatim when the scalar, inside its quotes if any, is those very bytes.
@@ -173,8 +171,6 @@ impl<'de> Visitor<'de> for FrontmatterFieldsVisitor {
         while let Some(key) = entries.next_key::<YamlSpanned<String>>()? {
             let frontmatter_key = FrontmatterKey::from_str(&key.value);
             match frontmatter_key {
-                Ok(FrontmatterKey::Title) => fields.title = Some(entries.next_value()?),
-                Ok(FrontmatterKey::Subtitle) => fields.subtitle = Some(entries.next_value()?),
                 Ok(FrontmatterKey::View) => fields.view = Some(entries.next_value()?),
                 Ok(FrontmatterKey::Styles) => fields.styles = entries.next_value()?,
                 Err(_unknown_key) => {

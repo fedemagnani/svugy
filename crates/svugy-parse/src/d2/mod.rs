@@ -14,7 +14,6 @@ pub const GRAMMAR_VERSION: &str = "v0.9.0";
 pub use ast::{
     D2Document, EdgeDeclaration, EdgeLink, EdgeOperator, Field, FieldAssignment, KeyPath,
     KeySegment, Scalar, ShapeDeclaration, Span, Statement, StyleProperty, SvugyProperty,
-    SvugyValue,
 };
 pub use diagnostic::{Construct, D2Language, SyntaxError, UnsupportedConstruct};
 

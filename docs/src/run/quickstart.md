@@ -15,7 +15,9 @@ svugy view webapp.md                           # live preview, reloaded on every
 svugy validate webapp.md                       # every error and warning, with line and column
 ```
 
-- `render --profile static` writes an SVG with no CSS, script or fonts, text drawn as paths: for `<img>`, READMEs and design tools.
+- `render --workflow ID` opens the interactive SVG on workflow ID instead of the first.
+- `render --profile static --workflow ID` writes one workflow as an SVG with no CSS, script or fonts, text drawn as paths: for `<img>`, READMEs and design tools. `--profile static` needs `--workflow` or `--all-workflows`.
+- `render --all-workflows -o FILE.svg` writes one SVG per workflow, `FILE.ID.svg`, each opening on its workflow; it needs `-o`.
 - `render --theme sketch`, also on `view`, draws a hand-drawn look: hatched faces, wobbly double outlines, open arrowheads, labels in Excalifont. It combines with `--profile static`.
   - Excalifont lacks some glyphs, e.g. ①②③: browsers substitute another font, the static SVG leaves them blank.
 - `validate --format json` prints one JSON object, for scripts and agents.

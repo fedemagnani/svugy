@@ -12,7 +12,7 @@
     d2: {
       label: 'd2',
       byte: 1,
-      tokenPattern: /(?<string>"(?:[^"\\\n]|\\.)*")|(?<comment>#.*)|(?<arrow><->|->|<-|--)|(?<keyword>(?<![\w.-])(?:vars|svugy|style|shape|label|link|direction|caption|height|position|badge|subtitle|legend|title|entries|dashes|badges|x|y)(?![\w.-])(?=\s*:))|(?<key>[A-Za-z_][\w.-]*(?=\s*:))|(?<number>-?\b\d+(?:\.\d+)?\b)|(?<punctuation>[{}[\];:])/g,
+      tokenPattern: /(?<string>"(?:[^"\\\n]|\\.)*")|(?<comment>#.*)|(?<arrow><->|->|<-|--)|(?<keyword>(?<![\w.-])(?:vars|svugy|style|shape|label|link|direction|caption|height|position|badge|subtitle|x|y)(?![\w.-])(?=\s*:))|(?<key>[A-Za-z_][\w.-]*(?=\s*:))|(?<number>-?\b\d+(?:\.\d+)?\b)|(?<punctuation>[{}[\];:])/g,
     },
   };
   const THEMES = {
@@ -224,16 +224,20 @@
       shownPreview.after(next);
     }
 
-    // The level link reopening the reader's focused level and shown layer; the root's frames the first layer, not the whole canvas.
+    // The level link reopening the reader's shown workflow, focused level and shown layer; the root's frames the first layer, not the whole canvas.
     function levelLinkOf(preview) {
       const enteredLevel = preview.contentDocument?.querySelector('[data-svugy-entered]');
       if (!enteredLevel) return '#svugy=';
       const levelPath = enteredLevel.getAttribute('data-svugy-level');
       const encodedLevelPath = encodeURIComponent(levelPath);
       const shownLayer = enteredLevel.closest('[data-svugy-layer]');
-      if (!shownLayer) return `#svugy=${encodedLevelPath}`;
-      const layerNumber = shownLayer.getAttribute('data-svugy-layer');
-      return `#svugy=${encodedLevelPath}&layer=${layerNumber}`;
+      const layerNumber = shownLayer?.getAttribute('data-svugy-layer');
+      const layerParameter = shownLayer ? `&layer=${layerNumber}` : '';
+      const shownWorkflow = enteredLevel.closest('[data-svugy-workflow]');
+      const workflowId = shownWorkflow?.getAttribute('data-svugy-workflow');
+      const encodedWorkflowId = shownWorkflow ? encodeURIComponent(workflowId) : '';
+      const workflowParameter = shownWorkflow ? `&workflow=${encodedWorkflowId}` : '';
+      return `#svugy=${encodedLevelPath}${layerParameter}${workflowParameter}`;
     }
 
     function discardLoadingPreview() {

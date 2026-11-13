@@ -1,6 +1,6 @@
 ---
 source: crates/svugy-parse/tests/d2_lower.rs
-expression: model.to_json()
+expression: model_json
 ---
 {
   "elements": {
@@ -36,5 +36,24 @@ expression: model.to_json()
       }
     }
   },
-  "edges": []
+  "workflows": [
+    {
+      "id": "main",
+      "title": "main",
+      "steps": [
+        {
+          "id": "main",
+          "title": "Every edge",
+          "items": [
+            {
+              "element": "api"
+            },
+            {
+              "element": "cloud.vpc"
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }

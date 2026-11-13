@@ -1,4 +1,4 @@
-# Edge endpoints declare their elements, ancestors included; parallel edges get their own ordinals.
+# Edge endpoints declare their elements, ancestors included; parallel edges get their own ordinals; an edge into its own lineage is dropped.
 cloud.vpc.api -> onprem.db: reads
 cloud: {
   vpc.api -> cache

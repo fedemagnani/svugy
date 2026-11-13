@@ -9,10 +9,12 @@ mod report;
 mod skill;
 mod tree;
 mod view;
+mod workflow_choice;
 
 use std::process::ExitCode;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use svugy_model::model::ShownWorkflow;
 use svugy_parse::json::JsonPrinter;
 
 use crate::example::ExampleCommand;
@@ -24,6 +26,7 @@ use crate::report::InputReport;
 use crate::skill::SkillCommand;
 use crate::tree::SourceTree;
 use crate::view::{LIVE_VIEW_HELP, ViewCommand};
+use crate::workflow_choice::{ShownWorkflows, WorkflowChoice};
 
 /// Point a new user at the example, then explain the input formats, where diagnostics go and the exit codes, after the top-level help.
 const EXIT_CODES_HELP: &str = "\
@@ -40,7 +43,9 @@ Exit codes, identical for every subcommand:
   1  the input has errors: Markdown syntax, d2 syntax, malformed JSON or model
      validation; or validate finds a stale code reference; or import -o FILE.md
      meets a model Markdown cannot say
-  2  usage error: unknown flag, missing argument, INPUT not .md, .d2 or .json
+  2  usage error: unknown flag, missing argument, INPUT not .md, .d2 or .json,
+     render --workflow naming no workflow of the input, or render --all-workflows
+     with an -o naming no file stem
   3  I/O failure: a file cannot be read, written or opened, or view cannot
      listen on its port";
 
@@ -93,7 +98,7 @@ struct Cli {
 /// Name the subcommand to run.
 #[derive(Subcommand)]
 enum Command {
-    /// Render a model as an SVG, interactive unless --profile static is given, hand-drawn with --theme sketch.
+    /// Render a model as an SVG, interactive unless --profile static draws one --workflow alone, hand-drawn with --theme sketch.
     Render(RenderCommand),
     /// Serve the interactive SVG in the default browser, reloading it whenever INPUT changes.
     #[command(after_long_help = LIVE_VIEW_HELP)]
@@ -118,9 +123,11 @@ struct RenderCommand {
     #[command(flatten)]
     flavor: SvgFlavor,
     #[command(flatten)]
+    workflow_choice: WorkflowChoice,
+    #[command(flatten)]
     output: OutputTarget,
     /// Open the written SVG in the default browser; needs -o.
-    #[arg(long, requires = "output")]
+    #[arg(long, requires = "output", conflicts_with = "all_workflows")]
     open: bool,
 }
 
@@ -179,14 +186,44 @@ impl Command {
 }
 
 impl RenderCommand {
-    /// Run `render`: load the input, render it in the flavor, write the SVG and open it when `--open` asks.
+    /// Run `render`: load the input and render the chosen workflow, or each workflow, in the flavor.
     fn run(self) -> Result<(), Failure> {
         let model = self.input.load_model_printing_diagnostics()?;
-        let svg = self.flavor.render(&model);
+        let shown_workflows = self.workflow_choice.shown_workflows(&model)?;
+        match shown_workflows {
+            ShownWorkflows::One(shown_workflow) => {
+                self.write_svg_opening_it_if_asked(shown_workflow)
+            }
+            ShownWorkflows::Each(each_workflow) => self.write_svg_per_workflow(each_workflow),
+        }
+    }
+
+    /// Write the SVG of `shown_workflow` to the output and open it when `--open` asks.
+    fn write_svg_opening_it_if_asked(
+        &self,
+        shown_workflow: ShownWorkflow<'_>,
+    ) -> Result<(), Failure> {
+        let svg = self.flavor.render(shown_workflow);
         self.output.write(&svg)?;
         let is_open_requested = self.open;
         if is_open_requested {
             self.output.open_in_default_browser()?;
+        }
+        Ok(())
+    }
+
+    /// Write the SVG of each workflow to `STEM.ID.svg` beside the output file.
+    fn write_svg_per_workflow(&self, each_workflow: Vec<ShownWorkflow<'_>>) -> Result<(), Failure> {
+        let output_path = self
+            .output
+            .path()
+            .expect("clap requires -o with --all-workflows");
+        for shown_workflow in each_workflow {
+            let workflow_id = shown_workflow.workflow().id();
+            let workflow_tag = workflow_id.as_str();
+            let workflow_svg_path = OutputTarget::tagged_svg_path(output_path, workflow_tag)?;
+            let svg = self.flavor.render(shown_workflow);
+            OutputTarget::write_file(&workflow_svg_path, &svg)?;
         }
         Ok(())
     }

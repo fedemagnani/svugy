@@ -269,7 +269,8 @@ mod tests {
             .with_style("stroke-dash", "5")
             .with_style("stroke-width", "2");
         let red = Rgba::from_packed(0xff0000ff);
-        let element_style = element.style();
+        let element_properties = element.properties();
+        let element_style = element_properties.style();
         assert_eq!(ColorKey::FILL.read_from(element_style), Some(red));
         assert_eq!(ColorKey::STROKE.read_from(element_style), None);
         assert_eq!(NumberKey::STROKE_DASH.read_from(element_style), Some(5.0));

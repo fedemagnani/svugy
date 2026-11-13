@@ -4,9 +4,9 @@ use std::collections::BTreeSet;
 
 use kurbo::Rect;
 
-use svugy_model::model::Model;
+use svugy_model::graph::WorkflowGraph;
 
-use super::paint::ModelPaints;
+use super::paint::GraphPaints;
 use super::{Paint, Profile, ThemeStroke};
 use crate::geometry::{ArrowheadMarker, Group};
 use crate::render::theme::stroke::Stroke;
@@ -23,11 +23,11 @@ pub(crate) struct ArrowheadMarkers {
 }
 
 impl ArrowheadMarkers {
-    /// Collect the paint of every connection of `drawn_layers` ending in an arrowhead, traces and arcs, interiors included, each painted from the model its layer is drawn from.
-    pub(crate) fn collect(drawn_layers: &[(&Group, &Model)]) -> Self {
+    /// Collect the paint of every connection of `drawn_layers` ending in an arrowhead, traces and arcs, interiors included, each painted from the graph its layer is drawn from.
+    pub(crate) fn collect(drawn_layers: &[(&Group, &WorkflowGraph)]) -> Self {
         let mut connection_paints = BTreeSet::new();
-        for &(root, model) in drawn_layers {
-            let paints = ModelPaints::new(model);
+        for &(root, graph) in drawn_layers {
+            let paints = GraphPaints::new(graph);
             let levels = root.this_and_nested_levels();
             let connections =
                 levels.flat_map(|(group, _to_root)| group.traces.iter().chain(&group.connections));

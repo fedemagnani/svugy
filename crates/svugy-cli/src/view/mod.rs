@@ -48,7 +48,8 @@ impl ViewCommand {
         let watched_input = self.input.clone();
         let watcher = FileWatcher::new(watched_input, flavor);
         let model = self.input.load_model_printing_diagnostics()?;
-        let svg = flavor.render(&model);
+        let first_workflow = model.showing_first_workflow();
+        let svg = flavor.render(first_workflow);
         let live_diagram = LiveDiagram::new(svg);
         let live_diagram = Arc::new(live_diagram);
         let served_live_diagram = Arc::clone(&live_diagram);

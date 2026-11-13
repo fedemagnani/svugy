@@ -1,9 +1,9 @@
-//! Reuse ranked placements across the layouts of one model: a level's compound placement depends only on the model and on the extents of the levels below it, so an arrangement search recomputes it only when those change.
+//! Reuse ranked placements across the layouts of one graph: a level's compound placement depends only on the graph and on the extents of the levels below it, so an arrangement search recomputes it only when those change.
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
-use svugy_model::model::Model;
+use svugy_model::graph::WorkflowGraph;
 use svugy_model::path::ElementPath;
 
 use super::RankedPlacement;
@@ -11,10 +11,10 @@ use crate::layout::edge_levels::LeavingEdges;
 use crate::layout::{PlacedLevel, PlacedLevels};
 use crate::metrics::TextMeasure;
 
-/// Names one ranked placement by its inputs beside the model: the level, and the exact extent of every level placed below it.
+/// Names one ranked placement by its inputs beside the graph: the level, and the exact extent of every level placed below it.
 type PlacementKey = (ElementPath, Vec<(ElementPath, u64, u64)>);
 
-/// Holds the ranked placements already computed for one model, keyed by their inputs, for every layout of that model to reuse.
+/// Holds the ranked placements already computed for one graph, keyed by their inputs, for every layout of that graph to reuse.
 #[derive(Default)]
 pub(crate) struct PlacementCache {
     placements: RefCell<BTreeMap<PlacementKey, Vec<(ElementPath, PlacedLevel)>>>,
@@ -44,7 +44,7 @@ impl<P: RankedPlacement> RankedPlacement for MemoizedPlacement<'_, P> {
     /// Return the cached placement of `level` for the extents placed below it, or place it with the inner placement and cache it.
     fn place_ranked_level(
         &self,
-        model: &Model,
+        graph: &WorkflowGraph,
         level: &ElementPath,
         leaving_edges: &LeavingEdges,
         interiors: &PlacedLevels,
@@ -61,7 +61,7 @@ impl<P: RankedPlacement> RankedPlacement for MemoizedPlacement<'_, P> {
         }
         let placement =
             self.inner
-                .place_ranked_level(model, level, leaving_edges, interiors, measure);
+                .place_ranked_level(graph, level, leaving_edges, interiors, measure);
         let cached_placement = placement.clone();
         let mut placements = self.cache.placements.borrow_mut();
         placements.insert(key, cached_placement);

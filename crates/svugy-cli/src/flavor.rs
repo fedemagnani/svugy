@@ -2,13 +2,20 @@
 
 use clap::{Args, ValueEnum};
 use svugy::{InteractiveSvg, RenderSvg, SketchInteractiveSvg, SketchStaticSvg, StaticSvg};
-use svugy_model::model::Model;
+use svugy_model::model::ShownWorkflow;
+
+use crate::workflow_choice::WORKFLOW_CHOICE_GROUP;
 
 /// Render a model as the SVG of the chosen profile and theme.
 #[derive(Args, Clone, Copy)]
 pub struct SvgFlavor {
-    /// Which SVG to write.
-    #[arg(long, value_enum, default_value_t = RenderProfile::Interactive)]
+    /// Which SVG to write; static draws one workflow, so it needs --workflow or --all-workflows.
+    #[arg(
+        long,
+        value_enum,
+        default_value_t = RenderProfile::Interactive,
+        requires_if("static", WORKFLOW_CHOICE_GROUP)
+    )]
     profile: RenderProfile,
     /// How to draw the diagram.
     #[arg(long, value_enum, default_value_t = RenderTheme::Standard)]
@@ -20,7 +27,7 @@ pub struct SvgFlavor {
 pub enum RenderProfile {
     /// Explorable in a browser: themed, animated, with the embedded runtime.
     Interactive,
-    /// Self-contained for <img> embeds and design tools: no CSS, script, fonts or animation.
+    /// Self-contained for <img> embeds and design tools: one workflow, no CSS, script, fonts or animation.
     Static,
 }
 
@@ -39,15 +46,15 @@ impl SvgFlavor {
         Self { profile, theme }
     }
 
-    /// Render `model` as the SVG of this flavor's profile and theme.
-    pub fn render(self, model: &Model) -> String {
+    /// Render the model of `shown` as the SVG of this flavor's profile and theme, showing its workflow.
+    pub fn render(self, shown: ShownWorkflow<'_>) -> String {
         match (self.profile, self.theme) {
-            (RenderProfile::Interactive, RenderTheme::Standard) => InteractiveSvg::render(model),
+            (RenderProfile::Interactive, RenderTheme::Standard) => InteractiveSvg::render(shown),
             (RenderProfile::Interactive, RenderTheme::Sketch) => {
-                SketchInteractiveSvg::render(model)
+                SketchInteractiveSvg::render(shown)
             }
-            (RenderProfile::Static, RenderTheme::Standard) => StaticSvg::render(model),
-            (RenderProfile::Static, RenderTheme::Sketch) => SketchStaticSvg::render(model),
+            (RenderProfile::Static, RenderTheme::Standard) => StaticSvg::render(shown),
+            (RenderProfile::Static, RenderTheme::Sketch) => SketchStaticSvg::render(shown),
         }
     }
 }

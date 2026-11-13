@@ -9,7 +9,7 @@ use crate::render::writer::{Attributes, SvgWriter};
 
 /// Strokes every outline, connection and arrowhead a theme draws, in that theme's hand.
 pub(crate) trait Stroke {
-    /// Redraw `path`, a connection or its legend sample, in this hand.
+    /// Redraw `path`, a connection, in this hand.
     fn redraw_connection(path: &BezPath) -> BezPath;
 
     /// Widen an outline laid out `laid_out_width` wide to the width this hand strokes it at.

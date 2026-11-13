@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 
 use glam::DVec3;
 use kurbo::{Affine, Point, Size};
-use svugy_model::model::Model;
+use svugy_model::graph::WorkflowGraph;
 use svugy_model::path::ElementPath;
 
 use super::camera::Camera;
@@ -22,7 +22,7 @@ impl Group {
     /// Plate the stub markers of every nested container its plan stubs edges for, keyed by container, clear of everything its entered view draws, as camera `C` sees them.
     pub(super) fn plate_stub_markers_per_container<M: TextMeasure, C: Camera>(
         &self,
-        model: &Model,
+        graph: &WorkflowGraph,
         plans: &LevelPlans,
         measure: &M,
     ) -> StubMarkersByContainer {
@@ -34,7 +34,7 @@ impl Group {
                     return None;
                 }
                 let obstructions = Obstructions::around_stubs_of(self, &interior);
-                let stub_plater = StubPlater::<M, C>::new(model, plan, obstructions, measure);
+                let stub_plater = StubPlater::<M, C>::new(graph, plan, obstructions, measure);
                 let stub_markers = stub_plater.plate_stub_markers();
                 let container = interior.container.clone();
                 Some((container, stub_markers))
@@ -62,7 +62,7 @@ impl Group {
 
 /// Plates one container's stub tags flat on its slab, as camera `C` sees it, each in its slot's stub band as near the slot as the entered view's obstructions allow.
 struct StubPlater<'a, M, C> {
-    model: &'a Model,
+    graph: &'a WorkflowGraph,
     plan: &'a LevelPlan,
     obstructions: Obstructions,
     measure: &'a M,
@@ -75,15 +75,15 @@ impl<'a, M: TextMeasure, C: Camera> StubPlater<'a, M, C> {
     /// Plan distance between neighbouring plate centres along a side.
     const SLIDE_STEP: f64 = 6.0;
 
-    /// Set up a plater of `plan`'s stub tags, each naming its external endpoint in `model`, measured by `measure`, clear of `obstructions`.
+    /// Set up a plater of `plan`'s stub tags, each naming its external endpoint in `graph`, measured by `measure`, clear of `obstructions`.
     fn new(
-        model: &'a Model,
+        graph: &'a WorkflowGraph,
         plan: &'a LevelPlan,
         obstructions: Obstructions,
         measure: &'a M,
     ) -> Self {
         Self {
-            model,
+            graph,
             plan,
             obstructions,
             measure,
@@ -96,7 +96,7 @@ impl<'a, M: TextMeasure, C: Camera> StubPlater<'a, M, C> {
         let plan = self.plan;
         let mut stub_markers = BTreeMap::new();
         for (external_endpoint, stub) in plan.stubs() {
-            let Some(external_element) = self.model.element(external_endpoint) else {
+            let Some(external_element) = self.graph.element(external_endpoint) else {
                 continue;
             };
             let tag_text = external_element.label();
@@ -178,8 +178,6 @@ mod tests {
 
     use kurbo::{Rect, RoundedRect};
 
-    use svugy_model::builder::ModelBuilder;
-
     use super::*;
     use crate::geometry::camera::Isometric;
     use crate::geometry::fixtures::FixedAdvanceMeasure;
@@ -190,11 +188,8 @@ mod tests {
 
     const TOLERANCE: f64 = 1e-9;
 
-    fn empty_model() -> Model {
-        ModelBuilder::new()
-            .build()
-            .model
-            .expect("an empty model is valid")
+    fn empty_graph() -> WorkflowGraph {
+        WorkflowGraph::default()
     }
 
     /// Return the plan rectangle `tag`'s plate covers on its level's floor, the slab's top.
@@ -218,10 +213,10 @@ mod tests {
 
     impl ProjectedExample {
         fn new() -> Self {
-            let model = SvugyExample::model();
+            let graph = SvugyExample::graph();
             let font = BundledFont::<InterFaces>::new();
-            let plans = LevelPlans::lay_out(&model, &font);
-            let scene = Scene::project::<Isometric>(&model, &plans, &font);
+            let plans = LevelPlans::lay_out(&graph, &font);
+            let scene = Scene::project::<Isometric>(&graph, &plans, &font);
             Self { plans, scene }
         }
 
@@ -263,14 +258,14 @@ mod tests {
     ) -> Vec<(ElementPath, usize, usize)> {
         let plan = example.plans.level(interior.container).expect("planned");
         let font = BundledFont::<InterFaces>::new();
-        let model = empty_model();
+        let graph = empty_graph();
         let mut obstructions = Obstructions::around_stubs_of(&example.scene.root, interior);
         let mut overlap_counts = Vec::new();
         for (external_endpoint, stub_marker) in &interior.group.stub_markers {
             let tag = &stub_marker.tag;
             let slot = plan.stubs()[external_endpoint].slot;
             let overlap_count = obstructions.count_overlapped_by(tag);
-            let stub_plater = StubPlater::<_, Isometric>::new(&model, plan, obstructions, &font);
+            let stub_plater = StubPlater::<_, Isometric>::new(&graph, plan, obstructions, &font);
             let plate_size = tag.plate.rect().size();
             let candidate_centers = stub_plater.plate_centers_sliding_from(slot, plate_size);
             let least_overlap_count = candidate_centers
@@ -372,9 +367,9 @@ mod tests {
         let slot = north_slot_at(150.0);
         let plan = plan_with_one_stub(slot);
         let obstructions = Obstructions::around_text_of(&[]);
-        let model = empty_model();
+        let graph = empty_graph();
         let mut stub_plater =
-            StubPlater::<_, Isometric>::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
+            StubPlater::<_, Isometric>::new(&graph, &plan, obstructions, &FixedAdvanceMeasure);
 
         let tag = stub_plater.place_flat_beside(slot, "browser");
 
@@ -393,9 +388,9 @@ mod tests {
         let slot = Port::new(Side::East, Point::new(300.0, 60.0));
         let plan = plan_with_one_stub(slot);
         let obstructions = Obstructions::around_text_of(&[]);
-        let model = empty_model();
+        let graph = empty_graph();
         let mut stub_plater =
-            StubPlater::<_, Isometric>::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
+            StubPlater::<_, Isometric>::new(&graph, &plan, obstructions, &FixedAdvanceMeasure);
 
         let tag = stub_plater.place_flat_beside(slot, "browser");
 
@@ -408,16 +403,16 @@ mod tests {
     fn a_plate_slides_from_its_slot_to_the_nearest_clear_spot() {
         let slot = north_slot_at(150.0);
         let plan = plan_with_one_stub(slot);
-        let model = empty_model();
+        let graph = empty_graph();
         let unobstructed = Obstructions::around_text_of(&[]);
         let mut blocking_stub_plater =
-            StubPlater::<_, Isometric>::new(&model, &plan, unobstructed, &FixedAdvanceMeasure);
+            StubPlater::<_, Isometric>::new(&graph, &plan, unobstructed, &FixedAdvanceMeasure);
         let blocking_tag = blocking_stub_plater.place_flat_beside(slot, "browser");
         let mut blocking_only = Obstructions::around_text_of(&[]);
         blocking_only.record(&blocking_tag);
         let blocked = blocking_stub_plater.obstructions;
         let mut stub_plater =
-            StubPlater::<_, Isometric>::new(&model, &plan, blocked, &FixedAdvanceMeasure);
+            StubPlater::<_, Isometric>::new(&graph, &plan, blocked, &FixedAdvanceMeasure);
 
         let tag = stub_plater.place_flat_beside(slot, "browser");
 
@@ -453,9 +448,9 @@ mod tests {
         let everywhere_plate = RoundedRect::from_rect(everywhere, 0.0);
         let covering_everything = PlatedLabel::new(anything.label, everywhere_plate);
         obstructions.record(&covering_everything);
-        let model = empty_model();
+        let graph = empty_graph();
         let mut stub_plater =
-            StubPlater::<_, Isometric>::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
+            StubPlater::<_, Isometric>::new(&graph, &plan, obstructions, &FixedAdvanceMeasure);
 
         let tag = stub_plater.place_flat_beside(slot, "browser");
 
@@ -469,9 +464,9 @@ mod tests {
         let slot = north_slot_at(1.0);
         let plan = plan_with_one_stub(slot);
         let obstructions = Obstructions::around_text_of(&[]);
-        let model = empty_model();
+        let graph = empty_graph();
         let mut stub_plater =
-            StubPlater::<_, Isometric>::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
+            StubPlater::<_, Isometric>::new(&graph, &plan, obstructions, &FixedAdvanceMeasure);
 
         let tag = stub_plater.place_flat_beside(slot, "browser");
 
@@ -486,9 +481,9 @@ mod tests {
         let slot = north_slot_at(300.0);
         let plan = plan_with_one_stub(slot);
         let obstructions = Obstructions::around_text_of(&[]);
-        let model = empty_model();
+        let graph = empty_graph();
         let mut stub_plater =
-            StubPlater::<_, Isometric>::new(&model, &plan, obstructions, &FixedAdvanceMeasure);
+            StubPlater::<_, Isometric>::new(&graph, &plan, obstructions, &FixedAdvanceMeasure);
         let long_text = "a label far longer than the three hundred units of its side";
 
         let tag = stub_plater.place_flat_beside(slot, long_text);

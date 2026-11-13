@@ -1,9 +1,11 @@
-//! Render a svugy model as an isometric, explorable SVG.
+//! Render a svugy graph as an isometric, explorable SVG.
 
 mod arrange;
 mod geometry;
 mod layout;
 mod metrics;
+#[cfg(test)]
+mod one_step;
 mod render;
 mod sketch;
 mod svg;

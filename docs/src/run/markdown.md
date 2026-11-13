@@ -1,6 +1,6 @@
 # Markdown
 
-A diagram is one `.md` file: frontmatter, then a nested list of components, then a list of edges.
+A diagram is one `.md` file: frontmatter, a nested list of components, then workflows. A workflow is a story told in steps; each step lists the edges and components it involves.
 
 <div class="svugy-live">
 
@@ -20,12 +20,10 @@ Every rule below is an error unless it says warning. `svugy validate FILE` repor
 | Part, in this order | Required |
 |---|---|
 | frontmatter between `---` lines | no |
-| the diagram's [description](#descriptions) | no |
 | `## Components`, at least one item | yes |
-| `## Edges` | no |
-| `## Legend` or `## Legend: TITLE` | no |
+| `## Workflows`, at least one workflow | yes |
 
-- Sections hold bullet lists only. `# Title` is an error: the title goes in the frontmatter.
+- `# Title` is an error: the title goes in the first workflow's heading.
 - An item's line is read verbatim: `*`, `_` and backticks are plain characters.
 - `<!-- comments -->` and blank lines are ignored anywhere. Indent a comment between nested items like the item after it; a shallower one would end the list.
 
@@ -33,8 +31,6 @@ Every rule below is an error unless it says warning. `svugy validate FILE` repor
 
 ```yaml
 ---
-title: A web app
-subtitle: from the browser to the database and back
 view: top
 styles:
   service: (color=#3478f6)
@@ -44,10 +40,10 @@ styles:
 
 | Key | Value | Effect |
 |---|---|---|
-| `title` | text | drawn top-left |
-| `subtitle` | text | drawn under the title |
 | `view` | `isometric` or `top` | the angle the diagram is seen from: `top` draws it flat, as a 2D plan; `isometric` by default |
 | `styles` | name → properties list | each name becomes usable in any properties list |
+
+Any other key is an error.
 
 ## Components
 
@@ -58,15 +54,97 @@ styles:
 - **ID:** ASCII letters, digits, `_` and `-`, starting with a letter or `_`; unique among its siblings.
 - **Display name:** the text after the first `:`; without one, the ID is drawn. Quote it if it ends in a parenthesised group or holds `"`: `- cache: "Cache (Redis)"`.
 - **Children:** items indented two spaces under it. A component with children is a container: a slab holding them, which starts closed in the interactive SVG.
+- `## Components` holds `- ` bullets only.
+- `position`, `layout` and `columns` are an error here: set them in a workflow's [overrides](#overrides).
+- Warning: a component no workflow shows. It is never drawn.
 
-## Edges
+## Workflows
+
+````md
+## Components
+- web: Web app
+- shop: Shop backend
+  - api: API
+  - orders: Orders (shape=cylinder)
+- gateway: Payment gateway
+- fraud: Fraud check
+- ledger: Ledger
+- vault: Card vault
+
+## Workflows
+### checkout: A customer pays (subtitle=from cart to charged card)
+What happens between [the web app](#web) sending the cart and [the ledger](#ledger) recording the charge.
+
+- shop (layout=row)
+- web (position=0,40)
+
+#### order: The shop takes the order
+[The API](#api) saves the cart before [charging it](#checkout/charge).
+- web -> api: places order (traveler=envelope)
+  ```description
+  One request per click on **Pay**.
+  ```
+- api -> orders: saves it
+
+#### charge: The gateway charges the card
+- api -> gateway: charges (traveler=parcel)
+- gateway -> fraud -> ledger
+- vault
+
+#### confirm: The web app learns the result
+The answer comes back on [the charge request](#api->gateway).
+- api -> gateway[0]
+- gateway -> api: approved
+
+### refund: A customer gets a refund
+#### ask: The shop asks for the money back
+- web -> api: requests a refund
+- api -> gateway: refunds
+````
+
+A workflow is `### ID: TITLE`, then, in order:
+
+| Part | Required | Is |
+|---|---|---|
+| prose | no | the workflow's overview, unfenced Markdown |
+| overrides | no | a bullet list changing how this workflow draws some components |
+| steps | yes, at least one | `#### ID: TITLE` blocks |
+
+- `subtitle=TEXT` in parentheses after the title is the heading's only property.
+- The first workflow is the one the SVG opens on. The reader picks the others from the heading's menu.
+- A workflow shows only the components its steps list, as an edge end or bare, plus their ancestors. Each workflow is laid out on its own.
+- A container none of whose children the workflow shows is drawn there as a leaf.
+- Text between the overrides and the first step is an error.
+
+### Overrides
 
 ```md
-- REF -> REF[: LABEL] [(PROPERTIES)]
-- REF -> REF -> REF
+- REF (PROPERTIES)
 ```
 
-- **REF** is a component's dotted path, or any dotted suffix of it that matches exactly one component:
+- One line per component: no display name, description or children.
+- Any [component property](#on-a-component); `position`, `layout` and `columns` only here.
+- They apply to this workflow only: the component's own properties first, then the override's styles, then its `key=value` entries.
+- Errors: a component the workflow doesn't show, a component listed twice.
+
+### Steps
+
+A step is `#### ID: TITLE`, then its prose (optional, unfenced Markdown: the step's description), then at least one item. Steps are numbered from 1 in written order; the ID is unique within its workflow.
+
+| Item | Does |
+|---|---|
+| `- REF -> REF[: LABEL] [(PROPERTIES)]` | declares a new edge; a [description](#descriptions) block may follow |
+| `- REF -> REF -> REF` | declares one edge per hop; no label or properties |
+| `- REF -> REF[n]` | lists again the n-th edge between the pair, counted from 0 in written order across the workflow's steps; no label, properties or description |
+| `- REF` | shows a component without an edge |
+
+- Edges belong to their workflow. In the example, `api -> gateway` in `refund` is a different edge from `api -> gateway` in `checkout`, and each workflow numbers its own from 0.
+- Two items joining the same pair are two edges.
+- No edge from a component to itself, its ancestor or its descendant.
+- Errors: a step without items, an item listed twice in one step, `[n]` naming no edge of the workflow, text after the items.
+- Prose can't hold `- ` bullets or headings outside a code fence: a `- ` line starts the items, a `#` line is a heading.
+
+**REF** is a component's dotted path, or any dotted suffix of it that matches exactly one component:
 
 | Components | REF | Resolves to |
 |---|---|---|
@@ -75,17 +153,11 @@ styles:
 | `render.writer` and `store.writer` | `render.writer` | `render.writer` |
 | top-level `api` and `orders.api` | `api` | the top-level `api`: a whole path wins |
 
-- A chain `a -> b -> c` adds one edge per hop and takes no label or properties.
-- Two items joining the same pair are two edges.
-- No edge from a component to itself, its ancestor or its descendant.
-
 ## Descriptions
 
-````md
-```description
-Every request starts in the browser and ends in the database.
-```
+Components and edges take a fenced block with the info string `description`; workflows and steps take unfenced prose instead.
 
+````md
 ## Components
 - backend: Backend
 
@@ -96,28 +168,43 @@ Every request starts in the browser and ends in the database.
   ```
 
   - api: API
+  - queue: Queue
 
-## Edges
+## Workflows
+### main: A web app
+#### receipt: The API schedules a receipt
 - api -> queue: schedules a receipt
   ```description
   One job per order, retried 3 times.
   ```
 ````
 
-- A description is a fenced block with the info string `description`, holding any Markdown.
-- Before `## Components`, it describes the diagram. Indented under a component or an edge, it describes that item; under a component, it goes before the children.
-- One description per item. Text under an item outside a description block is an error.
-- The interactive SVG shows it in a panel when the item is focused or clicked.
+- The block holds any Markdown. Indent it under the component or the edge; under a component, it goes before the children.
+- One description per item. Text under a component outside a description block is an error.
+- No description under an override, a bare step item, an `[n]` item or a chain.
+- The interactive SVG shows workflow and step prose in the steps card, component and edge descriptions in the component card ([Interactive SVG](../interactive.md#description-panel)).
 
-**Links** in a description point into the diagram, and clicking one zooms to its target:
+### Links
+
+A link in any description or prose points into the diagram; clicking one goes to its target.
 
 | Link | Targets |
 |---|---|
 | `[the API](#api)` | a component, by REF |
-| `[the job](#api->queue)` | the edge between two components, when exactly one exists |
-| `[the retry](#api->queue[1])` | the n-th edge between them, from 0 |
+| `[the charge](#api->gateway)` | the edge between two components, when exactly one exists |
+| `[the retry](#api->gateway[1])` | the n-th edge between them, from 0 |
+| `[charging it](#checkout/charge)` | step `charge` of workflow `checkout`, from any workflow |
 
-A link naming nothing, or several things, is a warning and shows as plain text.
+Edge links resolve:
+
+- in workflow prose, step prose and edge descriptions: in that workflow;
+- in a component description: in each workflow showing the component, separately.
+
+Targets may name items declared later. Warnings, and the link shows as plain text there:
+
+- a target naming nothing or several items;
+- in workflow prose, step prose or an edge description, a component the workflow doesn't show;
+- in a component description, an edge target naming nothing or several edges in a workflow showing the component: one warning per such workflow.
 
 ## Properties
 
@@ -140,17 +227,18 @@ A link naming nothing, or several things, is a warning and shows as plain text.
 | `line` | `solid` (default), `dashed`, `dotted` | outline dash |
 | `shape` | `box` (default), `slab`, `cylinder`, `disc` | a leaf's solid |
 | `height` | number > 0 | a leaf's height |
-| `position` | `X,Y` | top-left corner in the parent; unpinned components are placed automatically |
-| `layout` | `layered` (default), `grid`, `row`, `column` | how a container places its children; without it, children with no edges among them line up facing the container's edges, near the neighbours they connect to |
-| `columns` | integer > 0 | column count, required by `layout=grid` |
+| `position` | `X,Y` | overrides only: top-left corner in the parent; unpinned components are placed automatically |
+| `layout` | `layered` (default), `grid`, `row`, `column` | overrides only: how a container places its children; without it, children with no edges among them line up facing the container's edges, near the neighbours they connect to |
+| `columns` | integer > 0 | overrides only: column count, required by `layout=grid` |
 | `link` | component REF or URL | a click goes to that component, or opens the URL |
-| `code` | `FILE` or `FILE#SYMBOL` | a `code: value` line in the hover panel; `svugy validate` checks it against the repository |
-| `meta.NAME` | text | a `NAME: value` line in the hover panel |
+| `code` | `FILE` or `FILE#SYMBOL` | its code, as text, in the component card; `svugy validate` checks it against the repository |
+| `meta.NAME` | text | a `NAME: value` line in the component card |
 
 - A colour is `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, a CSS colour name or `transparent`.
 - A `link` holding `:`, `/`, `?` or `#` is a URL; anything else is a REF. Write a relative page as `./guide.html`.
+- Warning: a `link` REF naming a component a workflow doesn't show; in that workflow the component links nowhere.
 - A `code` FILE is relative to the root of the git checkout holding the diagram (else the diagram's directory): no leading `/`, no `..`. SYMBOL is `NAME`, `Type::NAME` or `Type.NAME`. `svugy validate` fails when FILE is missing or does not spell each SYMBOL segment as a whole identifier; `render` never reads the repository.
-- Warnings: `shape` or `height` on a container (always a slab), `layout` on a leaf.
+- Warnings: `shape` or `height` on a component a workflow draws as a container (always a slab); `layout` on a component a workflow draws as a leaf.
 
 ### On an edge
 
@@ -162,18 +250,8 @@ A link naming nothing, or several things, is a warning and shows as plain text.
 
 `line=badge` draws no arc: a small copy of the target sits on the source's top face. Use it for a dependency many components share. Both ends must be leaves.
 
-## Legend
+## Migrating from v3
 
-```md
-## Legend: How to read it
-- arrows point where a request goes
-- (line=dashed): leaves your servers
-- (line=dotted): embedded at build time
-- (line=badge, target=cache): looks up the cache
-```
-
-- Items are drawn in order under the title.
-- `(PROPERTIES): TEXT` is a key row, drawn next to a sample: `line=dashed`, `line=dotted`, or `line=badge` with `target=REF`. Any other item is free text.
-- Warning: a key row describing something the diagram never draws.
+v3's frontmatter `title` and `subtitle`, the description before `## Components`, `## Edges`, `## Legend`, and `position`, `layout` or `columns` on a component are now errors; each message names its fix. The [migration table](https://github.com/fedemagnani/svugy/blob/main/crates/svugy-cli/skill/references/syntax.md#migrating-from-v3) maps every v3 construct to v4.
 
 Next: [d2](d2.md)

@@ -5,14 +5,15 @@ use std::marker::PhantomData;
 
 use glam::DVec3;
 use kurbo::{Affine, BezPath, CubicBez, Point, Rect, Vec2};
-use svugy_model::model::{Element, Model, Shape};
+use svugy_model::graph::WorkflowGraph;
+use svugy_model::model::{Element, Shape};
 use svugy_model::path::ElementPath;
 
 use super::camera::Camera;
 use super::{Face, FaceShade, Label, Solid};
 use crate::metrics::{LabelBlock, LabelRole, TextAnchor, TextMeasure};
 
-/// Resolves an element's shape to the primitive it is drawn as, seen by camera `C`, the one place a model `Shape` becomes a `Primitive`.
+/// Resolves an element's shape to the primitive it is drawn as, seen by camera `C`, the one place a graph `Shape` becomes a `Primitive`.
 pub(super) struct ResolvedPrimitive<C> {
     /// Height of the top face above the element's floor, where its connections attach and its interior sits.
     pub(super) height: f64,
@@ -33,10 +34,10 @@ impl<C: Camera> ResolvedPrimitive<C> {
     /// Thickness of the sheet stacked under a closed container, a fifth of a block's height.
     const SHEET_THICKNESS: f64 = Block::DEFAULT_HEIGHT / 5.0;
 
-    /// Resolve the element at `path` of `model` as a container or a leaf, or `None` when `model` has no element there.
-    pub(super) fn of_path(model: &Model, path: &ElementPath) -> Option<Self> {
-        let element = model.element(path)?;
-        let is_container = model.is_container(path);
+    /// Resolve the element at `path` of `graph` as a container or a leaf, or `None` when `graph` has no element there.
+    pub(super) fn of_path(graph: &WorkflowGraph, path: &ElementPath) -> Option<Self> {
+        let element = graph.element(path)?;
+        let is_container = graph.is_container(path);
         if is_container {
             let container = Self::of_container();
             return Some(container);
@@ -57,7 +58,8 @@ impl<C: Camera> ResolvedPrimitive<C> {
 
     /// Resolve a leaf to its authored primitive, else a block.
     pub(super) fn of_leaf(element: &Element) -> Self {
-        let shape = element.shape().unwrap_or(Shape::Box);
+        let properties = element.properties();
+        let shape = properties.shape().unwrap_or(Shape::Box);
         match shape {
             Shape::Box => Self::leaf::<Block>(element),
             Shape::Slab => Self::leaf::<Slab>(element),
@@ -68,7 +70,8 @@ impl<C: Camera> ResolvedPrimitive<C> {
 
     /// Resolve `P` standing as tall as `element` sets, else at its default height, its labels on its own leaf site.
     fn leaf<P: Primitive>(element: &Element) -> Self {
-        let authored_height = element.height();
+        let properties = element.properties();
+        let authored_height = properties.height();
         let height = authored_height.unwrap_or(P::DEFAULT_HEIGHT);
         Self {
             height,
@@ -429,7 +432,8 @@ impl LabelSite {
             label_block.title,
         )
         .with_plane(self.plane);
-        let measured_caption = element.caption().zip(label_block.caption);
+        let properties = element.properties();
+        let measured_caption = properties.caption().zip(label_block.caption);
         let Some((caption_text, caption_size)) = measured_caption else {
             return vec![title];
         };

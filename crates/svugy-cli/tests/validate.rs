@@ -170,7 +170,7 @@ fn a_d2_syntax_error_reports_its_byte_offset_line_column_and_source_name() {
 
 #[test]
 fn warnings_only_input_exits_0_with_its_warnings_reported() {
-    let model_argument = fixture("ancestor_edge.json");
+    let model_argument = fixture("unshown_element.json");
     let d2_argument = fixture("broken_link.d2");
 
     let json_run = run_svugy(&["validate", &model_argument, "--format", "json"]);
@@ -181,7 +181,7 @@ fn warnings_only_input_exits_0_with_its_warnings_reported() {
     let human_report = stderr_text(&human_run);
     assert_eq!(json_run.status.code(), Some(0));
     assert_eq!(json_report["severity"], "warning");
-    assert_eq!(codes, ["svugy::ancestor_descendant_edge"]);
+    assert_eq!(codes, ["svugy::unshown_element"]);
     assert_eq!(human_run.status.code(), Some(0));
     assert!(
         human_report.contains("svugy::unresolved_link"),

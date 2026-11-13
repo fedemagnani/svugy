@@ -2,8 +2,8 @@
 
 Write a diagram in Markdown; svugy renders it as one isometric SVG you can click into.
 
-- **Input:** a `.md` file: a nested list of components and a list of edges. It diffs like code, and any Markdown preview shows it as an outline.
-- **Output:** one self-contained `.svg`. Open it in a browser; nothing to install or serve.
+- **Input:** a `.md` file: a nested list of components, then workflows told in steps, each step listing the edges it involves. It diffs like code, and any Markdown preview shows it as an outline.
+- **Output:** one self-contained `.svg`. Open it in a browser, pick a workflow and step through it; nothing to install or serve.
 - **Errors:** `svugy validate` reports every problem in one run, with line and column.
 
 Edit the diagram below: svugy, compiled to wasm, re-renders it as you type. The theme toggle switches between the standard and sketch themes.

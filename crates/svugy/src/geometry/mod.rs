@@ -4,9 +4,11 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::iter;
 
 use kurbo::{Affine, BezPath, Line, Point, Rect, RoundedRect, Shape as _, Size, Vec2};
-use svugy_model::disclose::DisclosedModel;
-use svugy_model::model::{EdgeId, Model};
+use svugy_model::disclose::DisclosedGraph;
+use svugy_model::graph::WorkflowGraph;
+use svugy_model::model::EdgeId;
 use svugy_model::path::ElementPath;
+use svugy_model::workflow::Workflow;
 
 use crate::layout::{LevelPlacement, LevelPlan, LevelPlans};
 use crate::metrics::{LabelRole, TextAnchor, TextMeasure, TextSize, TextSpec};
@@ -24,14 +26,13 @@ mod connection;
 mod depth;
 mod ground;
 mod heading;
-mod legend;
 mod level;
 mod obstruction;
 mod primitive;
 mod score;
 mod stub;
 
-/// Draws the whole diagram in document space as one scene: the ground grid, the root level's group, the diagram's heading and its legend.
+/// Draws one workflow in document space as one scene: the ground grid and the root level's group.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Scene {
     /// Projected ground-grid lines under the root level, painted before everything else.
@@ -39,17 +40,20 @@ pub(crate) struct Scene {
     pub(crate) root: Group,
     /// Local rectangle the viewBox frames once each level is entered, keyed by level; the root's is the document viewBox.
     views_by_level: BTreeMap<ElementPath, Rect>,
-    /// Diagram title and subtitle, upright in document space, when the model sets either.
-    pub(crate) heading: Option<Heading>,
-    /// Legend, upright in document space, when the model has one with anything to draw.
-    pub(crate) legend: Option<LegendPanel>,
+}
+
+/// Heads a scene with its workflow's title and subtitle, upright in document space: the scene a document writes.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct HeadedScene {
+    pub(crate) scene: Scene,
+    pub(crate) heading: Heading,
 }
 
 impl Scene {
     /// Screen margin a view keeps around what it frames.
     const VIEW_MARGIN: f64 = 24.0;
 
-    /// Draw `root` on the ground `ground_lines` rule, each level framed by its view in `views_by_level`, with no heading and no legend.
+    /// Draw `root` on the ground `ground_lines` rule, each level framed by its view in `views_by_level`.
     pub(crate) fn new(
         ground_lines: Vec<Line>,
         root: Group,
@@ -59,35 +63,33 @@ impl Scene {
             ground_lines,
             root,
             views_by_level,
-            heading: None,
-            legend: None,
         }
     }
 
-    /// Project every level `plans` lays out for `model` into one scene seen by camera `C`, closing no container.
+    /// Project every level `plans` lays out for `graph` into one scene seen by camera `C`, closing no container.
     pub(crate) fn project<C: Camera>(
-        model: &Model,
+        graph: &WorkflowGraph,
         plans: &LevelPlans,
         measure: &impl TextMeasure,
     ) -> Self {
         let no_closed_containers = BTreeSet::new();
-        Self::project_closing::<C>(model, &no_closed_containers, plans, measure)
+        Self::project_closing::<C>(graph, &no_closed_containers, plans, measure)
     }
 
     /// Project one disclosure layer, laid out by `plans`, into one scene seen by camera `C`, stacking a sheet under each container it closes.
     pub(crate) fn project_disclosed<C: Camera>(
-        disclosed: &DisclosedModel,
+        disclosed: &DisclosedGraph,
         plans: &LevelPlans,
         measure: &impl TextMeasure,
     ) -> Self {
-        let disclosed_model = disclosed.model();
+        let disclosed_graph = disclosed.graph();
         let closed_containers = disclosed.closed_containers();
-        Self::project_closing::<C>(disclosed_model, closed_containers, plans, measure)
+        Self::project_closing::<C>(disclosed_graph, closed_containers, plans, measure)
     }
 
-    /// Project every level `plans` lays out into one scene seen by camera `C`: the ground grid under the root, each container's interior stacked on its solid, a sheet under each of `closed_containers`, each edge arced in its home level or badged on its source, every container's stub markers over it, every level's view framed around what it draws, then the diagram's heading and legend above it all.
+    /// Project every level `plans` lays out into one scene seen by camera `C`: the ground grid under the root, each container's interior stacked on its solid, a sheet under each of `closed_containers`, each edge arced in its home level or badged on its source, every container's stub markers over it, every level's view framed around what it draws.
     fn project_closing<C: Camera>(
-        model: &Model,
+        graph: &WorkflowGraph,
         closed_containers: &BTreeSet<ElementPath>,
         plans: &LevelPlans,
         measure: &impl TextMeasure,
@@ -96,32 +98,19 @@ impl Scene {
         let root_plan = plans
             .level(&root_path)
             .expect("layout plans the root level");
-        let projector = LevelProjector::<_, C>::new(model, closed_containers, plans, measure);
+        let projector = LevelProjector::<_, C>::new(graph, closed_containers, plans, measure);
         let no_floor_branches = Vec::new();
         let mut root =
             projector.project_level(&root_path, root_plan, Affine::IDENTITY, no_floor_branches);
         let mut stub_markers_by_container =
-            root.plate_stub_markers_per_container::<_, C>(model, plans, measure);
+            root.plate_stub_markers_per_container::<_, C>(graph, plans, measure);
         root.hand_stub_markers_to_interiors(&mut stub_markers_by_container);
         let views_by_level = Self::frame_every_level::<C>(&root, plans);
         let root_placed = root_plan.placed();
         let root_boundary = root_placed.boundary();
         let ground_grid = GroundGrid::covering(root_boundary);
         let ground_lines = ground_grid.lines::<C>();
-        let mut scene = Self::new(ground_lines, root, views_by_level);
-        let content_view = scene.root_view();
-        let heading = Heading::set_above(content_view, model, measure);
-        if let Some(heading) = heading {
-            let heading_bounds = heading.bounds();
-            scene.widen_root_view_to_frame(heading_bounds);
-            scene = scene.with_heading(heading);
-        }
-        let legend = LegendPanel::set_top_right_of::<C>(&scene, model, plans, measure);
-        if let Some(legend) = legend {
-            scene.widen_root_view_to_frame(legend.bounds);
-            scene = scene.with_legend(legend);
-        }
-        scene
+        Self::new(ground_lines, root, views_by_level)
     }
 
     /// Frame the view of `root` and of every level nested in it, each laid out by `plans` and seen by camera `C`, keyed by level.
@@ -157,16 +146,20 @@ impl Scene {
         *root_view = root_view.union(framed_bounds);
     }
 
-    /// Head the scene with `heading`.
-    fn with_heading(mut self, heading: Heading) -> Self {
-        self.heading = Some(heading);
-        self
-    }
-
-    /// Set `legend` on the scene.
-    fn with_legend(mut self, legend: LegendPanel) -> Self {
-        self.legend = Some(legend);
-        self
+    /// Head the scene with `workflow`'s title and subtitle above its content, widening the root view to frame them.
+    pub(crate) fn headed_by(
+        mut self,
+        workflow: &Workflow,
+        measure: &impl TextMeasure,
+    ) -> HeadedScene {
+        let content_view = self.root_view();
+        let heading = Heading::set_above(content_view, workflow, measure);
+        let heading_bounds = heading.bounds();
+        self.widen_root_view_to_frame(heading_bounds);
+        HeadedScene {
+            scene: self,
+            heading,
+        }
     }
 
     /// Return the root level's view, the document viewBox.
@@ -564,49 +557,11 @@ impl StubMarker {
     }
 }
 
-/// Sets the diagram's heading upright and start-anchored: its title over an optional subtitle, or its subtitle alone.
+/// Sets the workflow's heading upright and start-anchored: its title over an optional subtitle.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum Heading {
-    Titled {
-        title: Label,
-        subtitle: Option<Label>,
-    },
-    Subtitled(Label),
-}
-
-/// Sets the legend upright and start-anchored: its title, its entries, then one key row per described line style and badge kind the diagram draws.
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct LegendPanel {
-    pub(crate) title: Option<Label>,
-    pub(crate) entries: Vec<Label>,
-    pub(crate) key_rows: Vec<KeyRow>,
-    /// Screen bounds of every line and key row.
-    pub(crate) bounds: Rect,
-}
-
-/// Keys one legend row: a sample of one way the diagram draws its edges, paired with the description the legend gives it.
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct KeyRow {
-    pub(crate) sample: KeySample,
-    pub(crate) description: Label,
-    /// Screen bounds of the sample and the description together.
-    pub(crate) bounds: Rect,
-}
-
-/// Samples how a set of edges is drawn: a stroke dashed like their arcs, or the icon of the badges of their target.
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) enum KeySample {
-    Stroke {
-        line: Line,
-        stroke_dash: f64,
-        /// Edges whose arcs are dashed `stroke_dash` long, whose paint the sample shares when they all share one.
-        edges: Vec<EdgeId>,
-    },
-    Badge {
-        target: ElementPath,
-        /// Faces of the target's mini, back to front.
-        faces: Vec<Face>,
-    },
+pub(crate) struct Heading {
+    pub(crate) title: Label,
+    pub(crate) subtitle: Option<Label>,
 }
 
 /// Sets a label over a rounded plate on the label's plane, so it stays legible above paths.
@@ -869,6 +824,25 @@ pub(crate) mod fixtures {
             root.connections.push(connection);
             let views_by_level = BTreeMap::from([(ElementPath::root(), view)]);
             Self::new(Vec::new(), root, views_by_level)
+        }
+    }
+
+    impl HeadedScene {
+        /// Head `scene` with a blank title, which a static document draws as nothing, keeping its views.
+        pub(crate) fn untitled(scene: Scene) -> Self {
+            let blank_size = LabelRole::WorkflowTitle.measure_text("", &FixedAdvanceMeasure);
+            let blank_title = Label::new(
+                "",
+                LabelRole::WorkflowTitle,
+                TextAnchor::Start,
+                Point::ORIGIN,
+                blank_size,
+            );
+            let heading = Heading {
+                title: blank_title,
+                subtitle: None,
+            };
+            Self { scene, heading }
         }
     }
 }

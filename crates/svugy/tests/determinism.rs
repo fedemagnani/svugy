@@ -5,6 +5,7 @@ use std::collections::BTreeSet;
 use svugy::{RenderSvg, StaticSvg};
 use svugy_model::builder::{ElementRef, ModelBuilder};
 use svugy_model::model::{Edge, Element, Model};
+use svugy_model::workflow::{Step, StepId, Workflow, WorkflowId};
 
 const REPEATED_RENDER_COUNT: usize = 200;
 const RANDOM_GRAPH_COUNT: usize = 300;
@@ -34,9 +35,15 @@ impl LinearCongruentialGenerator {
     }
 }
 
-/// Build a model of top-level elements with the given ids, joined by the given index pairs.
+/// Build a model of top-level elements with the given ids, joined by the given index pairs, all shown in the one step of its one workflow.
 fn top_level_model_of(element_ids: &[&str], edge_index_pairs: &[(usize, usize)]) -> Model {
     let mut builder = ModelBuilder::new();
+    let main_id = WorkflowId::new("main");
+    let main_workflow = Workflow::new(main_id, "main");
+    let main = builder.add_workflow(main_workflow);
+    let main_step_id = StepId::new("main");
+    let main_step = Step::new(main_step_id, "main");
+    let step = builder.add_step(&main, main_step);
     let element_refs: Vec<ElementRef> = element_ids
         .iter()
         .map(|&element_id| {
@@ -48,8 +55,9 @@ fn top_level_model_of(element_ids: &[&str], edge_index_pairs: &[(usize, usize)])
         let from = &element_refs[from_index];
         let to = &element_refs[to_index];
         let edge = Edge::new();
-        builder.add_edge(from, to, edge);
+        builder.add_edge(&step, from, to, edge);
     }
+    builder.list_every_element(&step);
     builder.build().model.expect("the model is valid")
 }
 
@@ -83,7 +91,7 @@ fn a_graph_whose_alignments_tie_in_width_renders_identically_every_time() {
     let model = top_level_model_of(&["n0", "n1", "n2", "n3"], &edge_index_pairs);
 
     let distinct_renders: BTreeSet<String> = (0..REPEATED_RENDER_COUNT)
-        .map(|_render_index| StaticSvg::render(&model))
+        .map(|_render_index| StaticSvg::render(model.showing_first_workflow()))
         .collect();
 
     assert_eq!(distinct_renders.len(), 1);
@@ -95,8 +103,8 @@ fn random_small_graphs_render_identically_twice() {
 
     for graph_index in 0..RANDOM_GRAPH_COUNT {
         let model = random_small_model(&mut generator);
-        let first_render = StaticSvg::render(&model);
-        let second_render = StaticSvg::render(&model);
+        let first_render = StaticSvg::render(model.showing_first_workflow());
+        let second_render = StaticSvg::render(model.showing_first_workflow());
         assert!(
             first_render == second_render,
             "random graph {graph_index} rendered differently"
@@ -108,7 +116,7 @@ fn random_small_graphs_render_identically_twice() {
 fn a_lone_element_named_like_dagres_root_sentinel_renders() {
     let model = top_level_model_of(&["\u{0}"], &[]);
 
-    let render = StaticSvg::render(&model);
+    let render = StaticSvg::render(model.showing_first_workflow());
 
     assert!(render.starts_with("<svg"));
 }
@@ -118,7 +126,7 @@ fn an_element_named_like_dagres_root_sentinel_renders_with_edges() {
     let edge_index_pairs = [(0, 1), (1, 2), (2, 0)];
     let model = top_level_model_of(&["\u{0}", "a", "b"], &edge_index_pairs);
 
-    let render = StaticSvg::render(&model);
+    let render = StaticSvg::render(model.showing_first_workflow());
 
     assert!(render.starts_with("<svg"));
 }

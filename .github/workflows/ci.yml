@@ -90,4 +90,4 @@ jobs:
       - name: Render the README figure and diff it against the committed one
         env:
           CARGO_TARGET_WASM32_WASIP1_RUNNER: wasmtime --dir=.
-        run: cargo run --quiet --release -p svugy-cli --target ${{ matrix.target }} -- render examples/svugy/svugy.d2 --profile static | diff - docs/svugy.svg
+        run: cargo run --quiet --release -p svugy-cli --target ${{ matrix.target }} -- render examples/svugy/svugy.d2 --profile static --workflow main | diff - docs/svugy.svg

@@ -82,4 +82,4 @@ fixture:
 
 # Render examples/svugy/svugy.d2 as the static SVG the README shows.
 readme:
-    cargo run --quiet -p svugy-cli -- render examples/svugy/svugy.d2 --profile static -o docs/svugy.svg
+    cargo run --quiet -p svugy-cli -- render examples/svugy/svugy.d2 --profile static --workflow main -o docs/svugy.svg

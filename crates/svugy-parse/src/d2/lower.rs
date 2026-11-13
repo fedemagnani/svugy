@@ -1,14 +1,13 @@
-//! Lower a d2 document into the model, merging repeated keys, declaring every endpoint and warning on what the model cannot hold.
+//! Lower a d2 document into a model of one workflow, merging repeated keys, declaring every endpoint and warning on what the model cannot hold.
 
-use std::collections::BTreeMap;
-use std::iter;
+use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Bound;
 
-use svugy_model::builder::{ElementRef, ModelBuilder};
-use svugy_model::legend::{DashKey, Legend};
+use svugy_model::builder::{ElementRef, ModelBuilder, WorkflowRef};
 use svugy_model::model::{ByteRange, Edge, Element, PlacementHint, Shape};
 use svugy_model::path::ElementPath;
-use svugy_model::validate::ModelAdmission;
+use svugy_model::validate::{ModelAdmission, ModelReport};
+use svugy_model::workflow::{ElementOverride, Step, StepId, Workflow, WorkflowId};
 
 use super::D2Import;
 use super::D2Parse;
@@ -16,8 +15,20 @@ use super::ast::{
     EdgeDeclaration, EdgeLink, EdgeOperator, Field, FieldAssignment, KeyPath, KeySegment, Scalar,
     ShapeDeclaration, Span, Statement,
 };
-use super::carrier::{CarrierReader, ElementAttribute, LegendBadge, RootAttribute};
+use super::carrier::{CarrierReader, ElementAttribute};
 use super::diagnostic::{Construct, Diagnostics};
+
+/// Name the one workflow a d2 import yields, also its title when the root has no label.
+const MAIN_WORKFLOW_ID: &str = "main";
+
+/// Name the main workflow's one step, which lists every edge.
+const EVERY_EDGE_STEP_ID: &str = "main";
+
+/// Title the main workflow's one step.
+const EVERY_EDGE_STEP_TITLE: &str = "Every edge";
+
+/// Spell the error of a d2 file declaring no shape, which leaves the main step nothing to list.
+const NO_SHAPE: &str = "the diagram declares no shape, so there is nothing to draw";
 
 /// Name the one d2 direction svugy's layered placement follows, its ranks advancing along plan x.
 const LAYERED_DIRECTION: &str = "right";
@@ -34,11 +45,10 @@ const MAPPED_D2_SHAPES: [(&str, Option<Shape>); 5] = [
 /// Name the d2 shapes that draw a diagram of their own instead of one node (d2target at v0.9.0).
 const SPECIAL_D2_SHAPES: [&str; 4] = ["sql_table", "sequence_diagram", "class", "hierarchy"];
 
-/// Lower each statement into drafts of the diagram's title, subtitle, legend, elements and edges, recording every diagnostic on the way.
+/// Lower each statement into drafts of the main workflow's title and subtitle, the elements and the edges, recording every diagnostic on the way.
 struct Lowering {
     title: Option<String>,
     subtitle: Option<String>,
-    legend: Option<LegendDraft>,
     elements: ElementDrafts,
     edges: Vec<EdgeDraft>,
     diagnostics: Diagnostics,
@@ -50,22 +60,15 @@ struct ElementDrafts {
     drafts: BTreeMap<ElementPath, ElementDraft>,
 }
 
-/// Merge every d2 declaration of one element, the last write winning as in d2.
+/// Merge every d2 declaration of one element and of its override in the main workflow, the last write winning as in d2.
 struct ElementDraft {
+    declaration_index: usize,
     name: String,
     element: Element,
+    main_override: Option<ElementOverride>,
     d2_shape: Option<Shape>,
     svugy_shape: Option<Shape>,
     badge_mark_span: Option<Span>,
-}
-
-/// Merge the root carrier's legend attributes, the last write winning as in d2; badge keys wait as written until every shape is declared.
-#[derive(Default)]
-struct LegendDraft {
-    title: Option<String>,
-    entries: Vec<String>,
-    dashes: Vec<(DashKey, String)>,
-    badges: Vec<LegendBadge>,
 }
 
 /// Connect two element keys with an edge already carrying its label, style and span.
@@ -99,7 +102,6 @@ impl Lowering {
         Self {
             title: None,
             subtitle: None,
-            legend: None,
             elements,
             edges,
             diagnostics,
@@ -178,7 +180,7 @@ impl Lowering {
                 to_key,
                 edge,
             };
-            self.edges.push(edge_draft);
+            self.push_edge_unless_lineage_or_warn(edge_draft, link_span);
             tail_key = head_key;
             tail_start = target.span.start;
         }
@@ -234,6 +236,17 @@ impl Lowering {
         }
     }
 
+    /// Keep `edge_draft` unless it joins a component to itself, its ancestor or its descendant, which svugy can't draw: drop that one with a warning at `link_span`.
+    fn push_edge_unless_lineage_or_warn(&mut self, edge_draft: EdgeDraft, link_span: Span) {
+        let is_lineage_edge = edge_draft.from_key.shares_lineage_with(&edge_draft.to_key);
+        if is_lineage_edge {
+            self.diagnostics
+                .record_warning(Construct::LineageEdge, link_span);
+            return;
+        }
+        self.edges.push(edge_draft);
+    }
+
     /// Apply a field to its target element, or to the diagram when the target is the root.
     fn lower_field_assignment(&mut self, scope_key: &ElementPath, assignment: FieldAssignment) {
         let FieldAssignment {
@@ -267,7 +280,7 @@ impl Lowering {
             Field::Link(link) => {
                 let link_range = ByteRange::from(link.span);
                 self.elements.edit_element(&target_key, |element| {
-                    element.with_link(link.text).with_link_span(link_range)
+                    element.with_link_written_at(link.text, Some(link_range))
                 });
             }
             Field::Style(properties) => self.elements.edit_element(&target_key, |element| {
@@ -278,12 +291,12 @@ impl Lowering {
             Field::Svugy(properties) => {
                 let mut carrier_reader = CarrierReader::new(&mut self.diagnostics);
                 let element_attributes = carrier_reader.read_element(properties, span);
-                self.merge_element_carrier(&target_key, element_attributes);
+                self.merge_element_carrier(&target_key, element_attributes, span);
             }
         }
     }
 
-    /// Title the diagram by the root's `label`, as d2 titles a board's PDF page, subtitle it by the root's carrier, keep its default direction, and warn on every other field.
+    /// Title the main workflow by the root's `label`, as d2 titles a board's PDF page, subtitle it by the root's carrier, keep its default direction, and warn on every other field.
     fn lower_root_field(&mut self, field: Field, span: Span) {
         let root_key = ElementPath::root();
         let field_keyword = field.keyword();
@@ -292,8 +305,10 @@ impl Lowering {
             Field::Label(label) => self.title = Some(label.text),
             Field::Svugy(properties) => {
                 let mut carrier_reader = CarrierReader::new(&mut self.diagnostics);
-                let root_attributes = carrier_reader.read_root(properties);
-                self.merge_root_carrier(root_attributes);
+                let subtitle = carrier_reader.read_root_subtitle(properties);
+                if let Some(subtitle) = subtitle {
+                    self.subtitle = Some(subtitle);
+                }
             }
             Field::Direction(direction) => self.lower_direction_field(&root_key, direction),
             _element_only_field => {
@@ -303,25 +318,7 @@ impl Lowering {
         }
     }
 
-    /// Merge the root carrier's attributes in write order: the latest subtitle, legend title and entries win as in d2, dashes and badges accumulate.
-    fn merge_root_carrier(&mut self, attributes: Vec<RootAttribute>) {
-        for attribute in attributes {
-            match attribute {
-                RootAttribute::Subtitle(subtitle) => self.subtitle = Some(subtitle),
-                RootAttribute::LegendTitle(title) => self.legend_mut().title = Some(title),
-                RootAttribute::LegendEntries(entries) => self.legend_mut().entries = entries,
-                RootAttribute::LegendDash(dash_key, description) => {
-                    let dash_description = (dash_key, description);
-                    self.legend_mut().dashes.push(dash_description);
-                }
-                RootAttribute::LegendBadge(legend_badge) => {
-                    self.legend_mut().badges.push(legend_badge);
-                }
-            }
-        }
-    }
-
-    /// Map `direction: right` onto layered placement, which the root already has; svugy's placement follows no other direction.
+    /// Map `direction: right` onto layered placement in the main workflow, which the root already has; svugy's placement follows no other direction.
     fn lower_direction_field(&mut self, element_key: &ElementPath, direction: Scalar) {
         let is_diff_layered_direction = direction.text != LAYERED_DIRECTION;
         if is_diff_layered_direction {
@@ -333,9 +330,10 @@ impl Lowering {
         if is_root {
             return;
         }
-        self.elements.edit_element(element_key, |element| {
-            element.with_child_placement(PlacementHint::Layered)
-        });
+        self.elements
+            .edit_main_override(element_key, direction.span, |element_override| {
+                element_override.with_child_placement(PlacementHint::Layered)
+            });
     }
 
     /// Map a d2 shape onto a primitive through `MAPPED_D2_SHAPES`, warning on special and unmapped shapes.
@@ -359,11 +357,12 @@ impl Lowering {
         self.elements.draft_mut(element_key).d2_shape = *primitive;
     }
 
-    /// Merge an element carrier's attributes into its draft in write order, the latest write winning as in d2; the carrier's primitive outranks d2's `shape`.
+    /// Merge an element carrier's attributes, written at `carrier_span`, into its draft in write order, the latest write winning as in d2; the carrier's primitive outranks d2's `shape`.
     fn merge_element_carrier(
         &mut self,
         element_key: &ElementPath,
         attributes: Vec<ElementAttribute>,
+        carrier_span: Span,
     ) {
         for attribute in attributes {
             match attribute {
@@ -383,36 +382,48 @@ impl Lowering {
                     self.elements.draft_mut(element_key).badge_mark_span = badge_mark_span;
                 }
                 ElementAttribute::Position(position) => {
-                    self.elements
-                        .edit_element(element_key, |element| element.with_position(position));
+                    self.elements.edit_main_override(
+                        element_key,
+                        carrier_span,
+                        |element_override| element_override.with_position(position),
+                    );
                 }
             }
         }
     }
 
-    /// Finish into the import: resolve the legend's badge keys, warn at container badge marks, build the model through its admission and sort the diagnostics by source offset.
+    /// Finish into the import: withhold the model of a diagram of no shape behind one error at the file start, else warn at container badge marks and build the model through its admission; sort the diagnostics by source offset.
     fn into_import(self) -> D2Import {
         let Self {
             title,
             subtitle,
-            legend,
             elements,
             edges,
             mut diagnostics,
         } = self;
-        let mut builder = ModelBuilder::new();
-        if let Some(title) = title {
-            builder = builder.with_title(title);
-        }
-        if let Some(subtitle) = subtitle {
-            builder = builder.with_subtitle(subtitle);
-        }
-        if let Some(legend_draft) = legend {
-            let legend = legend_draft.resolve(&elements, &mut diagnostics);
-            builder = builder.with_legend(legend);
+        let declares_no_shape = elements.drafts.is_empty();
+        if declares_no_shape {
+            let file_start = Span::new(0, 0);
+            diagnostics.record_error(NO_SHAPE, file_start);
+            let withheld_admission = ModelAdmission {
+                model: None,
+                report: ModelReport::default(),
+            };
+            let (errors, warnings) = diagnostics.into_sorted_parts();
+            return D2Import {
+                admission: withheld_admission,
+                errors,
+                warnings,
+            };
         }
         elements.warn_container_badge_marks(&mut diagnostics);
-        let admission = Self::build_model(builder, elements, edges);
+        let main_workflow_id = WorkflowId::new(MAIN_WORKFLOW_ID);
+        let main_title = title.unwrap_or_else(|| MAIN_WORKFLOW_ID.to_owned());
+        let mut main_workflow = Workflow::new(main_workflow_id, main_title);
+        if let Some(subtitle) = subtitle {
+            main_workflow = main_workflow.with_subtitle(subtitle);
+        }
+        let admission = Self::build_model(main_workflow, elements, edges);
         let (errors, warnings) = diagnostics.into_sorted_parts();
         D2Import {
             admission,
@@ -421,9 +432,9 @@ impl Lowering {
         }
     }
 
-    /// Hand the drafts to `builder`, parents before children, then the edges in declaration order, and return its admission.
+    /// Build the model of `main_workflow`: every element with its override, parents before children, then one step listing every edge in declaration order and every leaf no edge touches, so it draws what d2 draws.
     fn build_model(
-        mut builder: ModelBuilder,
+        main_workflow: Workflow,
         elements: ElementDrafts,
         edges: Vec<EdgeDraft>,
     ) -> ModelAdmission {
@@ -431,7 +442,13 @@ impl Lowering {
             .into_iter()
             .map(|edge_draft| edge_draft.badged_if_from_leaf_into_badge_leaf(&elements))
             .collect();
-        let element_refs = elements.add_to(&mut builder);
+        let untouched_leaf_keys = elements.leaf_keys_no_edge_touches(&badged_edges);
+        let mut builder = ModelBuilder::new();
+        let main_workflow_ref = builder.add_workflow(main_workflow);
+        let element_refs = elements.add_to(&mut builder, &main_workflow_ref);
+        let every_edge_step_id = StepId::new(EVERY_EDGE_STEP_ID);
+        let every_edge_step = Step::new(every_edge_step_id, EVERY_EDGE_STEP_TITLE);
+        let every_edge_step_ref = builder.add_step(&main_workflow_ref, every_edge_step);
         for edge_draft in badged_edges {
             let EdgeDraft {
                 from_key,
@@ -440,14 +457,13 @@ impl Lowering {
             } = edge_draft;
             let from_ref = &element_refs[&from_key];
             let to_ref = &element_refs[&to_key];
-            builder.add_edge(from_ref, to_ref, edge);
+            builder.add_edge(&every_edge_step_ref, from_ref, to_ref, edge);
+        }
+        for leaf_key in untouched_leaf_keys {
+            let leaf_ref = &element_refs[&leaf_key];
+            builder.list_element(&every_edge_step_ref, leaf_ref);
         }
         builder.build()
-    }
-
-    /// Return the legend's draft, drafting an empty one on first use.
-    fn legend_mut(&mut self) -> &mut LegendDraft {
-        self.legend.get_or_insert_with(LegendDraft::default)
     }
 }
 
@@ -483,11 +499,15 @@ impl ElementDrafts {
         span: Span,
     ) -> ElementPath {
         let element_key = Self::child_key(parent_key, &segment.name);
+        let is_declared = self.drafts.contains_key(&element_key);
+        if is_declared {
+            return element_key;
+        }
+        let declaration_index = self.drafts.len();
+        let name = segment.name.clone();
+        let draft = ElementDraft::new(declaration_index, name, span);
         let drafted_key = element_key.clone();
-        self.drafts.entry(drafted_key).or_insert_with(|| {
-            let name = segment.name.clone();
-            ElementDraft::new(name, span)
-        });
+        self.drafts.insert(drafted_key, draft);
         element_key
     }
 
@@ -497,14 +517,6 @@ impl ElementDrafts {
         parent_key.child(folded_name)
     }
 
-    /// Key the element at `path` from the root case-insensitively, as d2 matches keys.
-    fn key_of(path: &[String]) -> ElementPath {
-        let root_key = ElementPath::root();
-        path.iter().fold(root_key, |parent_key, name| {
-            Self::child_key(&parent_key, name)
-        })
-    }
-
     /// Replace the drafted element by `edit` of it, as the model's builders consume the element they extend.
     fn edit_element(&mut self, element_key: &ElementPath, edit: impl FnOnce(Element) -> Element) {
         let draft = self.draft_mut(element_key);
@@ -512,35 +524,60 @@ impl ElementDrafts {
         draft.element = edit(element);
     }
 
-    /// Return the model path of the shape declared under `element_key`, each segment spelled as its first declaration spelled it.
-    fn declared_path_of(&self, element_key: &ElementPath) -> Option<ElementPath> {
-        let ancestor_keys = element_key.ancestors();
-        let own_key = element_key.clone();
-        let own_key_once = iter::once(own_key);
-        let element_and_ancestor_keys = ancestor_keys.chain(own_key_once);
-        let declared_names: Option<Vec<String>> = element_and_ancestor_keys
-            .map(|key| {
-                let draft = self.drafts.get(&key)?;
-                let declared_name = draft.name.clone();
-                Some(declared_name)
-            })
-            .collect();
-        let declared_names = declared_names?;
-        let declared_path = ElementPath::from_segments(declared_names);
-        Some(declared_path)
+    /// Replace the element's override of the main workflow by `edit` of it, spanned at `span`, the field that wrote it last.
+    fn edit_main_override(
+        &mut self,
+        element_key: &ElementPath,
+        span: Span,
+        edit: impl FnOnce(ElementOverride) -> ElementOverride,
+    ) {
+        let draft = self.draft_mut(element_key);
+        let main_override = draft.main_override.take().unwrap_or_default();
+        let field_range = ByteRange::from(span);
+        let edited_override = edit(main_override).with_span(field_range);
+        draft.main_override = Some(edited_override);
     }
 
-    /// Add every drafted element to `builder`, parents before children, and return each one's ref by its key.
-    fn add_to(self, builder: &mut ModelBuilder) -> BTreeMap<ElementPath, ElementRef> {
+    /// Return the key of every leaf `edges` leave untouched, in declaration order: an element with no drafted child, an empty container included.
+    fn leaf_keys_no_edge_touches(&self, edges: &[EdgeDraft]) -> Vec<ElementPath> {
+        let touched_keys: BTreeSet<&ElementPath> = edges
+            .iter()
+            .flat_map(|edge_draft| [&edge_draft.from_key, &edge_draft.to_key])
+            .collect();
+        let mut untouched_leaf_drafts: Vec<(&ElementPath, &ElementDraft)> = self
+            .drafts
+            .iter()
+            .filter(|(element_key, _draft)| {
+                let is_leaf = !self.is_container(element_key);
+                let is_untouched = !touched_keys.contains(element_key);
+                is_leaf && is_untouched
+            })
+            .collect();
+        untouched_leaf_drafts.sort_by_key(|(_element_key, draft)| draft.declaration_index);
+        untouched_leaf_drafts
+            .into_iter()
+            .map(|(element_key, _draft)| element_key.clone())
+            .collect()
+    }
+
+    /// Add every drafted element to `builder`, parents before children, with its override of `workflow`, and return each one's ref by its key.
+    fn add_to(
+        self,
+        builder: &mut ModelBuilder,
+        workflow: &WorkflowRef,
+    ) -> BTreeMap<ElementPath, ElementRef> {
         let mut element_refs: BTreeMap<ElementPath, ElementRef> = BTreeMap::new();
         for (element_key, draft) in self.drafts {
             let parent_key = element_key.parent();
             let parent_ref = parent_key.and_then(|parent_key| element_refs.get(&parent_key));
-            let (name, element) = draft.into_named_element();
+            let (name, element, main_override) = draft.into_parts();
             let element_ref = match parent_ref {
                 Some(parent_ref) => builder.add_child(parent_ref, &name, element),
                 None => builder.add_top_level(&name, element),
             };
+            if let Some(main_override) = main_override {
+                builder.override_element(workflow, &element_ref, main_override);
+            }
             element_refs.insert(element_key, element_ref);
         }
         element_refs
@@ -582,73 +619,40 @@ impl ElementDrafts {
     }
 }
 
-impl LegendDraft {
-    /// Resolve the draft into the model's legend, each badge key to the path its shape is declared under; a key naming no shape is an error dropping only its description.
-    fn resolve(self, elements: &ElementDrafts, diagnostics: &mut Diagnostics) -> Legend {
-        let Self {
-            title,
-            entries,
-            dashes,
-            badges,
-        } = self;
-        let mut legend = Legend::new();
-        if let Some(title) = title {
-            legend = legend.with_title(title);
-        }
-        legend = entries.into_iter().fold(legend, Legend::with_entry);
-        for (dash_key, description) in dashes {
-            legend = legend.with_dash_description(dash_key, description);
-        }
-        for legend_badge in badges {
-            let LegendBadge {
-                target_path,
-                description,
-                span,
-            } = legend_badge;
-            let target_key = ElementDrafts::key_of(&target_path);
-            let Some(target) = elements.declared_path_of(&target_key) else {
-                let message = format!(
-                    "`{target_key}` names no shape: a `svugy.legend.badges` key is the path of a badge target, e.g. `pipeline.inter`"
-                );
-                diagnostics.record_error(message, span);
-                continue;
-            };
-            legend = legend.with_badge_description(target, description);
-        }
-        legend
-    }
-}
-
 impl ElementDraft {
-    /// Draft an element labelled by its own name, declared at `span`.
-    fn new(name: String, span: Span) -> Self {
+    /// Draft an element labelled by its own name, declared `declaration_index`-th at `span`.
+    fn new(declaration_index: usize, name: String, span: Span) -> Self {
         let source_range = ByteRange::from(span);
         let label = name.clone();
         let element = Element::new(label).with_span(source_range);
         Self {
+            declaration_index,
             name,
             element,
+            main_override: None,
             d2_shape: None,
             svugy_shape: None,
             badge_mark_span: None,
         }
     }
 
-    /// Split the draft into its key name and its element, shaped by the carrier first and d2 second, kept apart until now as d2's `rectangle` resets its shape.
-    fn into_named_element(self) -> (String, Element) {
+    /// Split the draft into its key name, its element and its override of the main workflow; the element is shaped by the carrier first and d2 second, kept apart until now as d2's `rectangle` resets its shape.
+    fn into_parts(self) -> (String, Element, Option<ElementOverride>) {
         let Self {
+            declaration_index: _declaration_index,
             name,
             element,
+            main_override,
             d2_shape,
             svugy_shape,
             badge_mark_span: _badge_mark_span,
         } = self;
         let shape = svugy_shape.or(d2_shape);
         let Some(shape) = shape else {
-            return (name, element);
+            return (name, element, main_override);
         };
         let shaped_element = element.with_shape(shape);
-        (name, shaped_element)
+        (name, shaped_element, main_override)
     }
 }
 

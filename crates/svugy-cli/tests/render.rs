@@ -1,4 +1,4 @@
-//! Prove `svugy render` writes the interactive or static SVG in either theme from JSON and d2 input, and exits with the documented codes.
+//! Prove `svugy render` writes the interactive or static SVG in either theme from JSON and d2 input, on the chosen workflow or each in turn, and exits with the documented codes.
 
 mod support;
 
@@ -27,7 +27,14 @@ fn render_writes_the_interactive_svg_unless_the_static_profile_is_asked_for() {
 
     let default_run = run_svugy(&["render", &model_argument]);
     let interactive_run = run_svugy(&["render", &model_argument, "--profile", "interactive"]);
-    let static_run = run_svugy(&["render", &model_argument, "--profile", "static"]);
+    let static_run = run_svugy(&[
+        "render",
+        &model_argument,
+        "--profile",
+        "static",
+        "--workflow",
+        "main",
+    ]);
 
     let default_svg = stdout_text(&default_run);
     let static_svg = stdout_text(&static_run);
@@ -58,6 +65,8 @@ fn render_draws_either_profile_hand_drawn_only_under_the_sketch_theme() {
         "sketch",
         "--profile",
         "static",
+        "--workflow",
+        "main",
     ]);
 
     let default_svg = stdout_text(&default_run);
@@ -69,6 +78,65 @@ fn render_draws_either_profile_hand_drawn_only_under_the_sketch_theme() {
     );
     assert!(sketch_interactive_svg.contains(HACHURE_ATTRIBUTE));
     assert!(sketch_static_svg.contains(HACHURE_ATTRIBUTE));
+}
+
+#[test]
+fn render_opens_on_the_named_workflow_writes_each_one_as_stem_id_svg_and_rejects_an_unknown_id_or_stem()
+ {
+    let diagram_argument = fixture("two_workflows.md");
+    let extensionless_output_argument = scratch_file("each_workflow");
+    let order_svg_path = scratch_file("each_workflow.order.svg");
+    let refund_svg_path = scratch_file("each_workflow.refund.svg");
+    let stemless_output_argument = scratch_file(".svg");
+    let directory_output_argument = scratch_file("some_directory/");
+
+    let refund_run = run_svugy(&["render", &diagram_argument, "--workflow", "refund"]);
+    let static_without_workflow_run =
+        run_svugy(&["render", &diagram_argument, "--profile", "static"]);
+    let each_static_run = run_svugy(&[
+        "render",
+        &diagram_argument,
+        "--profile",
+        "static",
+        "--all-workflows",
+        "-o",
+        &extensionless_output_argument,
+    ]);
+    let unknown_workflow_run = run_svugy(&["render", &diagram_argument, "--workflow", "audit"]);
+    let stemless_output_run = run_svugy(&[
+        "render",
+        &diagram_argument,
+        "--all-workflows",
+        "-o",
+        &stemless_output_argument,
+    ]);
+    let directory_output_run = run_svugy(&[
+        "render",
+        &diagram_argument,
+        "--all-workflows",
+        "-o",
+        &directory_output_argument,
+    ]);
+
+    let refund_svg = stdout_text(&refund_run);
+    let order_svg = fs::read_to_string(&order_svg_path).expect("render wrote the order workflow");
+    let refund_static_svg =
+        fs::read_to_string(&refund_svg_path).expect("render wrote the refund workflow");
+    let unknown_workflow_report = stderr_text(&unknown_workflow_run);
+    let order_edge = r#"data-svugy-edge="(web -&gt; api)[0]""#;
+    let refund_edge = r#"data-svugy-edge="(api -&gt; web)[0]""#;
+    assert!(refund_svg.contains(r#"<g data-svugy-shown="" data-svugy-workflow="refund">"#));
+    assert_eq!(static_without_workflow_run.status.code(), Some(2));
+    assert!(each_static_run.status.success());
+    assert!(order_svg.contains(order_edge) && !order_svg.contains(refund_edge));
+    assert!(refund_static_svg.contains(refund_edge) && !refund_static_svg.contains(order_edge));
+    assert_eq!(unknown_workflow_run.status.code(), Some(2));
+    assert!(
+        unknown_workflow_report.contains("order, refund"),
+        "an unknown id lists the input's workflows: {unknown_workflow_report}"
+    );
+    assert_eq!(stemless_output_run.status.code(), Some(2));
+    assert_eq!(directory_output_run.status.code(), Some(2));
 }
 
 #[test]

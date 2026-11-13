@@ -8,17 +8,21 @@ mod paint;
 mod static_profile;
 mod traveler;
 
+use std::collections::BTreeMap;
+
 use kurbo::{BezPath, Line, Rect};
-use svugy_model::disclose::DisclosedModel;
-use svugy_model::model::{Model, ViewAngle};
+use svugy_model::disclose::DisclosedGraph;
+use svugy_model::graph::WorkflowGraph;
+use svugy_model::model::{ProjectedWorkflow, ViewAngle};
 use svugy_model::path::ElementPath;
+use svugy_model::workflow::WorkflowId;
 
 use crate::geometry::{
-    Badge, Camera, Connection, Face, FaceShade, Group, Heading, KeySample, Label, LegendPanel,
-    PlatedLabel, Scene, Solid,
+    Badge, Camera, Connection, Face, FaceShade, Group, HeadedScene, Heading, Label, PlatedLabel,
+    Scene, Solid,
 };
 use crate::metrics::LabelRole;
-use crate::render::contract::{ContractAnnotator, DiagramDetails, RuntimeContract};
+use crate::render::contract::{ContractAnnotator, RuntimeContract, WorkflowDetails};
 use crate::render::theme::paint::Paint;
 use crate::render::theme::shading::Shading;
 use crate::render::theme::stroke::Stroke;
@@ -32,7 +36,7 @@ pub(crate) use interactive::Interactive;
 #[cfg(test)]
 pub(crate) use interactive::Runtime;
 use level_view::LevelViews;
-use paint::{Dashes, ModelPaints, PlatePaint, SolidPaint};
+use paint::{Dashes, GraphPaints, PlatePaint, SolidPaint};
 pub(crate) use static_profile::Static;
 use traveler::{ResolvedTraveler, TravelerSymbols};
 
@@ -107,13 +111,19 @@ type ThemeStroke<P> = <<P as Profile>::Theme as Theme>::Stroke;
 /// Shades faces in the manner of profile `P`'s theme.
 type ThemeShading<P> = <<P as Profile>::Theme as Theme>::Shading;
 
-/// Pairs a disclosure layer with the scene projected from it: one layer of the interactive document.
+/// Pairs a disclosure layer with the headed scene projected from it: one layer of the interactive document.
 pub(crate) struct LayerScene<'d> {
-    disclosure: &'d DisclosedModel,
-    scene: Scene,
+    disclosure: &'d DisclosedGraph,
+    headed_scene: HeadedScene,
 }
 
-/// Groups every disclosure layer one camera projects, with the ground it sees: one angle of the interactive document.
+/// Groups every camera's disclosure layers of one projected workflow: one workflow of the interactive document.
+pub(crate) struct WorkflowScenes<'d> {
+    projection: &'d ProjectedWorkflow<'d>,
+    cameras: Vec<CameraLayers<'d>>,
+}
+
+/// Groups every disclosure layer one camera projects, with the ground it sees: one angle of one workflow of the interactive document.
 pub(crate) struct CameraLayers<'d> {
     angle: ViewAngle,
     ground: EndlessGround,
@@ -127,12 +137,13 @@ struct Definitions {
     grounds: Vec<EndlessGround>,
 }
 
-/// Writes one layer's scene in a single pass, painted from the model it draws, ending each connection in its shared arrowhead, moving each traveler as its shared symbol and framing each level in its collected view.
+/// Writes one layer's headed scene in a single pass, painted from the graph it draws, ending each connection in its shared arrowhead, moving each traveler as its shared symbol and framing each level in its collected view.
 struct LayerPass<'r, 'm, P> {
     profile: &'r P,
     scene: &'r Scene,
-    model: &'m Model,
-    paints: ModelPaints<'m>,
+    heading: &'r Heading,
+    graph: &'m WorkflowGraph,
+    paints: GraphPaints<'m>,
     annotator: ContractAnnotator<'m>,
     definitions: &'r Definitions,
     level_views: LevelViews,
@@ -144,12 +155,19 @@ impl<P: Profile> Renderer<P> {
         Self { profile }
     }
 
-    /// Write `scene`, projected whole from `model`, as a document of one unwrapped layer sized to its root view: the definitions, the canvas, then the layer's ground grid, heading, legend and root level.
-    pub(crate) fn write_document(&self, model: &Model, scene: &Scene) -> String {
-        let drawn_layer = (&scene.root, model);
+    /// Write `headed_scene`, projected whole from the graph of `projection`, as a document of one unwrapped layer sized to its root view: the definitions, the canvas, then the layer's ground grid, heading and root level.
+    pub(crate) fn write_document(
+        &self,
+        projection: &ProjectedWorkflow,
+        headed_scene: &HeadedScene,
+    ) -> String {
+        let scene = &headed_scene.scene;
+        let graph = projection.graph();
+        let drawn_layer = (&scene.root, graph);
         let definitions = Definitions::collect(&[drawn_layer]);
-        let annotator = ContractAnnotator::new(model);
-        let layer_pass = LayerPass::new(&self.profile, scene, model, annotator, &definitions);
+        let annotator = ContractAnnotator::new(projection);
+        let layer_pass =
+            LayerPass::new(&self.profile, headed_scene, graph, annotator, &definitions);
         let document_view = scene.root_view();
         self.write_root(document_view, |writer| {
             definitions.write(writer, &self.profile);
@@ -200,49 +218,84 @@ impl<P: Profile> Renderer<P> {
 }
 
 impl<T: Theme> InteractiveRenderer<T> {
-    /// Write `camera_layers`, each camera's disclosure layers of `model`, as the interactive document sized to the canvas covering every layer's root view from `shown_angle`, so changing layer never changes its aspect ratio: the model's title, its diagram details, the definitions every camera shares, one canvas, then one group per camera holding the endless ground the reader pans across and one group per layer; the group of the camera at `shown_angle` and every camera's deepest layer are shown, so a viewer without scripts sees the whole diagram from the author's angle.
+    /// Write `workflow_scenes`, every workflow's camera layers, as the interactive document sized to the canvas covering every layer's root view of every workflow from `shown_angle`, so changing workflow or layer never changes its aspect ratio: the definitions every workflow shares, one canvas, then one group per workflow holding its details and one group per camera, each holding the endless ground the reader pans across and one group per layer; the group of `shown_workflow`, of every camera at `shown_angle` and of every camera's deepest layer are shown, so a viewer without scripts sees that workflow whole from the author's angle.
     pub(crate) fn write_layered_document(
         &self,
-        model: &Model,
+        workflow_scenes: &[WorkflowScenes],
+        shown_workflow: &WorkflowId,
         shown_angle: ViewAngle,
-        camera_layers: &[CameraLayers],
     ) -> String {
-        let every_layer_scene = camera_layers.iter().flat_map(|camera| &camera.layer_scenes);
-        let drawn_layers: Vec<(&Group, &Model)> = every_layer_scene
+        let every_camera = workflow_scenes
+            .iter()
+            .flat_map(|workflow_scene| &workflow_scene.cameras);
+        let every_layer_scene = every_camera.clone().flat_map(|camera| &camera.layer_scenes);
+        let drawn_layers: Vec<(&Group, &WorkflowGraph)> = every_layer_scene
             .map(|layer_scene| {
-                let layer_model = layer_scene.disclosure.model();
-                (&layer_scene.scene.root, layer_model)
+                let layer_graph = layer_scene.disclosure.graph();
+                (&layer_scene.headed_scene.scene.root, layer_graph)
             })
             .collect();
-        let grounds = camera_layers.iter().map(|camera| camera.ground).collect();
+        let grounds_by_angle: BTreeMap<ViewAngle, EndlessGround> = every_camera
+            .clone()
+            .map(|camera| (camera.angle, camera.ground))
+            .collect();
+        let grounds = grounds_by_angle.into_values().collect();
         let definitions = Definitions::collect(&drawn_layers).with_endless_grounds(grounds);
-        let shown_camera = camera_layers
-            .iter()
-            .find(|camera| camera.angle == shown_angle)
-            .expect("every interactive document projects the author's angle");
-        let canvas_view = shown_camera.canvas_view();
+        let shown_cameras = every_camera.filter(|camera| camera.angle == shown_angle);
+        let shown_canvas_views = shown_cameras.map(CameraLayers::canvas_view);
+        let canvas_view = shown_canvas_views
+            .reduce(|covered_view, canvas_view| covered_view.union(canvas_view))
+            .expect("every model has a workflow projected from the author's angle");
         self.write_root(canvas_view, |writer| {
-            if let Some(title) = model.title() {
-                let no_attributes = Attributes::new();
-                writer.text_element("title", &no_attributes, title);
-            }
-            if let Some(diagram_details) = DiagramDetails::of(model) {
-                diagram_details.write(writer);
-            }
             definitions.write(writer, &self.profile);
             self.write_canvas(writer, canvas_view);
-            for camera in camera_layers {
-                let is_shown_camera = camera.angle == shown_angle;
-                self.write_camera(writer, model, camera, is_shown_camera, &definitions);
+            for workflow_scene in workflow_scenes {
+                let scene_workflow = workflow_scene.projection.workflow();
+                let is_shown_workflow = scene_workflow.id() == shown_workflow;
+                self.write_workflow(
+                    writer,
+                    workflow_scene,
+                    is_shown_workflow,
+                    shown_angle,
+                    &definitions,
+                );
             }
         })
     }
 
-    /// Write `camera`'s group, its layers disclosed from `model`: the endless ground, then one group per layer, the deepest shown; the group itself shown when `is_shown_camera`.
+    /// Write `workflow_scene`'s group: the workflow's details, then one group per camera, the one at `shown_angle` shown; the group itself shown when `is_shown_workflow`.
+    fn write_workflow(
+        &self,
+        writer: &mut SvgWriter,
+        workflow_scene: &WorkflowScenes,
+        is_shown_workflow: bool,
+        shown_angle: ViewAngle,
+        definitions: &Definitions,
+    ) {
+        let workflow = workflow_scene.projection.workflow();
+        let workflow_id = workflow.id().as_str();
+        let workflow_attributes =
+            Attributes::new().with_text(RuntimeContract::WORKFLOW, workflow_id);
+        let shown_workflow_attributes = if is_shown_workflow {
+            workflow_attributes.with_text(RuntimeContract::SHOWN, "")
+        } else {
+            workflow_attributes
+        };
+        writer.open_element("g", &shown_workflow_attributes);
+        let workflow_details = WorkflowDetails::of(workflow);
+        workflow_details.write(writer);
+        for camera in &workflow_scene.cameras {
+            let is_shown_camera = camera.angle == shown_angle;
+            self.write_camera(writer, workflow_scene, camera, is_shown_camera, definitions);
+        }
+        writer.close_element();
+    }
+
+    /// Write `camera`'s group, its layers disclosed from `workflow_scene`'s graph: the endless ground, then one group per layer, the deepest shown; the group itself shown when `is_shown_camera`.
     fn write_camera(
         &self,
         writer: &mut SvgWriter,
-        model: &Model,
+        workflow_scene: &WorkflowScenes,
         camera: &CameraLayers,
         is_shown_camera: bool,
         definitions: &Definitions,
@@ -259,13 +312,18 @@ impl<T: Theme> InteractiveRenderer<T> {
         camera.ground.write_plane(writer);
         let deepest_layer_index = camera.layer_scenes.len() - 1;
         for (layer_index, layer_scene) in camera.layer_scenes.iter().enumerate() {
-            let layer_model = layer_scene.disclosure.model();
-            let annotator = ContractAnnotator::new(model)
+            let layer_graph = layer_scene.disclosure.graph();
+            let annotator = ContractAnnotator::new(workflow_scene.projection)
                 .with_disclosure(layer_scene.disclosure)
                 .with_descriptions();
-            let scene = &layer_scene.scene;
-            let layer_pass =
-                LayerPass::new(&self.profile, scene, layer_model, annotator, definitions);
+            let headed_scene = &layer_scene.headed_scene;
+            let layer_pass = LayerPass::new(
+                &self.profile,
+                headed_scene,
+                layer_graph,
+                annotator,
+                definitions,
+            );
             let layer_value = layer_index.to_string();
             let layer_attributes =
                 Attributes::new().with_text(RuntimeContract::LAYER, &layer_value);
@@ -284,9 +342,25 @@ impl<T: Theme> InteractiveRenderer<T> {
 }
 
 impl<'d> LayerScene<'d> {
-    /// Pair `disclosure` with `scene`, projected from its model.
-    pub(crate) fn new(disclosure: &'d DisclosedModel, scene: Scene) -> Self {
-        Self { disclosure, scene }
+    /// Pair `disclosure` with `headed_scene`, projected from its graph.
+    pub(crate) fn new(disclosure: &'d DisclosedGraph, headed_scene: HeadedScene) -> Self {
+        Self {
+            disclosure,
+            headed_scene,
+        }
+    }
+}
+
+impl<'d> WorkflowScenes<'d> {
+    /// Group `cameras`, every camera's layers of the workflow `projection` pairs with its graph.
+    pub(crate) fn new(
+        projection: &'d ProjectedWorkflow<'d>,
+        cameras: Vec<CameraLayers<'d>>,
+    ) -> Self {
+        Self {
+            projection,
+            cameras,
+        }
     }
 }
 
@@ -306,7 +380,7 @@ impl<'d> CameraLayers<'d> {
         let root_views = self
             .layer_scenes
             .iter()
-            .map(|layer_scene| layer_scene.scene.root_view());
+            .map(|layer_scene| layer_scene.headed_scene.scene.root_view());
         root_views
             .reduce(|covered_view, root_view| covered_view.union(root_view))
             .expect("disclosure yields layer 0 at least")
@@ -314,8 +388,8 @@ impl<'d> CameraLayers<'d> {
 }
 
 impl Definitions {
-    /// Collect the arrowheads and travelers of every layer of `drawn_layers`, each a root level and the model it is drawn from.
-    fn collect(drawn_layers: &[(&Group, &Model)]) -> Self {
+    /// Collect the arrowheads and travelers of every layer of `drawn_layers`, each a root level and the graph it is drawn from.
+    fn collect(drawn_layers: &[(&Group, &WorkflowGraph)]) -> Self {
         let arrowheads = ArrowheadMarkers::collect(drawn_layers);
         let travelers = TravelerSymbols::collect(drawn_layers);
         Self {
@@ -351,20 +425,23 @@ impl Definitions {
 }
 
 impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
-    /// Set up the pass over layer `scene`, painted from `model`, annotated by `annotator`, referencing `definitions`.
+    /// Set up the pass over layer `headed_scene`, painted from `graph`, annotated by `annotator`, referencing `definitions`.
     fn new(
         profile: &'r P,
-        scene: &'r Scene,
-        model: &'m Model,
+        headed_scene: &'r HeadedScene,
+        graph: &'m WorkflowGraph,
         annotator: ContractAnnotator<'m>,
         definitions: &'r Definitions,
     ) -> Self {
-        let paints = ModelPaints::new(model);
+        let scene = &headed_scene.scene;
+        let heading = &headed_scene.heading;
+        let paints = GraphPaints::new(graph);
         let level_views = LevelViews::collect(scene);
         Self {
             profile,
             scene,
-            model,
+            heading,
+            graph,
             paints,
             annotator,
             definitions,
@@ -379,14 +456,9 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         }
     }
 
-    /// Write the layer's scene: its heading, legend, then root level.
+    /// Write the layer's scene: its heading, then root level.
     fn write_layer(&self, writer: &mut SvgWriter) {
-        if let Some(heading) = &self.scene.heading {
-            self.write_heading(writer, heading);
-        }
-        if let Some(legend) = &self.scene.legend {
-            self.write_legend(writer, legend);
-        }
+        self.write_heading(writer, self.heading);
         let root = ElementPath::root();
         self.write_level(writer, &root, &self.scene.root);
     }
@@ -404,20 +476,15 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         writer.empty_element("line", &line_attributes);
     }
 
-    /// Write the heading: the diagram's title in text ink and its subtitle muted, outside every level group, so they stay in document space whatever level is entered, in the group a live viewer clicks for the diagram's description.
+    /// Write the heading: the workflow's title in text ink and its subtitle muted, outside every level group, so they stay in document space whatever level is entered, in the group a live viewer activates for the workflow menu.
     fn write_heading(&self, writer: &mut SvgWriter, heading: &Heading) {
         let title_ink = Paint::Token(Token::Text);
         let subtitle_ink = Paint::Token(Token::TextMuted);
         let heading_attributes = Attributes::new().with_text(RuntimeContract::HEADING, "");
         self.profile
-            .write_in_live_group(writer, &heading_attributes, |writer| match heading {
-                Heading::Titled { title, subtitle } => {
-                    self.write_label_in_ink(writer, title, title_ink);
-                    if let Some(subtitle) = subtitle {
-                        self.write_label_in_ink(writer, subtitle, subtitle_ink);
-                    }
-                }
-                Heading::Subtitled(subtitle) => {
+            .write_in_live_group(writer, &heading_attributes, |writer| {
+                self.write_label_in_ink(writer, &heading.title, title_ink);
+                if let Some(subtitle) = &heading.subtitle {
                     self.write_label_in_ink(writer, subtitle, subtitle_ink);
                 }
             });
@@ -447,51 +514,6 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
             return ink_presentation.with_number("opacity", CAPTION_OPACITY);
         }
         ink_presentation
-    }
-
-    /// Set the legend's title in text ink and its entries muted, then each key row's sample and its muted description, outside every level group like the heading.
-    fn write_legend(&self, writer: &mut SvgWriter, legend: &LegendPanel) {
-        let title_ink = Paint::Token(Token::Text);
-        let line_ink = Paint::Token(Token::TextMuted);
-        if let Some(title) = &legend.title {
-            self.write_label_in_ink(writer, title, title_ink);
-        }
-        for entry in &legend.entries {
-            self.write_label_in_ink(writer, entry, line_ink);
-        }
-        for key_row in &legend.key_rows {
-            self.write_key_sample(writer, &key_row.sample);
-            self.write_label_in_ink(writer, &key_row.description, line_ink);
-        }
-    }
-
-    /// Draw a key sample as the diagram draws what it samples: a stroke dashed and painted like its arcs, or a badge shaded like its target.
-    fn write_key_sample(&self, writer: &mut SvgWriter, sample: &KeySample) {
-        match sample {
-            KeySample::Stroke {
-                line,
-                stroke_dash,
-                edges,
-            } => {
-                let sample_paint = self.paints.stroke_sample(edges);
-                let dashes = Dashes::along_connection(*stroke_dash);
-                let mut sample_path = BezPath::new();
-                sample_path.move_to(line.p0);
-                sample_path.line_to(line.p1);
-                let drawn_sample_path = ThemeStroke::<P>::redraw_connection(&sample_path);
-                let path_data = PathData(&drawn_sample_path).to_string();
-                let sample_attributes = self
-                    .stroke_attributes(sample_paint, dashes)
-                    .with_text("d", &path_data);
-                writer.empty_element("path", &sample_attributes);
-            }
-            KeySample::Badge { target, faces } => {
-                let target_paint = self.paints.solid(target);
-                for face in faces {
-                    self.write_face(writer, face, &target_paint);
-                }
-            }
-        }
     }
 
     /// Stroke an unfilled path like a connection: in `paint`, at the connection width and opacity, dashed by `dashes` unless solid.
@@ -687,7 +709,7 @@ impl<'r, 'm, P: Profile> LayerPass<'r, 'm, P> {
         let Some(dot_path) = &connection.dot_path else {
             return;
         };
-        let traveler = ResolvedTraveler::carried_along(&connection.edge, self.model);
+        let traveler = ResolvedTraveler::carried_along(&connection.edge, self.graph);
         let traveler_paint = self.profile.paint_value(connection_paint);
         traveler.write_moving_along(writer, dot_path, &traveler_paint);
     }
@@ -767,13 +789,14 @@ mod tests {
     use std::collections::{BTreeMap, BTreeSet};
     use std::iter;
 
+    use crate::one_step::OneStepModelBuilder;
     use kurbo::{Affine, BezPath, Point, RoundedRect, Shape};
-    use svugy_model::builder::{ElementRef, ModelBuilder};
+    use svugy_model::builder::ElementRef;
     use svugy_model::color::Rgb;
-    use svugy_model::model::{Edge, EdgeId, Element};
+    use svugy_model::model::{Edge, EdgeId, Element, Model};
     use svugy_model::path::ElementPath;
-    use svugy_parse::diagnostic::SourceLanguage;
-    use svugy_parse::json::{JsonLanguage, JsonPrinter};
+    use svugy_model::properties::ComponentProperties;
+    use svugy_model::workflow::{Workflow, WorkflowId};
 
     use super::*;
     use crate::geometry::Isometric;
@@ -813,30 +836,40 @@ mod tests {
 
     /// Build elements `a` and `b` joined by one labelled edge, as the fixture scene draws them.
     fn model_with_a_and_b(a_element: Element) -> Model {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let a = builder.add_top_level("a", a_element);
         let b = builder.add_top_level("b", Element::new("b"));
         let calls = Edge::new().with_label("calls");
         builder.add_edge(&a, &b, calls);
-        builder.build().model.expect("valid model")
+        builder.build()
     }
 
-    /// Render `scene`, painted from `model`'s styles, in `profile`.
-    fn render_scene(model: &Model, scene: &Scene, profile: impl Profile) -> String {
+    /// Build element `a` linking to `link`.
+    fn element_a_linked_to(link: &str) -> Element {
+        let link_property = ComponentProperties::new().with_link(link);
+        Element::new("a").with_properties(link_property)
+    }
+
+    /// Render `headed_scene`, painted from the styles of `model`'s one workflow, in `profile`, as that workflow draws it.
+    fn render_scene(model: &Model, headed_scene: &HeadedScene, profile: impl Profile) -> String {
+        let main_workflow = model.showing_first_workflow();
+        let projection = main_workflow.projected();
         let renderer = Renderer::new(profile);
-        renderer.write_document(model, scene)
+        renderer.write_document(&projection, headed_scene)
     }
 
     fn render_fixture_scene(model: &Model) -> String {
         let font = BundledFont::<InterFaces>::new();
         let scene = Scene::two_solids_and_one_connection();
+        let headed_scene = HeadedScene::untitled(scene);
         let profile = Static::<Standard>::new(&font);
-        render_scene(model, &scene, profile)
+        render_scene(model, &headed_scene, profile)
     }
 
     fn render_interactive_fixture_scene(model: &Model) -> String {
         let scene = Scene::two_solids_and_one_connection();
-        render_scene(model, &scene, Interactive::<Standard>::new())
+        let headed_scene = HeadedScene::untitled(scene);
+        render_scene(model, &headed_scene, Interactive::<Standard>::new())
     }
 
     #[test]
@@ -853,8 +886,9 @@ mod tests {
         let model = model_with_a_and_b(a_element);
         let font = BundledFont::<ExcalifontFaces>::new();
         let scene = Scene::two_solids_and_one_connection();
+        let headed_scene = HeadedScene::untitled(scene);
         let profile = Static::<Sketch>::new(&font);
-        let markup = render_scene(&model, &scene, profile);
+        let markup = render_scene(&model, &headed_scene, profile);
         insta::assert_snapshot!(markup);
     }
 
@@ -911,7 +945,7 @@ mod tests {
 
     /// Build a `depth`-level chain: each level holds a peer `p{level}` and a nest `n{level}`, joined by one stroked edge.
     fn nested_model(depth: usize) -> Model {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let mut parent: Option<ElementRef> = None;
         for level in 0..depth {
             let peer_id = format!("p{level}");
@@ -935,7 +969,7 @@ mod tests {
             builder.add_edge(&peer, &nest, edge);
             parent = Some(nest);
         }
-        builder.build().model.expect("valid model")
+        builder.build()
     }
 
     fn nested_scene(depth: usize) -> Scene {
@@ -1028,8 +1062,9 @@ mod tests {
         let font = BundledFont::<InterFaces>::new();
         let model = nested_model(depth);
         let scene = nested_scene(depth);
+        let headed_scene = HeadedScene::untitled(scene);
         let profile = Static::<Standard>::new(&font);
-        render_scene(&model, &scene, profile)
+        render_scene(&model, &headed_scene, profile)
     }
 
     fn nested_path_nodes(group: &usvg::Group) -> Vec<&usvg::Path> {
@@ -1129,8 +1164,10 @@ mod tests {
     #[test]
     fn every_nested_level_carries_its_outer_view_as_its_data_view() {
         let model = nested_model(DEEP_NESTED_DEPTH);
-        let scene = nested_scene(DEEP_NESTED_DEPTH);
-        let markup = render_scene(&model, &scene, Interactive::<Standard>::new());
+        let unheaded_scene = nested_scene(DEEP_NESTED_DEPTH);
+        let headed_scene = HeadedScene::untitled(unheaded_scene);
+        let markup = render_scene(&model, &headed_scene, Interactive::<Standard>::new());
+        let scene = &headed_scene.scene;
         let nested_interiors: Vec<NestedInterior> = scene.root.nested_interiors().collect();
         assert_eq!(nested_interiors.len(), DEEP_NESTED_DEPTH - 1);
         for nested_interior in nested_interiors {
@@ -1152,16 +1189,16 @@ mod tests {
 
     #[test]
     fn a_path_link_enters_its_level_and_only_safe_urls_become_anchors() {
-        let path_linked_model = model_with_a_and_b(Element::new("a").with_link("b"));
-        let script_linked_model =
-            model_with_a_and_b(Element::new("a").with_link("javascript:alert(1)"));
+        let path_linked_model = model_with_a_and_b(element_a_linked_to("b"));
+        let script_linked_model = model_with_a_and_b(element_a_linked_to("javascript:alert(1)"));
         let url_linked_model =
-            model_with_a_and_b(Element::new("a").with_link("https://example.com/?a=1&b=2"));
+            model_with_a_and_b(element_a_linked_to("https://example.com/?a=1&b=2"));
         let path_linked_markup = render_interactive_fixture_scene(&path_linked_model);
         let script_linked_markup = render_interactive_fixture_scene(&script_linked_model);
         let url_linked_markup = render_interactive_fixture_scene(&url_linked_model);
-        let leaf_target_entering_root = "<g data-svugy-element=\"a\" data-svugy-goto=\"\">";
-        let unlinked_element = "<g data-svugy-element=\"a\">";
+        let leaf_target_entering_root =
+            "<g data-svugy-element=\"a\" data-svugy-goto=\"\" data-svugy-steps=\"main\">";
+        let unlinked_element = "<g data-svugy-element=\"a\" data-svugy-steps=\"main\">";
         assert!(
             path_linked_markup.contains(leaf_target_entering_root),
             "{path_linked_markup}"
@@ -1182,8 +1219,7 @@ mod tests {
             script_linked_markup.contains(unlinked_element),
             "{script_linked_markup}"
         );
-        let anchored_element =
-            "<a href=\"https://example.com/?a=1&amp;b=2\">\n<g data-svugy-element=\"a\">";
+        let anchored_element = "<a href=\"https://example.com/?a=1&amp;b=2\">\n<g data-svugy-element=\"a\" data-svugy-steps=\"main\">";
         assert!(
             url_linked_markup.contains(anchored_element),
             "{url_linked_markup}"
@@ -1195,9 +1231,10 @@ mod tests {
         let hostile_text = "\"q\" <b> & ]]> '\u{FFFF}\u{1}end";
         let xml_safe_text = "\"q\" <b> & ]]> 'end";
         let json_escaped_text = "\"q\" <b> & ]]> '\u{1}end";
-        let hostile_element = Element::new(hostile_text)
+        let hostile_properties = ComponentProperties::new()
             .with_caption(hostile_text)
             .with_metadata("note", hostile_text);
+        let hostile_element = Element::new(hostile_text).with_properties(hostile_properties);
         let model = model_with_a_and_b(hostile_element);
         let markup = render_interactive_fixture_scene(&model);
         let options = usvg::Options::default();
@@ -1233,8 +1270,9 @@ mod tests {
     fn only_the_sketch_theme_hatches_faces_over_fills_the_runtime_never_highlights() {
         let model = model_with_a_and_b(Element::new("a"));
         let scene = Scene::two_solids_and_one_connection();
+        let headed_scene = HeadedScene::untitled(scene);
         let standard_markup = render_interactive_fixture_scene(&model);
-        let sketch_markup = render_scene(&model, &scene, Interactive::<Sketch>::new());
+        let sketch_markup = render_scene(&model, &headed_scene, Interactive::<Sketch>::new());
         let sketch_attributes = [RuntimeContract::HACHURE, RuntimeContract::FACE_FILL];
         for sketch_attribute in sketch_attributes {
             let marked_element = format!(" {sketch_attribute}=\"\"");
@@ -1294,12 +1332,12 @@ mod tests {
 
     #[test]
     fn hanging_tags_take_the_ink_of_the_ground_they_hang_onto() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let desk_element = Element::new("desk").with_style("fill", "#1b2436");
         let desk = builder.add_top_level("desk", desk_element);
         let core = builder.add_child(&desk, "core", Element::new("core"));
         builder.add_child(&core, "engine", Element::new("engine"));
-        let model = builder.build().model.expect("valid model");
+        let model = builder.build();
         let view = Rect::new(-20.0, -20.0, 180.0, 140.0);
         let mut desk_interior = Group::new(Affine::IDENTITY);
         let core_solid = tagged_solid(core.path(), "core");
@@ -1310,7 +1348,8 @@ mod tests {
         let views_by_level =
             BTreeMap::from([(ElementPath::root(), view), (desk.path().clone(), view)]);
         let scene = Scene::new(Vec::new(), root, views_by_level);
-        let markup = render_scene(&model, &scene, Interactive::<Standard>::new());
+        let headed_scene = HeadedScene::untitled(scene);
+        let markup = render_scene(&model, &headed_scene, Interactive::<Standard>::new());
         let desk_tag = label_line(&markup, "desk");
         let core_tag = label_line(&markup, "core");
         assert!(
@@ -1320,19 +1359,25 @@ mod tests {
         assert!(core_tag.starts_with("<text fill=\"#ffffff\""), "{core_tag}");
     }
 
-    /// Build the fixture plan's `a -> b`, titled and subtitled, projected in `font`.
-    fn headed_fixture(font: &BundledFont<InterFaces>) -> (Model, Scene) {
-        let mut builder = ModelBuilder::new()
-            .with_title("svugy · how it is built")
-            .with_subtitle("full Rust stack");
+    /// Build the fixture plan's `a -> b`, titled and subtitled, projected in `font` under its heading.
+    fn headed_fixture(font: &BundledFont<InterFaces>) -> (Model, HeadedScene) {
+        let main_id = WorkflowId::new("main");
+        let main_workflow =
+            Workflow::new(main_id, "svugy · how it is built").with_subtitle("full Rust stack");
+        let mut builder = OneStepModelBuilder::of_workflow(main_workflow);
         let a = builder.add_top_level("a", Element::new("a"));
         let b = builder.add_top_level("b", Element::new("b"));
         builder.add_edge(&a, &b, Edge::new().with_label("calls"));
-        let model = builder.build().model.expect("valid model");
+        let model = builder.build();
+        let built_workflow = model.showing_first_workflow();
+        let projection = built_workflow.projected();
+        let graph = projection.graph();
         let plan = LevelPlan::two_boxes_and_one_route();
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project::<Isometric>(&model, &plans, font);
-        (model, scene)
+        let unheaded_scene = Scene::project::<Isometric>(graph, &plans, font);
+        let heading_workflow = projection.workflow();
+        let headed_scene = unheaded_scene.headed_by(heading_workflow, font);
+        (model, headed_scene)
     }
 
     /// Return the lines between the canvas and the root level group, where the heading is drawn, leaving out the ground grid painted beneath it.
@@ -1349,8 +1394,8 @@ mod tests {
     #[test]
     fn interactive_heading_sets_upright_text_outside_every_level_in_text_and_muted_ink() {
         let font = BundledFont::<InterFaces>::new();
-        let (model, scene) = headed_fixture(&font);
-        let markup = render_scene(&model, &scene, Interactive::<Standard>::new());
+        let (model, headed_scene) = headed_fixture(&font);
+        let markup = render_scene(&model, &headed_scene, Interactive::<Standard>::new());
 
         let heading_lines = lines_before_the_root_level(&markup);
 
@@ -1393,9 +1438,9 @@ mod tests {
     #[test]
     fn static_heading_outlines_both_lines_in_palette_literals_before_the_root_level() {
         let font = BundledFont::<InterFaces>::new();
-        let (model, scene) = headed_fixture(&font);
+        let (model, headed_scene) = headed_fixture(&font);
         let profile = Static::<Standard>::new(&font);
-        let markup = render_scene(&model, &scene, profile);
+        let markup = render_scene(&model, &headed_scene, profile);
 
         let heading_lines = lines_before_the_root_level(&markup);
 
@@ -1443,8 +1488,9 @@ mod tests {
         let mut scene = Scene::two_solids_and_one_connection();
         let labelled_connection = scene.root.connections.remove(0);
         scene.root.traces.push(labelled_connection);
+        let headed_scene = HeadedScene::untitled(scene);
 
-        let markup = render_scene(&model, &scene, Interactive::<Standard>::new());
+        let markup = render_scene(&model, &headed_scene, Interactive::<Standard>::new());
 
         let document = roxmltree::Document::parse(&markup).expect("well-formed XML");
         let root_level = document
@@ -1525,11 +1571,11 @@ mod tests {
     fn interactive_profile_overlays_every_level_with_its_stub_markers() {
         let model = nested_model(NESTED_DEPTH);
         let scene = nested_scene(NESTED_DEPTH);
-        let markup = render_scene(&model, &scene, Interactive::<Standard>::new());
+        let headed_scene = HeadedScene::untitled(scene);
+        let markup = render_scene(&model, &headed_scene, Interactive::<Standard>::new());
         let overlay_group_count = markup.matches("<g data-svugy-overlay=\"\"").count();
         assert_eq!(overlay_group_count, NESTED_DEPTH);
-        let stub_group =
-            "<g data-svugy-goto=\"\" data-svugy-stub=\"outside\">\n<title>to outside</title>";
+        let stub_group = "<g data-svugy-goto=\"\" data-svugy-steps=\"main\" data-svugy-stub=\"outside\">\n<title>to outside</title>";
         let stub_group_count = markup.matches(stub_group).count();
         assert_eq!(stub_group_count, NESTED_DEPTH - 1);
         let stub_plate_count = markup.matches("<rect").count() - 1;
@@ -1564,73 +1610,24 @@ mod tests {
         assert!(is_deepest_face_drawn_in_place, "{expected_bounds:?}");
     }
 
-    /// Load the svugy golden, with its legend unless `is_unlegended`.
-    fn golden_model(is_unlegended: bool) -> Model {
-        let model = crate::svugy_example::SvugyExample::model();
-        if is_unlegended {
-            let saved = JsonPrinter::print(&model);
-            let mut model_value: serde_json::Value = serde_json::from_str(&saved).expect("JSON");
-            let fields = model_value
-                .as_object_mut()
-                .expect("a model saves as an object");
-            fields.remove("legend");
-            let unlegended = model_value.to_string();
-            let import = JsonLanguage::import(&unlegended);
-            let import_parts = import.into_admitted_parts();
-            import_parts
-                .model
-                .expect("dropping the legend keeps a sound model")
-        } else {
-            model
-        }
-    }
-
-    #[test]
-    fn the_legend_is_text_in_the_interactive_profile_and_glyph_paths_in_the_static_one() {
-        let legended_model = golden_model(false);
-        let unlegended_model = golden_model(true);
-        let interactive_svg = InteractiveSvg::render(&legended_model);
-        let static_svg = StaticSvg::render(&legended_model);
-        let unlegended_static_svg = StaticSvg::render(&unlegended_model);
-
-        assert!(interactive_svg.contains(">Read it as a story</text>"));
-        assert!(interactive_svg.contains(">reads the bundled font</text>"));
-        assert!(!static_svg.contains("Read it as a story"));
-        let static_path_count = static_svg.matches("<path ").count();
-        let unlegended_path_count = unlegended_static_svg.matches("<path ").count();
-        let legend_lines = 1 + 4 + 3;
-        let legend_samples = 2 + 2;
-        assert_eq!(
-            static_path_count - unlegended_path_count,
-            legend_lines + legend_samples
-        );
-        let root_level_start = static_svg
-            .find("<g data-svugy-level=")
-            .expect("the root level is drawn");
-        let embedded_sample_start = static_svg
-            .find(r#"stroke-dasharray="2 4""#)
-            .expect("the embedded line is dotted");
-        assert!(embedded_sample_start < root_level_start);
-    }
-
     #[test]
     fn a_badge_is_its_edges_one_group_per_camera_with_its_details_inside_its_sources_group_in_both_profiles()
      {
-        let source_group = r#"<g data-svugy-element="pipeline.render.profile">"#;
-        let next_source_group = r#"<g data-svugy-element="pipeline.render.writer">"#;
-        let badge_group_opening = r#"<g data-svugy-edge="(pipeline.render.profile -&gt; pipeline.inter)[0]" data-svugy-from="pipeline.render.profile" data-svugy-to="pipeline.inter">"#;
-        let badge_details = r#"<title>outlines</title>
+        let source_group = r#"<g data-svugy-element="pipeline.render.profile" "#;
+        let next_source_group = r#"<g data-svugy-element="pipeline.render.writer" "#;
+        let badge_group_opening = r#"<g data-svugy-edge="(pipeline.render.profile -&gt; pipeline.inter)[0]" data-svugy-from="pipeline.render.profile" data-svugy-steps="#;
+        let badge_group = r#"<title>outlines</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(pipeline.render.profile -&gt; pipeline.inter)[0]","from":"pipeline.render.profile","to":"pipeline.inter","label":"outlines"}</desc>"#;
-        let badge_group = format!("{badge_group_opening}\n{badge_details}");
-        let model = golden_model(false);
-        let interactive_svg = InteractiveSvg::render(&model);
-        let static_svg = StaticSvg::render(&model);
+        let model = crate::svugy_example::SvugyExample::model();
+        let main_workflow = model.showing_first_workflow();
+        let interactive_svg = InteractiveSvg::render(main_workflow);
+        let static_svg = StaticSvg::render(main_workflow);
         let camera_count = interactive_svg.matches("<g data-svugy-camera=").count();
         for (svg, camera_count) in [(interactive_svg, camera_count), (static_svg, 1)] {
             let source_start = svg.find(source_group).expect("profile is drawn");
             let next_source_start = svg.find(next_source_group).expect("writer is drawn");
             let badge_start = svg
-                .find(&badge_group)
+                .find(badge_group)
                 .expect("the badge carries its details");
             let edge_group_count = svg.matches(badge_group_opening).count();
             assert!(source_start < badge_start && badge_start < next_source_start);

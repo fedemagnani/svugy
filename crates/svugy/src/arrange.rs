@@ -1,10 +1,10 @@
-//! Search a model's arrangements for its most readable layout: layout lays each candidate out, geometry projects and measures it, and one score, straying from the author's order last, ranks them.
+//! Search a graph's arrangements for its most readable layout: layout lays each candidate out, geometry projects and measures it, and one score, straying from the author's order last, ranks them.
 
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::marker::PhantomData;
 
-use svugy_model::model::Model;
+use svugy_model::graph::WorkflowGraph;
 use svugy_model::path::ElementPath;
 
 use crate::geometry::{Camera, QuantizedLength, Scene, SceneScore};
@@ -20,9 +20,9 @@ pub(crate) struct LayoutScore {
     source_order_distance: usize,
 }
 
-/// Searches a model's arrangements for its most readable layout as camera `C` sees it: starting from the seed layout's, it tries every move of one decision at a time, keeps a move only when it scores strictly better, and stops when a sweep improves nothing or its layouts run out.
+/// Searches a graph's arrangements for its most readable layout as camera `C` sees it: starting from the seed layout's, it tries every move of one decision at a time, keeps a move only when it scores strictly better, and stops when a sweep improves nothing or its layouts run out.
 pub(crate) struct ArrangementSearch<'s, M, C> {
-    model: &'s Model,
+    graph: &'s WorkflowGraph,
     measure: &'s M,
     layouts_left: usize,
     placement_cache: PlacementCache,
@@ -93,14 +93,14 @@ impl<'s, M: TextMeasure, C: Camera> ArrangementSearch<'s, M, C> {
     /// Most children a container may hold for every order of them to be tried; larger ones try adjacent swaps.
     const MAX_PERMUTED_CHILDREN: usize = 6;
 
-    /// Search `model`'s arrangements, measuring labels with `measure`.
-    pub(crate) fn new(model: &'s Model, measure: &'s M) -> Self {
+    /// Search `graph`'s arrangements, measuring labels with `measure`.
+    pub(crate) fn new(graph: &'s WorkflowGraph, measure: &'s M) -> Self {
         let layouts_left = Self::LAYOUT_BUDGET;
         let placement_cache = PlacementCache::new();
         let evaluated = BTreeSet::new();
         let scored_layouts = Vec::new();
         Self {
-            model,
+            graph,
             measure,
             layouts_left,
             placement_cache,
@@ -112,10 +112,10 @@ impl<'s, M: TextMeasure, C: Camera> ArrangementSearch<'s, M, C> {
 
     /// Return the most readable arrangements found, with their layout: sweep every ranked level's moves within ranks, every free container's orders and orientations, then every bundle's acceptance and slot side; when a sweep improves nothing, try each container move paired with each rank move, since a container's new order often pays only once its neighbours move too; stop when that improves nothing either.
     pub(crate) fn best(mut self) -> (Arrangements, LevelPlans) {
-        let (seed_plans, seed_arrangements) = LevelPlans::lay_out_seeded(self.model, self.measure);
+        let (seed_plans, seed_arrangements) = LevelPlans::lay_out_seeded(self.graph, self.measure);
         self.layouts_left -= 1;
         let seed_scene_score = self.remembered_scene_score_of(&seed_plans);
-        let seed_source_order_distance = seed_arrangements.source_order_distance(self.model);
+        let seed_source_order_distance = seed_arrangements.source_order_distance(self.graph);
         let seed_score = LayoutScore::new(seed_scene_score, seed_source_order_distance);
         let evaluated_seed = seed_arrangements.clone();
         self.evaluated.insert(evaluated_seed);
@@ -124,9 +124,9 @@ impl<'s, M: TextMeasure, C: Camera> ArrangementSearch<'s, M, C> {
             plans: seed_plans,
             score: seed_score,
         };
-        let rank_movable_levels = Arrangements::rank_movable_levels(self.model);
-        let free_containers = Arrangements::free_containers(self.model);
-        let bundle_groups = GroupId::bundle_candidates_of(self.model);
+        let rank_movable_levels = Arrangements::rank_movable_levels(self.graph);
+        let free_containers = Arrangements::free_containers(self.graph);
+        let bundle_groups = GroupId::bundle_candidates_of(self.graph);
         loop {
             let mut is_improved = false;
             for level in &rank_movable_levels {
@@ -174,13 +174,13 @@ impl<'s, M: TextMeasure, C: Camera> ArrangementSearch<'s, M, C> {
             self.evaluated.insert(evaluated_arrangements);
             self.layouts_left -= 1;
             let plans = LevelPlans::lay_out_with(
-                self.model,
+                self.graph,
                 &arrangements,
                 &self.placement_cache,
                 self.measure,
             );
             let scene_score = self.remembered_scene_score_of(&plans);
-            let source_order_distance = arrangements.source_order_distance(self.model);
+            let source_order_distance = arrangements.source_order_distance(self.graph);
             let score = LayoutScore::new(scene_score, source_order_distance);
             let is_better = score.cmp(&best.score) == Ordering::Less;
             if !is_better {
@@ -202,7 +202,7 @@ impl<'s, M: TextMeasure, C: Camera> ArrangementSearch<'s, M, C> {
         current: &Arrangements,
         container: &ElementPath,
     ) -> Vec<Arrangements> {
-        let current_order = current.packing_order_of(self.model, container);
+        let current_order = current.packing_order_of(self.graph, container);
         let child_count = current_order.len();
         let is_permutable = child_count <= Self::MAX_PERMUTED_CHILDREN;
         let orders = if is_permutable {
@@ -248,7 +248,7 @@ impl<'s, M: TextMeasure, C: Camera> ArrangementSearch<'s, M, C> {
         level: &ElementPath,
     ) -> Vec<Arrangements> {
         let mut moves = Vec::new();
-        for (child, _element) in self.model.children(level) {
+        for (child, _element) in self.graph.children(level) {
             let rank_moves = [
                 RankMove::ToNorthEnd(child.clone()),
                 RankMove::ToSouthEnd(child.clone()),
@@ -291,7 +291,7 @@ impl<'s, M: TextMeasure, C: Camera> ArrangementSearch<'s, M, C> {
 
     /// Measure what the scene `plans` lay out costs its reader: project it and score it.
     fn scene_score_of(&self, plans: &LevelPlans) -> SceneScore {
-        let scene = Scene::project::<C>(self.model, plans, self.measure);
+        let scene = Scene::project::<C>(self.graph, plans, self.measure);
         scene.score::<C>()
     }
 
@@ -353,13 +353,13 @@ mod tests {
         ];
         let font = BundledFont::<InterFaces>::new();
         for (name, markdown) in examples {
-            let model = example_model(markdown);
-            let search = ArrangementSearch::<_, Isometric>::new(&model, &font);
+            let graph = example_graph(markdown);
+            let search = ArrangementSearch::<_, Isometric>::new(&graph, &font);
 
-            let (seed_plans, seed_arrangements) = LevelPlans::lay_out_seeded(&model, &font);
+            let (seed_plans, seed_arrangements) = LevelPlans::lay_out_seeded(&graph, &font);
             let seed_score = layout_score_of(&search, &seed_arrangements, &seed_plans);
             let (best_arrangements, best_plans) = search.best();
-            let rescoring_search = ArrangementSearch::<_, Isometric>::new(&model, &font);
+            let rescoring_search = ArrangementSearch::<_, Isometric>::new(&graph, &font);
             let best_score = layout_score_of(&rescoring_search, &best_arrangements, &best_plans);
 
             assert!(
@@ -375,15 +375,18 @@ mod tests {
         plans: &LevelPlans,
     ) -> LayoutScore {
         let scene_score = search.scene_score_of(plans);
-        let source_order_distance = arrangements.source_order_distance(search.model);
+        let source_order_distance = arrangements.source_order_distance(search.graph);
         LayoutScore::new(scene_score, source_order_distance)
     }
 
-    fn example_model(markdown: &str) -> Model {
+    fn example_graph(markdown: &str) -> WorkflowGraph {
         let import = MarkdownLanguage::import(markdown);
         let import_parts = import.into_admitted_parts();
-        import_parts
+        let model = import_parts
             .model
-            .expect("every example is a valid diagram")
+            .expect("every example is a valid diagram");
+        let first_workflow = model.showing_first_workflow();
+        let projection = first_workflow.projected();
+        projection.into_graph()
     }
 }

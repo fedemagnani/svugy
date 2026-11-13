@@ -1,10 +1,12 @@
-//! Pick the paint of every solid and connection from the model's styles.
+//! Pick the paint of every solid and connection from the graph's styles.
 
 use std::fmt;
 
 use svugy_model::color::Rgba;
-use svugy_model::model::{Edge, EdgeId, Element, Model};
+use svugy_model::graph::WorkflowGraph;
+use svugy_model::model::{Edge, EdgeId, Element};
 use svugy_model::path::ElementPath;
+use svugy_model::properties::ComponentProperties;
 use svugy_model::style::{ColorKey, NumberKey};
 
 use crate::geometry::FaceShade;
@@ -26,9 +28,9 @@ const DASH_GAP_RATIO: f64 = 0.8;
 /// Lengthen a connection's gap past its dash by this much.
 const CONNECTION_DASH_GAP_EXCESS: f64 = 2.0;
 
-/// Picks paints from the model's `fill`, `stroke` and `stroke-dash` styles, falling back to theme surfaces.
-pub(crate) struct ModelPaints<'m> {
-    model: &'m Model,
+/// Picks paints from the graph's `fill`, `stroke` and `stroke-dash` styles, falling back to theme surfaces.
+pub(crate) struct GraphPaints<'m> {
+    graph: &'m WorkflowGraph,
 }
 
 /// Holds the paints of one solid's three face shades, of the ink its labels are set in, and of its outline.
@@ -71,17 +73,18 @@ pub(crate) struct PlatePaint {
     pub(crate) ink: Paint,
 }
 
-impl<'m> ModelPaints<'m> {
-    /// Pick paints from `model`'s styles.
-    pub(crate) fn new(model: &'m Model) -> Self {
-        Self { model }
+impl<'m> GraphPaints<'m> {
+    /// Pick paints from `graph`'s styles.
+    pub(crate) fn new(graph: &'m WorkflowGraph) -> Self {
+        Self { graph }
     }
 
     /// Paint a solid from its element's `fill`, `stroke` and `stroke-dash`, else from the leaf or container surface.
     pub(crate) fn solid(&self, path: &ElementPath) -> SolidPaint {
-        let element = self.model.element(path);
+        let element = self.graph.element(path);
         let filled = self.filled_solid(path, element);
-        let style = element.map(Element::style);
+        let properties = element.map(Element::properties);
+        let style = properties.map(ComponentProperties::style);
         let authored_stroke = style.and_then(|style| ColorKey::STROKE.read_from(style));
         let stroked = authored_stroke.map_or(filled, |stroke| filled.outlined_in(stroke));
         let authored_dash = style.and_then(|style| NumberKey::STROKE_DASH.read_from(style));
@@ -96,15 +99,16 @@ impl<'m> ModelPaints<'m> {
 
     /// Paint a connection from its edge's `stroke` and its source's `fill`: stroke ?? (opaque(fill) ∧ L(fill) ≥ 0.5 ? fill : muted text).
     pub(crate) fn connection(&self, edge: &EdgeId) -> Paint {
-        let authored_edge = self.model.edge(edge);
+        let authored_edge = self.graph.edge(edge);
         let edge_style = authored_edge.map(Edge::style);
         let authored_stroke = edge_style.and_then(|style| ColorKey::STROKE.read_from(style));
         if let Some(stroke) = authored_stroke {
             return Paint::from_color(stroke);
         }
         let source_path = edge.from();
-        let source = self.model.element(source_path);
-        let source_style = source.map(Element::style);
+        let source = self.graph.element(source_path);
+        let source_properties = source.map(Element::properties);
+        let source_style = source_properties.map(ComponentProperties::style);
         let source_fill = source_style.and_then(|style| ColorKey::FILL.read_from(style));
         let Some(fill) = source_fill else {
             return Paint::Token(Token::TextMuted);
@@ -121,23 +125,9 @@ impl<'m> ModelPaints<'m> {
 
     /// Dash a connection by its edge's `stroke-dash`, else by the default dash every unstyled edge flows with.
     pub(crate) fn connection_dashes(&self, edge: &EdgeId) -> Option<Dashes> {
-        let authored_edge = self.model.edge(edge);
+        let authored_edge = self.graph.edge(edge);
         let stroke_dash = authored_edge.map_or(Edge::DEFAULT_STROKE_DASH, Edge::stroke_dash);
         Dashes::along_connection(stroke_dash)
-    }
-
-    /// Paint a legend's stroke sample in the one paint every connection of `edges` shares, else in text ink.
-    pub(crate) fn stroke_sample(&self, edges: &[EdgeId]) -> Paint {
-        let mut connection_paints = edges.iter().map(|edge| self.connection(edge));
-        let first_paint = connection_paints.next();
-        let Some(first_paint) = first_paint else {
-            return Paint::Token(Token::Text);
-        };
-        let is_shared = connection_paints.all(|paint| paint == first_paint);
-        if is_shared {
-            return first_paint;
-        }
-        Paint::Token(Token::Text)
     }
 
     /// Paint the ground of `level`: the canvas and its text at the root, else the top face and ink of the container whose top that ground is.
@@ -154,10 +144,11 @@ impl<'m> ModelPaints<'m> {
 
     /// Fill a solid's faces from its `fill`: shaded from an authored color, none when transparent, else its default surface.
     fn filled_solid(&self, path: &ElementPath, element: Option<&Element>) -> SolidPaint {
-        let style = element.map(Element::style);
+        let properties = element.map(Element::properties);
+        let style = properties.map(ComponentProperties::style);
         let authored_fill = style.and_then(|style| ColorKey::FILL.read_from(style));
         let Some(fill) = authored_fill else {
-            let is_container = self.model.is_container(path);
+            let is_container = self.graph.is_container(path);
             let default_surface = if is_container {
                 CONTAINER_SURFACE
             } else {
@@ -348,7 +339,7 @@ impl PlatePaint {
 
 #[cfg(test)]
 mod tests {
-    use svugy_model::builder::ModelBuilder;
+    use crate::one_step::OneStepModelBuilder;
     use svugy_model::model::Edge;
 
     use super::*;
@@ -362,10 +353,10 @@ mod tests {
         for &(key, value) in style {
             element = element.with_style(key, value);
         }
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let styled = builder.add_top_level("styled", element);
-        let model = builder.build().model.expect("valid model");
-        let paints = ModelPaints::new(&model);
+        let graph = builder.build_graph();
+        let paints = GraphPaints::new(&graph);
         paints.solid(styled.path())
     }
 
@@ -375,23 +366,23 @@ mod tests {
         for &(key, value) in edge_style {
             edge = edge.with_style(key, value);
         }
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let source_element = Element::new("source").with_style(ColorKey::FILL.name(), source_fill);
         let source = builder.add_top_level("source", source_element);
         let target = builder.add_top_level("target", Element::new("target"));
         let edge_id = builder.add_edge(&source, &target, edge);
-        let model = builder.build().model.expect("valid model");
-        let paints = ModelPaints::new(&model);
+        let graph = builder.build_graph();
+        let paints = GraphPaints::new(&graph);
         paints.connection(&edge_id)
     }
 
     #[test]
     fn unstyled_leaves_and_containers_take_their_default_surfaces() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let desk = builder.add_top_level("desk", Element::new("desk"));
         let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
-        let model = builder.build().model.expect("valid model");
-        let paints = ModelPaints::new(&model);
+        let graph = builder.build_graph();
+        let paints = GraphPaints::new(&graph);
         let desk_paint = paints.solid(desk.path());
         let quoter_paint = paints.solid(quoter.path());
         assert_eq!(desk_paint, SolidPaint::from_surface(CONTAINER_SURFACE));
@@ -401,13 +392,13 @@ mod tests {
     #[test]
     fn the_ground_is_the_canvas_at_the_root_and_the_container_top_inside_one() {
         let dark_fill = "#1b2436";
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let desk_element = Element::new("desk").with_style(ColorKey::FILL.name(), dark_fill);
         let desk = builder.add_top_level("desk", desk_element);
         let core = builder.add_child(&desk, "core", Element::new("core"));
         builder.add_child(&core, "engine", Element::new("engine"));
-        let model = builder.build().model.expect("valid model");
-        let paints = ModelPaints::new(&model);
+        let graph = builder.build_graph();
+        let paints = GraphPaints::new(&graph);
         let root = ElementPath::root();
         let root_ground = paints.ground(&root);
         let desk_ground = paints.ground(desk.path());
@@ -519,7 +510,7 @@ mod tests {
 
     #[test]
     fn connections_fall_back_from_edge_stroke_to_source_fill_to_muted_text() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let app_element = Element::new("app").with_style(ColorKey::FILL.name(), "#9945ff");
         let app = builder.add_top_level("app", app_element);
         let api = builder.add_top_level("api", Element::new("api"));
@@ -527,8 +518,8 @@ mod tests {
         let stroked = builder.add_edge(&app, &api, stroked_edge);
         let from_app = builder.add_edge(&app, &api, Edge::new());
         let from_api = builder.add_edge(&api, &app, Edge::new());
-        let model = builder.build().model.expect("valid model");
-        let paints = ModelPaints::new(&model);
+        let graph = builder.build_graph();
+        let paints = GraphPaints::new(&graph);
         let stroked_paint = paints.connection(&stroked);
         let from_app_paint = paints.connection(&from_app);
         let from_api_paint = paints.connection(&from_api);
@@ -560,14 +551,14 @@ mod tests {
 
     #[test]
     fn connections_are_dashed_by_their_stroke_dash_two_units_apart_and_solid_at_zero() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let app = builder.add_top_level("app", Element::new("app"));
         let api = builder.add_top_level("api", Element::new("api"));
         let flowing = builder.add_edge(&app, &api, Edge::new());
         let dotted = builder.add_edge(&app, &api, Edge::new().with_style("stroke-dash", "2"));
         let solid = builder.add_edge(&app, &api, Edge::new().with_style("stroke-dash", "0"));
-        let model = builder.build().model.expect("valid model");
-        let paints = ModelPaints::new(&model);
+        let graph = builder.build_graph();
+        let paints = GraphPaints::new(&graph);
 
         let flowing_dashes = paints.connection_dashes(&flowing);
         let dotted_dashes = paints.connection_dashes(&dotted);
@@ -578,9 +569,5 @@ mod tests {
         assert_eq!(flowing_dash_array.as_deref(), Some("5 7"));
         assert_eq!(dotted_dash_array.as_deref(), Some("2 4"));
         assert_eq!(solid_dashes, None);
-        let shared_paint = paints.stroke_sample(&[flowing.clone(), dotted]);
-        let no_paint = paints.stroke_sample(&[]);
-        assert_eq!(shared_paint, paints.connection(&flowing));
-        assert_eq!(no_paint, Paint::Token(Token::Text));
     }
 }

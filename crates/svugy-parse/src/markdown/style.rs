@@ -4,6 +4,7 @@ use strum::IntoEnumIterator;
 
 use super::ast::{Assignment, Entry, Span, StyleDefinition};
 use super::diagnostic::Diagnostics;
+use super::parse::PARENTHESISED_LABEL_HINT;
 use super::property::{Property, PropertyKey, PropertyValue};
 
 /// Keep each frontmatter style's typed properties by name, read once where the style is defined.
@@ -19,7 +20,11 @@ impl StyleBook {
         for definition in definitions {
             let StyleDefinition { name, entries } = definition;
             for entry in &entries {
-                let Entry::Style(nested_style) = entry else {
+                let Entry::Style {
+                    name: nested_style,
+                    may_end_label: _may_end_label,
+                } = entry
+                else {
                     continue;
                 };
                 let nested_name = &nested_style.inner;
@@ -34,21 +39,26 @@ impl StyleBook {
         Self { styles }
     }
 
-    /// Expand `entries` into typed properties, each key once: every style's, then every `key=value` entry's over them.
+    /// Expand `entries` into typed properties, each key once: every style's, then every `key=value` entry's over them; an unknown style that may end a label is hinted as its unquoted end.
     pub(crate) fn expand(&self, entries: &[Entry], diagnostics: &mut Diagnostics) -> Vec<Property> {
         let mut properties: Vec<Property> = Vec::new();
         for entry in entries {
-            let Entry::Style(style_name) = entry else {
+            let Entry::Style {
+                name: style_name,
+                may_end_label,
+            } = entry
+            else {
                 continue;
             };
             let Some(style_properties) = self.find(&style_name.inner) else {
+                let unknown_name = &style_name.inner;
+                if *may_end_label {
+                    let message = format!("no style `{unknown_name}`; {PARENTHESISED_LABEL_HINT}");
+                    diagnostics.record_error(message, style_name.span);
+                    continue;
+                }
                 let style_names = self.styles.iter().map(|(name, _properties)| name);
-                diagnostics.record_unknown(
-                    "no style",
-                    &style_name.inner,
-                    style_names,
-                    style_name.span,
-                );
+                diagnostics.record_unknown("no style", unknown_name, style_names, style_name.span);
                 continue;
             };
             for style_property in style_properties {

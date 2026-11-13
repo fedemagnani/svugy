@@ -2,7 +2,7 @@
 source: crates/svugy/src/render/profile/mod.rs
 expression: markup
 ---
-<svg data-svugy-contract="3" height="205" viewBox="-95.263 -40 285.788 205" width="285.788" xmlns="http://www.w3.org/2000/svg">
+<svg data-svugy-contract="4" height="205" viewBox="-95.263 -40 285.788 205" width="285.788" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <marker id="arrowhead-0" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
 <path d="M0,1 L9,5 L0,9 Z" fill="#8b93a5"/>
@@ -10,7 +10,7 @@ expression: markup
 </defs>
 <rect fill="#0a0b10" height="205" rx="14" width="285.788" x="-95.263" y="-40"/>
 <g data-svugy-level="" data-svugy-view="-95.263 -40 285.788 205">
-<g data-svugy-element="a">
+<g data-svugy-element="a" data-svugy-steps="main">
 <title>a</title>
 <desc data-svugy-details="">{"kind":"element","path":"a","label":"a"}</desc>
 <path d="M-43.301,45 L8.66,75 L8.66,55 L-43.301,25 Z" fill="#2b2f39" stroke="#0a0b10" stroke-width="0.8"/>
@@ -18,7 +18,7 @@ expression: markup
 <path d="M-8.66,5 L43.301,35 L8.66,55 L-43.301,25 Z" fill="#3a3f4b" stroke="#0a0b10" stroke-width="0.8"/>
 <path d="M0.836,28.612 Q0.025,28.143 -0.085,27.585 Q-0.194,27.027 0.649,26.541 Q1.283,26.174 1.948,26.142 Q2.612,26.11 3.267,26.294 Q3.922,26.479 4.531,26.772 Q5.332,27.153 5.733,27.293 Q6.134,27.434 6.413,27.273 L6.439,27.258 Q6.799,27.05 6.766,26.803 Q6.733,26.555 6.307,26.309 Q5.865,26.054 5.406,26.009 Q4.947,25.963 4.581,26.069 L3.419,25.128 Q4.373,24.83 5.431,24.972 Q6.489,25.114 7.438,25.662 Q8.047,26.013 8.405,26.442 Q8.763,26.872 8.686,27.317 Q8.61,27.762 7.92,28.161 L4.099,30.367 L2.658,29.535 L3.445,29.081 L3.394,29.051 Q2.79,29.16 2.128,29.067 Q1.466,28.975 0.836,28.612 Z M2.338,28.243 Q2.871,28.55 3.518,28.566 Q4.165,28.583 4.617,28.322 L5.231,27.967 Q5.074,27.953 4.82,27.862 Q4.566,27.771 4.3,27.661 Q4.033,27.551 3.846,27.466 Q3.363,27.258 2.927,27.211 Q2.491,27.165 2.151,27.361 Q1.821,27.551 1.892,27.789 Q1.963,28.026 2.338,28.243 Z" fill="#e6e8ee"/>
 </g>
-<g data-svugy-element="b">
+<g data-svugy-element="b" data-svugy-steps="main">
 <title>b</title>
 <desc data-svugy-details="">{"kind":"element","path":"b","label":"b"}</desc>
 <path d="M43.301,115 L95.263,145 L95.263,125 L43.301,95 Z" fill="#2b2f39" stroke="#0a0b10" stroke-width="0.8"/>
@@ -26,12 +26,12 @@ expression: markup
 <path d="M77.942,75 L129.904,105 L95.263,125 L43.301,95 Z" fill="#3a3f4b" stroke="#0a0b10" stroke-width="0.8"/>
 <path d="M88.789,99.374 Q88.327,99.107 88.165,98.832 Q88.002,98.556 88.033,98.307 Q88.063,98.058 88.185,97.865 L88.114,97.824 L87.206,98.348 L85.709,97.484 L93.269,93.119 L94.792,93.998 L91.95,95.638 L91.996,95.665 Q92.321,95.594 92.754,95.569 Q93.188,95.544 93.673,95.637 Q94.157,95.729 94.639,96.007 Q95.269,96.371 95.467,96.86 Q95.665,97.349 95.327,97.904 Q94.99,98.459 94.02,99.019 Q93.077,99.564 92.12,99.765 Q91.164,99.965 90.303,99.858 Q89.443,99.751 88.789,99.374 Z M89.545,98.398 Q90.139,98.741 90.928,98.646 Q91.717,98.55 92.468,98.117 Q93.214,97.686 93.379,97.233 Q93.543,96.781 92.945,96.435 Q92.356,96.095 91.577,96.179 Q90.798,96.262 90.027,96.708 Q89.256,97.153 89.108,97.607 Q88.961,98.061 89.545,98.398 Z" fill="#e6e8ee"/>
 </g>
-<g data-svugy-edge="(a -&gt; b)[0]" data-svugy-from="a" data-svugy-to="b">
+<g data-svugy-edge="(a -&gt; b)[0]" data-svugy-from="a" data-svugy-steps="main" data-svugy-to="b">
 <title>calls</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(a -&gt; b)[0]","from":"a","to":"b","label":"calls"}</desc>
 <path d="M25.981,55 Q43.301,45 60.622,85" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="#8b93a5" stroke-dasharray="5 7" stroke-width="1.6"/>
 </g>
-<g data-svugy-edge="(a -&gt; b)[0]" data-svugy-from="a" data-svugy-to="b">
+<g data-svugy-edge="(a -&gt; b)[0]" data-svugy-from="a" data-svugy-steps="main" data-svugy-to="b">
 <title>calls</title>
 <desc data-svugy-details="">{"kind":"edge","edge":"(a -&gt; b)[0]","from":"a","to":"b","label":"calls"}</desc>
 <rect fill="#0a0b10" height="16" rx="8" stroke="#8b93a5" stroke-opacity="0.55" width="36" x="25.301" y="33"/>

@@ -14,18 +14,18 @@ use crate::output::OutputTarget;
 const SKILL_MARKDOWN: &str = include_str!("../skill/SKILL.md");
 /// Embed the syntax the entry file's example leaves out.
 const SYNTAX_MARKDOWN: &str = include_str!("../skill/references/syntax.md");
-/// Embed how to write a legend.
-const LEGEND_MARKDOWN: &str = include_str!("../skill/references/legend.md");
 /// Embed the validate report's fields, exit codes and fixes its messages don't give.
 const TROUBLESHOOT_MARKDOWN: &str = include_str!("../skill/references/troubleshoot.md");
+/// Embed the model JSON shape, read when a diagram arrives or must leave as JSON.
+const JSON_MARKDOWN: &str = include_str!("../skill/references/json.md");
 /// Embed the installation steps, read when `svugy` is missing from `PATH`.
 const INSTALL_MARKDOWN: &str = include_str!("../skill/references/install.md");
 /// List the skill's files by path inside the skill directory, each with its embedded contents; the entry file reads a reference only when its case applies.
 const SKILL_FILES: [(&str, &str); 5] = [
     ("SKILL.md", SKILL_MARKDOWN),
     ("references/syntax.md", SYNTAX_MARKDOWN),
-    ("references/legend.md", LEGEND_MARKDOWN),
     ("references/troubleshoot.md", TROUBLESHOOT_MARKDOWN),
+    ("references/json.md", JSON_MARKDOWN),
     ("references/install.md", INSTALL_MARKDOWN),
 ];
 /// Name the directory, under a project or the home directory, where Claude looks for the svugy skill.

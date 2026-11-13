@@ -13,7 +13,7 @@ mod skeleton;
 mod style;
 mod target;
 
-pub use diagnostic::{MarkdownError, MarkdownLanguage, UnresolvedTarget};
+pub use diagnostic::{MarkdownError, MarkdownLanguage};
 pub use print::{
     MarkdownPrinter, TextField, Unprintable, UnprintableModel, UnprintableOwner, UnprintableReason,
 };
@@ -29,7 +29,7 @@ pub type MarkdownImport = Import<MarkdownLanguage>;
 /// Split a Markdown import into its model, withheld while any diagnostic is an error, its Markdown errors and the model's report.
 pub type MarkdownImportParts = ImportParts<MarkdownLanguage>;
 
-/// Collect the parse of a Markdown diagram: its document, every item line parsed, and every error found on the way.
+/// Collect the parse of a Markdown diagram: its document, every item line and heading parsed, and every error found on the way.
 #[derive(Debug)]
 pub struct MarkdownParse {
     document: Document,
@@ -37,7 +37,7 @@ pub struct MarkdownParse {
 }
 
 impl MarkdownParse {
-    /// Read the skeleton of `source`, then parse its frontmatter and item lines; broken parts are reported, never fatal.
+    /// Read the skeleton of `source`, then parse its frontmatter, headings and item lines; broken parts are reported, never fatal.
     pub fn parse(source: &str) -> Self {
         let mut diagnostics = Diagnostics::default();
         let skeleton = Skeleton::read(source, &mut diagnostics);

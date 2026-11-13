@@ -1,1 +1,0 @@
-{"elements": {"a": {"label": "a"}, "a.b": {"label": "b"}}, "edges": [{"from": "a", "to": "a.b"}]}

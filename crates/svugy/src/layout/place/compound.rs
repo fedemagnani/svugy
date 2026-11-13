@@ -4,7 +4,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use dagre_dgl_rs::{EdgeLabel, Graph, GraphLabel, NodeLabel};
 use kurbo::{Point, Rect, Size};
-use svugy_model::model::{Element, Model, PlacementHint};
+use svugy_model::graph::WorkflowGraph;
+use svugy_model::model::PlacementHint;
 use svugy_model::path::ElementPath;
 
 use super::footprints::Footprints;
@@ -27,20 +28,20 @@ pub(in crate::layout) struct CompoundRegions {
 
 impl CompoundRegions {
     /// Absorb every ranked container whose parent is ranked, unless an edge ends on it: dagre cannot attach an edge to a subgraph.
-    pub(in crate::layout) fn of(model: &Model) -> Self {
-        let edge_endpoints: BTreeSet<&ElementPath> = model
+    pub(in crate::layout) fn of(graph: &WorkflowGraph) -> Self {
+        let edge_endpoints: BTreeSet<&ElementPath> = graph
             .arc_edges()
             .flat_map(|(edge_id, _edge)| [edge_id.from(), edge_id.to()])
             .collect();
-        let absorbed = model
+        let absorbed = graph
             .elements()
             .keys()
             .filter(|path| {
-                let is_container = model.is_container(path);
+                let is_container = graph.is_container(path);
                 let is_edge_endpoint = edge_endpoints.contains(path);
                 let parent = path.enclosing_level();
-                let is_parent_ranked = Self::is_ranked(model, &parent);
-                let is_self_ranked = Self::is_ranked(model, path);
+                let is_parent_ranked = Self::is_ranked(graph, &parent);
+                let is_self_ranked = Self::is_ranked(graph, path);
                 is_container && !is_edge_endpoint && is_parent_ranked && is_self_ranked
             })
             .cloned()
@@ -49,17 +50,16 @@ impl CompoundRegions {
     }
 
     /// Tell whether `level` places its children in dagre ranks: layered by request, or by default when edges join its children, with no child pinned.
-    pub(in crate::layout) fn is_ranked(model: &Model, level: &ElementPath) -> bool {
-        let level_element = model.element(level);
-        let hint = level_element.and_then(Element::child_placement);
+    pub(in crate::layout) fn is_ranked(graph: &WorkflowGraph, level: &ElementPath) -> bool {
+        let hint = graph.child_placement(level);
         let is_layered_by_request = hint == Some(PlacementHint::Layered);
-        let has_edges_among_children = model
+        let has_edges_among_children = graph
             .arc_edges()
             .any(|(edge_id, _edge)| edge_id.home_level() == *level);
         let is_layered_by_default = hint.is_none() && has_edges_among_children;
-        let has_pinned_child = model
+        let has_pinned_child = graph
             .children(level)
-            .any(|(_path, element)| element.position().is_some());
+            .any(|(path, _element)| graph.position(path).is_some());
         let is_layered = is_layered_by_request || is_layered_by_default;
         is_layered && !has_pinned_child
     }
@@ -69,7 +69,7 @@ impl RankedPlacement for CompoundRegions {
     /// Place a region root with its absorbed containers in one compound layout; an absorbed level yields nothing, its region root places it.
     fn place_ranked_level(
         &self,
-        model: &Model,
+        graph: &WorkflowGraph,
         level: &ElementPath,
         leaving_edges: &LeavingEdges,
         interiors: &PlacedLevels,
@@ -79,7 +79,7 @@ impl RankedPlacement for CompoundRegions {
         if is_absorbed {
             return Vec::new();
         }
-        self.place_region(model, level, leaving_edges, interiors, measure)
+        self.place_region(graph, level, leaving_edges, interiors, measure)
     }
 }
 
@@ -90,8 +90,12 @@ impl CompoundRegions {
     }
 
     /// Tell whether `level` roots a compound layout: ranked, and not absorbed into its parent's.
-    pub(in crate::layout) fn is_region_root(&self, model: &Model, level: &ElementPath) -> bool {
-        let is_ranked = Self::is_ranked(model, level);
+    pub(in crate::layout) fn is_region_root(
+        &self,
+        graph: &WorkflowGraph,
+        level: &ElementPath,
+    ) -> bool {
+        let is_ranked = Self::is_ranked(graph, level);
         let is_absorbed = self.is_absorbed(level);
         is_ranked && !is_absorbed
     }
@@ -99,15 +103,15 @@ impl CompoundRegions {
     /// Place `region_root` and its absorbed containers in one compound layout, returning each of their levels.
     fn place_region(
         &self,
-        model: &Model,
+        graph: &WorkflowGraph,
         region_root: &ElementPath,
         leaving_edges: &LeavingEdges,
         interiors: &PlacedLevels,
         measure: &impl TextMeasure,
     ) -> Vec<(ElementPath, PlacedLevel)> {
-        let region_levels = self.region_levels_of(model, region_root);
-        let node_sizes = Self::node_sizes_of(model, &region_levels, interiors, measure, self);
-        let joined_pairs = Self::joined_pairs_of(model, region_root, &region_levels);
+        let region_levels = self.region_levels_of(graph, region_root);
+        let node_sizes = Self::node_sizes_of(graph, &region_levels, interiors, measure, self);
+        let joined_pairs = Self::joined_pairs_of(graph, region_root, &region_levels);
         let centres = Self::compound_centres(&region_levels, &node_sizes, &joined_pairs, self);
         let mut footprints: BTreeMap<ElementPath, Rect> = node_sizes
             .iter()
@@ -127,7 +131,7 @@ impl CompoundRegions {
             let is_left_by_edges = leaving_edges.is_left_by_edges(container);
             let inset = PlacedLevel::inset_inside_boundary(is_left_by_edges);
             let children_box = Self::union_of(&children_footprints);
-            let container_element = model.element(container);
+            let container_element = graph.element(container);
             let tag_width = container_element.map_or(0.0, |element| {
                 let tag_block = LabelBlock::measure(element, LabelRole::ContainerTag, measure);
                 tag_block.hanging_width()
@@ -149,7 +153,7 @@ impl CompoundRegions {
         let is_root_left_by_edges = leaving_edges.is_left_by_edges(region_root);
         let inset = PlacedLevel::inset_inside_boundary(is_root_left_by_edges);
         let inset_footprints = Footprints::new(root_footprints).shifted_inside_inset(inset);
-        let root_element = model.element(region_root);
+        let root_element = graph.element(region_root);
         let extent = PlacedLevel::extent_fitting_footprints_and_tag(
             &inset_footprints,
             inset,
@@ -162,12 +166,16 @@ impl CompoundRegions {
     }
 
     /// Return `region_root` and every container absorbed below it through absorbed containers, parents first.
-    fn region_levels_of(&self, model: &Model, region_root: &ElementPath) -> Vec<ElementPath> {
+    fn region_levels_of(
+        &self,
+        graph: &WorkflowGraph,
+        region_root: &ElementPath,
+    ) -> Vec<ElementPath> {
         let mut region_levels = vec![region_root.clone()];
         let mut next_index = 0;
         while next_index < region_levels.len() {
             let level = region_levels[next_index].clone();
-            let absorbed_children = model
+            let absorbed_children = graph
                 .children(&level)
                 .map(|(path, _element)| path.clone())
                 .filter(|path| self.is_absorbed(path));
@@ -179,7 +187,7 @@ impl CompoundRegions {
 
     /// Size every child of a region level that is not itself absorbed: a placed container by its extent, a leaf by its labels.
     fn node_sizes_of(
-        model: &Model,
+        graph: &WorkflowGraph,
         region_levels: &[ElementPath],
         interiors: &PlacedLevels,
         measure: &impl TextMeasure,
@@ -187,7 +195,7 @@ impl CompoundRegions {
     ) -> BTreeMap<ElementPath, Size> {
         region_levels
             .iter()
-            .flat_map(|level| model.children(level))
+            .flat_map(|level| graph.children(level))
             .filter(|(path, _element)| !regions.is_absorbed(path))
             .map(|(path, element)| {
                 let interior = interiors.level(path);
@@ -202,7 +210,7 @@ impl CompoundRegions {
 
     /// Join, once for every edge inside `region_root`, the region nodes holding its endpoints, so parallel edges pull their ends into line harder.
     fn joined_pairs_of(
-        model: &Model,
+        graph: &WorkflowGraph,
         region_root: &ElementPath,
         region_levels: &[ElementPath],
     ) -> Vec<(ElementPath, ElementPath)> {
@@ -218,7 +226,7 @@ impl CompoundRegions {
                 node = parent;
             }
         };
-        model
+        graph
             .arc_edges()
             .filter(|(edge_id, _edge)| {
                 let is_from_inside = region_root.is_ancestor_of(edge_id.from());

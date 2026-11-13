@@ -39,7 +39,6 @@ pub enum Construct {
     BlockString,
     Null,
     Array,
-    ArrayMap,
     ReservedField(&'static str),
     FieldForm(String),
     DeclarationInEdgeMap,
@@ -50,6 +49,7 @@ pub enum Construct {
     FieldOnRoot(&'static str),
     UnknownStyleKey(String),
     ContainerBadge,
+    LineageEdge,
 }
 
 /// Record the diagnostics of d2's stages, handed from one stage to the next.
@@ -87,7 +87,6 @@ impl fmt::Display for Construct {
             Self::BlockString => write!(formatter, "a block string (`|md … |`)"),
             Self::Null => write!(formatter, "a `null` deletion"),
             Self::Array => write!(formatter, "an array value (`[…]`)"),
-            Self::ArrayMap => write!(formatter, "a map inside an array (`[{{…}}]`)"),
             Self::ReservedField(keyword) => write!(formatter, "the field `{keyword}`"),
             Self::FieldForm(keyword) => write!(formatter, "this form of the field `{keyword}`"),
             Self::DeclarationInEdgeMap => write!(formatter, "a declaration inside an edge map"),
@@ -101,6 +100,10 @@ impl fmt::Display for Construct {
             Self::FieldOnRoot(keyword) => write!(formatter, "the field `{keyword}` on the root"),
             Self::UnknownStyleKey(key) => write!(formatter, "the style key `{key}`"),
             Self::ContainerBadge => write!(formatter, "`svugy.badge` on a container"),
+            Self::LineageEdge => write!(
+                formatter,
+                "an edge between a component and its own lineage, which svugy can't draw,"
+            ),
         }
     }
 }

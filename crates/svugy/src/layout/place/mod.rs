@@ -11,7 +11,8 @@ mod rank_moves;
 use std::collections::{BTreeMap, BTreeSet};
 
 use kurbo::{Point, Rect, Size};
-use svugy_model::model::{Element, Model, PlacementHint};
+use svugy_model::graph::WorkflowGraph;
+use svugy_model::model::{Element, PlacementHint};
 use svugy_model::path::ElementPath;
 
 use super::edge_levels::{HomedEdges, LeavingEdges};
@@ -44,7 +45,7 @@ pub(super) trait RankedPlacement {
     /// Place the ranked `level`, sizing its container children by their placed `interiors`.
     fn place_ranked_level(
         &self,
-        model: &Model,
+        graph: &WorkflowGraph,
         level: &ElementPath,
         leaving_edges: &LeavingEdges,
         interiors: &PlacedLevels,
@@ -68,23 +69,23 @@ impl RankedPlacement for RearrangedFromSeed<'_> {
     /// Rearrange the seed's footprints of `level` to its children's sizes in this layer, fixing that level alone.
     fn place_ranked_level(
         &self,
-        model: &Model,
+        graph: &WorkflowGraph,
         level: &ElementPath,
         leaving_edges: &LeavingEdges,
         interiors: &PlacedLevels,
         measure: &impl TextMeasure,
     ) -> Vec<(ElementPath, PlacedLevel)> {
-        let sizes = SiblingGraph::measured_sizes_of_children(model, level, interiors, measure);
+        let sizes = SiblingGraph::measured_sizes_of_children(graph, level, interiors, measure);
         let seed_plan = self
             .seed
             .level(level)
             .expect("a level ranked in a shallower layer is placed in the deepest one");
         let seed_level = seed_plan.placed();
         let is_left_by_edges = leaving_edges.is_left_by_edges(level);
-        let homed_edges = HomedEdges::of(model);
+        let homed_edges = HomedEdges::of(graph);
         let joined_pairs = homed_edges.lifted_pairs_in(level);
         let placed_level = PlacedLevel::place_children_from_seed(
-            model,
+            graph,
             level,
             &sizes,
             &joined_pairs,
@@ -107,14 +108,14 @@ pub(super) struct SiblingGraph {
 impl SiblingGraph {
     /// Build the sibling graph of `parent`'s children, a container sized by its own level's extent and a leaf by its labels, packed in source order, joined by `joined_pairs`.
     pub(super) fn of_measured_children(
-        model: &Model,
+        graph: &WorkflowGraph,
         parent: &ElementPath,
         joined_pairs: BTreeSet<(ElementPath, ElementPath)>,
         interiors: &PlacedLevels,
         measure: &impl TextMeasure,
     ) -> Self {
-        let sizes = Self::measured_sizes_of_children(model, parent, interiors, measure);
-        let packing_order = Self::source_order_of_children(model, parent);
+        let sizes = Self::measured_sizes_of_children(graph, parent, interiors, measure);
+        let packing_order = Self::source_order_of_children(graph, parent);
         Self {
             sizes,
             packing_order,
@@ -124,10 +125,10 @@ impl SiblingGraph {
 
     /// List `parent`'s children in the order their source declares them, path order breaking ties and ordering a source without spans.
     pub(in crate::layout) fn source_order_of_children(
-        model: &Model,
+        graph: &WorkflowGraph,
         parent: &ElementPath,
     ) -> Vec<ElementPath> {
-        let mut children_by_span_start: Vec<(Option<usize>, &ElementPath)> = model
+        let mut children_by_span_start: Vec<(Option<usize>, &ElementPath)> = graph
             .children(parent)
             .map(|(path, element)| {
                 let span = element.span();
@@ -153,12 +154,12 @@ impl SiblingGraph {
 
     /// Size every child of `parent`: a container by its own level's extent, a leaf by its labels.
     fn measured_sizes_of_children(
-        model: &Model,
+        graph: &WorkflowGraph,
         parent: &ElementPath,
         interiors: &PlacedLevels,
         measure: &impl TextMeasure,
     ) -> BTreeMap<ElementPath, Size> {
-        model
+        graph
             .children(parent)
             .map(|(path, element)| {
                 let interior = interiors.level(path);
@@ -185,7 +186,7 @@ impl SiblingGraph {
 impl PlacedLevel {
     /// Place the children of `parent` around the pinned ones by `hint`, inside a margin with stub room when edges leave it, in a level sized to fit them and its hanging tag.
     pub(super) fn place_children(
-        model: &Model,
+        graph: &WorkflowGraph,
         parent: &ElementPath,
         siblings: SiblingGraph,
         hint: Option<PlacementHint>,
@@ -193,8 +194,8 @@ impl PlacedLevel {
         measure: &impl TextMeasure,
     ) -> Self {
         let inset = Self::inset_inside_boundary(is_left_by_edges);
-        let (pinned_footprints, free_siblings) = siblings.split_off_pinned(model);
-        let parent_element = model.element(parent);
+        let (pinned_footprints, free_siblings) = siblings.split_off_pinned(graph);
+        let parent_element = graph.element(parent);
         let free_footprints = free_siblings.place_by_hint(hint);
         let cleared_free_footprints =
             free_footprints.shifted_clear_of_pinned(&pinned_footprints, inset);
@@ -212,7 +213,7 @@ impl PlacedLevel {
 
     /// Rearrange `seed`'s footprints of the ranked `parent`'s children to their `sizes`, shortening the `joined_pairs` between them, inside a margin with stub room when edges leave it, in a level sized to fit them and its hanging tag.
     fn place_children_from_seed(
-        model: &Model,
+        graph: &WorkflowGraph,
         parent: &ElementPath,
         sizes: &BTreeMap<ElementPath, Size>,
         joined_pairs: &BTreeSet<(ElementPath, ElementPath)>,
@@ -225,7 +226,7 @@ impl PlacedLevel {
         let rearranged_by_path = seed_arrangement.rearranged(sizes, joined_pairs);
         let rearranged_footprints = Footprints::new(rearranged_by_path);
         let inset_footprints = rearranged_footprints.shifted_onto_inset(inset);
-        let parent_element = model.element(parent);
+        let parent_element = graph.element(parent);
         let extent = Self::extent_fitting_footprints_and_tag(
             &inset_footprints,
             inset,
@@ -263,12 +264,11 @@ impl PlacedLevel {
 
 impl SiblingGraph {
     /// Split off the children the author pinned, as footprints at their positions, keeping the free ones and the pairs they join.
-    fn split_off_pinned(self, model: &Model) -> (Footprints, Self) {
+    fn split_off_pinned(self, graph: &WorkflowGraph) -> (Footprints, Self) {
         let mut pinned_footprints = BTreeMap::new();
         let mut free_sizes = BTreeMap::new();
         for (path, size) in self.sizes {
-            let element = model.element(&path);
-            let position = element.and_then(Element::position);
+            let position = graph.position(&path);
             let Some(position) = position else {
                 free_sizes.insert(path, size);
                 continue;
@@ -339,29 +339,35 @@ impl SiblingGraph {
 
 #[cfg(test)]
 mod tests {
-    use svugy_model::builder::ModelBuilder;
+    use crate::one_step::OneStepModelBuilder;
     use svugy_model::model::{Edge, Position};
+
+    use svugy_model::workflow::ElementOverride;
 
     use super::*;
     use crate::metrics::{BundledFont, InterFaces};
 
-    fn place_level(model: &Model, level: &ElementPath, is_left_by_edges: bool) -> PlacedLevel {
+    fn place_level(
+        graph: &WorkflowGraph,
+        level: &ElementPath,
+        is_left_by_edges: bool,
+    ) -> PlacedLevel {
         let measure = BundledFont::<InterFaces>::new();
-        let joined_pairs = model
-            .layoutable_edges()
-            .map(|(edge_id, _edge)| (edge_id.from().clone(), edge_id.to().clone()))
+        let joined_pairs = graph
+            .edges()
+            .keys()
+            .map(|edge_id| (edge_id.from().clone(), edge_id.to().clone()))
             .collect();
         let no_interiors = PlacedLevels::new(BTreeMap::new());
         let siblings =
-            SiblingGraph::of_measured_children(model, level, joined_pairs, &no_interiors, &measure);
-        let level_element = model.element(level);
-        let hint = level_element.and_then(Element::child_placement);
-        PlacedLevel::place_children(model, level, siblings, hint, is_left_by_edges, &measure)
+            SiblingGraph::of_measured_children(graph, level, joined_pairs, &no_interiors, &measure);
+        let hint = graph.child_placement(level);
+        PlacedLevel::place_children(graph, level, siblings, hint, is_left_by_edges, &measure)
     }
 
-    fn place_top_level(model: &Model) -> PlacedLevel {
+    fn place_top_level(graph: &WorkflowGraph) -> PlacedLevel {
         let root = ElementPath::root();
-        place_level(model, &root, false)
+        place_level(graph, &root, false)
     }
 
     fn assert_no_two_footprints_overlap(plan: &PlacedLevel) {
@@ -387,14 +393,14 @@ mod tests {
 
     #[test]
     fn longer_labels_give_wider_footprints() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         builder.add_top_level("short", Element::new("API"));
         builder.add_top_level("long", Element::new("Payment ledger reconciliation"));
         let long_caption = Element::new("API").with_caption("reads every ledger entry twice a day");
         builder.add_top_level("captioned", long_caption);
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
 
-        let plan = place_top_level(&model);
+        let plan = place_top_level(&graph);
 
         let short_width = plan.footprints[&ElementPath::from_segments(["short"])].width();
         let long_width = plan.footprints[&ElementPath::from_segments(["long"])].width();
@@ -406,7 +412,7 @@ mod tests {
 
     #[test]
     fn layered_footprints_never_overlap() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let names = [
             "app", "api", "auth", "queue", "worker", "db", "cache", "mail",
         ];
@@ -428,9 +434,9 @@ mod tests {
         for (from_index, to_index) in edge_pairs {
             builder.add_edge(&elements[from_index], &elements[to_index], Edge::new());
         }
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
 
-        let plan = place_top_level(&model);
+        let plan = place_top_level(&graph);
 
         assert_eq!(plan.footprints.len(), names.len());
         assert_no_two_footprints_overlap(&plan);
@@ -439,15 +445,16 @@ mod tests {
 
     #[test]
     fn explicit_positions_override_automatic_placement() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let pinned_position = Position { x: 400.0, y: 300.0 };
-        let pinned = Element::new("pinned").with_position(pinned_position);
-        let pinned_ref = builder.add_top_level("pinned", pinned);
+        let pinned_ref = builder.add_top_level("pinned", Element::new("pinned"));
+        let pinning = ElementOverride::new().with_position(pinned_position);
+        builder.override_element(&pinned_ref, pinning);
         let free_ref = builder.add_top_level("free", Element::new("free"));
         builder.add_edge(&free_ref, &pinned_ref, Edge::new());
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
 
-        let plan = place_top_level(&model);
+        let plan = place_top_level(&graph);
 
         let pinned_footprint = plan.footprints[&ElementPath::from_segments(["pinned"])];
         assert_eq!(pinned_footprint.origin(), Point::new(400.0, 300.0));
@@ -456,14 +463,15 @@ mod tests {
 
     #[test]
     fn a_free_sibling_never_overlaps_a_footprint_pinned_at_the_margin_corner() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let pinned_position = Position { x: 18.0, y: 18.0 };
-        let pinned = Element::new("pinned").with_position(pinned_position);
-        builder.add_top_level("pinned", pinned);
+        let pinned = builder.add_top_level("pinned", Element::new("pinned"));
+        let pinning = ElementOverride::new().with_position(pinned_position);
+        builder.override_element(&pinned, pinning);
         builder.add_top_level("free", Element::new("free"));
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
 
-        let plan = place_top_level(&model);
+        let plan = place_top_level(&graph);
 
         let pinned_footprint = plan.footprints[&ElementPath::from_segments(["pinned"])];
         let pinned_origin = Point::new(pinned_position.x, pinned_position.y);
@@ -474,14 +482,18 @@ mod tests {
 
     #[test]
     fn positions_inside_the_margin_shift_together_until_the_level_encloses_them() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let west_position = Position { x: -50.0, y: 100.0 };
-        builder.add_top_level("west", Element::new("west").with_position(west_position));
+        let west = builder.add_top_level("west", Element::new("west"));
+        let west_pinning = ElementOverride::new().with_position(west_position);
+        builder.override_element(&west, west_pinning);
         let north_position = Position { x: 200.0, y: 0.0 };
-        builder.add_top_level("north", Element::new("north").with_position(north_position));
-        let model = builder.build().model.expect("fixture model is valid");
+        let north = builder.add_top_level("north", Element::new("north"));
+        let north_pinning = ElementOverride::new().with_position(north_position);
+        builder.override_element(&north, north_pinning);
+        let graph = builder.build_graph();
 
-        let plan = place_top_level(&model);
+        let plan = place_top_level(&graph);
 
         let west = plan.footprints[&ElementPath::from_segments(["west"])];
         let north = plan.footprints[&ElementPath::from_segments(["north"])];
@@ -493,12 +505,12 @@ mod tests {
 
     #[test]
     fn a_level_left_by_edges_reserves_stub_room_on_every_side() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         builder.add_top_level("a", Element::new("a"));
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
         let root = ElementPath::root();
 
-        let plan = place_level(&model, &root, true);
+        let plan = place_level(&graph, &root, true);
 
         let stubbed_margin = LEVEL_MARGIN + STUB_MARGIN;
         let footprint = plan.footprints[&ElementPath::from_segments(["a"])];
@@ -510,16 +522,16 @@ mod tests {
 
     #[test]
     fn a_container_level_is_at_least_as_wide_as_its_hanging_tag_and_caption() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let long_tag = "settlement and reconciliation services";
         let cluster = builder.add_top_level("cluster", Element::new(long_tag));
         builder.add_child(&cluster, "x", Element::new("x"));
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
         let measure = BundledFont::<InterFaces>::new();
-        let cluster_element = model.element(cluster.path()).expect("cluster is declared");
+        let cluster_element = graph.element(cluster.path()).expect("cluster is declared");
         let tag_block = LabelBlock::measure(cluster_element, LabelRole::ContainerTag, &measure);
 
-        let plan = place_level(&model, cluster.path(), false);
+        let plan = place_level(&graph, cluster.path(), false);
 
         assert_eq!(plan.extent.width, tag_block.hanging_width());
         let only_footprint = plan.footprints[&cluster.path().child("x")];
@@ -528,15 +540,17 @@ mod tests {
 
     #[test]
     fn grid_hint_packs_children_into_rows_of_its_column_count() {
-        let mut builder = ModelBuilder::new();
-        let grid = Element::new("cluster").with_child_placement(PlacementHint::Grid { columns: 2 });
-        let cluster = builder.add_top_level("cluster", grid);
+        let mut builder = OneStepModelBuilder::new();
+        let cluster = builder.add_top_level("cluster", Element::new("cluster"));
+        let grid_placement = PlacementHint::Grid { columns: 2 };
+        let gridding = ElementOverride::new().with_child_placement(grid_placement);
+        builder.override_element(&cluster, gridding);
         for name in ["a", "b", "c", "d", "e"] {
             builder.add_child(&cluster, name, Element::new(name));
         }
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
 
-        let plan = place_level(&model, cluster.path(), false);
+        let plan = place_level(&graph, cluster.path(), false);
 
         let footprint_of = |name: &str| plan.footprints[&cluster.path().child(name)];
         let (a, b, c, e) = (
@@ -555,23 +569,21 @@ mod tests {
 
     #[test]
     fn row_and_column_hints_line_children_up_along_one_axis() {
-        let mut builder = ModelBuilder::new();
-        let row = builder.add_top_level(
-            "row",
-            Element::new("row").with_child_placement(PlacementHint::Row),
-        );
-        let column = builder.add_top_level(
-            "column",
-            Element::new("column").with_child_placement(PlacementHint::Column),
-        );
+        let mut builder = OneStepModelBuilder::new();
+        let row = builder.add_top_level("row", Element::new("row"));
+        let rowing = ElementOverride::new().with_child_placement(PlacementHint::Row);
+        builder.override_element(&row, rowing);
+        let column = builder.add_top_level("column", Element::new("column"));
+        let columning = ElementOverride::new().with_child_placement(PlacementHint::Column);
+        builder.override_element(&column, columning);
         for name in ["a", "b", "c"] {
             builder.add_child(&row, name, Element::new(name));
             builder.add_child(&column, name, Element::new(name));
         }
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
 
-        let row_plan = place_level(&model, row.path(), false);
-        let column_plan = place_level(&model, column.path(), false);
+        let row_plan = place_level(&graph, row.path(), false);
+        let column_plan = place_level(&graph, column.path(), false);
 
         let row_tops: Vec<f64> = row_plan
             .footprints

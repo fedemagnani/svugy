@@ -82,7 +82,7 @@ impl SuffixIndex {
     }
 
     /// Spell why `reference_text` names no single component: it matches each of `matches`.
-    pub(crate) fn ambiguity(reference_text: &str, matches: &[&ElementPath]) -> String {
+    fn ambiguity(reference_text: &str, matches: &[&ElementPath]) -> String {
         let match_list = ProseList::join_quoted(matches, "and");
         format!("`{reference_text}` matches {match_list}; add a parent to pick one")
     }
@@ -104,7 +104,7 @@ impl SuffixIndex {
     }
 
     /// List every distinct suffix of `length` segments, the candidates a misspelled reference of that length is suggested from.
-    pub(crate) fn suffixes_of_length(&self, length: usize) -> Vec<String> {
+    fn suffixes_of_length(&self, length: usize) -> Vec<String> {
         let mut suffixes: Vec<String> = Vec::new();
         for path in &self.paths {
             let segments = path.segments();
