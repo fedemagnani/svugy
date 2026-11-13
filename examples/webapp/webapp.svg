@@ -48,10 +48,10 @@
 [data-svugy-contract] .svugy-workflows-title { font-weight: 650; }
 [data-svugy-contract] .svugy-workflows-subtitle { font-size: 11.5px; color: var(--svugy-text-muted); }
 
-[data-svugy-contract] .svugy-panel { --svugy-panel-line-height: 40px; display: flex; flex-direction: column; overflow: hidden; font-size: 12.5px; font-weight: 450; line-height: 1.5; cursor: auto; -webkit-user-select: text; user-select: text; }
+[data-svugy-contract] .svugy-panel { --svugy-panel-line-height: 40px; background: color-mix(in srgb, var(--svugy-canvas) 80%, transparent); box-shadow: none; display: flex; flex-direction: column; overflow: hidden; font-size: 12.5px; font-weight: 450; line-height: 1.5; cursor: auto; -webkit-user-select: text; user-select: text; }
 [data-svugy-contract] .svugy-panel [hidden] { display: none; }
 [data-svugy-contract] .svugy-panel-side.svugy-panel-open { position: relative; padding-left: 14px; }
-[data-svugy-contract] .svugy-panel-edge { position: absolute; top: 0; bottom: 0; left: 0; width: 14px; cursor: col-resize; touch-action: none; background: color-mix(in srgb, var(--svugy-text) 5%, transparent); }
+[data-svugy-contract] .svugy-panel-edge { position: absolute; top: 0; bottom: 0; left: 0; width: 14px; cursor: col-resize; touch-action: none; }
 [data-svugy-contract] .svugy-panel .svugy-panel-hide { position: absolute; top: 50%; left: 0; width: 14px; height: 48px; margin-top: -24px; border-radius: 0 6px 6px 0; background: color-mix(in srgb, var(--svugy-text) 14%, var(--svugy-canvas)); font-size: 18px; font-weight: 600; cursor: col-resize; }
 [data-svugy-contract] .svugy-panel-divider { flex: none; display: flex; align-items: center; justify-content: center; height: 14px; border-top: 1px solid color-mix(in srgb, var(--svugy-text-muted) 25%, transparent); cursor: row-resize; touch-action: none; }
 [data-svugy-contract] .svugy-panel-divider::before { content: ''; width: 36px; height: 4px; border-radius: 2px; background: var(--svugy-text-muted); opacity: 0.55; }
