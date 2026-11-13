@@ -4,16 +4,6 @@ label: "svugy · one render"
 vars: {
   svugy: {
     subtitle: "from your d2 file to one explorable SVG"
-    legend: {
-      title: What happens on render
-      entries: [
-        "① the CLI imports your d2"
-        "② the pipeline lays it out and draws it"
-        "③ the runtime is embedded, the SVG written"
-      ]
-      dashes: { 5: data; 2: embedded at build time }
-      badges: { pipeline.inter: reads the bundled font }
-    }
   }
 }
 
@@ -55,5 +45,5 @@ runtime: {
   vars: { svugy: { caption: "svugy.js · svugy.css"; position: { x: 840; y: 0 } } }
 }
 
-cli -> pipeline.layout: ① ② model
-runtime -> pipeline.render: ③ { style.stroke-dash: 2 }
+cli -> pipeline.layout: model
+runtime -> pipeline.render: embedded { style.stroke-dash: 2 }

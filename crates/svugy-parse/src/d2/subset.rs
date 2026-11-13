@@ -6,19 +6,22 @@ use svugy_model::style::AnyStyleKey;
 
 use super::ast::{
     D2Document, EdgeDeclaration, EdgeLink, Field, FieldAssignment, KeyPath, KeySegment, Keyword,
-    Scalar, ShapeDeclaration, Span, Statement, StyleProperty, SvugyProperty, SvugyValue,
+    Scalar, ShapeDeclaration, Span, Statement, StyleProperty, SvugyProperty,
 };
 use super::diagnostic::{Construct, Diagnostics};
 use super::parse::{
-    SyntaxArray, SyntaxAssignment, SyntaxDeclaration, SyntaxHead, SyntaxKey, SyntaxLink,
-    SyntaxStatement, SyntaxValue,
+    SyntaxAssignment, SyntaxDeclaration, SyntaxHead, SyntaxKey, SyntaxLink, SyntaxStatement,
+    SyntaxValue,
 };
 
 /// Reject an entry of the `svugy` variable that is not a plain `key: value`.
 const SVUGY_ENTRY_ERROR: &str = "the `svugy` variable holds only `key: value` entries";
 
-/// Reject an item of a `svugy` list that is not a plain value.
-const SVUGY_LIST_ITEM_ERROR: &str = "a list in the `svugy` variable holds only plain values";
+/// Name d2's own legend variable, which svugy does not import.
+const D2_LEGEND_VARIABLE: &str = "d2-legend";
+
+/// Name the carrier's v3 legend attribute, which svugy v4 no longer has.
+const SVUGY_LEGEND_ATTRIBUTE: &str = "legend";
 
 /// Reject a `vars` map in an edge map as d2 does, pointing to the language that carries an edge's traveler.
 const EDGE_VARS_ERROR: &str =
@@ -429,8 +432,13 @@ impl<'sink> SubsetFilter<'sink> {
             return Vec::new();
         };
         let first_segment = key.segments.first();
-        let is_user_variable = first_segment
-            .is_none_or(|first_segment| first_segment.segment.name != SvugyProperty::VARIABLE);
+        let variable_name = first_segment.map(|first_segment| first_segment.segment.name.as_str());
+        let is_d2_legend = variable_name == Some(D2_LEGEND_VARIABLE);
+        if is_d2_legend {
+            self.reject_legend(D2_LEGEND_VARIABLE, span);
+            return Vec::new();
+        }
+        let is_user_variable = variable_name != Some(SvugyProperty::VARIABLE);
         if is_user_variable {
             self.diagnostics.record_warning(Construct::Variables, span);
             return Vec::new();
@@ -445,13 +453,19 @@ impl<'sink> SubsetFilter<'sink> {
         self.collect_svugy_properties(attribute_path, assignment, span)
     }
 
-    /// Collect every `key: value` below `attribute_path` as a carrier property addressed by its full path; anything else there is an error.
+    /// Collect every `key: value` below `attribute_path` as a carrier property addressed by its full path; a legend is one error, anything else not a `key: value` too.
     fn collect_svugy_properties(
         &mut self,
         attribute_path: Vec<String>,
         assignment: SyntaxAssignment,
         span: Span,
     ) -> Vec<SvugyProperty> {
+        let first_attribute = attribute_path.first();
+        let is_svugy_legend = first_attribute.is_some_and(|name| name == SVUGY_LEGEND_ATTRIBUTE);
+        if is_svugy_legend {
+            self.reject_legend("svugy.legend", span);
+            return Vec::new();
+        }
         let mut properties = Vec::new();
         let SyntaxAssignment { value, map } = assignment;
         let carried_value = value.and_then(|value| self.filter_carried_value(value));
@@ -491,30 +505,22 @@ impl<'sink> SubsetFilter<'sink> {
         properties
     }
 
-    /// Keep a carried value: a scalar as itself, an array as a list of its scalar items, each other item an error.
-    fn filter_carried_value(&mut self, value: SyntaxValue) -> Option<SvugyValue> {
-        let SyntaxValue::Array(array) = value else {
-            let scalar = self.filter_scalar(value)?;
-            let carried_scalar = SvugyValue::Scalar(scalar);
-            return Some(carried_scalar);
+    /// Reject the legend `legend_key` sets at `span`, since svugy v4 says what a legend entry meant in step prose or edge descriptions.
+    fn reject_legend(&mut self, legend_key: &str, span: Span) {
+        let message = format!(
+            "`{legend_key}` sets a legend, but svugy v4 has no legend: say what each entry meant in step prose or edge descriptions"
+        );
+        self.diagnostics.record_error(message, span);
+    }
+
+    /// Keep a carried value's scalar, rejecting an array since every svugy attribute takes one value.
+    fn filter_carried_value(&mut self, value: SyntaxValue) -> Option<Scalar> {
+        let SyntaxValue::Array(array_span) = value else {
+            return self.filter_scalar(value);
         };
-        let SyntaxArray { items, span } = array;
-        let item_count = items.len();
-        let mut scalar_items = Vec::with_capacity(item_count);
-        for item in items {
-            let SyntaxValue::Scalar(scalar) = item else {
-                let item_span = item.span();
-                self.diagnostics
-                    .record_error(SVUGY_LIST_ITEM_ERROR, item_span);
-                continue;
-            };
-            scalar_items.push(scalar);
-        }
-        let list = SvugyValue::List {
-            items: scalar_items,
-            span,
-        };
-        Some(list)
+        let message = "a svugy attribute takes one value, not a list";
+        self.diagnostics.record_error(message, array_span);
+        None
     }
 
     /// Filter an edge chain, its value kept as its label and its map as its fields; a `null` deletion is warned on and dropped.
@@ -594,8 +600,7 @@ impl<'sink> SubsetFilter<'sink> {
             SyntaxValue::BlockString(span) => (Construct::BlockString, span),
             SyntaxValue::Import(span) => (Construct::Import, span),
             SyntaxValue::Substitution(span) => (Construct::Variables, span),
-            SyntaxValue::Array(array) => (Construct::Array, array.span),
-            SyntaxValue::Map(span) => (Construct::ArrayMap, span),
+            SyntaxValue::Array(span) => (Construct::Array, span),
         };
         self.diagnostics.record_warning(construct, span);
         None

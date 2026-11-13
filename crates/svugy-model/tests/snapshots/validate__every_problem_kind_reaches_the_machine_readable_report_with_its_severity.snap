@@ -6,7 +6,7 @@ expression: pretty
   "causes": [],
   "code": "svugy::model_report",
   "labels": [],
-  "message": "the model has 11 error(s) and 7 warning(s)",
+  "message": "the model has 26 error(s) and 10 warning(s)",
   "related": [
     {
       "causes": [],
@@ -34,28 +34,27 @@ expression: pretty
     },
     {
       "causes": [],
-      "code": "svugy::dangling_reference",
-      "help": "did you mean `db`?",
+      "code": "svugy::impossible_height",
       "labels": [],
-      "message": "edge `(desk.quoter -> dbb)[0]` points to `dbb`, which is not an element",
+      "message": "element `cache.hot` stands 0 plan units tall, which is not a positive number no greater than 1000000",
       "related": [],
       "severity": "error"
     },
     {
       "causes": [],
-      "code": "svugy::ancestor_descendant_edge",
+      "code": "svugy::malformed_code_reference",
       "labels": [
         {
-          "label": "declared here",
+          "label": "pointed here",
           "span": {
-            "length": 12,
-            "offset": 40
+            "length": 17,
+            "offset": 80
           }
         }
       ],
-      "message": "edge `(desk -> desk.quoter)[0]` joins an element to its own ancestor, so layout leaves it out",
+      "message": "element `db` points at code `../store/db.rs#Db`, but its file climbs out with `..`; write it relative to the repository root",
       "related": [],
-      "severity": "warning"
+      "severity": "error"
     },
     {
       "causes": [],
@@ -92,51 +91,206 @@ expression: pretty
     },
     {
       "causes": [],
-      "code": "svugy::impossible_placement",
+      "code": "svugy::unresolved_link",
+      "help": "did you mean `desk.quoter`?",
       "labels": [],
-      "message": "element `cache.hot` is pinned at (inf, 0), which is not within 1000000 plan units of its level's origin",
+      "message": "element `desk.quoter` links to `desk.quoterr`, which is not an element; write `./desk.quoterr` if it is a relative URL",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::malformed_id",
+      "labels": [],
+      "message": "workflow id `not an id` is not an id: ASCII letters, digits, `_` and single inner `-`, starting with a letter or `_`",
       "related": [],
       "severity": "error"
     },
     {
       "causes": [],
-      "code": "svugy::impossible_placement",
+      "code": "svugy::duplicate_id",
+      "labels": [],
+      "message": "workflow `main` is declared more than once",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::duplicate_override",
       "labels": [
         {
-          "label": "declared here",
+          "label": "overridden again here",
+          "span": {
+            "length": 5,
+            "offset": 90
+          }
+        }
+      ],
+      "message": "workflow `main` overrides `desk` more than once",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::unshown_element",
+      "labels": [],
+      "message": "element `cache.hot` is shown by no workflow, so it is never drawn",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::unshown_element",
+      "labels": [],
+      "message": "element `db` is shown by no workflow, so it is never drawn",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::unresolved_description_target",
+      "labels": [
+        {
+          "label": "described here",
           "span": {
             "length": 4,
             "offset": 0
           }
         }
       ],
-      "message": "element `desk` asks for a grid of 0 columns, which has no cell for any child",
-      "related": [],
-      "severity": "error"
-    },
-    {
-      "causes": [],
-      "code": "svugy::impossible_placement",
-      "labels": [],
-      "message": "element `desk.quoter` has child placement `Column` but no children to place",
+      "message": "the description of element `desk` links to `#desk->ledger`, which names nothing in workflow `main`",
       "related": [],
       "severity": "warning"
     },
     {
       "causes": [],
-      "code": "svugy::impossible_placement",
+      "code": "svugy::duplicate_step_item",
       "labels": [],
-      "message": "element `wide` packs its 1 children into 40000 columns and 1 rows, but a packed level holds at most 32766 of either",
+      "message": "step `main/all` lists element `wide.cell` more than once",
       "related": [],
       "severity": "error"
     },
     {
       "causes": [],
-      "code": "svugy::impossible_height",
+      "code": "svugy::dangling_reference",
+      "help": "did you mean `(wide -> ledger)[0]`?",
       "labels": [],
-      "message": "element `cache.hot` stands 0 plan units tall, which is not a positive number no greater than 1000000",
+      "message": "step `main/all` lists edge `(desk -> ledger)[3]`, which names nothing in workflow `main`",
       "related": [],
       "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::duplicate_id",
+      "labels": [],
+      "message": "step `main/all` is declared more than once",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::empty_step",
+      "labels": [],
+      "message": "step `main/all` lists no edge or component",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::lineage_edge",
+      "labels": [
+        {
+          "label": "declared here",
+          "span": {
+            "length": 12,
+            "offset": 40
+          }
+        }
+      ],
+      "message": "edge `(desk -> desk.quoter)[0]` of workflow `main` joins an element to itself or to its own ancestor, which no layer can draw",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::dangling_reference",
+      "help": "did you mean `db`?",
+      "labels": [],
+      "message": "edge `(desk.quoter -> dbb)[0]` of workflow `main` points to `dbb`, which is not an element",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::lineage_edge",
+      "labels": [],
+      "message": "edge `(desk.quoter -> desk.quoter)[0]` of workflow `main` joins an element to itself or to its own ancestor, which no layer can draw",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::badge_edge_on_container",
+      "labels": [],
+      "message": "edge `(ledger -> wide)[0]` of workflow `main` is a badge, which needs a leaf at both ends",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::badge_edge_on_container",
+      "labels": [
+        {
+          "label": "declared here",
+          "span": {
+            "length": 14,
+            "offset": 60
+          }
+        }
+      ],
+      "message": "edge `(wide -> ledger)[0]` of workflow `main` is a badge, which needs a leaf at both ends",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::unshown_override",
+      "labels": [],
+      "message": "workflow `main` overrides `db`, which it doesn't show",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::impossible_placement",
+      "labels": [],
+      "message": "workflow `main` pins `desk` at (inf, 0), which is not within 1000000 plan units of its level's origin",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::impossible_placement",
+      "labels": [],
+      "message": "workflow `main` asks `desk` for a grid of 0 columns, which has no cell for any child",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::impossible_placement",
+      "labels": [],
+      "message": "workflow `main` packs the 1 children of `wide` into 40000 columns and 1 rows, but a packed level holds at most 32766 of either",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::impossible_placement",
+      "labels": [],
+      "message": "workflow `main` gives `wide.cell` child placement `Column`, but shows no children of it",
+      "related": [],
+      "severity": "warning"
     },
     {
       "causes": [],
@@ -150,7 +304,7 @@ expression: pretty
           }
         }
       ],
-      "message": "element `desk` is a container, so it is drawn as a slab and its shape `Disc` is ignored in v1",
+      "message": "element `desk` is a container in workflow `main`, so it is drawn as a slab there and its shape `Disc` is ignored",
       "related": [],
       "severity": "warning"
     },
@@ -166,65 +320,63 @@ expression: pretty
           }
         }
       ],
-      "message": "element `desk` is a container, so it is drawn as a slab and its height 30 is ignored in v1",
+      "message": "element `desk` is a container in workflow `main`, so it is drawn as a slab there and its height 30 is ignored",
       "related": [],
       "severity": "warning"
     },
     {
       "causes": [],
-      "code": "svugy::badge_edge_on_container",
-      "labels": [
-        {
-          "label": "declared here",
-          "span": {
-            "length": 14,
-            "offset": 60
-          }
-        }
-      ],
-      "message": "edge `(wide -> ledger)[0]` is a badge, which needs a leaf at both ends",
+      "code": "svugy::unshown_link_target",
+      "labels": [],
+      "message": "element `ledger` links to `db`, which workflow `main` doesn't show, so it links nowhere there",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::unresolved_description_target",
+      "labels": [],
+      "message": "the description of workflow `main` links to `#vault`, which names no element `#PATH`, edge `#FROM->TO[n]` or step `#WORKFLOW/STEP`",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::malformed_id",
+      "labels": [],
+      "message": "step id `-x` of workflow `not an id` is not an id: ASCII letters, digits, `_` and single inner `-`, starting with a letter or `_`",
       "related": [],
       "severity": "error"
     },
     {
       "causes": [],
-      "code": "svugy::unresolved_link",
-      "help": "did you mean `desk.quoter`?",
+      "code": "svugy::empty_step",
       "labels": [],
-      "message": "element `desk.quoter` links to `desk.quoterr`, which is not an element; write `./desk.quoterr` if it is a relative URL",
-      "related": [],
-      "severity": "warning"
-    },
-    {
-      "causes": [],
-      "code": "svugy::malformed_code_reference",
-      "labels": [
-        {
-          "label": "pointed here",
-          "span": {
-            "length": 17,
-            "offset": 80
-          }
-        }
-      ],
-      "message": "element `db` points at code `../store/db.rs#Db`, but its file climbs out with `..`; write it relative to the repository root",
+      "message": "step `not an id/-x` lists no edge or component",
       "related": [],
       "severity": "error"
     },
     {
       "causes": [],
-      "code": "svugy::undrawn_legend_key",
+      "code": "svugy::empty_workflow",
       "labels": [],
-      "message": "the legend describes the arcs dashed `3`, which the diagram never draws",
+      "message": "workflow `main` has no step, so it shows nothing",
       "related": [],
-      "severity": "warning"
+      "severity": "error"
     },
     {
       "causes": [],
-      "code": "svugy::undrawn_legend_key",
-      "help": "did you mean `ledger`?",
+      "code": "svugy::unlisted_edge",
       "labels": [],
-      "message": "the legend describes the badges of `ledgr`, which the diagram never draws",
+      "message": "edge `(ledger -> wide)[0]` of workflow `loose` is listed by no step, so it is never drawn",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::unshown_link_target",
+      "labels": [],
+      "message": "element `ledger` links to `db`, which workflow `loose` doesn't show, so it links nowhere there",
       "related": [],
       "severity": "warning"
     }

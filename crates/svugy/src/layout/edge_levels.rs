@@ -2,7 +2,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use svugy_model::model::{EdgeId, Model};
+use svugy_model::graph::WorkflowGraph;
+use svugy_model::model::EdgeId;
 use svugy_model::path::ElementPath;
 
 use super::EdgeEnd;
@@ -25,10 +26,10 @@ pub(super) struct LeavingEdge<'a> {
 }
 
 impl<'a> HomedEdges<'a> {
-    /// Home every arc of `model` in its lowest common ancestor level.
-    pub(super) fn of(model: &'a Model) -> Self {
+    /// Home every arc of `graph` in its lowest common ancestor level.
+    pub(super) fn of(graph: &'a WorkflowGraph) -> Self {
         let mut homed_edges_by_level: BTreeMap<ElementPath, Vec<&'a EdgeId>> = BTreeMap::new();
-        for (edge, _attributes) in model.arc_edges() {
+        for (edge, _attributes) in graph.arc_edges() {
             let home = edge.home_level();
             let homed_edges = homed_edges_by_level.entry(home).or_default();
             homed_edges.push(edge);
@@ -64,14 +65,14 @@ impl<'a> HomedEdges<'a> {
 }
 
 impl<'a> LeavingEdges<'a> {
-    /// Record every layoutable edge of `model` as leaving every container between its endpoints and their lowest common ancestor.
-    pub(super) fn of(model: &'a Model) -> Self {
+    /// Record every edge of `graph` as leaving every container between its endpoints and their lowest common ancestor.
+    pub(super) fn of(graph: &'a WorkflowGraph) -> Self {
         let mut leaving_edges_by_container: BTreeMap<ElementPath, Vec<LeavingEdge<'a>>> =
             BTreeMap::new();
-        for (edge, _attributes) in model.layoutable_edges() {
+        for edge in graph.edges().keys() {
             let home = edge.home_level();
             let home_depth = home.depth();
-            let is_badge = model.is_badge_edge(edge);
+            let is_badge = graph.is_badge_edge(edge);
             for inner_end in [EdgeEnd::Source, EdgeEnd::Target] {
                 let endpoint = inner_end.endpoint_of(edge);
                 let left_containers = endpoint
@@ -135,27 +136,27 @@ impl<'a> LeavingEdge<'a> {
 
 #[cfg(test)]
 mod tests {
-    use svugy_model::builder::ModelBuilder;
+    use crate::one_step::OneStepModelBuilder;
     use svugy_model::model::{Edge, Element};
 
     use super::*;
 
-    fn deep_edge_model() -> Model {
-        let mut builder = ModelBuilder::new();
+    fn deep_edge_graph() -> WorkflowGraph {
+        let mut builder = OneStepModelBuilder::new();
         let a = builder.add_top_level("a", Element::new("a"));
         let b = builder.add_child(&a, "b", Element::new("b"));
         let c = builder.add_child(&b, "c", Element::new("c"));
         let d = builder.add_top_level("d", Element::new("d"));
         builder.add_edge(&c, &d, Edge::new());
-        builder.build().model.expect("fixture model is valid")
+        builder.build_graph()
     }
 
     #[test]
     fn an_edge_is_homed_at_its_lowest_common_ancestor_and_lifted_to_its_children_there() {
-        let model = deep_edge_model();
+        let graph = deep_edge_graph();
         let root = ElementPath::root();
 
-        let homed_edges = HomedEdges::of(&model);
+        let homed_edges = HomedEdges::of(&graph);
 
         assert_eq!(homed_edges.homed_in(&root).len(), 1);
         let a = ElementPath::from_segments(["a"]);
@@ -166,12 +167,12 @@ mod tests {
 
     #[test]
     fn an_edge_leaves_every_container_between_its_endpoint_and_its_home() {
-        let model = deep_edge_model();
+        let graph = deep_edge_graph();
         let a = ElementPath::from_segments(["a"]);
         let a_b = ElementPath::from_segments(["a", "b"]);
         let d = ElementPath::from_segments(["d"]);
 
-        let leaving_edges = LeavingEdges::of(&model);
+        let leaving_edges = LeavingEdges::of(&graph);
 
         let left_containers: Vec<&ElementPath> = leaving_edges.containers_left_by_edges().collect();
         assert_eq!(left_containers, [&a, &a_b]);

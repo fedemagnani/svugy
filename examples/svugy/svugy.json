@@ -1,203 +1,121 @@
 {
-  "title": "svugy · how it is built",
-  "subtitle": "text in → model → layout → geometry → SVG out",
-  "legend": {
-    "title": "Read it as a story",
-    "entries": [
-      "① your text becomes a model",
-      "② the model becomes boxes in plan space",
-      "③ boxes become isometric shapes",
-      "④ shapes become one SVG file, runtime inside"
-    ],
-    "dashes": {
-      "2": "embedded at build time",
-      "5": "data flows this way"
-    },
-    "badges": {
-      "pipeline.inter": "reads the bundled font"
-    }
-  },
   "elements": {
     "cli": {
-      "label": "svugy-cli",
       "caption": "render · validate · import",
       "height": 70.0,
+      "label": "svugy-cli",
+      "link": "pipeline",
       "style": {
         "fill": "#9945ff"
-      },
-      "position": {
-        "x": 0.0,
-        "y": 330.0
-      },
-      "link": "pipeline"
+      }
     },
     "contract": {
-      "label": "runtime contract",
       "caption": "data-svugy-*",
+      "label": "runtime contract",
       "shape": "slab",
       "style": {
         "fill": "#334566"
-      },
-      "position": {
-        "x": 1560.0,
-        "y": 760.0
       }
     },
     "d2": {
-      "label": "d2 v0.9.0",
       "caption": "reference grammar",
+      "label": "d2 v0.9.0",
+      "link": "https://d2lang.com",
       "style": {
         "fill": "transparent",
         "stroke": "#5b6170",
         "stroke-dash": "5"
-      },
-      "position": {
-        "x": 260.0,
-        "y": -220.0
-      },
-      "link": "https://d2lang.com"
+      }
     },
     "import": {
-      "label": "svugy-parse",
       "caption": "text → model",
+      "label": "svugy-parse",
       "style": {
         "fill": "#2a2418"
-      },
-      "position": {
-        "x": 260.0,
-        "y": 0.0
       }
     },
     "import.d2": {
-      "label": "d2",
       "caption": "import",
+      "label": "d2",
       "style": {
         "fill": "#f0a020"
-      },
-      "position": {
-        "x": 150.0,
-        "y": 18.0
       }
     },
     "import.json": {
-      "label": "JSON",
       "caption": "load · save",
+      "label": "JSON",
       "style": {
         "fill": "#f0a020"
-      },
-      "position": {
-        "x": 282.0,
-        "y": 18.0
       }
     },
     "import.markdown": {
-      "label": "Markdown",
       "caption": "parse · print",
+      "label": "Markdown",
       "style": {
         "fill": "#f0a020"
-      },
-      "position": {
-        "x": 18.0,
-        "y": 18.0
       }
     },
     "model": {
-      "label": "svugy-model",
       "caption": "the hub",
+      "label": "svugy-model",
       "style": {
         "fill": "#17271f"
-      },
-      "position": {
-        "x": 260.0,
-        "y": 330.0
       }
     },
     "model.graph": {
-      "label": "model",
       "caption": "elements · edges",
+      "label": "model",
       "style": {
         "fill": "#14f195"
-      },
-      "position": {
-        "x": 150.0,
-        "y": 18.0
       }
     },
     "model.path": {
-      "label": "path",
       "caption": "ids",
+      "label": "path",
       "style": {
         "fill": "#14f195"
-      },
-      "position": {
-        "x": 18.0,
-        "y": 18.0
       }
     },
     "model.validate": {
-      "label": "validate",
       "caption": "problems · bounds",
+      "label": "validate",
       "style": {
         "fill": "#14f195"
-      },
-      "position": {
-        "x": 18.0,
-        "y": 180.0
       }
     },
     "pipeline": {
-      "label": "svugy",
       "caption": "the pipeline",
+      "label": "svugy",
       "style": {
         "fill": "#1b2436"
-      },
-      "position": {
-        "x": 760.0,
-        "y": 0.0
       }
     },
     "pipeline.geometry": {
-      "label": "geometry",
       "caption": "screen space",
+      "label": "geometry",
       "style": {
         "fill": "#1f3566"
-      },
-      "position": {
-        "x": 36.0,
-        "y": 300.0
       }
     },
     "pipeline.geometry.depth": {
-      "label": "depth",
       "caption": "painter's order",
+      "label": "depth",
       "style": {
         "fill": "#3478f6"
-      },
-      "position": {
-        "x": 282.0,
-        "y": 18.0
       }
     },
     "pipeline.geometry.primitive": {
-      "label": "primitive",
       "caption": "4 primitives",
+      "label": "primitive",
       "style": {
         "fill": "#3478f6"
-      },
-      "position": {
-        "x": 150.0,
-        "y": 18.0
       }
     },
     "pipeline.geometry.projection": {
-      "label": "projection",
       "caption": "exact constants",
+      "label": "projection",
       "style": {
         "fill": "#3478f6"
-      },
-      "position": {
-        "x": 18.0,
-        "y": 18.0
       }
     },
     "pipeline.inter": {
@@ -205,120 +123,76 @@
       "shape": "cylinder",
       "style": {
         "fill": "#d5dcea"
-      },
-      "position": {
-        "x": 780.0,
-        "y": 54.0
       }
     },
     "pipeline.layout": {
-      "label": "layout",
       "caption": "plan space",
+      "label": "layout",
       "style": {
         "fill": "#1f3566"
-      },
-      "position": {
-        "x": 36.0,
-        "y": 36.0
       }
     },
     "pipeline.layout.place": {
-      "label": "place",
       "caption": "dagre · taffy · pins",
+      "label": "place",
       "style": {
         "fill": "#3478f6"
-      },
-      "position": {
-        "x": 18.0,
-        "y": 18.0
       }
     },
     "pipeline.layout.route": {
-      "label": "route",
       "caption": "ports",
+      "label": "route",
       "style": {
         "fill": "#3478f6"
-      },
-      "position": {
-        "x": 150.0,
-        "y": 18.0
       }
     },
     "pipeline.layout.stub": {
-      "label": "stub",
       "caption": "boundary slots",
+      "label": "stub",
       "style": {
         "fill": "#3478f6"
-      },
-      "position": {
-        "x": 282.0,
-        "y": 18.0
       }
     },
     "pipeline.metrics": {
-      "label": "metrics",
       "caption": "measures labels",
+      "label": "metrics",
       "style": {
         "fill": "#3478f6"
-      },
-      "position": {
-        "x": 600.0,
-        "y": 36.0
       }
     },
     "pipeline.render": {
-      "label": "render",
       "caption": "markup",
+      "label": "render",
       "style": {
         "fill": "#1f3566"
-      },
-      "position": {
-        "x": 560.0,
-        "y": 300.0
       }
     },
     "pipeline.render.profile": {
-      "label": "profile",
       "caption": "static · interactive",
+      "label": "profile",
       "style": {
         "fill": "#3478f6"
-      },
-      "position": {
-        "x": 150.0,
-        "y": 18.0
       }
     },
     "pipeline.render.theme": {
-      "label": "theme",
       "caption": "tokens · Oklab",
+      "label": "theme",
       "style": {
         "fill": "#3478f6"
-      },
-      "position": {
-        "x": 18.0,
-        "y": 18.0
       }
     },
     "pipeline.render.writer": {
-      "label": "writer",
       "caption": "escaping · decimals",
+      "label": "writer",
       "style": {
         "fill": "#3478f6"
-      },
-      "position": {
-        "x": 282.0,
-        "y": 18.0
       }
     },
     "runtime": {
-      "label": "runtime",
       "caption": "svugy.js · svugy.css",
+      "label": "runtime",
       "style": {
         "fill": "#3a3f4b"
-      },
-      "position": {
-        "x": 1900.0,
-        "y": 620.0
       }
     },
     "svg": {
@@ -326,163 +200,539 @@
       "shape": "disc",
       "style": {
         "fill": "#d5dcea"
-      },
-      "position": {
-        "x": 1900.0,
-        "y": 330.0
       }
     },
     "text": {
-      "label": "your text",
       "caption": "Markdown · d2 · JSON",
+      "label": "your text",
       "style": {
         "fill": "#3a3f4b"
-      },
-      "position": {
-        "x": 0.0,
-        "y": 40.0
       }
     }
   },
-  "edges": [
+  "workflows": [
     {
-      "from": "cli",
-      "to": "import",
-      "ordinal": 0
-    },
-    {
-      "from": "cli",
-      "to": "pipeline",
-      "ordinal": 0
-    },
-    {
-      "from": "d2",
-      "to": "import",
-      "ordinal": 0,
-      "label": "grammar",
-      "style": {
-        "stroke": "#5b6170",
-        "stroke-dash": "5"
-      }
-    },
-    {
-      "from": "import",
-      "to": "model",
-      "ordinal": 0,
-      "label": "①"
-    },
-    {
-      "from": "model",
-      "to": "pipeline",
-      "ordinal": 0,
-      "label": "②"
-    },
-    {
-      "from": "model.graph",
-      "to": "model.validate",
-      "ordinal": 0
-    },
-    {
-      "from": "model.path",
-      "to": "model.graph",
-      "ordinal": 0
-    },
-    {
-      "from": "pipeline",
-      "to": "svg",
-      "ordinal": 0,
-      "label": "④"
-    },
-    {
-      "from": "pipeline.geometry",
-      "to": "pipeline.render",
-      "ordinal": 0
-    },
-    {
-      "from": "pipeline.geometry.primitive",
-      "to": "pipeline.geometry.depth",
-      "ordinal": 0
-    },
-    {
-      "from": "pipeline.geometry.projection",
-      "to": "pipeline.geometry.primitive",
-      "ordinal": 0
-    },
-    {
-      "from": "pipeline.layout",
-      "to": "pipeline.geometry",
-      "ordinal": 0,
-      "label": "③"
-    },
-    {
-      "from": "pipeline.layout.place",
-      "to": "pipeline.layout.route",
-      "ordinal": 0
-    },
-    {
-      "from": "pipeline.layout.route",
-      "to": "pipeline.layout.stub",
-      "ordinal": 0
-    },
-    {
-      "from": "pipeline.metrics",
-      "to": "pipeline.inter",
-      "ordinal": 0,
-      "label": "measures",
-      "badge": true
-    },
-    {
-      "from": "pipeline.metrics",
-      "to": "pipeline.layout",
-      "ordinal": 0
-    },
-    {
-      "from": "pipeline.render.profile",
-      "to": "pipeline.inter",
-      "ordinal": 0,
-      "label": "outlines",
-      "badge": true
-    },
-    {
-      "from": "pipeline.render.profile",
-      "to": "pipeline.render.writer",
-      "ordinal": 0
-    },
-    {
-      "from": "pipeline.render.theme",
-      "to": "pipeline.render.profile",
-      "ordinal": 0
-    },
-    {
-      "from": "pipeline.render.writer",
-      "to": "contract",
-      "ordinal": 0,
-      "label": "emits",
-      "style": {
-        "stroke-dash": "2"
-      }
-    },
-    {
-      "from": "runtime",
-      "to": "contract",
-      "ordinal": 0,
-      "label": "reads",
-      "style": {
-        "stroke-dash": "2"
-      }
-    },
-    {
-      "from": "runtime",
-      "to": "svg",
-      "ordinal": 0,
-      "style": {
-        "stroke-dash": "2"
-      }
-    },
-    {
-      "from": "text",
-      "to": "cli",
-      "ordinal": 0
+      "description": "[Your text](#text) goes in; [one SVG file](#svg) comes out, with [the runtime](#runtime) inside it.",
+      "edges": [
+        {
+          "from": "cli",
+          "ordinal": 0,
+          "to": "import"
+        },
+        {
+          "from": "cli",
+          "ordinal": 0,
+          "to": "pipeline"
+        },
+        {
+          "from": "d2",
+          "label": "grammar",
+          "ordinal": 0,
+          "style": {
+            "stroke": "#5b6170",
+            "stroke-dash": "5"
+          },
+          "to": "import"
+        },
+        {
+          "from": "import",
+          "label": "①",
+          "ordinal": 0,
+          "to": "model"
+        },
+        {
+          "from": "model",
+          "label": "②",
+          "ordinal": 0,
+          "to": "pipeline"
+        },
+        {
+          "from": "model.graph",
+          "ordinal": 0,
+          "to": "model.validate"
+        },
+        {
+          "from": "model.path",
+          "ordinal": 0,
+          "to": "model.graph"
+        },
+        {
+          "from": "pipeline",
+          "label": "④",
+          "ordinal": 0,
+          "to": "svg"
+        },
+        {
+          "from": "pipeline.geometry",
+          "ordinal": 0,
+          "to": "pipeline.render"
+        },
+        {
+          "from": "pipeline.geometry.primitive",
+          "ordinal": 0,
+          "to": "pipeline.geometry.depth"
+        },
+        {
+          "from": "pipeline.geometry.projection",
+          "ordinal": 0,
+          "to": "pipeline.geometry.primitive"
+        },
+        {
+          "from": "pipeline.layout",
+          "label": "③",
+          "ordinal": 0,
+          "to": "pipeline.geometry"
+        },
+        {
+          "from": "pipeline.layout.place",
+          "ordinal": 0,
+          "to": "pipeline.layout.route"
+        },
+        {
+          "from": "pipeline.layout.route",
+          "ordinal": 0,
+          "to": "pipeline.layout.stub"
+        },
+        {
+          "badge": true,
+          "from": "pipeline.metrics",
+          "label": "measures",
+          "ordinal": 0,
+          "to": "pipeline.inter"
+        },
+        {
+          "from": "pipeline.metrics",
+          "ordinal": 0,
+          "to": "pipeline.layout"
+        },
+        {
+          "badge": true,
+          "from": "pipeline.render.profile",
+          "label": "outlines",
+          "ordinal": 0,
+          "to": "pipeline.inter"
+        },
+        {
+          "from": "pipeline.render.profile",
+          "ordinal": 0,
+          "to": "pipeline.render.writer"
+        },
+        {
+          "from": "pipeline.render.theme",
+          "ordinal": 0,
+          "to": "pipeline.render.profile"
+        },
+        {
+          "from": "pipeline.render.writer",
+          "label": "emits",
+          "ordinal": 0,
+          "style": {
+            "stroke-dash": "2"
+          },
+          "to": "contract"
+        },
+        {
+          "from": "runtime",
+          "label": "reads",
+          "ordinal": 0,
+          "style": {
+            "stroke-dash": "2"
+          },
+          "to": "contract"
+        },
+        {
+          "from": "runtime",
+          "ordinal": 0,
+          "style": {
+            "stroke-dash": "2"
+          },
+          "to": "svg"
+        },
+        {
+          "from": "text",
+          "ordinal": 0,
+          "to": "cli"
+        }
+      ],
+      "id": "main",
+      "overrides": {
+        "cli": {
+          "position": {
+            "x": 0.0,
+            "y": 330.0
+          }
+        },
+        "contract": {
+          "position": {
+            "x": 1560.0,
+            "y": 760.0
+          }
+        },
+        "d2": {
+          "position": {
+            "x": 260.0,
+            "y": -220.0
+          }
+        },
+        "import": {
+          "position": {
+            "x": 260.0,
+            "y": 0.0
+          }
+        },
+        "import.d2": {
+          "position": {
+            "x": 150.0,
+            "y": 18.0
+          }
+        },
+        "import.json": {
+          "position": {
+            "x": 282.0,
+            "y": 18.0
+          }
+        },
+        "import.markdown": {
+          "position": {
+            "x": 18.0,
+            "y": 18.0
+          }
+        },
+        "model": {
+          "position": {
+            "x": 260.0,
+            "y": 330.0
+          }
+        },
+        "model.graph": {
+          "position": {
+            "x": 150.0,
+            "y": 18.0
+          }
+        },
+        "model.path": {
+          "position": {
+            "x": 18.0,
+            "y": 18.0
+          }
+        },
+        "model.validate": {
+          "position": {
+            "x": 18.0,
+            "y": 180.0
+          }
+        },
+        "pipeline": {
+          "position": {
+            "x": 760.0,
+            "y": 0.0
+          }
+        },
+        "pipeline.geometry": {
+          "position": {
+            "x": 36.0,
+            "y": 300.0
+          }
+        },
+        "pipeline.geometry.depth": {
+          "position": {
+            "x": 282.0,
+            "y": 18.0
+          }
+        },
+        "pipeline.geometry.primitive": {
+          "position": {
+            "x": 150.0,
+            "y": 18.0
+          }
+        },
+        "pipeline.geometry.projection": {
+          "position": {
+            "x": 18.0,
+            "y": 18.0
+          }
+        },
+        "pipeline.inter": {
+          "position": {
+            "x": 780.0,
+            "y": 54.0
+          }
+        },
+        "pipeline.layout": {
+          "position": {
+            "x": 36.0,
+            "y": 36.0
+          }
+        },
+        "pipeline.layout.place": {
+          "position": {
+            "x": 18.0,
+            "y": 18.0
+          }
+        },
+        "pipeline.layout.route": {
+          "position": {
+            "x": 150.0,
+            "y": 18.0
+          }
+        },
+        "pipeline.layout.stub": {
+          "position": {
+            "x": 282.0,
+            "y": 18.0
+          }
+        },
+        "pipeline.metrics": {
+          "position": {
+            "x": 600.0,
+            "y": 36.0
+          }
+        },
+        "pipeline.render": {
+          "position": {
+            "x": 560.0,
+            "y": 300.0
+          }
+        },
+        "pipeline.render.profile": {
+          "position": {
+            "x": 150.0,
+            "y": 18.0
+          }
+        },
+        "pipeline.render.theme": {
+          "position": {
+            "x": 18.0,
+            "y": 18.0
+          }
+        },
+        "pipeline.render.writer": {
+          "position": {
+            "x": 282.0,
+            "y": 18.0
+          }
+        },
+        "runtime": {
+          "position": {
+            "x": 1900.0,
+            "y": 620.0
+          }
+        },
+        "svg": {
+          "position": {
+            "x": 1900.0,
+            "y": 330.0
+          }
+        },
+        "text": {
+          "position": {
+            "x": 0.0,
+            "y": 40.0
+          }
+        }
+      },
+      "steps": [
+        {
+          "description": "[The CLI](#cli) hands your text to [svugy-parse](#import), which reads Markdown, d2 or JSON into [svugy-model](#model); the d2 importer follows [the d2 grammar](#d2->import[0]). [Validate](#model.validate) checks the model before anything is drawn.",
+          "id": "model",
+          "items": [
+            {
+              "edge": {
+                "from": "text",
+                "ordinal": 0,
+                "to": "cli"
+              }
+            },
+            {
+              "edge": {
+                "from": "cli",
+                "ordinal": 0,
+                "to": "import"
+              }
+            },
+            {
+              "element": "import.markdown"
+            },
+            {
+              "element": "import.d2"
+            },
+            {
+              "element": "import.json"
+            },
+            {
+              "edge": {
+                "from": "d2",
+                "ordinal": 0,
+                "to": "import"
+              }
+            },
+            {
+              "edge": {
+                "from": "import",
+                "ordinal": 0,
+                "to": "model"
+              }
+            },
+            {
+              "edge": {
+                "from": "model.path",
+                "ordinal": 0,
+                "to": "model.graph"
+              }
+            },
+            {
+              "edge": {
+                "from": "model.graph",
+                "ordinal": 0,
+                "to": "model.validate"
+              }
+            }
+          ],
+          "title": "① Your text becomes a model"
+        },
+        {
+          "description": "[The pipeline](#pipeline) measures every label with [Inter](#pipeline.inter), the bundled font. Then [place](#pipeline.layout.place) puts the boxes, [route](#pipeline.layout.route) anchors each edge on a port and [stub](#pipeline.layout.stub) picks where edges leave their container.",
+          "id": "layout",
+          "items": [
+            {
+              "edge": {
+                "from": "cli",
+                "ordinal": 0,
+                "to": "pipeline"
+              }
+            },
+            {
+              "edge": {
+                "from": "model",
+                "ordinal": 0,
+                "to": "pipeline"
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline.metrics",
+                "ordinal": 0,
+                "to": "pipeline.layout"
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline.metrics",
+                "ordinal": 0,
+                "to": "pipeline.inter"
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline.layout.place",
+                "ordinal": 0,
+                "to": "pipeline.layout.route"
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline.layout.route",
+                "ordinal": 0,
+                "to": "pipeline.layout.stub"
+              }
+            }
+          ],
+          "title": "② The model becomes boxes in plan space"
+        },
+        {
+          "description": "[The geometry](#pipeline.geometry) turns each box into an isometric solid and orders the solids for painting; [the renderer](#pipeline.render) themes them and writes [one SVG file](#pipeline->svg[0]).",
+          "id": "render",
+          "items": [
+            {
+              "edge": {
+                "from": "pipeline.layout",
+                "ordinal": 0,
+                "to": "pipeline.geometry"
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline.geometry",
+                "ordinal": 0,
+                "to": "pipeline.render"
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline.geometry.projection",
+                "ordinal": 0,
+                "to": "pipeline.geometry.primitive"
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline.geometry.primitive",
+                "ordinal": 0,
+                "to": "pipeline.geometry.depth"
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline.render.theme",
+                "ordinal": 0,
+                "to": "pipeline.render.profile"
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline.render.profile",
+                "ordinal": 0,
+                "to": "pipeline.render.writer"
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline.render.profile",
+                "ordinal": 0,
+                "to": "pipeline.inter"
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline",
+                "ordinal": 0,
+                "to": "svg"
+              }
+            }
+          ],
+          "title": "③ Boxes become shapes, ④ shapes one SVG file"
+        },
+        {
+          "description": "[The writer](#pipeline.render.writer) emits the `data-svugy-*` attributes of [the runtime contract](#contract). [The runtime](#runtime), embedded at build time, reads them inside [the SVG](#svg) to make it explorable.",
+          "id": "runtime",
+          "items": [
+            {
+              "edge": {
+                "from": "pipeline.render.writer",
+                "ordinal": 0,
+                "to": "contract"
+              }
+            },
+            {
+              "edge": {
+                "from": "runtime",
+                "ordinal": 0,
+                "to": "contract"
+              }
+            },
+            {
+              "edge": {
+                "from": "runtime",
+                "ordinal": 0,
+                "to": "svg"
+              }
+            }
+          ],
+          "title": "The runtime ships inside the file"
+        }
+      ],
+      "subtitle": "text in → model → layout → geometry → SVG out",
+      "title": "svugy · how it is built"
     }
   ]
 }

@@ -1,13 +1,12 @@
 ---
 source: crates/svugy-parse/tests/json.rs
-assertion_line: 440
 expression: pretty
 ---
 {
   "causes": [],
   "code": "svugy::model_report",
   "labels": [],
-  "message": "the model has 3 error(s) and 1 warning(s)",
+  "message": "the model has 6 error(s) and 1 warning(s)",
   "related": [
     {
       "causes": [],
@@ -27,6 +26,24 @@ expression: pretty
     },
     {
       "causes": [],
+      "code": "svugy::unresolved_description_target",
+      "help": "did you mean `#db.primary`?",
+      "labels": [],
+      "message": "the description of element `db` links to `#db.primry`, which names no element `#PATH`, edge `#FROM->TO[n]` or step `#WORKFLOW/STEP`",
+      "related": [],
+      "severity": "warning"
+    },
+    {
+      "causes": [],
+      "code": "svugy::dangling_reference",
+      "help": "did you mean `(db.primary -> db.primry)[0]`?",
+      "labels": [],
+      "message": "step `main/all` lists edge `(db.primary -> db.primry)[1]`, which names nothing in workflow `main`",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
       "code": "svugy::dangling_reference",
       "help": "did you mean `db.primary`?",
       "labels": [
@@ -38,7 +55,15 @@ expression: pretty
           }
         }
       ],
-      "message": "edge `(db.primary -> db.primry)[0]` points to `db.primry`, which is not an element",
+      "message": "edge `(db.primary -> db.primry)[0]` of workflow `main` points to `db.primry`, which is not an element",
+      "related": [],
+      "severity": "error"
+    },
+    {
+      "causes": [],
+      "code": "svugy::unlisted_edge",
+      "labels": [],
+      "message": "edge `(ghost -> ghost)[0]` of workflow `main` is listed by no step, so it is never drawn",
       "related": [],
       "severity": "error"
     },
@@ -46,18 +71,17 @@ expression: pretty
       "causes": [],
       "code": "svugy::dangling_reference",
       "labels": [],
-      "message": "edge `(ghost -> ghost)[0]` points to `ghost`, which is not an element",
+      "message": "edge `(ghost -> ghost)[0]` of workflow `main` points to `ghost`, which is not an element",
       "related": [],
       "severity": "error"
     },
     {
       "causes": [],
-      "code": "svugy::unresolved_description_target",
-      "help": "did you mean `#db.primary`?",
+      "code": "svugy::lineage_edge",
       "labels": [],
-      "message": "the description of element `db` links to `#db.primry`, which names no element `#PATH` or edge `#FROM->TO[n]`",
+      "message": "edge `(ghost -> ghost)[0]` of workflow `main` joins an element to itself or to its own ancestor, which no layer can draw",
       "related": [],
-      "severity": "warning"
+      "severity": "error"
     }
   ],
   "severity": "error"

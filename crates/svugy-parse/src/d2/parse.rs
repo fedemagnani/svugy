@@ -67,7 +67,7 @@ pub(crate) struct SyntaxSegment {
     pub(crate) is_parent_reference: bool,
 }
 
-/// Represent a value as written; only `Scalar` survives the v1 subset, and an `Array` of scalars only in the `svugy` carrier.
+/// Represent a value as written; only `Scalar` survives the v1 subset.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum SyntaxValue {
     Scalar(Scalar),
@@ -75,16 +75,8 @@ pub(crate) enum SyntaxValue {
     BlockString(Span),
     Import(Span),
     Substitution(Span),
-    Array(SyntaxArray),
-    /// Mark a `{ … }` map, which only an array holds as a value.
-    Map(Span),
-}
-
-/// List the items of a `[ … ]` array as written, in order.
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) struct SyntaxArray {
-    pub(crate) items: Vec<SyntaxValue>,
-    pub(crate) span: Span,
+    /// Mark a `[ … ]` array, its items parsed only to find where it ends.
+    Array(Span),
 }
 
 impl SyntaxStatement {
@@ -326,26 +318,20 @@ impl SyntaxValue {
         I: ValueInput<'tokens, Token = Token<'src>, Span = Span>,
     {
         recursive(|value| {
-            let separator = Token::separator_parser().to(None);
+            let separator = Token::separator_parser().ignored();
             let braced_tree = Token::balanced_tree_parser();
             let map = just(Token::LeftBrace)
                 .rewind()
                 .ignore_then(braced_tree)
-                .to_span()
-                .map(Self::Map);
-            let item = choice((map, value)).map(Some);
+                .ignored();
+            let item = choice((map, value.ignored()));
             let left_bracket = just(Token::LeftBracket);
             let right_bracket = just(Token::RightBracket);
             let array = choice((item, separator))
                 .repeated()
-                .collect::<Vec<Option<Self>>>()
                 .delimited_by(left_bracket, right_bracket)
-                .map_with(|items, extra| {
-                    let items = items.into_iter().flatten().collect();
-                    let span = extra.span();
-                    let array = SyntaxArray { items, span };
-                    Self::Array(array)
-                });
+                .to_span()
+                .map(Self::Array);
             let run = none_of(Token::SEPARATORS_AND_BRACKETS)
                 .repeated()
                 .at_least(1)
@@ -449,21 +435,6 @@ impl<'src> Token<'src> {
         choice((closing_token, end_of_input))
             .labelled("end of statement")
             .rewind()
-    }
-}
-
-impl SyntaxValue {
-    /// Return the span of the value as written.
-    pub(crate) fn span(&self) -> Span {
-        match self {
-            Self::Scalar(scalar) => scalar.span,
-            Self::Array(array) => array.span,
-            Self::Null(span)
-            | Self::BlockString(span)
-            | Self::Import(span)
-            | Self::Substitution(span)
-            | Self::Map(span) => *span,
-        }
     }
 }
 

@@ -65,10 +65,8 @@ pub(crate) enum LabelRole {
     ConnectionLabel,
     StubTag,
     ContainerTag,
-    DiagramTitle,
-    DiagramSubtitle,
-    LegendTitle,
-    LegendLine,
+    WorkflowTitle,
+    WorkflowSubtitle,
 }
 
 impl LabelRole {
@@ -88,10 +86,8 @@ impl LabelRole {
                 let unspaced = TextSpec::new(text, 600, 9.0);
                 unspaced.with_letter_spacing(0.3)
             }
-            Self::DiagramTitle => TextSpec::new(text, 700, 17.0),
-            Self::DiagramSubtitle => TextSpec::new(text, 400, 11.5),
-            Self::LegendTitle => TextSpec::new(text, 700, 12.5),
-            Self::LegendLine => TextSpec::new(text, 400, 11.0),
+            Self::WorkflowTitle => TextSpec::new(text, 700, 17.0),
+            Self::WorkflowSubtitle => TextSpec::new(text, 400, 11.5),
         }
     }
 }
@@ -117,7 +113,8 @@ impl LabelBlock {
     ) -> Self {
         let title_text = element.label();
         let title = title_role.measure_text(title_text, measure);
-        let caption = element
+        let properties = element.properties();
+        let caption = properties
             .caption()
             .map(|caption_text| LabelRole::Caption.measure_text(caption_text, measure));
         Self { title, caption }

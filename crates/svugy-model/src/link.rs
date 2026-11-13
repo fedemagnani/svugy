@@ -1,6 +1,8 @@
 //! Resolve an element's `link:` value into a drill-down target or a URL, the one place that decides which it is.
 
-use crate::model::Model;
+use std::collections::BTreeMap;
+
+use crate::model::Element;
 use crate::path::ElementPath;
 
 /// List the characters only a URL holds, never an element path's bare segments.
@@ -16,12 +18,12 @@ pub enum Link<'a> {
 }
 
 impl<'a> Link<'a> {
-    /// Resolve `raw` against `model`: an element when it parses as the path of one, otherwise a URL.
-    pub fn resolve(raw: &'a str, model: &Model) -> Self {
+    /// Resolve `raw` against `elements`: an element when it parses as the path of one, otherwise a URL.
+    pub fn resolve(raw: &'a str, elements: &BTreeMap<ElementPath, Element>) -> Self {
         let Ok(path) = raw.parse::<ElementPath>() else {
             return Self::Url(raw);
         };
-        let is_element = model.element(&path).is_some();
+        let is_element = elements.contains_key(&path);
         if is_element {
             return Self::Element(path);
         }
@@ -49,19 +51,19 @@ impl<'a> Link<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::builder::ModelBuilder;
-    use crate::model::{Element, Model};
 
-    fn backend_with_api() -> Model {
-        let mut builder = ModelBuilder::new();
-        let backend = builder.add_top_level("backend", Element::new("backend"));
-        builder.add_child(&backend, "api", Element::new("API"));
-        builder.build().model.expect("fixture model is valid")
+    fn backend_with_api() -> BTreeMap<ElementPath, Element> {
+        let backend = ElementPath::from_segments(["backend"]);
+        let api = ElementPath::from_segments(["backend", "api"]);
+        BTreeMap::from([
+            (backend, Element::new("backend")),
+            (api, Element::new("API")),
+        ])
     }
 
     #[test]
     fn a_link_naming_an_element_resolves_to_it_and_anything_else_stays_a_url() {
-        let model = backend_with_api();
+        let elements = backend_with_api();
         let api = ElementPath::from_segments(["backend", "api"]);
         let cases = [
             ("backend.api", Link::Element(api)),
@@ -71,14 +73,14 @@ mod tests {
             ("", Link::Url("")),
         ];
         for (raw, expected_link) in cases {
-            let link = Link::resolve(raw, &model);
+            let link = Link::resolve(raw, &elements);
             assert_eq!(link, expected_link, "{raw:?}");
         }
     }
 
     #[test]
     fn only_urls_without_url_characters_are_shaped_like_an_element_path() {
-        let model = backend_with_api();
+        let elements = backend_with_api();
         let typo = ElementPath::from_segments(["backend", "apii"]);
         let cases = [
             ("backend.apii", Some(typo)),
@@ -89,7 +91,7 @@ mod tests {
             ("..", None),
         ];
         for (raw, expected_path) in cases {
-            let link = Link::resolve(raw, &model);
+            let link = Link::resolve(raw, &elements);
             let path_shaped = link.path_shaped_url();
             assert_eq!(path_shaped, expected_path, "{raw:?}");
         }

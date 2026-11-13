@@ -1,20 +1,23 @@
 //! Print a model back as a Markdown diagram, the text form any imported model can be saved as.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fmt;
 
 use thiserror::Error;
 
 use svugy_model::description::{DescriptionTarget, TargetLink};
 use svugy_model::link::Link;
-use svugy_model::model::{Edge, EdgeId, Element, Model, PlacementHint};
+use svugy_model::model::{Edge, EdgeId, Element, Model, PlacementHint, Position};
 use svugy_model::path::ElementPath;
+use svugy_model::properties::ComponentProperties;
 use svugy_model::style::{ColorKey, NumberKey, NumberValue, StyleValue};
+use svugy_model::workflow::{ElementOverride, Step, StepId, StepItem, Workflow, WorkflowId};
 
 use super::ast::Value;
 use super::parse::ItemLabel;
 use super::property::LineStyle;
 use super::skeleton::{DESCRIPTION_INFO, Skeleton};
+use super::target::{ComponentNumbering, EdgeNumbering};
 
 /// Name the style key an element's `color` lowers to.
 const FILL: &str = ColorKey::FILL.name();
@@ -30,12 +33,8 @@ const SAYABLE_EDGE_STYLE_KEYS: [&str; 2] = [STROKE, STROKE_DASH];
 const LINE_BREAKS: [char; 2] = ['\n', '\r'];
 /// Spell the opening of an HTML comment, which the language drops wherever it appears.
 const COMMENT_OPENING: &str = "<!--";
-/// List the first characters CommonMark may read, at the start of a list item, as a heading, quote, list, rule, code fence, HTML block or link definition.
-const BLOCK_MARKERS: [char; 10] = ['#', '>', '-', '+', '*', '_', '`', '~', '<', '['];
 /// Count the backticks of the shortest code fence CommonMark reads.
 const MIN_FENCE_LENGTH: usize = 3;
-/// List the characters that turn leading digits into an ordered list marker.
-const ORDERED_LIST_DELIMITERS: [char; 2] = ['.', ')'];
 
 /// Report every part of a model Markdown cannot say, so one round fixes them all.
 #[derive(Clone, Debug, PartialEq, Error)]
@@ -58,7 +57,7 @@ impl UnprintableModel {
     }
 }
 
-/// Name one part of a model Markdown cannot say, with the element, edge or legend it belongs to.
+/// Name one part of a model Markdown cannot say, with the element, workflow, override, step or edge it belongs to.
 #[derive(Clone, Debug, PartialEq, Error)]
 #[error("{owner}: {reason}")]
 pub struct Unprintable {
@@ -66,22 +65,26 @@ pub struct Unprintable {
     pub reason: UnprintableReason,
 }
 
-/// Name the diagram, element, edge or legend an unprintable part belongs to.
+/// Name the element, workflow, override, step or workflow edge an unprintable part belongs to.
 #[derive(Clone, Debug, PartialEq)]
 pub enum UnprintableOwner {
-    Diagram,
     Element(ElementPath),
-    Edge(EdgeId),
-    Legend,
+    Workflow(WorkflowId),
+    Override(WorkflowId, ElementPath),
+    Step(WorkflowId, StepId),
+    Edge(WorkflowId, EdgeId),
 }
 
 impl fmt::Display for UnprintableOwner {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Diagram => formatter.write_str("the diagram"),
             Self::Element(path) => write!(formatter, "element `{path}`"),
-            Self::Edge(id) => write!(formatter, "edge `{id}`"),
-            Self::Legend => formatter.write_str("the legend"),
+            Self::Workflow(workflow) => write!(formatter, "workflow `{workflow}`"),
+            Self::Override(workflow, path) => {
+                write!(formatter, "override of `{path}` in workflow `{workflow}`")
+            }
+            Self::Step(workflow, step) => write!(formatter, "step `{workflow}/{step}`"),
+            Self::Edge(workflow, id) => write!(formatter, "edge `{id}` of workflow `{workflow}`"),
         }
     }
 }
@@ -97,24 +100,16 @@ pub enum UnprintableReason {
     InvalidMetadataName(String),
     #[error("its {field} {text:?} holds a line break, which no one-line item can")]
     LineBreak { field: TextField, text: String },
-    #[error("its {field} {text:?} starts or ends with whitespace, which the language trims")]
-    PaddedText { field: TextField, text: String },
     #[error("its {field} {text:?} holds `<!--`, which the language reads as a comment and drops")]
     CommentOpening { field: TextField, text: String },
     #[error(
         "its description does not read back verbatim from a ```description block: Markdown reads a carriage return as a line break"
     )]
     UnreadableDescription,
-    #[error("its title ends with `#`, which Markdown reads as the heading's closing `#`s")]
-    TitleEndingWithHash,
-    #[error("it has an empty entry, which no list item can hold")]
-    EmptyEntry,
     #[error(
-        "entry `{0}` opens like a Markdown heading, quote, list, rule, code fence, HTML block or link definition, so it would not read back as text"
+        "its prose does not read back verbatim under a heading: outside a code fence it holds no `- ` bullet list, `#` heading or comment, and no blank line opens or closes it"
     )]
-    BlockOpeningEntry(String),
-    #[error("entry `{0}` starts with `(` followed by `key=`, so it would read as a key row")]
-    KeyRowShapedEntry(String),
+    UnreadableProse,
     #[error("stroke-dash `{0}` is neither 5 (`line=dashed`) nor 2 (`line=dotted`)")]
     UnsayableStrokeDash(String),
     #[error("style `{0}` has no property in the language")]
@@ -129,19 +124,13 @@ pub enum UnprintableReason {
         "link `{link}` spells element `{target}` another way, and the language keeps only the path; write it as `{target}`"
     )]
     RespelledElementLink { link: String, target: ElementPath },
-    #[error("it joins an element to itself, which the language rejects")]
-    SelfLoop,
-    #[error("it joins an element to its own ancestor or descendant, which the language rejects")]
-    AncestorDescendantEdge,
     #[error(
-        "its ordinal is {ordinal}, but the language numbers repeated edges in the order written, so it would read back as {reading_ordinal}"
+        "its ordinal is {ordinal}, but the language numbers repeated edges in the order their steps declare them, so it would read back as {reading_ordinal}"
     )]
     RenumberedEdge { ordinal: u32, reading_ordinal: u32 },
-    #[error("`{0}` names no element, so no reference points at it")]
-    UnknownReference(ElementPath),
 }
 
-/// Name the text of an element, edge or legend an unprintable reason is about.
+/// Name the text of an element, workflow, step or edge an unprintable reason is about.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, strum::Display)]
 pub enum TextField {
     #[strum(to_string = "display name")]
@@ -157,13 +146,9 @@ pub enum TextField {
     #[strum(to_string = "label")]
     Label,
     #[strum(to_string = "title")]
-    LegendTitle,
-    #[strum(to_string = "entry")]
-    LegendEntry,
-    #[strum(to_string = "dash description")]
-    DashDescription,
-    #[strum(to_string = "badge description")]
-    BadgeDescription,
+    Title,
+    #[strum(to_string = "subtitle")]
+    Subtitle,
 }
 
 /// Print a model as a Markdown diagram, collecting every part Markdown cannot say.
@@ -172,6 +157,13 @@ pub struct MarkdownPrinter<'a> {
     references: ReferenceIndex<'a>,
     markdown: String,
     unprintables: Vec<Unprintable>,
+}
+
+/// Track which edges the printed steps of one workflow have declared, the ordinal Markdown reads each declaration back with, and how many listings of each edge are still to print.
+struct EdgeDeclarations<'a> {
+    declared_edges: BTreeSet<&'a EdgeId>,
+    declaration_counts: BTreeMap<(&'a ElementPath, &'a ElementPath), u32>,
+    listings_left: BTreeMap<&'a EdgeId, usize>,
 }
 
 impl<'a> MarkdownPrinter<'a> {
@@ -190,50 +182,19 @@ impl<'a> MarkdownPrinter<'a> {
     pub fn print(model: &'a Model) -> Result<String, UnprintableModel> {
         let mut printer = Self::new(model);
         printer.write_frontmatter();
-        printer.write_diagram_description();
         printer.write_components();
-        printer.write_edges();
-        printer.write_legend();
+        printer.write_workflows();
         printer.finish()
     }
 
-    /// Write the frontmatter holding the title, subtitle and view angle, only when the model sets any, the title and subtitle double-quoted.
+    /// Write the frontmatter holding the view angle, only when the model sets one.
     fn write_frontmatter(&mut self) {
-        let title = self.model.title().map(Self::spell_yaml_quoted);
-        let subtitle = self.model.subtitle().map(Self::spell_yaml_quoted);
-        let view = self.model.view().map(|view| {
-            let view_spelling: &'static str = view.into();
-            view_spelling.to_owned()
-        });
-        let frontmatter_entries = [("title", title), ("subtitle", subtitle), ("view", view)];
-        let has_no_entry = frontmatter_entries
-            .iter()
-            .all(|(_key, value)| value.is_none());
-        if has_no_entry {
-            return;
-        }
-        self.markdown.push_str("---\n");
-        for (key, value) in frontmatter_entries {
-            let Some(yaml_value) = value else {
-                continue;
-            };
-            let entry = format!("{key}: {yaml_value}\n");
-            self.markdown.push_str(&entry);
-        }
-        self.markdown.push_str("---\n\n");
-    }
-
-    /// Write the diagram's description before `## Components`, or report one that would not read back verbatim.
-    fn write_diagram_description(&mut self) {
-        let Some(description) = self.model.description() else {
+        let Some(view) = self.model.view() else {
             return;
         };
-        let description_spelling = self.spell_description(description, "");
-        let mut reasons = Vec::new();
-        let spelled_description = Self::spelling_or_push_reason(description_spelling, &mut reasons);
-        self.markdown.push_str(&spelled_description);
-        self.markdown.push('\n');
-        self.report(reasons, || UnprintableOwner::Diagram);
+        let view_spelling: &'static str = view.into();
+        let frontmatter = format!("---\nview: {view_spelling}\n---\n\n");
+        self.markdown.push_str(&frontmatter);
     }
 
     /// Write one component item per element, in path order, nested two spaces per level.
@@ -259,7 +220,7 @@ impl<'a> MarkdownPrinter<'a> {
         reasons: &mut Vec<UnprintableReason>,
     ) -> String {
         let id = path.name().unwrap_or_default();
-        let is_invalid_id = !Self::is_id(id);
+        let is_invalid_id = !ElementPath::is_component_id(id);
         if is_invalid_id {
             let invalid_segment = id.to_owned();
             let invalid_id = UnprintableReason::InvalidId(invalid_segment);
@@ -277,27 +238,31 @@ impl<'a> MarkdownPrinter<'a> {
         } else {
             String::new()
         };
-        let properties = self.component_properties(element, reasons);
+        let element_properties = element.properties();
+        let properties = self.component_properties(element_properties, None, None, reasons);
         let properties_list = Self::spell_properties_list(&properties);
         let item_line = format!("{indent}- {id}{display_name}{properties_list}\n");
         let Some(description) = element.description() else {
             return item_line;
         };
         let description_indent = format!("{indent}  ");
-        let description_spelling = self.spell_description(description, &description_indent);
+        let description_spelling =
+            self.spell_description(description, &description_indent, &ComponentNumbering);
         let spelled_description = Self::spelling_or_push_reason(description_spelling, reasons);
         format!("{item_line}{spelled_description}")
     }
 
-    /// Spell the element's properties in the language's table order, from `caption` to `meta.NAME`, pushing onto `reasons` what the language cannot say.
+    /// Spell a component's properties, with the `position` and `child_placement` only an override sets, in the language's table order from `caption` to `meta.NAME`, pushing onto `reasons` what the language cannot say.
     fn component_properties(
         &self,
-        element: &Element,
+        component: &ComponentProperties,
+        position: Option<Position>,
+        child_placement: Option<PlacementHint>,
         reasons: &mut Vec<UnprintableReason>,
     ) -> Vec<String> {
         let mut properties = Vec::new();
-        let style = element.style();
-        if let Some(caption) = element.caption() {
+        let style = component.style();
+        if let Some(caption) = component.caption() {
             let caption_spelling = Self::spell_value(caption, TextField::Caption);
             let caption_value = Self::spelling_or_push_reason(caption_spelling, reasons);
             let property = format!("caption={caption_value}");
@@ -317,44 +282,44 @@ impl<'a> MarkdownPrinter<'a> {
             let property = format!("line={line}");
             properties.push(property);
         }
-        if let Some(shape) = element.shape() {
+        if let Some(shape) = component.shape() {
             let shape_keyword: &str = shape.into();
             let property = format!("shape={shape_keyword}");
             properties.push(property);
         }
-        if let Some(height) = element.height() {
+        if let Some(height) = component.height() {
             let property = format!("height={height}");
             properties.push(property);
         }
-        if let Some(position) = element.position() {
+        if let Some(position) = position {
             let x = position.x;
             let y = position.y;
             let property = format!("position={x},{y}");
             properties.push(property);
         }
-        if let Some(child_placement) = element.child_placement() {
+        if let Some(child_placement) = child_placement {
             let layout_keyword: &str = child_placement.into();
             let property = format!("layout={layout_keyword}");
             properties.push(property);
         }
-        if let Some(PlacementHint::Grid { columns }) = element.child_placement() {
+        if let Some(PlacementHint::Grid { columns }) = child_placement {
             let property = format!("columns={columns}");
             properties.push(property);
         }
-        if let Some(raw_link) = element.link() {
+        if let Some(raw_link) = component.link() {
             let link_spelling = self.spell_link(raw_link);
             let link_target = Self::spelling_or_push_reason(link_spelling, reasons);
             let property = format!("link={link_target}");
             properties.push(property);
         }
-        if let Some(code) = element.code() {
+        if let Some(code) = component.code() {
             let code_spelling = Self::spell_value(code, TextField::Code);
             let code_value = Self::spelling_or_push_reason(code_spelling, reasons);
             let property = format!("code={code_value}");
             properties.push(property);
         }
-        for (name, value) in element.metadata() {
-            let is_invalid_name = !Self::is_id(name);
+        for (name, value) in component.metadata() {
+            let is_invalid_name = !ElementPath::is_component_id(name);
             if is_invalid_name {
                 let invalid_metadata_name = name.clone();
                 let invalid_name = UnprintableReason::InvalidMetadataName(invalid_metadata_name);
@@ -373,13 +338,15 @@ impl<'a> MarkdownPrinter<'a> {
 
     /// Spell a `link` value the way the language reads it back: an element by its shortest reference, a URL only when it holds a URL character.
     fn spell_link(&self, raw_link: &str) -> Result<String, UnprintableReason> {
-        let link = Link::resolve(raw_link, self.model);
+        let elements = self.model.elements();
+        let link = Link::resolve(raw_link, elements);
         match link {
             Link::Element(target) => {
                 let canonical_link = target.to_string();
                 let is_canonical = canonical_link == raw_link;
                 if is_canonical {
-                    return self.references.spell(&target);
+                    let reference = self.references.spell(&target);
+                    return Ok(reference);
                 }
                 let link = raw_link.to_owned();
                 let respelled_link = UnprintableReason::RespelledElementLink { link, target };
@@ -398,56 +365,140 @@ impl<'a> MarkdownPrinter<'a> {
         }
     }
 
-    /// Write one edge item per edge, in edge order, under `## Edges` when the model has any.
-    fn write_edges(&mut self) {
+    /// Write `## Workflows`, then each workflow in written order.
+    fn write_workflows(&mut self) {
+        self.markdown.push_str("\n## Workflows\n");
         let model = self.model;
-        let edges = model.edges();
-        let is_edgeless = edges.is_empty();
-        if is_edgeless {
-            return;
-        }
-        self.markdown.push_str("\n## Edges\n");
-        let mut previous_pair = None;
-        let mut reading_ordinal = 0;
-        for (id, edge) in edges {
-            let from = id.from();
-            let to = id.to();
-            let pair = (from, to);
-            let is_repeated_pair = previous_pair == Some(pair);
-            reading_ordinal = if is_repeated_pair {
-                reading_ordinal + 1
-            } else {
-                0
-            };
-            previous_pair = Some(pair);
-            let mut reasons = Vec::new();
-            let item = self.edge_item(id, edge, reading_ordinal, &mut reasons);
-            self.markdown.push_str(&item);
-            self.report(reasons, || {
-                let edge_id = id.clone();
-                UnprintableOwner::Edge(edge_id)
-            });
+        for workflow in model.workflows() {
+            self.write_workflow(workflow);
         }
     }
 
-    /// Spell `- FROM -> TO[: LABEL] [(PROPERTIES)]`, each endpoint by its shortest unique reference, then its description, pushing onto `reasons` what the language cannot say, an edge it would number other than `reading_ordinal` included.
-    fn edge_item(
+    /// Write the workflow's heading with its prose and one override item per overridden component, then each of its steps.
+    fn write_workflow(&mut self, workflow: &'a Workflow) {
+        let workflow_id = workflow.id();
+        let mut reasons = Vec::new();
+        let heading = Self::workflow_heading(workflow, &mut reasons);
+        let prose = match workflow.description() {
+            Some(prose) => {
+                let prose_spelling = self.spell_prose(prose, workflow);
+                let spelled_prose = Self::spelling_or_push_reason(prose_spelling, &mut reasons);
+                Some(spelled_prose)
+            }
+            None => None,
+        };
+        self.report(reasons, || {
+            let owner_id = workflow_id.clone();
+            UnprintableOwner::Workflow(owner_id)
+        });
+        let mut override_items = String::new();
+        for (path, element_override) in workflow.overrides() {
+            let mut reasons = Vec::new();
+            let item = self.override_item(path, element_override, &mut reasons);
+            override_items.push_str(&item);
+            self.report(reasons, || {
+                let owner_id = workflow_id.clone();
+                let overridden_path = path.clone();
+                UnprintableOwner::Override(owner_id, overridden_path)
+            });
+        }
+        self.write_headed_part(&heading, prose.as_deref(), &override_items);
+        let mut declarations = EdgeDeclarations::of(workflow);
+        for step in workflow.steps() {
+            self.write_step(workflow, step, &mut declarations);
+        }
+    }
+
+    /// Spell `### ID: TITLE [(subtitle=TEXT)]`, pushing onto `reasons` what the language cannot say.
+    fn workflow_heading(workflow: &Workflow, reasons: &mut Vec<UnprintableReason>) -> String {
+        let workflow_id = workflow.id();
+        let workflow_title = workflow.title();
+        let title_spelling = Self::spell_title(workflow_title);
+        let title = Self::spelling_or_push_reason(title_spelling, reasons);
+        let Some(subtitle) = workflow.subtitle() else {
+            return format!("### {workflow_id}: {title}");
+        };
+        let subtitle_spelling = Self::spell_value(subtitle, TextField::Subtitle);
+        let subtitle_value = Self::spelling_or_push_reason(subtitle_spelling, reasons);
+        format!("### {workflow_id}: {title} (subtitle={subtitle_value})")
+    }
+
+    /// Spell `- REF (PROPERTIES)`, the parentheses kept for an override that sets nothing, pushing onto `reasons` what the language cannot say.
+    fn override_item(
         &self,
-        id: &EdgeId,
-        edge: &Edge,
-        reading_ordinal: u32,
+        path: &ElementPath,
+        element_override: &ElementOverride,
         reasons: &mut Vec<UnprintableReason>,
     ) -> String {
-        let from = id.from();
-        let to = id.to();
-        let is_self_loop = from == to;
-        if is_self_loop {
-            reasons.push(UnprintableReason::SelfLoop);
+        let reference = self.references.spell(path);
+        let overridden_properties = element_override.properties();
+        let position = element_override.position();
+        let child_placement = element_override.child_placement();
+        let properties =
+            self.component_properties(overridden_properties, position, child_placement, reasons);
+        let entries = properties.join(", ");
+        format!("- {reference} ({entries})\n")
+    }
+
+    /// Write the step's heading with its prose, then one item per item it lists, an edge declared at its first listing that Markdown reads back with its ordinal.
+    fn write_step(
+        &mut self,
+        workflow: &'a Workflow,
+        step: &'a Step,
+        declarations: &mut EdgeDeclarations<'a>,
+    ) {
+        let workflow_id = workflow.id();
+        let step_id = step.id();
+        let mut reasons = Vec::new();
+        let step_title = step.title();
+        let title_spelling = Self::spell_title(step_title);
+        let title = Self::spelling_or_push_reason(title_spelling, &mut reasons);
+        let heading = format!("#### {step_id}: {title}");
+        let prose = match step.description() {
+            Some(prose) => {
+                let prose_spelling = self.spell_prose(prose, workflow);
+                let spelled_prose = Self::spelling_or_push_reason(prose_spelling, &mut reasons);
+                Some(spelled_prose)
+            }
+            None => None,
+        };
+        self.report(reasons, || {
+            let owner_workflow_id = workflow_id.clone();
+            let owner_step_id = step_id.clone();
+            UnprintableOwner::Step(owner_workflow_id, owner_step_id)
+        });
+        let mut items = String::new();
+        for item in step.items() {
+            let item_line = match item {
+                StepItem::Element(path) => {
+                    let reference = self.references.spell(path);
+                    format!("- {reference}\n")
+                }
+                StepItem::Edge(id) => self.edge_item(workflow, id, declarations),
+            };
+            items.push_str(&item_line);
         }
-        let joins_ancestor_and_descendant = id.joins_ancestor_and_descendant();
-        if joins_ancestor_and_descendant {
-            reasons.push(UnprintableReason::AncestorDescendantEdge);
-        }
+        self.write_headed_part(&heading, prose.as_deref(), &items);
+    }
+
+    /// Spell the edge `id` as a step item: a declaration with its label, properties and description where `EdgeDeclarations` declares it, `- FROM -> TO[n]` elsewhere, reporting what the language cannot say.
+    fn edge_item(
+        &mut self,
+        workflow: &'a Workflow,
+        id: &'a EdgeId,
+        declarations: &mut EdgeDeclarations<'a>,
+    ) -> String {
+        let from_path = id.from();
+        let to_path = id.to();
+        let from_reference = self.references.spell(from_path);
+        let to_reference = self.references.spell(to_path);
+        let edge = workflow.edge(id);
+        let reading_ordinal = declarations.declare(id);
+        let (Some(edge), Some(reading_ordinal)) = (edge, reading_ordinal) else {
+            let ordinal = id.ordinal();
+            return format!("- {from_reference} -> {to_reference}[{ordinal}]\n");
+        };
+        let mut reasons = Vec::new();
         let ordinal = id.ordinal();
         let is_renumbered = ordinal != reading_ordinal;
         if is_renumbered {
@@ -457,27 +508,32 @@ impl<'a> MarkdownPrinter<'a> {
             };
             reasons.push(renumbered_edge);
         }
-        let from_spelling = self.references.spell(from);
-        let from_reference = Self::spelling_or_push_reason(from_spelling, reasons);
-        let to_spelling = self.references.spell(to);
-        let to_reference = Self::spelling_or_push_reason(to_spelling, reasons);
         let label = match edge.label() {
             Some(label) => {
                 let label_spelling = Self::spell_label(label, TextField::Label);
-                let label = Self::spelling_or_push_reason(label_spelling, reasons);
+                let label = Self::spelling_or_push_reason(label_spelling, &mut reasons);
                 format!(": {label}")
             }
             None => String::new(),
         };
-        let properties = Self::edge_properties(edge, reasons);
+        let properties = Self::edge_properties(edge, &mut reasons);
         let properties_list = Self::spell_properties_list(&properties);
         let item_line = format!("- {from_reference} -> {to_reference}{label}{properties_list}\n");
-        let Some(description) = edge.description() else {
-            return item_line;
+        let spelled_item = match edge.description() {
+            Some(description) => {
+                let description_spelling = self.spell_description(description, "  ", workflow);
+                let spelled_description =
+                    Self::spelling_or_push_reason(description_spelling, &mut reasons);
+                format!("{item_line}{spelled_description}")
+            }
+            None => item_line,
         };
-        let description_spelling = self.spell_description(description, "  ");
-        let spelled_description = Self::spelling_or_push_reason(description_spelling, reasons);
-        format!("{item_line}{spelled_description}")
+        self.report(reasons, || {
+            let owner_workflow_id = workflow.id().clone();
+            let edge_id = id.clone();
+            UnprintableOwner::Edge(owner_workflow_id, edge_id)
+        });
+        spelled_item
     }
 
     /// Spell the edge's properties in the language's table order, `line`, `color`, `traveler`, pushing onto `reasons` what the language cannot say.
@@ -515,154 +571,20 @@ impl<'a> MarkdownPrinter<'a> {
         properties
     }
 
-    /// Write the legend section: its free-text entries, then a key row per dash and per badge description, each written verbatim or reported.
-    fn write_legend(&mut self) {
-        let model = self.model;
-        let Some(legend) = model.legend() else {
-            return;
-        };
-        let mut reasons = Vec::new();
-        let heading = match legend.title() {
-            Some(title) => {
-                let title_problem = Self::check_legend_title(title);
-                reasons.extend(title_problem);
-                let spaced_title = Self::spaced(title);
-                format!("\n## Legend:{spaced_title}\n")
-            }
-            None => "\n## Legend\n".to_owned(),
-        };
-        self.markdown.push_str(&heading);
-        for entry in legend.entries() {
-            let entry_problem = Self::check_legend_entry(entry);
-            reasons.extend(entry_problem);
-            let item = format!("- {entry}\n");
-            self.markdown.push_str(&item);
+    /// Write a heading after a blank line, then its prose, then its items after a blank line when prose precedes them.
+    fn write_headed_part(&mut self, heading: &str, prose: Option<&str>, items: &str) {
+        let heading_line = format!("\n{heading}\n");
+        self.markdown.push_str(&heading_line);
+        if let Some(prose) = prose {
+            let prose_lines = format!("{prose}\n");
+            self.markdown.push_str(&prose_lines);
         }
-        for (dash_key, description) in legend.dashes() {
-            let dash_spelling = dash_key.to_string();
-            let line_spelling = Self::spell_line(&dash_spelling);
-            let line = Self::spelling_or_push_reason(line_spelling, &mut reasons);
-            let description_problem =
-                Self::check_verbatim_text(description, TextField::DashDescription);
-            reasons.extend(description_problem);
-            let spaced_description = Self::spaced(description);
-            let item = format!("- (line={line}):{spaced_description}\n");
-            self.markdown.push_str(&item);
+        let has_items = !items.is_empty();
+        let has_prose_before_items = prose.is_some() && has_items;
+        if has_prose_before_items {
+            self.markdown.push('\n');
         }
-        for (target, description) in legend.badges() {
-            let target_spelling = self.references.spell(target);
-            let target_reference = Self::spelling_or_push_reason(target_spelling, &mut reasons);
-            let description_problem =
-                Self::check_verbatim_text(description, TextField::BadgeDescription);
-            reasons.extend(description_problem);
-            let spaced_description = Self::spaced(description);
-            let item = format!("- (line=badge, target={target_reference}):{spaced_description}\n");
-            self.markdown.push_str(&item);
-        }
-        self.report(reasons, || UnprintableOwner::Legend);
-    }
-
-    /// Check that a legend title reads back from its heading as itself: verbatim text not ending in a closing `#`.
-    fn check_legend_title(title: &str) -> Option<UnprintableReason> {
-        let verbatim_problem = Self::check_verbatim_text(title, TextField::LegendTitle);
-        let has_verbatim_problem = verbatim_problem.is_some();
-        if has_verbatim_problem {
-            return verbatim_problem;
-        }
-        let is_ending_with_hash = title.ends_with('#');
-        if is_ending_with_hash {
-            return Some(UnprintableReason::TitleEndingWithHash);
-        }
-        None
-    }
-
-    /// Check that a free-text legend entry reads back as itself: non-empty verbatim text that opens no Markdown block and no key row.
-    fn check_legend_entry(entry: &str) -> Option<UnprintableReason> {
-        let is_empty = entry.is_empty();
-        if is_empty {
-            return Some(UnprintableReason::EmptyEntry);
-        }
-        let verbatim_problem = Self::check_verbatim_text(entry, TextField::LegendEntry);
-        let has_verbatim_problem = verbatim_problem.is_some();
-        if has_verbatim_problem {
-            return verbatim_problem;
-        }
-        let opens_markdown_block = Self::opens_markdown_block(entry);
-        if opens_markdown_block {
-            let block_opening_text = entry.to_owned();
-            let block_opening_entry = UnprintableReason::BlockOpeningEntry(block_opening_text);
-            return Some(block_opening_entry);
-        }
-        let is_key_row_shaped = Self::is_key_row_shaped(entry);
-        if is_key_row_shaped {
-            let key_row_shaped_text = entry.to_owned();
-            let key_row_shaped_entry = UnprintableReason::KeyRowShapedEntry(key_row_shaped_text);
-            return Some(key_row_shaped_entry);
-        }
-        None
-    }
-
-    /// Check that `text` reads back verbatim from the rest of a line, which the parser trims: one-line text with no surrounding whitespace.
-    fn check_verbatim_text(text: &str, field: TextField) -> Option<UnprintableReason> {
-        let one_line_problem = Self::check_one_line_text(text, field);
-        let has_one_line_problem = one_line_problem.is_some();
-        if has_one_line_problem {
-            return one_line_problem;
-        }
-        let trimmed_text = text.trim();
-        let is_padded = trimmed_text != text;
-        if is_padded {
-            let text = text.to_owned();
-            let padded_text = UnprintableReason::PaddedText { field, text };
-            return Some(padded_text);
-        }
-        None
-    }
-
-    /// Check that `text` survives inside one item line: no line break ends it and no comment opening drops it.
-    fn check_one_line_text(text: &str, field: TextField) -> Option<UnprintableReason> {
-        let has_line_break = text.contains(LINE_BREAKS);
-        if has_line_break {
-            let text = text.to_owned();
-            let line_break = UnprintableReason::LineBreak { field, text };
-            return Some(line_break);
-        }
-        let has_comment_opening = text.contains(COMMENT_OPENING);
-        if has_comment_opening {
-            let text = text.to_owned();
-            let comment_opening = UnprintableReason::CommentOpening { field, text };
-            return Some(comment_opening);
-        }
-        None
-    }
-
-    /// Tell whether CommonMark may read `text`, at the start of a list item, as a block other than a paragraph.
-    fn opens_markdown_block(text: &str) -> bool {
-        let starts_with_block_marker = text.starts_with(BLOCK_MARKERS);
-        let after_leading_digits =
-            text.trim_start_matches(|character: char| character.is_ascii_digit());
-        let has_leading_digits = after_leading_digits.len() < text.len();
-        let has_list_delimiter_after_digits =
-            after_leading_digits.starts_with(ORDERED_LIST_DELIMITERS);
-        let opens_ordered_list = has_leading_digits && has_list_delimiter_after_digits;
-        starts_with_block_marker || opens_ordered_list
-    }
-
-    /// Tell whether `text` opens like a key row, `(` followed by `key=`, spaces allowed, which the parser reads as one.
-    fn is_key_row_shaped(text: &str) -> bool {
-        let Some(after_parenthesis) = text.strip_prefix('(') else {
-            return false;
-        };
-        let key_onwards = after_parenthesis.trim_start();
-        let after_key = key_onwards.trim_start_matches(|character: char| {
-            let is_alphanumeric = character.is_ascii_alphanumeric();
-            let is_key_punctuation = matches!(character, '_' | '-' | '.');
-            is_alphanumeric || is_key_punctuation
-        });
-        let has_key = after_key.len() < key_onwards.len();
-        let equals_onwards = after_key.trim_start();
-        let has_equals_after_key = equals_onwards.starts_with('=');
-        has_key && has_equals_after_key
+        self.markdown.push_str(items);
     }
 
     /// Hand out the written Markdown, or every unprintable part found while writing it.
@@ -736,6 +658,14 @@ impl<'a> MarkdownPrinter<'a> {
         Self::spell_bare_or_quoted(text, reads_back_bare, field)
     }
 
+    /// Spell `text` as a heading's title: bare when it reads back as a label and ends with no `#`, which Markdown reads as the heading's closing `#`s, otherwise quoted.
+    fn spell_title(text: &str) -> Result<String, UnprintableReason> {
+        let reads_back_as_label = ItemLabel::reads_back_bare(text);
+        let is_ending_with_hash = text.ends_with('#');
+        let reads_back_bare = reads_back_as_label && !is_ending_with_hash;
+        Self::spell_bare_or_quoted(text, reads_back_bare, TextField::Title)
+    }
+
     /// Spell `text` bare when `reads_back_bare`, otherwise quoted, or report text no item line keeps.
     fn spell_bare_or_quoted(
         text: &str,
@@ -750,19 +680,27 @@ impl<'a> MarkdownPrinter<'a> {
             let bare_text = text.to_owned();
             return Ok(bare_text);
         }
-        Self::spell_quoted(text, field)
-    }
-
-    /// Spell `text` as a quoted string, escaping `"` and `\`, its only escapes, or report text no item line keeps.
-    fn spell_quoted(text: &str, field: TextField) -> Result<String, UnprintableReason> {
-        let one_line_problem = Self::check_one_line_text(text, field);
-        if let Some(one_line_problem) = one_line_problem {
-            return Err(one_line_problem);
-        }
         let backslash_escaped = text.replace('\\', "\\\\");
         let escaped = backslash_escaped.replace('"', "\\\"");
         let quoted = format!("\"{escaped}\"");
         Ok(quoted)
+    }
+
+    /// Check that `text` survives inside one item line: no line break ends it and no comment opening drops it.
+    fn check_one_line_text(text: &str, field: TextField) -> Option<UnprintableReason> {
+        let has_line_break = text.contains(LINE_BREAKS);
+        if has_line_break {
+            let text = text.to_owned();
+            let line_break = UnprintableReason::LineBreak { field, text };
+            return Some(line_break);
+        }
+        let has_comment_opening = text.contains(COMMENT_OPENING);
+        if has_comment_opening {
+            let text = text.to_owned();
+            let comment_opening = UnprintableReason::CommentOpening { field, text };
+            return Some(comment_opening);
+        }
+        None
     }
 
     /// Spell `description` as a description block after `indent`, its targets respelled as references, or report a description that would not read back verbatim under an item.
@@ -770,8 +708,9 @@ impl<'a> MarkdownPrinter<'a> {
         &self,
         description: &str,
         indent: &str,
+        numbering: &(impl EdgeNumbering + ?Sized),
     ) -> Result<String, UnprintableReason> {
-        let respelled_description = self.respell_targets(description);
+        let respelled_description = self.respell_targets(description, numbering);
         let description = respelled_description.as_str();
         let item_spelling = Self::fenced_description(description, "  ");
         let reads_back = Skeleton::reads_back_as_description(description, &item_spelling);
@@ -783,36 +722,52 @@ impl<'a> MarkdownPrinter<'a> {
         Ok(spelled_description)
     }
 
-    /// Respell each canonical `#` target of `description` by its shortest unique references, keeping one that names nothing in the model as written.
-    fn respell_targets(&self, description: &str) -> String {
+    /// Spell `prose` to be written verbatim under a heading of `workflow`, its targets respelled as references, or report prose that would not read back verbatim there.
+    fn spell_prose(&self, prose: &str, workflow: &Workflow) -> Result<String, UnprintableReason> {
+        let respelled_prose = self.respell_targets(prose, workflow);
+        let reads_back = Skeleton::reads_back_as_prose(&respelled_prose);
+        let is_lossy = !reads_back;
+        if is_lossy {
+            return Err(UnprintableReason::UnreadableProse);
+        }
+        Ok(respelled_prose)
+    }
+
+    /// Respell each canonical `#` target of `description` by its shortest unique references, `[n]` dropped where `numbering` adds it back on reading, so an unnumbered target it numbers reads back numbered.
+    fn respell_targets(
+        &self,
+        description: &str,
+        numbering: &(impl EdgeNumbering + ?Sized),
+    ) -> String {
         TargetLink::respell_all(description, |target_link| {
             let description_target = DescriptionTarget::parse(target_link.target)?;
             match description_target {
-                DescriptionTarget::Element(path) => self.references.spell(&path).ok(),
-                DescriptionTarget::Edge(id) => self.spell_edge_target(&id),
+                DescriptionTarget::Element(path) => {
+                    let reference = self.references.spell(&path);
+                    Some(reference)
+                }
+                DescriptionTarget::Edge(id) => {
+                    let from_reference = self.references.spell(id.from());
+                    let to_reference = self.references.spell(id.to());
+                    let ordinal = id.ordinal();
+                    let reading_ordinal = numbering.number_unnumbered(id.from(), id.to());
+                    let is_numbered_on_reading = reading_ordinal == Some(ordinal);
+                    if is_numbered_on_reading {
+                        let unnumbered_target = format!("{from_reference}->{to_reference}");
+                        return Some(unnumbered_target);
+                    }
+                    let numbered_target = format!("{from_reference}->{to_reference}[{ordinal}]");
+                    Some(numbered_target)
+                }
+                DescriptionTarget::UnnumberedEdge { from, to } => {
+                    let from_reference = self.references.spell(&from);
+                    let to_reference = self.references.spell(&to);
+                    let unnumbered_target = format!("{from_reference}->{to_reference}");
+                    Some(unnumbered_target)
+                }
+                DescriptionTarget::Step { .. } => None,
             }
         })
-    }
-
-    /// Spell an edge target `FROM->TO[n]` by its endpoints' shortest references, `[n]` dropped when the edge is the only one between them; `None` for an edge not in the model.
-    fn spell_edge_target(&self, id: &EdgeId) -> Option<String> {
-        self.model.edge(id)?;
-        let from = id.from();
-        let to = id.to();
-        let from_reference = self.references.spell(from).ok()?;
-        let to_reference = self.references.spell(to).ok()?;
-        let edge_ids = self.model.edges().keys();
-        let parallel_edge_count = edge_ids
-            .filter(|edge_id| edge_id.from() == from && edge_id.to() == to)
-            .count();
-        let is_only_edge_of_pair = parallel_edge_count == 1;
-        if is_only_edge_of_pair {
-            let unnumbered_target = format!("{from_reference}->{to_reference}");
-            return Some(unnumbered_target);
-        }
-        let ordinal = id.ordinal();
-        let numbered_target = format!("{from_reference}->{to_reference}[{ordinal}]");
-        Some(numbered_target)
     }
 
     /// Fence `description` as a description block after `indent`; fence length = max(3, 1 + longest backtick run opening a line).
@@ -850,56 +805,52 @@ impl<'a> MarkdownPrinter<'a> {
         let entries = properties.join(", ");
         format!(" ({entries})")
     }
+}
 
-    /// Spell `text` after the space that separates it from what precedes, or as nothing when it is empty.
-    fn spaced(text: &str) -> String {
-        let is_empty = text.is_empty();
-        if is_empty {
-            return String::new();
+impl<'a> EdgeDeclarations<'a> {
+    /// Create new declarations of `workflow`, none printed yet, counting every listing of each of its edges.
+    fn of(workflow: &'a Workflow) -> Self {
+        let mut listings_left: BTreeMap<&'a EdgeId, usize> = BTreeMap::new();
+        let items = workflow.steps().iter().flat_map(Step::items);
+        for item in items {
+            let StepItem::Edge(id) = item else {
+                continue;
+            };
+            let listing_count = listings_left.entry(id).or_default();
+            *listing_count += 1;
         }
-        format!(" {text}")
+        Self {
+            declared_edges: BTreeSet::new(),
+            declaration_counts: BTreeMap::new(),
+            listings_left,
+        }
     }
 
-    /// Tell whether `text` is an ID: ASCII letters, digits, `_` and `-`, starting with a letter or `_`, each `-` followed by a non-`-`.
-    fn is_id(text: &str) -> bool {
-        let mut characters = text.chars();
-        let Some(first_character) = characters.next() else {
-            return false;
-        };
-        let is_valid_start = matches!(first_character, 'a'..='z' | 'A'..='Z' | '_');
-        let is_valid_rest = characters
-            .all(|character| matches!(character, 'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '-'));
-        let has_double_hyphen = text.contains("--");
-        let has_trailing_hyphen = text.ends_with('-');
-        let has_dangling_hyphen = has_double_hyphen || has_trailing_hyphen;
-        is_valid_start && is_valid_rest && !has_dangling_hyphen
-    }
-
-    /// Spell `text` as a YAML double-quoted scalar, escaping quotes, backslashes and every character YAML forbids unescaped.
-    fn spell_yaml_quoted(text: &str) -> String {
-        let mut quoted = String::from('"');
-        for character in text.chars() {
-            let is_unprintable_in_yaml =
-                character.is_control() || matches!(character, '\u{FFFE}' | '\u{FFFF}');
-            match character {
-                '"' => quoted.push_str("\\\""),
-                '\\' => quoted.push_str("\\\\"),
-                unprintable if is_unprintable_in_yaml => {
-                    let code_point = u32::from(unprintable);
-                    let escape = format!("\\u{code_point:04X}");
-                    quoted.push_str(&escape);
-                }
-                printable => quoted.push(printable),
-            }
+    /// Declare the edge `id` at the first listing reached once every lower ordinal of its pair is declared, or at its last listing, returning the ordinal Markdown reads that declaration back with; `None` while it stays a reference.
+    fn declare(&mut self, id: &'a EdgeId) -> Option<u32> {
+        let listing_count = self.listings_left.entry(id).or_default();
+        *listing_count = listing_count.saturating_sub(1);
+        let has_later_listing = *listing_count > 0;
+        let is_already_declared = self.declared_edges.contains(id);
+        if is_already_declared {
+            return None;
         }
-        quoted.push('"');
-        quoted
+        let pair = (id.from(), id.to());
+        let declaration_count = self.declaration_counts.entry(pair).or_default();
+        let reading_ordinal = *declaration_count;
+        let is_declared_out_of_order = id.ordinal() != reading_ordinal;
+        let is_declaration_deferred = is_declared_out_of_order && has_later_listing;
+        if is_declaration_deferred {
+            return None;
+        }
+        *declaration_count += 1;
+        self.declared_edges.insert(id);
+        Some(reading_ordinal)
     }
 }
 
 /// Count the elements each dotted suffix of a path matches, to spell every element by its shortest unique reference.
 struct ReferenceIndex<'a> {
-    model: &'a Model,
     element_counts_by_suffix: HashMap<&'a [String], usize>,
 }
 
@@ -919,20 +870,12 @@ impl<'a> ReferenceIndex<'a> {
             }
         }
         Self {
-            model,
             element_counts_by_suffix,
         }
     }
 
     /// Spell the shortest dotted suffix of `path` that ends no other element's path, else the whole path, which always names it exactly.
-    fn spell(&self, path: &ElementPath) -> Result<String, UnprintableReason> {
-        let element = self.model.element(path);
-        let is_unknown_element = element.is_none();
-        if is_unknown_element {
-            let unknown_path = path.clone();
-            let unknown_reference = UnprintableReason::UnknownReference(unknown_path);
-            return Err(unknown_reference);
-        }
+    fn spell(&self, path: &ElementPath) -> String {
         let segments = path.segments();
         let depth = segments.len();
         let suffix_starts = 0..depth;
@@ -942,11 +885,8 @@ impl<'a> ReferenceIndex<'a> {
             let element_count = self.element_counts_by_suffix.get(suffix);
             element_count == Some(&1)
         });
-        let Some(unique_suffix) = unique_suffixes.next() else {
-            let whole_path = segments.join(".");
-            return Ok(whole_path);
-        };
-        let reference = unique_suffix.join(".");
-        Ok(reference)
+        let unique_suffix = unique_suffixes.next();
+        let reference_segments = unique_suffix.unwrap_or(segments);
+        reference_segments.join(".")
     }
 }

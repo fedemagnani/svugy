@@ -6,7 +6,8 @@ use std::marker::PhantomData;
 
 use glam::DVec3;
 use kurbo::{Affine, Point, Rect, Vec2};
-use svugy_model::model::{Edge, EdgeId, Model};
+use svugy_model::graph::WorkflowGraph;
+use svugy_model::model::{Edge, EdgeId};
 use svugy_model::path::ElementPath;
 
 use super::badge::{BadgeIcon, BadgeSeater};
@@ -21,7 +22,7 @@ use crate::metrics::TextMeasure;
 
 /// Projects levels top-down as camera `C` sees them, each container's interior onto its solid's top, a sheet under each closed container.
 pub(super) struct LevelProjector<'a, M, C> {
-    model: &'a Model,
+    graph: &'a WorkflowGraph,
     closed_containers: &'a BTreeSet<ElementPath>,
     plans: &'a LevelPlans,
     measure: &'a M,
@@ -37,15 +38,15 @@ pub(super) struct FloorBranch {
 }
 
 impl<'a, M: TextMeasure, C: Camera> LevelProjector<'a, M, C> {
-    /// Set up a projector of the levels `plans` lays out for `model`, closing `closed_containers`, its labels measured by `measure`.
+    /// Set up a projector of the levels `plans` lays out for `graph`, closing `closed_containers`, its labels measured by `measure`.
     pub(super) fn new(
-        model: &'a Model,
+        graph: &'a WorkflowGraph,
         closed_containers: &'a BTreeSet<ElementPath>,
         plans: &'a LevelPlans,
         measure: &'a M,
     ) -> Self {
         Self {
-            model,
+            graph,
             closed_containers,
             plans,
             measure,
@@ -85,8 +86,8 @@ impl<'a, M: TextMeasure, C: Camera> LevelProjector<'a, M, C> {
         back_to_front
             .into_iter()
             .filter_map(|path| {
-                let element = self.model.element(path)?;
-                let primitive = ResolvedPrimitive::<C>::of_path(self.model, path)?;
+                let element = self.graph.element(path)?;
+                let primitive = ResolvedPrimitive::<C>::of_path(self.graph, path)?;
                 let footprint = footprints[path];
                 let drawn_solid = primitive
                     .draw(path, element, footprint, self.measure)
@@ -128,11 +129,11 @@ impl<'a, M: TextMeasure, C: Camera> LevelProjector<'a, M, C> {
 
     /// Shape the icon of every edge drawn as a badge on `source`, each its target shrunk, in edge order.
     fn badge_icons_from(&self, source: &ElementPath) -> Vec<(EdgeId, BadgeIcon<C>)> {
-        let badge_edges = self.model.badge_edges_from(source);
+        let badge_edges = self.graph.badge_edges_from(source);
         badge_edges
             .filter_map(|edge_id| {
                 let target = edge_id.to();
-                let icon = BadgeIcon::of_target_in(self.model, self.plans, target)?;
+                let icon = BadgeIcon::of_target_in(self.graph, self.plans, target)?;
                 let badge_edge_id = edge_id.clone();
                 Some((badge_edge_id, icon))
             })
@@ -349,7 +350,7 @@ impl<'a, M: TextMeasure, C: Camera> LevelProjector<'a, M, C> {
         shape: &impl ConnectionShape,
         obstructions: &mut Obstructions,
     ) -> Connection {
-        let edge = self.model.edge(&connection.edge);
+        let edge = self.graph.edge(&connection.edge);
         let edge_label = edge.and_then(Edge::label);
         let Some(label_text) = edge_label else {
             return connection;
@@ -372,7 +373,7 @@ impl<'a, M: TextMeasure, C: Camera> LevelProjector<'a, M, C> {
         endpoint_and_ancestors
             .filter(|path| level.is_ancestor_of(path))
             .filter_map(|path| {
-                let primitive = ResolvedPrimitive::<C>::of_path(self.model, &path)?;
+                let primitive = ResolvedPrimitive::<C>::of_path(self.graph, &path)?;
                 Some(primitive.height)
             })
             .sum()
@@ -472,9 +473,9 @@ impl Branch {
 mod tests {
     use std::collections::{BTreeMap, BTreeSet};
 
+    use crate::one_step::OneStepModelBuilder;
     use kurbo::{BezPath, ParamCurve, PathEl, Point, Shape as _, Size};
-    use svugy_model::builder::ModelBuilder;
-    use svugy_model::disclose::DisclosedModel;
+    use svugy_model::disclose::DisclosedGraph;
     use svugy_model::model::{Element, Shape};
 
     use super::*;
@@ -492,8 +493,8 @@ mod tests {
     }
 
     /// Nest leaf `a.b.c` in container `a.b` in container `a`, beside leaf `a.d`, with `r -> a.b.c` homed at the root and `a.d -> a.b.c` homed in `a`.
-    fn three_nested_levels_model() -> Model {
-        let mut builder = ModelBuilder::new();
+    fn three_nested_levels_graph() -> WorkflowGraph {
+        let mut builder = OneStepModelBuilder::new();
         let r = builder.add_top_level("r", Element::new("relay"));
         let a = builder.add_top_level("a", Element::new("outer"));
         let b = builder.add_child(&a, "b", Element::new("inner"));
@@ -502,11 +503,11 @@ mod tests {
         let into_core = Edge::new().with_label("feeds");
         builder.add_edge(&r, &c, into_core);
         builder.add_edge(&d, &c, Edge::new());
-        builder.build().model.expect("fixture model is valid")
+        builder.build_graph()
     }
 
     impl LevelPlans {
-        /// Plan the root, `a` and `a.b` of the nested model: `a` sits at (100, 20), `a.b` at (30, 30) in `a`, `a.b.c` at (20, 20) in `a.b`.
+        /// Plan the root, `a` and `a.b` of the nested graph: `a` sits at (100, 20), `a.b` at (30, 30) in `a`, `a.b.c` at (20, 20) in `a.b`.
         fn three_nested_levels() -> Self {
             let relay_into_core = EdgeId::new(path("r"), path("a.b.c"), 0);
             let dealer_into_core = EdgeId::new(path("a.d"), path("a.b.c"), 0);
@@ -561,9 +562,9 @@ mod tests {
     }
 
     fn nested_scene() -> Scene {
-        let model = three_nested_levels_model();
+        let graph = three_nested_levels_graph();
         let plans = LevelPlans::three_nested_levels();
-        Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure)
+        Scene::project::<Isometric>(&graph, &plans, &FixedAdvanceMeasure)
     }
 
     fn solid_of<'a>(group: &'a Group, element: &str) -> &'a Solid {
@@ -698,14 +699,14 @@ mod tests {
 
     #[test]
     fn a_bundled_edge_branches_on_each_containers_floor_under_one_trunk_and_one_traveler() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let app = builder.add_top_level("a", Element::new("app"));
         let ui = builder.add_child(&app, "x", Element::new("ui"));
         let backend = builder.add_top_level("b", Element::new("backend"));
         let api = builder.add_child(&backend, "y", Element::new("api"));
         let feeds = Edge::new().with_label("feeds");
         let ui_into_api = builder.add_edge(&ui, &api, feeds);
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
         let ui_east_port = Port::new(Side::East, Point::new(60.0, 40.0));
         let app_east_slot = Port::new(Side::East, Point::new(100.0, 40.0));
         let backend_west_slot = Port::new(Side::West, Point::new(200.0, 40.0));
@@ -752,7 +753,7 @@ mod tests {
         ]);
         let plans = LevelPlans::new(plans_by_level);
 
-        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&graph, &plans, &FixedAdvanceMeasure);
 
         let [trunk] = &scene.root.connections[..] else {
             panic!("the home level arcs the trunk alone");
@@ -871,13 +872,13 @@ mod tests {
         assert_eq!(first_scene, second_scene);
     }
 
-    fn two_boxes_model() -> Model {
-        let mut builder = ModelBuilder::new();
+    fn two_boxes_graph() -> WorkflowGraph {
+        let mut builder = OneStepModelBuilder::new();
         let a = builder.add_top_level("a", Element::new("app").with_caption("Dioxus · wasm"));
         let b = builder.add_top_level("b", Element::new("store").with_shape(Shape::Cylinder));
         let calls = Edge::new().with_label("calls");
         builder.add_edge(&a, &b, calls);
-        builder.build().model.expect("fixture model is valid")
+        builder.build_graph()
     }
 
     fn assert_contains(view: Rect, bounds: Rect) {
@@ -887,10 +888,10 @@ mod tests {
 
     #[test]
     fn fixture_plan_projects_both_solids_and_a_plated_arc() {
-        let model = two_boxes_model();
+        let graph = two_boxes_graph();
         let plan = LevelPlan::two_boxes_and_one_route();
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&graph, &plans, &FixedAdvanceMeasure);
         let painted: Vec<String> = scene
             .root
             .solids
@@ -909,10 +910,10 @@ mod tests {
 
     #[test]
     fn arc_ends_on_the_projected_ports_at_their_solids_tops() {
-        let model = two_boxes_model();
+        let graph = two_boxes_graph();
         let plan = LevelPlan::two_boxes_and_one_route();
         let plans = LevelPlans::root_only(plan.clone());
-        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&graph, &plans, &FixedAdvanceMeasure);
         let (_edge_id, route) = plan.routes().iter().next().expect("fixture has a route");
         let connection = &scene.root.connections[0];
         let dot_path = connection
@@ -936,7 +937,7 @@ mod tests {
 
     #[test]
     fn a_flat_route_is_traced_on_the_floor_port_to_port_its_stroke_stopping_under_the_arrowhead() {
-        let model = two_boxes_model();
+        let graph = two_boxes_graph();
         let lifted_plan = LevelPlan::two_boxes_and_one_route();
         let lifted_routes = lifted_plan.routes();
         let (edge_id, lifted_route) = lifted_routes.iter().next().expect("fixture has a route");
@@ -955,7 +956,7 @@ mod tests {
         let flat_plan = LevelPlan::new(placed, flat_routes, BTreeMap::new());
         let plans = LevelPlans::root_only(flat_plan);
 
-        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&graph, &plans, &FixedAdvanceMeasure);
 
         let is_lifted_connection_drawn = !scene.root.connections.is_empty();
         assert!(
@@ -1000,11 +1001,11 @@ mod tests {
 
     #[test]
     fn view_contains_every_drawable() {
-        let model = two_boxes_model();
+        let graph = two_boxes_graph();
         let plan = LevelPlan::two_boxes_and_one_route();
         let measure = FixedAdvanceMeasure;
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project::<Isometric>(&model, &plans, &measure);
+        let scene = Scene::project::<Isometric>(&graph, &plans, &measure);
         for solid in &scene.root.solids {
             for face in &solid.faces {
                 assert_contains(scene.root_view(), face.outline.bounding_box());
@@ -1023,7 +1024,7 @@ mod tests {
 
     #[test]
     fn view_frames_the_drawables_not_the_empty_floor() {
-        let model = two_boxes_model();
+        let graph = two_boxes_graph();
         let two_boxes_plan = LevelPlan::two_boxes_and_one_route();
         let floor_extent = Size::new(2_000.0, 2_000.0);
         let two_boxes_placed = two_boxes_plan.placed();
@@ -1033,7 +1034,7 @@ mod tests {
         let placed_boundary = placed.boundary();
         let plan = LevelPlan::new(placed, routes, BTreeMap::new());
         let plans = LevelPlans::root_only(plan.clone());
-        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&graph, &plans, &FixedAdvanceMeasure);
         let floor = Isometric::horizontal_plane_at(0.0).transform_rect_bbox(placed_boundary);
         let is_floor_framed = scene.root_view().union(floor) == scene.root_view();
         assert!(
@@ -1045,10 +1046,10 @@ mod tests {
 
     #[test]
     fn solids_follow_the_depth_order_not_the_path_order() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         builder.add_top_level("a_small_front", Element::new("front"));
         builder.add_top_level("z_long_back", Element::new("back"));
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
         let front = ElementPath::from_segments(["a_small_front"]);
         let back = ElementPath::from_segments(["z_long_back"]);
         let footprints = BTreeMap::from([
@@ -1059,7 +1060,7 @@ mod tests {
         let placed = PlacedLevel::new(extent, footprints);
         let plan = LevelPlan::new(placed, BTreeMap::new(), BTreeMap::new());
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&graph, &plans, &FixedAdvanceMeasure);
         let painted: Vec<String> = scene
             .root
             .solids
@@ -1071,18 +1072,18 @@ mod tests {
 
     #[test]
     fn a_tall_leaf_raises_its_port_to_its_authored_top_and_the_view_frames_it() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let tall_app = Element::new("app").with_height(84.0);
         let a = builder.add_top_level("a", tall_app);
         let b = builder.add_top_level("b", Element::new("store").with_shape(Shape::Cylinder));
         builder.add_edge(&a, &b, Edge::new().with_label("calls"));
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
         let plan = LevelPlan::two_boxes_and_one_route();
         let plans = LevelPlans::root_only(plan.clone());
-        let low_scene =
-            Scene::project::<Isometric>(&two_boxes_model(), &plans, &FixedAdvanceMeasure);
+        let low_graph = two_boxes_graph();
+        let low_scene = Scene::project::<Isometric>(&low_graph, &plans, &FixedAdvanceMeasure);
 
-        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&graph, &plans, &FixedAdvanceMeasure);
 
         let (_edge_id, route) = plan.routes().iter().next().expect("fixture has a route");
         let (dot_start, _dot_end) = dot_path_ends(&scene.root.connections[0]);
@@ -1099,11 +1100,11 @@ mod tests {
 
     #[test]
     fn a_taller_solid_behind_is_still_painted_before_a_lower_one_in_front() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         builder.add_top_level("a_small_front", Element::new("front"));
         let tall_back = Element::new("back").with_height(200.0);
         builder.add_top_level("z_long_back", tall_back);
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
         let front = ElementPath::from_segments(["a_small_front"]);
         let back = ElementPath::from_segments(["z_long_back"]);
         let footprints = BTreeMap::from([
@@ -1114,7 +1115,7 @@ mod tests {
         let placed = PlacedLevel::new(extent, footprints);
         let plan = LevelPlan::new(placed, BTreeMap::new(), BTreeMap::new());
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&graph, &plans, &FixedAdvanceMeasure);
         let painted: Vec<String> = scene
             .root
             .solids
@@ -1126,12 +1127,12 @@ mod tests {
 
     #[test]
     fn lifted_edge_rises_by_every_primitive_down_to_its_true_endpoint() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let desk = builder.add_top_level("desk", Element::new("desk"));
         let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
         let browser = builder.add_top_level("browser", Element::new("Browser"));
         let edge_id = builder.add_edge(&quoter, &browser, Edge::new());
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
         let desk_path = ElementPath::from_segments(["desk"]);
         let browser_path = ElementPath::from_segments(["browser"]);
         let footprints = BTreeMap::from([
@@ -1146,7 +1147,7 @@ mod tests {
         let placed = PlacedLevel::new(extent, footprints);
         let plan = LevelPlan::new(placed, routes, BTreeMap::new());
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&graph, &plans, &FixedAdvanceMeasure);
         let connection = &scene.root.connections[0];
         let dot_path = connection
             .dot_path
@@ -1167,14 +1168,14 @@ mod tests {
 
     #[test]
     fn plates_of_arcs_sharing_an_apex_slide_apart_and_clear_every_solid_label() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let a = builder.add_top_level("a", Element::new("app"));
         let b = builder.add_top_level("b", Element::new("store"));
         let calls = Edge::new().with_label("calls");
         let replies = Edge::new().with_label("replies");
         let calls_id = builder.add_edge(&a, &b, calls);
         let replies_id = builder.add_edge(&a, &b, replies);
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
         let a_footprint = Rect::new(20.0, 30.0, 80.0, 70.0);
         let b_footprint = Rect::new(440.0, 50.0, 500.0, 90.0);
         let footprints = BTreeMap::from([(path("a"), a_footprint), (path("b"), b_footprint)]);
@@ -1189,7 +1190,7 @@ mod tests {
         let plan = LevelPlan::new(placed, routes, BTreeMap::new());
         let measure = FixedAdvanceMeasure;
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project::<Isometric>(&model, &plans, &measure);
+        let scene = Scene::project::<Isometric>(&graph, &plans, &measure);
         let plates: Vec<Rect> = scene
             .root
             .connections
@@ -1221,17 +1222,17 @@ mod tests {
 
     #[test]
     fn the_outermost_layer_stacks_a_peeking_sheet_under_its_closed_container_only() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let vault = builder.add_top_level("vault", Element::new("vault"));
         let ledger = builder.add_child(&vault, "ledger", Element::new("ledger"));
         let teller = builder.add_top_level("teller", Element::new("teller"));
         builder.add_edge(&teller, &ledger, Edge::new());
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
         let measure = FixedAdvanceMeasure;
-        let layers = DisclosedModel::every_layer_of(&model);
+        let layers = DisclosedGraph::every_layer_of(&graph);
         let outermost_layer = &layers[0];
-        let outermost_model = outermost_layer.model();
-        let outermost_plans = LevelPlans::lay_out(outermost_model, &measure);
+        let outermost_graph = outermost_layer.graph();
+        let outermost_plans = LevelPlans::lay_out(outermost_graph, &measure);
 
         let scene =
             Scene::project_disclosed::<Isometric>(outermost_layer, &outermost_plans, &measure);
@@ -1255,11 +1256,11 @@ mod tests {
 
     #[test]
     fn repeated_projections_are_identical() {
-        let model = two_boxes_model();
+        let graph = two_boxes_graph();
         let plan = LevelPlan::two_boxes_and_one_route();
         let plans = LevelPlans::root_only(plan);
-        let first_scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
-        let second_scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
+        let first_scene = Scene::project::<Isometric>(&graph, &plans, &FixedAdvanceMeasure);
+        let second_scene = Scene::project::<Isometric>(&graph, &plans, &FixedAdvanceMeasure);
         assert_eq!(first_scene, second_scene);
     }
 }

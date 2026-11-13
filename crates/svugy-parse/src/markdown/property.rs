@@ -9,7 +9,7 @@ use svugy_model::color::Rgba;
 use svugy_model::model::{PlacementHint, Position, Shape, Traveler};
 use svugy_model::style::{NumberValue, StyleValue};
 
-use super::ast::{Reference, Span, Value};
+use super::ast::{Span, Value};
 use crate::prose::ProseList;
 
 /// Spell the prefix of a `meta.NAME` key.
@@ -23,7 +23,7 @@ const DASHED_LENGTH: f64 = 5.0;
 /// Dash length `line=dotted` lowers to.
 const DOTTED_LENGTH: f64 = 2.0;
 
-/// Name a property key: one of the spec's tables in their order, `target` of a legend key row, or a `meta.NAME` entry.
+/// Name a property key: one of the spec's tables in their order, or a `meta.NAME` entry.
 #[derive(Debug, Clone, PartialEq, Eq, EnumString, EnumIter, IntoStaticStr)]
 #[strum(serialize_all = "lowercase")]
 pub(crate) enum PropertyKey {
@@ -39,7 +39,6 @@ pub(crate) enum PropertyKey {
     Link,
     Code,
     Traveler,
-    Target,
     #[strum(disabled)]
     Meta(String),
 }
@@ -66,7 +65,6 @@ pub(crate) enum PropertyValue {
     Link(Spanned<String>),
     Code(Spanned<String>),
     Traveler(Traveler),
-    Target(Reference),
     Meta { name: String, value: String },
     Unreadable(PropertyKey),
 }
@@ -124,10 +122,6 @@ impl PropertyKey {
                 PropertyValue::Code(spanned_code)
             }),
             Self::Traveler => value.read_keyword(self).map(PropertyValue::Traveler),
-            Self::Target => value.read_text().map(|target| {
-                let reference = Reference::from_dotted(&target, value_span);
-                PropertyValue::Target(reference)
-            }),
             Self::Meta(name) => value.read_text().map(|text| {
                 let name = name.clone();
                 PropertyValue::Meta { name, value: text }
@@ -152,7 +146,6 @@ impl PropertyValue {
             Self::Link(..) => PropertyKey::Link,
             Self::Code(..) => PropertyKey::Code,
             Self::Traveler(..) => PropertyKey::Traveler,
-            Self::Target(..) => PropertyKey::Target,
             Self::Meta { name, .. } => PropertyKey::Meta(name.clone()),
             Self::Unreadable(key) => key.clone(),
         }
@@ -161,7 +154,7 @@ impl PropertyValue {
 
 impl Value {
     /// Read the value as text: quoted, or one bare piece.
-    fn read_text(&self) -> Result<String, String> {
+    pub(crate) fn read_text(&self) -> Result<String, String> {
         let pieces = match self {
             Self::Quoted(text) => return Ok(text.clone()),
             Self::Bare(pieces) => pieces,

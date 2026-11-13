@@ -167,7 +167,7 @@ impl Verdict {
         }
     }
 
-    /// Judge `source` in the language `L`: the SVG `R` renders when nothing is an error, and every diagnostic located in the source.
+    /// Judge `source` in the language `L`: the SVG `R` renders, opening on the first workflow, when nothing is an error, and every diagnostic located in the source.
     fn of<L: SourceLanguage, R: RenderSvg>(source: &str) -> Self {
         let import = L::import(source);
         let diagnostics = import
@@ -176,7 +176,8 @@ impl Verdict {
             .map(|diagnostic| LocatedDiagnostic::locate(diagnostic, source))
             .collect();
         let admitted_model = import.admitted_model();
-        let svg = admitted_model.map(R::render);
+        let first_workflow = admitted_model.map(|model| model.showing_first_workflow());
+        let svg = first_workflow.map(R::render);
         Self { svg, diagnostics }
     }
 
@@ -280,7 +281,10 @@ mod tests {
 
     #[test]
     fn an_error_withholds_the_svg_and_points_at_its_line_and_column() {
-        let verdict = verdict_of(MARKDOWN_LANGUAGE_BYTE, "## Components\n- a (colour=red)\n");
+        let verdict = verdict_of(
+            MARKDOWN_LANGUAGE_BYTE,
+            "## Components\n- a (colour=red)\n\n## Workflows\n### w: W\n#### s: S\n- a\n",
+        );
 
         let diagnostics = verdict["diagnostics"].as_array().expect("a list");
         let first = &diagnostics[0];
@@ -294,7 +298,7 @@ mod tests {
     fn a_warning_still_renders() {
         let verdict = verdict_of(
             MARKDOWN_LANGUAGE_BYTE,
-            "## Components\n- a (shape=cylinder)\n  - b\n",
+            "## Components\n- a (shape=cylinder)\n  - b\n\n## Workflows\n### w: W\n#### s: S\n- b\n",
         );
 
         let diagnostics = verdict["diagnostics"].as_array().expect("a list");
@@ -304,7 +308,7 @@ mod tests {
 
     #[test]
     fn exports_render_what_the_input_buffer_holds_in_the_language_and_theme_named() {
-        let source = b"## Components\n- a\n- b\n\n## Edges\n- a -> b\n";
+        let source = b"## Components\n- a\n- b\n\n## Workflows\n### w: W\n#### s: S\n- a -> b\n";
         let buffer = input_buffer(source.len());
         let input = PLAYGROUND.with_borrow_mut(|playground| playground.input.as_mut_ptr());
         assert_eq!(buffer, input);

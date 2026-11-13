@@ -3,16 +3,10 @@ source: crates/svugy-parse/tests/json.rs
 expression: saved
 ---
 {
-  "title": "svugy · how it is built",
-  "subtitle": "text in, SVG out",
   "elements": {
     "browser": {
       "label": "Browser",
       "shape": "disc",
-      "position": {
-        "x": 640.0,
-        "y": 120.5
-      },
       "link": "https://example.com/browser",
       "span": {
         "start": 10,
@@ -22,6 +16,7 @@ expression: saved
     "cli": {
       "label": "svugy-cli",
       "caption": "render · validate · import",
+      "description": "Reads [the layout](#pipeline.layout) back through [its edge](#cli->pipeline.layout).",
       "height": 84.0,
       "style": {
         "fill": "#2563eb"
@@ -31,11 +26,6 @@ expression: saved
       "label": "pipeline",
       "caption": "the pipeline",
       "shape": "slab",
-      "child_placement": {
-        "grid": {
-          "columns": 2
-        }
-      },
       "metadata": {
         "owner": "backend team"
       }
@@ -53,49 +43,132 @@ expression: saved
       "caption": "markup"
     }
   },
-  "edges": [
+  "workflows": [
     {
-      "from": "cli",
-      "to": "pipeline.layout",
-      "ordinal": 0,
-      "label": "① model"
-    },
-    {
-      "from": "pipeline",
-      "to": "pipeline.\"inter.v4\"",
-      "ordinal": 0,
+      "id": "build",
+      "title": "How it is built",
+      "subtitle": "text in, SVG out",
+      "overrides": {
+        "browser": {
+          "caption": "any browser",
+          "position": {
+            "x": 640.0,
+            "y": 120.5
+          }
+        },
+        "pipeline": {
+          "child_placement": {
+            "grid": {
+              "columns": 2
+            }
+          }
+        }
+      },
+      "edges": [
+        {
+          "from": "cli",
+          "to": "pipeline.layout",
+          "ordinal": 0,
+          "label": "① model"
+        },
+        {
+          "from": "pipeline.layout",
+          "to": "browser",
+          "ordinal": 0,
+          "label": "boxes"
+        },
+        {
+          "from": "pipeline.layout",
+          "to": "browser",
+          "ordinal": 1,
+          "label": "shapes",
+          "traveler": "parcel"
+        },
+        {
+          "from": "pipeline.render",
+          "to": "browser",
+          "ordinal": 0,
+          "label": "④ markup",
+          "style": {
+            "stroke-dash": "3"
+          }
+        },
+        {
+          "from": "pipeline.render",
+          "to": "pipeline.\"inter.v4\"",
+          "ordinal": 0,
+          "badge": true,
+          "span": {
+            "start": 40,
+            "end": 52
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "lay_out",
+          "title": "The CLI lays the model out",
+          "items": [
+            {
+              "edge": {
+                "from": "cli",
+                "to": "pipeline.layout",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline.layout",
+                "to": "browser",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline.layout",
+                "to": "browser",
+                "ordinal": 1
+              }
+            }
+          ],
+          "span": {
+            "start": 92,
+            "end": 120
+          }
+        },
+        {
+          "id": "draw",
+          "title": "The renderer draws it",
+          "description": "[The renderer](#pipeline.render) reads [the font](#build/draw).",
+          "items": [
+            {
+              "edge": {
+                "from": "pipeline.render",
+                "to": "browser",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "pipeline.render",
+                "to": "pipeline.\"inter.v4\"",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "cli",
+                "to": "pipeline.layout",
+                "ordinal": 0
+              }
+            }
+          ]
+        }
+      ],
       "span": {
-        "start": 40,
-        "end": 52
+        "start": 60,
+        "end": 90
       }
-    },
-    {
-      "from": "pipeline.layout",
-      "to": "browser",
-      "ordinal": 0,
-      "label": "boxes"
-    },
-    {
-      "from": "pipeline.layout",
-      "to": "browser",
-      "ordinal": 1,
-      "label": "shapes",
-      "traveler": "parcel"
-    },
-    {
-      "from": "pipeline.render",
-      "to": "browser",
-      "ordinal": 0,
-      "label": "④ markup",
-      "style": {
-        "stroke-dash": "3"
-      }
-    },
-    {
-      "from": "pipeline.render",
-      "to": "pipeline.render",
-      "ordinal": 0,
-      "label": "retry"
     }
   ]
 }

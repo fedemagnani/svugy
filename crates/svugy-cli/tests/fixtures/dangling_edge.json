@@ -1,1 +1,1 @@
-{"elements": {"a": {"label": "a"}}, "edges": [{"from": "a", "to": "b"}]}
+{"elements": {"a": {"label": "a"}}, "workflows": [{"id": "main", "title": "main", "edges": [{"from": "a", "to": "b"}], "steps": [{"id": "main", "title": "main", "items": [{"edge": {"from": "a", "to": "b", "ordinal": 0}}]}]}]}

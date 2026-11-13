@@ -1,6 +1,6 @@
 ---
 source: crates/svugy-parse/tests/json.rs
-expression: model.to_json()
+expression: model_json
 ---
 {
   "elements": {
@@ -9,13 +9,40 @@ expression: model.to_json()
     },
     "a.\"b.c\"": {
       "label": "dotted id"
+    },
+    "c": {
+      "label": "C"
     }
   },
-  "edges": [
+  "workflows": [
     {
-      "from": "a",
-      "to": "a.\"b.c\"",
-      "ordinal": 0
+      "id": "main",
+      "title": "Main",
+      "edges": [
+        {
+          "from": "a",
+          "to": "c",
+          "ordinal": 0
+        }
+      ],
+      "steps": [
+        {
+          "id": "all",
+          "title": "All",
+          "items": [
+            {
+              "edge": {
+                "from": "a",
+                "to": "c",
+                "ordinal": 0
+              }
+            },
+            {
+              "element": "a.\"b.c\""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

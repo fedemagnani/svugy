@@ -1,52 +1,49 @@
-//! Lower a parsed diagram file into the model: styles expanded, references resolved, each property applied where it suits.
+//! Lower a parsed diagram file into the model: styles expanded, references resolved, each property applied where it suits, each workflow's edges declared by its steps.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use chumsky::span::Spanned;
-use svugy_model::builder::{ElementRef, ModelBuilder};
-use svugy_model::description::DescriptionOwner;
-use svugy_model::legend::Legend;
+use svugy_model::builder::{DescribedRef, EdgeRef, ElementRef, ModelBuilder, StepRef, WorkflowRef};
 use svugy_model::link::Link;
-use svugy_model::model::{ByteRange, Edge, EdgeId, Element, PlacementHint};
+use svugy_model::model::{ByteRange, Edge, EdgeId, Element, PlacementHint, Position};
 use svugy_model::path::ElementPath;
-use svugy_model::problem::Problem;
+use svugy_model::properties::ComponentProperties;
 use svugy_model::style::{ColorKey, NumberKey};
+use svugy_model::workflow::{ElementOverride, Step, StepId, Workflow, WorkflowId};
 
 use super::ast::{
-    ComponentItem, DescriptionBlock, Document, EdgeItem, LegendItem, LegendKeyRow, LegendSection,
-    Reference, Span,
+    ChainItem, ComponentItem, Description, Document, EdgeItem, ListedEdge, OverrideItem, Reference,
+    Span, StepItem, StepSection, WorkflowSection,
 };
 use super::diagnostic::Diagnostics;
 use super::property::{LineStyle, Property, PropertyKey, PropertyValue};
 use super::resolve::SuffixIndex;
 use super::style::StyleBook;
-use super::target::{ParallelEdgeCounts, TargetResolver};
+use super::target::{ComponentNumbering, TargetRespeller};
 use super::{MarkdownImport, MarkdownParse};
 
-/// Lower each item into the builder through the style book and the suffix index, holding each description until every target it may name is added, the lowering recording every error on the way.
+/// Lower each item into the builder through the style book and the suffix index, recording every error on the way.
 struct Lowering {
     styles: StyleBook,
     references: SuffixIndex,
     element_refs: BTreeMap<ElementPath, ElementRef>,
-    container_paths: BTreeSet<ElementPath>,
-    parallel_edge_counts: ParallelEdgeCounts,
-    pending_descriptions: Vec<(DescriptionOwner, DescriptionBlock)>,
     builder: ModelBuilder,
     diagnostics: Diagnostics,
 }
 
-/// Draft a component's element with its `layout` and `columns`, which only together make its placement hint, unless either was unreadable.
-struct ComponentDraft {
-    element: Element,
+/// Track a workflow while its steps are lowered: its handle and the descriptions held until every edge they may name is declared.
+struct WorkflowDraft {
+    handle: WorkflowRef,
+    pending_descriptions: Vec<(DescribedRef, Description)>,
+}
+
+/// Collect where a component is pinned and how it places its children, `layout` and `columns` making the placement hint only together.
+#[derive(Default)]
+struct PlacementDraft {
+    position: Option<Spanned<Position>>,
     layout: Option<Spanned<PlacementHint>>,
     columns: Option<Spanned<u32>>,
     has_unreadable_placement: bool,
-}
-
-/// Draft the edge every hop of an edge item shares, with where it asked for `line=badge`.
-struct EdgeDraft {
-    edge: Edge,
-    badge_span: Option<Span>,
 }
 
 impl MarkdownParse {
@@ -54,40 +51,25 @@ impl MarkdownParse {
     pub fn lower(self) -> MarkdownImport {
         let Self { document, errors } = self;
         let Document {
-            title,
-            subtitle,
             view,
-            description,
             styles,
             components,
-            edges,
-            legend,
+            workflows,
         } = document;
         let mut diagnostics = Diagnostics::from_parts(errors, Vec::new());
         let style_book = StyleBook::read(styles, &mut diagnostics);
         let suffix_index = SuffixIndex::index(&components);
-        let mut builder = ModelBuilder::new();
-        if let Some(title) = title {
-            builder = builder.with_title(title);
-        }
-        if let Some(subtitle) = subtitle {
-            builder = builder.with_subtitle(subtitle);
-        }
-        if let Some(view) = view {
-            builder = builder.with_view(view);
-        }
+        let builder = ModelBuilder::new();
+        let builder = match view {
+            Some(view) => builder.with_view(view),
+            None => builder,
+        };
         let mut lowering = Lowering::new(style_book, suffix_index, builder, diagnostics);
-        if let Some(description) = description {
-            let diagram_description = (DescriptionOwner::Diagram, description);
-            lowering.pending_descriptions.push(diagram_description);
-        }
         lowering.lower_components(None, components);
-        for edge in edges {
-            lowering.lower_edge(edge);
+        for workflow in workflows {
+            lowering.lower_workflow(workflow);
         }
-        lowering.describe_all();
-        let legend = legend.map(|legend| lowering.lower_legend(legend));
-        lowering.into_import(legend)
+        lowering.into_import()
     }
 }
 
@@ -103,15 +85,12 @@ impl Lowering {
             styles,
             references,
             element_refs: BTreeMap::new(),
-            container_paths: BTreeSet::new(),
-            parallel_edge_counts: ParallelEdgeCounts::new(),
-            pending_descriptions: Vec::new(),
             builder,
             diagnostics,
         }
     }
 
-    /// Add each component under `parent`, the top level when `None`, then its children under it.
+    /// Add each component under `parent`, the top level when `None`, described with its targets respelled, then its children under it.
     fn lower_components(&mut self, parent: Option<&ElementRef>, components: Vec<ComponentItem>) {
         for component in components {
             let ComponentItem {
@@ -124,19 +103,19 @@ impl Lowering {
             } = component;
             let label = display_name.unwrap_or_else(|| id.inner.clone());
             let source_range = ByteRange::new(span.start, span.end);
-            let element = Element::new(label).with_span(source_range);
             let properties = self.styles.expand(&entries, &mut self.diagnostics);
-            let element = self.build_component(element, properties);
+            let (component_properties, placement) = self.lower_component_properties(properties);
+            placement.reject_on_component(&mut self.diagnostics);
+            let element = Element::new(label)
+                .with_span(source_range)
+                .with_properties(component_properties);
             let element_ref = self.add_component(parent, &id, element);
             if let Some(description) = description {
-                let element_path = element_ref.path().clone();
-                let owner = DescriptionOwner::Element(element_path);
-                self.pending_descriptions.push((owner, description));
-            }
-            let has_children = !children.is_empty();
-            if has_children {
-                let container_path = element_ref.path().clone();
-                self.container_paths.insert(container_path);
+                let respeller = TargetRespeller::new(&self.references, &ComponentNumbering);
+                let canonical_text = respeller.respell(&description.text);
+                let described_element = element_ref.clone();
+                let owner = DescribedRef::Element(described_element);
+                self.builder.describe(&owner, canonical_text);
             }
             self.lower_components(Some(&element_ref), children);
         }
@@ -172,113 +151,296 @@ impl Lowering {
         first_declaration
     }
 
-    /// Apply each property to the component's element, then its placement hint from `layout` and `columns` together, checked only when both read.
-    fn build_component(&mut self, element: Element, properties: Vec<Property>) -> Element {
-        let mut draft = ComponentDraft {
-            element,
-            layout: None,
-            columns: None,
-            has_unreadable_placement: false,
+    /// Add the workflow with its overrides and steps, then describe its prose, its steps' prose and its edges once every edge is declared.
+    fn lower_workflow(&mut self, section: WorkflowSection) {
+        let WorkflowSection {
+            id,
+            title,
+            subtitle,
+            prose,
+            overrides,
+            steps,
+        } = section;
+        let workflow_id = WorkflowId::new(id.inner);
+        let id_range = ByteRange::new(id.span.start, id.span.end);
+        let workflow = Workflow::new(workflow_id, title).with_span(id_range);
+        let workflow = match subtitle {
+            Some(subtitle) => workflow.with_subtitle(subtitle),
+            None => workflow,
         };
-        for property in properties {
-            draft = self.apply_component_property(draft, property);
+        let handle = self.builder.add_workflow(workflow);
+        let mut draft = WorkflowDraft {
+            handle,
+            pending_descriptions: Vec::new(),
+        };
+        if let Some(prose) = prose {
+            let described_workflow = draft.handle.clone();
+            let owner = DescribedRef::Workflow(described_workflow);
+            draft.pending_descriptions.push((owner, prose));
         }
-        let ComponentDraft {
-            element,
-            layout,
-            columns,
-            has_unreadable_placement,
+        for override_item in overrides {
+            self.lower_override(&draft, override_item);
+        }
+        for step in steps {
+            self.lower_step(&mut draft, step);
+        }
+        let WorkflowDraft {
+            handle,
+            pending_descriptions,
         } = draft;
-        if has_unreadable_placement {
-            return element;
+        let declared_workflow = self.builder.workflow(&handle);
+        let respeller = TargetRespeller::new(&self.references, declared_workflow);
+        let canonical_descriptions: Vec<(DescribedRef, String)> = pending_descriptions
+            .into_iter()
+            .map(|(owner, description)| {
+                let canonical_text = respeller.respell(&description.text);
+                (owner, canonical_text)
+            })
+            .collect();
+        for (owner, canonical_text) in canonical_descriptions {
+            self.builder.describe(&owner, canonical_text);
         }
-        let layout = layout.map(|layout| (layout.inner, layout.span));
-        let columns = columns.map(|columns| (columns.inner, columns.span));
-        let placement = match (layout, columns) {
-            (None, None) => return element,
-            (Some((PlacementHint::Grid { .. }, _layout_span)), Some((columns, _columns_span))) => {
-                PlacementHint::Grid { columns }
-            }
-            (Some((PlacementHint::Grid { .. }, layout_span)), None) => {
-                self.diagnostics
-                    .record_error("`layout=grid` needs `columns`", layout_span);
-                return element;
-            }
-            (_layout, Some((_columns, columns_span))) => {
-                self.diagnostics
-                    .record_error("`columns` needs `layout=grid`", columns_span);
-                return element;
-            }
-            (Some((placement, _layout_span)), None) => placement,
-        };
-        element.with_child_placement(placement)
     }
 
-    /// Apply one property to a component, recording one that suits only edges or legend key rows; an unreadable one is already reported.
-    fn apply_component_property(
-        &mut self,
-        mut draft: ComponentDraft,
-        property: Property,
-    ) -> ComponentDraft {
-        let Property { value, span } = property;
-        let element = draft.element;
-        draft.element = match value {
-            PropertyValue::Caption(caption) => element.with_caption(caption),
-            PropertyValue::Color(color) => element.with_style(ColorKey::FILL.name(), color),
-            PropertyValue::Stroke(stroke) => element.with_style(ColorKey::STROKE.name(), stroke),
-            PropertyValue::Line(LineStyle::Badge) => {
-                let message = "`badge` is an edge's line: a component's `line` is `solid`, `dashed` or `dotted`";
-                self.diagnostics.record_error(message, span);
-                element
-            }
-            PropertyValue::Line(line) => match line.stroke_dash() {
-                Some(stroke_dash) => {
-                    element.with_style(NumberKey::STROKE_DASH.name(), stroke_dash.to_string())
-                }
-                None => element,
-            },
-            PropertyValue::Shape(shape) => element.with_shape(shape),
-            PropertyValue::Height(height) => element.with_height(height),
-            PropertyValue::Position(position) => element.with_position(position),
-            PropertyValue::Layout(layout) => {
-                draft.layout = Some(Spanned {
-                    inner: layout,
-                    span,
-                });
-                element
-            }
-            PropertyValue::Columns(columns) => {
-                draft.columns = Some(Spanned {
-                    inner: columns,
-                    span,
-                });
-                element
-            }
-            PropertyValue::Link(link) => {
-                let link_range = ByteRange::new(link.span.start, link.span.end);
-                match self.resolve_link(link) {
-                    Some(target) => element.with_link(target).with_link_span(link_range),
-                    None => element,
-                }
-            }
-            PropertyValue::Code(code) => {
-                let code_range = ByteRange::new(code.span.start, code.span.end);
-                element.with_code(code.inner).with_code_span(code_range)
-            }
-            PropertyValue::Meta { name, value } => element.with_metadata(name, value),
-            PropertyValue::Unreadable(PropertyKey::Layout | PropertyKey::Columns) => {
-                draft.has_unreadable_placement = true;
-                element
-            }
-            PropertyValue::Unreadable(_other_unreadable_key) => element,
-            component_inapplicable @ (PropertyValue::Traveler(..) | PropertyValue::Target(..)) => {
-                let key = component_inapplicable.key();
-                let message = format!("`{key}` does not apply to a component");
-                self.diagnostics.record_error(message, span);
-                element
-            }
+    /// Override how the workflow draws the component the item names, applying its styles then its `key=value` entries.
+    fn lower_override(&mut self, draft: &WorkflowDraft, override_item: OverrideItem) {
+        let OverrideItem {
+            reference,
+            entries,
+            span,
+        } = override_item;
+        let path = self.references.resolve(&reference, &mut self.diagnostics);
+        let properties = self.styles.expand(&entries, &mut self.diagnostics);
+        let override_range = ByteRange::new(span.start, span.end);
+        let (component_properties, placement) = self.lower_component_properties(properties);
+        let child_placement = placement.child_placement(&mut self.diagnostics);
+        let mut element_override = ElementOverride::new()
+            .with_span(override_range)
+            .with_properties(component_properties);
+        if let Some(position) = placement.position {
+            element_override = element_override.with_position(position.inner);
+        }
+        if let Some(child_placement) = child_placement {
+            element_override = element_override.with_child_placement(child_placement);
+        }
+        let Some(path) = path else {
+            return;
         };
-        draft
+        let element_ref = &self.element_refs[&path];
+        self.builder
+            .override_element(&draft.handle, element_ref, element_override);
+    }
+
+    /// Add the step, then each of its items in written order, holding its prose until every edge of the workflow is declared.
+    fn lower_step(&mut self, draft: &mut WorkflowDraft, step: StepSection) {
+        let StepSection {
+            id,
+            title,
+            prose,
+            items,
+        } = step;
+        let step_id = StepId::new(id.inner);
+        let id_range = ByteRange::new(id.span.start, id.span.end);
+        let step = Step::new(step_id, title).with_span(id_range);
+        let step_ref = self.builder.add_step(&draft.handle, step);
+        if let Some(prose) = prose {
+            let described_step = step_ref.clone();
+            let owner = DescribedRef::Step(described_step);
+            draft.pending_descriptions.push((owner, prose));
+        }
+        for item in items {
+            match item {
+                StepItem::Element(reference) => self.list_element(&step_ref, &reference),
+                StepItem::ListedEdge(listed_edge) => self.list_edge(&step_ref, listed_edge),
+                StepItem::Edge(edge_item) => self.declare_edge(draft, &step_ref, edge_item),
+                StepItem::Chain(chain_item) => self.declare_chain(&step_ref, chain_item),
+            }
+        }
+    }
+
+    /// List the component `reference` names in the step, shown without an edge, written where the reference is.
+    fn list_element(&mut self, step_ref: &StepRef, reference: &Reference) {
+        let Some(path) = self.references.resolve(reference, &mut self.diagnostics) else {
+            return;
+        };
+        let element_ref = &self.element_refs[&path];
+        let reference_range = ByteRange::new(reference.span.start, reference.span.end);
+        self.builder
+            .list_element_written_at(step_ref, element_ref, Some(reference_range));
+    }
+
+    /// List again in the step the edge `FROM -> TO[n]`, which validation checks some step of the workflow declares.
+    fn list_edge(&mut self, step_ref: &StepRef, listed_edge: ListedEdge) {
+        let ListedEdge {
+            from,
+            to,
+            ordinal,
+            span,
+        } = listed_edge;
+        let from_path = self.references.resolve(&from, &mut self.diagnostics);
+        let to_path = self.references.resolve(&to, &mut self.diagnostics);
+        let (Some(from_path), Some(to_path)) = (from_path, to_path) else {
+            return;
+        };
+        let id = EdgeId::new(from_path, to_path, ordinal);
+        let listing_range = ByteRange::new(span.start, span.end);
+        self.builder
+            .list_edge_written_at(step_ref, id, Some(listing_range));
+    }
+
+    /// Declare the item's edge in the step, holding its description until every edge of the workflow is declared.
+    fn declare_edge(&mut self, draft: &mut WorkflowDraft, step_ref: &StepRef, edge_item: EdgeItem) {
+        let EdgeItem {
+            from,
+            to,
+            label,
+            entries,
+            description,
+        } = edge_item;
+        let from_path = self.references.resolve(&from, &mut self.diagnostics);
+        let to_path = self.references.resolve(&to, &mut self.diagnostics);
+        let properties = self.styles.expand(&entries, &mut self.diagnostics);
+        let edge = match label {
+            Some(label) => Edge::new().with_label(label.inner),
+            None => Edge::new(),
+        };
+        let edge = self.apply_edge_properties(edge, properties);
+        let (Some(from_path), Some(to_path)) = (from_path, to_path) else {
+            return;
+        };
+        let hop_span = Span::from(from.span.start..to.span.end);
+        let edge_ref = self.add_hop(step_ref, from_path, to_path, edge, hop_span);
+        let Some(description) = description else {
+            return;
+        };
+        let owner = DescribedRef::Edge(edge_ref);
+        draft.pending_descriptions.push((owner, description));
+    }
+
+    /// Declare in the step one plain edge per hop of the chain whose two references resolve, after resolving all of them.
+    fn declare_chain(&mut self, step_ref: &StepRef, chain: ChainItem) {
+        let ChainItem {
+            start,
+            first_hop,
+            second_hop,
+            later_hops,
+        } = chain;
+        let leading_references = [start, first_hop, second_hop];
+        let references = leading_references.into_iter().chain(later_hops);
+        let endpoints: Vec<Option<(ElementPath, Span)>> = references
+            .map(|reference| {
+                let path = self.references.resolve(&reference, &mut self.diagnostics)?;
+                Some((path, reference.span))
+            })
+            .collect();
+        for hop in endpoints.windows(2) {
+            let [Some((from, from_span)), Some((to, to_span))] = hop else {
+                continue;
+            };
+            let hop_span = Span::from(from_span.start..to_span.end);
+            let from_path = from.clone();
+            let to_path = to.clone();
+            let edge = Edge::new();
+            self.add_hop(step_ref, from_path, to_path, edge, hop_span);
+        }
+    }
+
+    /// Declare `edge` from `from` to `to` in the step, written at `hop_span`.
+    fn add_hop(
+        &mut self,
+        step_ref: &StepRef,
+        from: ElementPath,
+        to: ElementPath,
+        edge: Edge,
+        hop_span: Span,
+    ) -> EdgeRef {
+        let hop_range = ByteRange::new(hop_span.start, hop_span.end);
+        let spanned_edge = edge.with_span(hop_range);
+        let from_ref = &self.element_refs[&from];
+        let to_ref = &self.element_refs[&to];
+        self.builder
+            .add_edge(step_ref, from_ref, to_ref, spanned_edge)
+    }
+
+    /// Lower each property into the component properties, collecting placements apart for the site to take or reject, recording one that suits only edges; an unreadable one is already reported.
+    fn lower_component_properties(
+        &mut self,
+        properties: Vec<Property>,
+    ) -> (ComponentProperties, PlacementDraft) {
+        let mut component_properties = ComponentProperties::new();
+        let mut placement = PlacementDraft::default();
+        for property in properties {
+            let Property { value, span } = property;
+            let lowered = component_properties;
+            component_properties = match value {
+                PropertyValue::Caption(caption) => lowered.with_caption(caption),
+                PropertyValue::Color(color) => lowered.with_style(ColorKey::FILL.name(), color),
+                PropertyValue::Stroke(stroke) => {
+                    lowered.with_style(ColorKey::STROKE.name(), stroke)
+                }
+                PropertyValue::Line(LineStyle::Badge) => {
+                    let message = "`badge` is an edge's line: a component's `line` is `solid`, `dashed` or `dotted`";
+                    self.diagnostics.record_error(message, span);
+                    lowered
+                }
+                PropertyValue::Line(line) => match line.stroke_dash() {
+                    Some(stroke_dash) => {
+                        let stroke_dash_text = stroke_dash.to_string();
+                        lowered.with_style(NumberKey::STROKE_DASH.name(), stroke_dash_text)
+                    }
+                    None => lowered,
+                },
+                PropertyValue::Shape(shape) => lowered.with_shape(shape),
+                PropertyValue::Height(height) => lowered.with_height(height),
+                PropertyValue::Position(position) => {
+                    let spanned_position = Spanned {
+                        inner: position,
+                        span,
+                    };
+                    placement.position = Some(spanned_position);
+                    lowered
+                }
+                PropertyValue::Layout(layout) => {
+                    let spanned_layout = Spanned {
+                        inner: layout,
+                        span,
+                    };
+                    placement.layout = Some(spanned_layout);
+                    lowered
+                }
+                PropertyValue::Columns(columns) => {
+                    let spanned_columns = Spanned {
+                        inner: columns,
+                        span,
+                    };
+                    placement.columns = Some(spanned_columns);
+                    lowered
+                }
+                PropertyValue::Link(link) => {
+                    let link_range = ByteRange::new(link.span.start, link.span.end);
+                    match self.resolve_link(link) {
+                        Some(target) => lowered.with_link_written_at(target, Some(link_range)),
+                        None => lowered,
+                    }
+                }
+                PropertyValue::Code(code) => {
+                    let code_range = ByteRange::new(code.span.start, code.span.end);
+                    lowered.with_code_written_at(code.inner, Some(code_range))
+                }
+                PropertyValue::Meta { name, value } => lowered.with_metadata(name, value),
+                PropertyValue::Unreadable(PropertyKey::Layout | PropertyKey::Columns) => {
+                    placement.has_unreadable_placement = true;
+                    lowered
+                }
+                PropertyValue::Unreadable(_other_unreadable_key) => lowered,
+                PropertyValue::Traveler(..) => {
+                    let message = "`traveler` does not apply to a component";
+                    self.diagnostics.record_error(message, span);
+                    lowered
+                }
+            };
+        }
+        (component_properties, placement)
     }
 
     /// Return a URL as written, or the path of the component a reference names; `None` once an unresolved reference is recorded.
@@ -293,87 +455,17 @@ impl Lowering {
         Some(path_text)
     }
 
-    /// Add one edge per hop of the item whose two references resolve, after checking all of them; a chain drops its label, properties and description after recording them.
-    fn lower_edge(&mut self, edge: EdgeItem) {
-        let EdgeItem {
-            references,
-            label,
-            properties,
-            description,
-        } = edge;
-        let endpoints: Vec<Option<(ElementPath, Span)>> = references
-            .iter()
-            .map(|reference| {
-                let path = self.references.resolve(reference, &mut self.diagnostics)?;
-                Some((path, reference.span))
-            })
-            .collect();
-        let is_chain = references.len() > 2;
-        let label = match label {
-            Some(label) if is_chain => {
-                let message = "a chain takes no label; write its hops on separate lines";
-                self.diagnostics.record_error(message, label.span);
-                None
-            }
-            label => label,
-        };
-        let properties = match properties {
-            Some(properties) if is_chain => {
-                let message = "a chain takes no properties; write its hops on separate lines";
-                self.diagnostics.record_error(message, properties.span);
-                None
-            }
-            properties => properties,
-        };
-        let mut description = match description {
-            Some(description) if is_chain => {
-                let message = "a chain takes no description; write its hops on separate lines";
-                self.diagnostics.record_error(message, description.span);
-                None
-            }
-            description => description,
-        };
-        let entries = properties
-            .map(|properties| properties.inner)
-            .unwrap_or_default();
-        let expanded_properties = self.styles.expand(&entries, &mut self.diagnostics);
-        let edge = match label {
-            Some(label) => Edge::new().with_label(label.inner),
-            None => Edge::new(),
-        };
-        let draft = self.build_edge(edge, expanded_properties);
-        for hop in endpoints.windows(2) {
-            let [Some((from, from_span)), Some((to, to_span))] = hop else {
-                continue;
-            };
-            let hop_span = Span::from(from_span.start..to_span.end);
-            let Some(edge_id) = self.add_hop(&draft, from, to, hop_span) else {
-                continue;
-            };
-            if let Some(description) = description.take() {
-                let owner = DescriptionOwner::Edge(edge_id);
-                self.pending_descriptions.push((owner, description));
-            }
-        }
-    }
-
-    /// Apply each property to the edge every hop shares, recording one that suits only components or legend key rows; an unreadable one is already reported.
-    fn build_edge(&mut self, edge: Edge, properties: Vec<Property>) -> EdgeDraft {
-        let mut draft = EdgeDraft {
-            edge,
-            badge_span: None,
-        };
+    /// Apply each property to an edge, recording one that suits only components; an unreadable one is already reported.
+    fn apply_edge_properties(&mut self, edge: Edge, properties: Vec<Property>) -> Edge {
+        let mut edge = edge;
         for property in properties {
             let Property { value, span } = property;
-            let edge = draft.edge;
-            draft.edge = match value {
-                PropertyValue::Line(LineStyle::Badge) => {
-                    draft.badge_span = Some(span);
-                    edge
-                }
+            edge = match value {
+                PropertyValue::Line(LineStyle::Badge) => edge.with_badge(),
                 PropertyValue::Line(line) => match line.stroke_dash() {
                     Some(stroke_dash) => {
-                        edge.with_style(NumberKey::STROKE_DASH.name(), stroke_dash.to_string())
+                        let stroke_dash_text = stroke_dash.to_string();
+                        edge.with_style(NumberKey::STROKE_DASH.name(), stroke_dash_text)
                     }
                     None => edge,
                 },
@@ -389,7 +481,6 @@ impl Lowering {
                 | PropertyValue::Columns(..)
                 | PropertyValue::Link(..)
                 | PropertyValue::Code(..)
-                | PropertyValue::Target(..)
                 | PropertyValue::Meta { .. }) => {
                     let key = edge_inapplicable.key();
                     let message = format!("`{key}` does not apply to an edge");
@@ -398,184 +489,75 @@ impl Lowering {
                 }
             };
         }
-        draft
-    }
-
-    /// Add the hop from `from` to `to` and return its id, recording one from a component to itself or between it and its own ancestor or descendant, badged only between two leaves.
-    fn add_hop(
-        &mut self,
-        draft: &EdgeDraft,
-        from: &ElementPath,
-        to: &ElementPath,
-        hop_span: Span,
-    ) -> Option<EdgeId> {
-        let is_self_edge = from == to;
-        if is_self_edge {
-            let message = format!("an edge cannot join `{from}` to itself");
-            self.diagnostics.record_error(message, hop_span);
-            return None;
-        }
-        let is_from_ancestor = from.is_ancestor_of(to);
-        if is_from_ancestor {
-            let message = format!("an edge cannot join `{from}` and its descendant `{to}`");
-            self.diagnostics.record_error(message, hop_span);
-            return None;
-        }
-        let is_to_ancestor = to.is_ancestor_of(from);
-        if is_to_ancestor {
-            let message = format!("an edge cannot join `{from}` and its ancestor `{to}`");
-            self.diagnostics.record_error(message, hop_span);
-            return None;
-        }
-        let hop_range = ByteRange::new(hop_span.start, hop_span.end);
-        let edge = draft.edge.clone().with_span(hop_range);
-        let edge = match draft.badge_span {
-            Some(badge_span) => self.badge_between_leaves(edge, from, to, badge_span),
-            None => edge,
-        };
-        let from_ref = &self.element_refs[from];
-        let to_ref = &self.element_refs[to];
-        let edge_id = self.builder.add_edge(from_ref, to_ref, edge);
-        let pair = (from.clone(), to.clone());
-        let parallel_edge_count = self.parallel_edge_counts.entry(pair).or_default();
-        *parallel_edge_count += 1;
-        Some(edge_id)
-    }
-
-    /// Respell each held description's targets canonically against every component and edge, then describe its owner with it.
-    fn describe_all(&mut self) {
-        let resolver = TargetResolver::new(&self.references, &self.parallel_edge_counts);
-        let pending_descriptions = std::mem::take(&mut self.pending_descriptions);
-        for (owner, description) in pending_descriptions {
-            let canonical_text = resolver.canonicalize(&description, &mut self.diagnostics);
-            self.builder.describe(&owner, canonical_text);
-        }
-    }
-
-    /// Draw `edge` as a badge when both its ends are leaves, recording the first end that has children otherwise.
-    fn badge_between_leaves(
-        &mut self,
-        edge: Edge,
-        from: &ElementPath,
-        to: &ElementPath,
-        badge_span: Span,
-    ) -> Edge {
-        let mut ends = [from, to].into_iter();
-        let container_end = ends.find(|end| self.container_paths.contains(*end));
-        let Some(container_end) = container_end else {
-            return edge.with_badge();
-        };
-        let message =
-            format!("a badge edge needs a leaf at both ends; `{container_end}` has children");
-        self.diagnostics.record_error(message, badge_span);
         edge
     }
 
-    /// Lower the legend's title, free lines and key rows into the model's legend.
-    fn lower_legend(&mut self, section: LegendSection) -> Legend {
-        let LegendSection { title, items } = section;
-        let mut legend = Legend::new();
-        if let Some(title) = title {
-            legend = legend.with_title(title);
-        }
-        for item in items {
-            legend = match item {
-                LegendItem::Line(line) => legend.with_entry(line),
-                LegendItem::KeyRow(key_row) => self.lower_key_row(legend, key_row),
-            };
-        }
-        legend
-    }
-
-    /// Describe the edges a key row's `line` draws: a dash length, or the badges of its `target`; checked only when every property read.
-    fn lower_key_row(&mut self, legend: Legend, key_row: LegendKeyRow) -> Legend {
-        let LegendKeyRow {
-            entries,
-            description,
-            span,
-        } = key_row;
-        let properties = self.styles.expand(&entries, &mut self.diagnostics);
-        let mut line = None;
-        let mut target = None;
-        let mut has_unreadable_property = false;
-        for property in properties {
-            let Property { value, span } = property;
-            match value {
-                PropertyValue::Line(line_style) => line = Some(line_style),
-                PropertyValue::Target(reference) => target = Some(reference),
-                PropertyValue::Unreadable(_unreadable_key) => has_unreadable_property = true,
-                key_row_inapplicable @ (PropertyValue::Caption(..)
-                | PropertyValue::Color(..)
-                | PropertyValue::Stroke(..)
-                | PropertyValue::Shape(..)
-                | PropertyValue::Height(..)
-                | PropertyValue::Position(..)
-                | PropertyValue::Layout(..)
-                | PropertyValue::Columns(..)
-                | PropertyValue::Link(..)
-                | PropertyValue::Code(..)
-                | PropertyValue::Traveler(..)
-                | PropertyValue::Meta { .. }) => {
-                    let key = key_row_inapplicable.key();
-                    let message = format!("`{key}` does not apply to a legend key row");
-                    self.diagnostics.record_error(message, span);
-                }
-            }
-        }
-        if has_unreadable_property {
-            return legend;
-        }
-        let is_badge = line == Some(LineStyle::Badge);
-        let stroke_dash = line.and_then(LineStyle::stroke_dash);
-        match (is_badge, stroke_dash, target) {
-            (true, _stroke_dash, Some(target)) => {
-                let Some(target_path) = self.references.resolve(&target, &mut self.diagnostics)
-                else {
-                    return legend;
-                };
-                legend.with_badge_description(target_path, description)
-            }
-            (true, _stroke_dash, None) => {
-                let message = "a badge key row names its badges' target: `target=COMPONENT`";
-                self.diagnostics.record_error(message, span);
-                legend
-            }
-            (false, _stroke_dash, Some(target)) => {
-                self.diagnostics
-                    .record_error("`target` needs `line=badge`", target.span);
-                legend
-            }
-            (false, Some(stroke_dash), None) => {
-                legend.with_dash_description(stroke_dash, description)
-            }
-            (false, None, None) => {
-                let message = "a key row describes `line=dashed`, `line=dotted` or `line=badge`";
-                self.diagnostics.record_error(message, span);
-                legend
-            }
-        }
-    }
-
-    /// Finish into the import: build the model through its admission, the legend given, and sort the errors by source offset.
-    fn into_import(self, legend: Option<Legend>) -> MarkdownImport {
+    /// Finish into the import: build the model through its admission and sort the errors by source offset.
+    fn into_import(self) -> MarkdownImport {
         let Self {
             builder,
             diagnostics,
             ..
         } = self;
-        let builder = match legend {
-            Some(legend) => builder.with_legend(legend),
-            None => builder,
-        };
-        let mut admission = builder.build();
-        admission
-            .report
-            .retain(|problem| !matches!(problem, Problem::UnresolvedDescriptionTarget(..)));
+        let admission = builder.build();
         let (errors, warnings) = diagnostics.into_sorted_parts();
         MarkdownImport {
             admission,
             errors,
             warnings,
+        }
+    }
+}
+
+impl PlacementDraft {
+    /// Return the placement hint `layout` and `columns` make together, recording a grid without `columns` and `columns` without a grid; `None` when either was unreadable.
+    fn child_placement(&self, diagnostics: &mut Diagnostics) -> Option<PlacementHint> {
+        if self.has_unreadable_placement {
+            return None;
+        }
+        let layout = self
+            .layout
+            .as_ref()
+            .map(|layout| (layout.inner, layout.span));
+        let columns = self
+            .columns
+            .as_ref()
+            .map(|columns| (columns.inner, columns.span));
+        match (layout, columns) {
+            (None, None) => None,
+            (Some((PlacementHint::Grid { .. }, _layout_span)), Some((columns, _columns_span))) => {
+                let grid = PlacementHint::Grid { columns };
+                Some(grid)
+            }
+            (Some((PlacementHint::Grid { .. }, layout_span)), None) => {
+                diagnostics.record_error("`layout=grid` needs `columns`", layout_span);
+                None
+            }
+            (_layout, Some((_columns, columns_span))) => {
+                diagnostics.record_error("`columns` needs `layout=grid`", columns_span);
+                None
+            }
+            (Some((placement, _layout_span)), None) => Some(placement),
+        }
+    }
+
+    /// Record each placement key set, which only a workflow's override may set.
+    fn reject_on_component(&self, diagnostics: &mut Diagnostics) {
+        let position_span = self.position.as_ref().map(|position| position.span);
+        let layout_span = self.layout.as_ref().map(|layout| layout.span);
+        let columns_span = self.columns.as_ref().map(|columns| columns.span);
+        let placement_spans = [
+            (PropertyKey::Position, position_span),
+            (PropertyKey::Layout, layout_span),
+            (PropertyKey::Columns, columns_span),
+        ];
+        for (key, span) in placement_spans {
+            let Some(span) = span else {
+                continue;
+            };
+            let message =
+                format!("`{key}` on a component is v3: set it in each workflow's overrides");
+            diagnostics.record_error(message, span);
         }
     }
 }

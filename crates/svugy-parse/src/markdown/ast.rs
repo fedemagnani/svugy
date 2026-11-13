@@ -1,7 +1,6 @@
-//! Hold a diagram file as written: its frontmatter, its component tree, its edges and its legend, each value spanned in the source.
+//! Hold a diagram file as written: its frontmatter, its component tree and its workflows, each value spanned in the source.
 
 use std::fmt;
-use std::ops::Range;
 
 use chumsky::span::{SimpleSpan, Spanned};
 use svugy_model::model::ViewAngle;
@@ -9,17 +8,13 @@ use svugy_model::model::ViewAngle;
 /// Span a piece of the diagram file as a byte range of its source.
 pub(crate) type Span = SimpleSpan<usize>;
 
-/// Hold the document a diagram file writes, every item line parsed but nothing resolved.
+/// Hold the document a diagram file writes, every item line and heading parsed but nothing resolved.
 #[derive(Debug, Default)]
 pub(crate) struct Document {
-    pub(crate) title: Option<String>,
-    pub(crate) subtitle: Option<String>,
     pub(crate) view: Option<ViewAngle>,
-    pub(crate) description: Option<DescriptionBlock>,
     pub(crate) styles: Vec<StyleDefinition>,
     pub(crate) components: Vec<ComponentItem>,
-    pub(crate) edges: Vec<EdgeItem>,
-    pub(crate) legend: Option<LegendSection>,
+    pub(crate) workflows: Vec<WorkflowSection>,
 }
 
 /// Define a named style from the frontmatter as the entries of its properties list.
@@ -35,25 +30,80 @@ pub(crate) struct ComponentItem {
     pub(crate) id: Spanned<String>,
     pub(crate) display_name: Option<String>,
     pub(crate) entries: Vec<Entry>,
-    pub(crate) description: Option<DescriptionBlock>,
+    pub(crate) description: Option<Description>,
     pub(crate) children: Vec<ComponentItem>,
     pub(crate) span: Span,
 }
 
-/// Declare one edge per hop of the item line `REF -> REF ... [: LABEL] [(PROPERTIES)]`, with the description under it.
+/// Declare a workflow by its heading `### ID: TITLE [(subtitle=TEXT)]`, with its prose, its overrides and its steps.
 #[derive(Debug)]
-pub(crate) struct EdgeItem {
-    pub(crate) references: Vec<Reference>,
-    pub(crate) label: Option<Spanned<String>>,
-    pub(crate) properties: Option<Spanned<Vec<Entry>>>,
-    pub(crate) description: Option<DescriptionBlock>,
+pub(crate) struct WorkflowSection {
+    pub(crate) id: Spanned<String>,
+    pub(crate) title: String,
+    pub(crate) subtitle: Option<String>,
+    pub(crate) prose: Option<Description>,
+    pub(crate) overrides: Vec<OverrideItem>,
+    pub(crate) steps: Vec<StepSection>,
 }
 
-/// Hold a description block's content as stored, with where each of its lines starts in the source, `None` where the line is not a suffix of its source line.
+/// Declare a step by its heading `#### ID: TITLE`, with its prose and its items.
 #[derive(Debug)]
-pub(crate) struct DescriptionBlock {
+pub(crate) struct StepSection {
+    pub(crate) id: Spanned<String>,
+    pub(crate) title: String,
+    pub(crate) prose: Option<Description>,
+    pub(crate) items: Vec<StepItem>,
+}
+
+/// Override how a workflow draws a component by the item line `REF (PROPERTIES)`.
+#[derive(Debug)]
+pub(crate) struct OverrideItem {
+    pub(crate) reference: Reference,
+    pub(crate) entries: Vec<Entry>,
+    pub(crate) span: Span,
+}
+
+/// List one item of a step: a component, an edge declared again by `[n]`, a new edge, or a chain of new edges.
+#[derive(Debug)]
+pub(crate) enum StepItem {
+    Element(Reference),
+    ListedEdge(ListedEdge),
+    Edge(EdgeItem),
+    Chain(ChainItem),
+}
+
+/// List again the edge `FROM -> TO[n]` some step of the workflow declares.
+#[derive(Debug)]
+pub(crate) struct ListedEdge {
+    pub(crate) from: Reference,
+    pub(crate) to: Reference,
+    pub(crate) ordinal: u32,
+    pub(crate) span: Span,
+}
+
+/// Declare one edge by the item line `REF -> REF[: LABEL] [(PROPERTIES)]`, with the description under it.
+#[derive(Debug)]
+pub(crate) struct EdgeItem {
+    pub(crate) from: Reference,
+    pub(crate) to: Reference,
+    pub(crate) label: Option<Spanned<String>>,
+    pub(crate) entries: Vec<Entry>,
+    pub(crate) description: Option<Description>,
+}
+
+/// Chain two or more new plain edges by the item line `REF -> REF -> REF (-> REF)*`, one per hop.
+#[derive(Debug)]
+pub(crate) struct ChainItem {
+    pub(crate) start: Reference,
+    pub(crate) first_hop: Reference,
+    pub(crate) second_hop: Reference,
+    pub(crate) later_hops: Vec<Reference>,
+}
+
+/// Hold a description as stored, a description block's content or a heading's prose, with the span it was written at.
+#[derive(Debug)]
+pub(crate) struct Description {
     pub(crate) text: String,
-    pub(crate) line_starts: Vec<Option<usize>>,
     pub(crate) span: Span,
 }
 
@@ -64,32 +114,13 @@ pub(crate) struct Reference {
     pub(crate) span: Span,
 }
 
-/// Hold the `## Legend` section: its title and its items in order.
-#[derive(Debug)]
-pub(crate) struct LegendSection {
-    pub(crate) title: Option<String>,
-    pub(crate) items: Vec<LegendItem>,
-}
-
-/// Write one legend item: a free line, or a key row describing what the diagram draws.
-#[derive(Debug)]
-pub(crate) enum LegendItem {
-    Line(String),
-    KeyRow(LegendKeyRow),
-}
-
-/// Describe what a key row's properties `(line=…[, target=REF])` draw.
-#[derive(Debug)]
-pub(crate) struct LegendKeyRow {
-    pub(crate) entries: Vec<Entry>,
-    pub(crate) description: String,
-    pub(crate) span: Span,
-}
-
-/// Write one entry of a properties list: a style name, or `key=value`.
+/// Write one entry of a properties list: a style name, which may be a label's unquoted end when the list follows a `:` and holds no `=`, or `key=value`.
 #[derive(Debug, Clone)]
 pub(crate) enum Entry {
-    Style(Spanned<String>),
+    Style {
+        name: Spanned<String>,
+        may_end_label: bool,
+    },
     Assignment(Assignment),
 }
 
@@ -111,12 +142,18 @@ impl Entry {
     /// Label the entry, and each spanned part of it, at `span`.
     pub(crate) fn relabelled(self, span: Span) -> Self {
         match self {
-            Self::Style(style_name) => {
+            Self::Style {
+                name,
+                may_end_label,
+            } => {
                 let relabelled_name = Spanned {
-                    inner: style_name.inner,
+                    inner: name.inner,
                     span,
                 };
-                Self::Style(relabelled_name)
+                Self::Style {
+                    name: relabelled_name,
+                    may_end_label,
+                }
             }
             Self::Assignment(Assignment { key, value }) => {
                 let relabelled_key = Spanned {
@@ -137,25 +174,8 @@ impl Entry {
     }
 }
 
-impl DescriptionBlock {
-    /// Return where `range`, a range of the text within one of its lines, is written in the source, else the whole block's span.
-    pub(crate) fn source_span(&self, range: Range<usize>) -> Span {
-        let text_before = &self.text[..range.start];
-        let line_index = text_before.matches('\n').count();
-        let line_text_start = text_before.rfind('\n').map_or(0, |newline| newline + 1);
-        let line_source_start = self.line_starts.get(line_index).copied().flatten();
-        let Some(line_source_start) = line_source_start else {
-            return self.span;
-        };
-        let column = range.start - line_text_start;
-        let start = line_source_start + column;
-        let end = start + range.len();
-        Span::from(start..end)
-    }
-}
-
 impl Reference {
-    /// Read a reference from its dotted spelling, as a `link` or `target` value writes it.
+    /// Read a reference from its dotted spelling, as a `link` value writes it.
     pub(crate) fn from_dotted(dotted: &str, span: Span) -> Self {
         let segments = dotted.split('.').map(str::to_owned).collect();
         Self { segments, span }

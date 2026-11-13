@@ -8,9 +8,8 @@ use svugy_parse::json::{JsonLanguage, JsonPrinter};
 use svugy_parse::markdown::{MarkdownParse, MarkdownPrinter};
 
 /// List every diagram that parses, by name: each fixture except errors.md, then the golden example.
-const DIAGRAMS: [(&str, &str); 6] = [
+const DIAGRAMS: [(&str, &str); 5] = [
     ("edges.md", include_str!("fixtures/markdown/edges.md")),
-    ("legend.md", include_str!("fixtures/markdown/legend.md")),
     ("nesting.md", include_str!("fixtures/markdown/nesting.md")),
     (
         "properties.md",
@@ -23,6 +22,8 @@ const DIAGRAMS: [(&str, &str); 6] = [
     ),
 ];
 const SVUGY_D2: &str = include_str!("../../../examples/svugy/svugy.d2");
+/// Name the span fields a reprint moves, the provenance of an element, workflow, override, step or edge.
+const SPAN_FIELDS: [&str; 3] = ["span", "link_span", "code_span"];
 
 #[test]
 fn a_printed_model_parses_back_into_itself() {
@@ -67,22 +68,39 @@ fn a_model_part_that_would_not_parse_back_as_itself_is_reported_instead_of_print
             "c": { "label": "c", "link": "\"b\"" },
             "p": { "label": "p" },
             "p.inter": { "label": "p.inter" }
-        }
-    }"#;
-    let edges = r#"{
-        "elements": { "a": { "label": "a" }, "p": { "label": "p" }, "p.c": { "label": "c" } },
-        "edges": [
-            { "from": "a", "to": "a" },
-            { "from": "a", "to": "p", "ordinal": 3 },
-            { "from": "p", "to": "p.c" }
+        },
+        "workflows": [
+            {
+                "id": "main",
+                "title": "Links",
+                "steps": [
+                    {
+                        "id": "all",
+                        "title": "Every element",
+                        "items": [{ "element": "a" }, { "element": "b" }, { "element": "c" }, { "element": "p.inter" }]
+                    }
+                ]
+            }
         ]
     }"#;
-    let legend = r##"{
-        "legend": {
-            "title": "keys #",
-            "entries": ["1. first", "# h", "> q", "---", "<!-- c -->", "", " (line=dashed): x", "(line=dashed): x", "(note) fine"]
-        },
-        "elements": { "a": { "label": "a" } }
+    let workflow = r##"{
+        "elements": { "a": { "label": "a" }, "b": { "label": "b" } },
+        "workflows": [
+            {
+                "id": "main",
+                "title": "ends with #",
+                "description": "Two cases:\n- one\n- two",
+                "edges": [{ "from": "a", "to": "b", "ordinal": 3 }],
+                "steps": [
+                    {
+                        "id": "join",
+                        "title": "A joins B",
+                        "description": "Over [the only edge](#a->b).",
+                        "items": [{ "edge": { "from": "a", "to": "b", "ordinal": 3 } }]
+                    }
+                ]
+            }
+        ]
     }"##;
     let cases = [
         (
@@ -93,24 +111,10 @@ fn a_model_part_that_would_not_parse_back_as_itself_is_reported_instead_of_print
 - element `c`: link `\"b\"` spells element `b` another way, and the language keeps only the path; write it as `b`",
         ),
         (
-            edges,
-            "Markdown cannot say 3 part(s) of this model:
-- edge `(a -> a)[0]`: it joins an element to itself, which the language rejects
-- edge `(a -> p)[3]`: its ordinal is 3, but the language numbers repeated edges in the order written, so it would read back as 0
-- edge `(p -> p.c)[0]`: it joins an element to its own ancestor or descendant, which the language rejects",
-        ),
-        (
-            legend,
-            "Markdown cannot say 9 part(s) of this model:
-- the legend: its title ends with `#`, which Markdown reads as the heading's closing `#`s
-- the legend: entry `1. first` opens like a Markdown heading, quote, list, rule, code fence, HTML block or link definition, so it would not read back as text
-- the legend: entry `# h` opens like a Markdown heading, quote, list, rule, code fence, HTML block or link definition, so it would not read back as text
-- the legend: entry `> q` opens like a Markdown heading, quote, list, rule, code fence, HTML block or link definition, so it would not read back as text
-- the legend: entry `---` opens like a Markdown heading, quote, list, rule, code fence, HTML block or link definition, so it would not read back as text
-- the legend: its entry \"<!-- c -->\" holds `<!--`, which the language reads as a comment and drops
-- the legend: it has an empty entry, which no list item can hold
-- the legend: its entry \" (line=dashed): x\" starts or ends with whitespace, which the language trims
-- the legend: entry `(line=dashed): x` starts with `(` followed by `key=`, so it would read as a key row",
+            workflow,
+            "Markdown cannot say 2 part(s) of this model:
+- workflow `main`: its prose does not read back verbatim under a heading: outside a code fence it holds no `- ` bullet list, `#` heading or comment, and no blank line opens or closes it
+- edge `(a -> b)[3]` of workflow `main`: its ordinal is 3, but the language numbers repeated edges in the order their steps declare them, so it would read back as 0",
         ),
     ];
 
@@ -154,29 +158,29 @@ fn print_json_model(json: &str) -> Result<String, String> {
     printed.map_err(|unprintable| unprintable.to_string())
 }
 
-/// Re-print model JSON without the `span`, `link_span` and `code_span` of each element and edge, the provenance a reprint moves.
+/// Re-print model JSON without any span field, the provenance a reprint moves.
 fn without_spans(model_json: &str) -> String {
     let mut model: Value = serde_json::from_str(model_json).expect("a model saves as JSON");
-    let elements = model["elements"]
-        .as_object_mut()
-        .expect("a model saves its elements as an object");
-    for element in elements.values_mut() {
-        remove_span(element);
-    }
-    let edges = model["edges"]
-        .as_array_mut()
-        .expect("a model saves its edges as an array");
-    for edge in edges {
-        remove_span(edge);
-    }
+    remove_spans(&mut model);
     serde_json::to_string_pretty(&model).expect("a JSON value prints")
 }
 
-fn remove_span(record: &mut Value) {
-    let Some(fields) = record.as_object_mut() else {
-        return;
-    };
-    fields.remove("span");
-    fields.remove("link_span");
-    fields.remove("code_span");
+/// Remove every span field from `value` and from each value nested in it.
+fn remove_spans(value: &mut Value) {
+    match value {
+        Value::Object(fields) => {
+            for span_field in SPAN_FIELDS {
+                fields.remove(span_field);
+            }
+            for field in fields.values_mut() {
+                remove_spans(field);
+            }
+        }
+        Value::Array(items) => {
+            for item in items {
+                remove_spans(item);
+            }
+        }
+        _scalar => {}
+    }
 }

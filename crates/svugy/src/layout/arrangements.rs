@@ -2,7 +2,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use svugy_model::model::{EdgeId, Element, Model, PlacementHint};
+use svugy_model::graph::WorkflowGraph;
+use svugy_model::model::{EdgeId, PlacementHint};
 use svugy_model::path::ElementPath;
 
 use super::LevelPlans;
@@ -96,11 +97,11 @@ impl Arrangements {
     }
 
     /// Count the pairs of siblings packed in the opposite order to their source, over every container given a packing order.
-    pub(crate) fn source_order_distance(&self, model: &Model) -> usize {
+    pub(crate) fn source_order_distance(&self, graph: &WorkflowGraph) -> usize {
         self.packing_orders
             .iter()
             .map(|(level, packing_order)| {
-                let source_order = SiblingGraph::source_order_of_children(model, level);
+                let source_order = SiblingGraph::source_order_of_children(graph, level);
                 let source_rank_by_child: BTreeMap<&ElementPath, usize> = source_order
                     .iter()
                     .enumerate()
@@ -129,16 +130,16 @@ impl Arrangements {
     }
 
     /// Return the levels whose children may move within their rank bands: ranked levels placed as region roots, so changing their extent moves nothing already placed.
-    pub(crate) fn rank_movable_levels(model: &Model) -> Vec<ElementPath> {
-        let compound_regions = CompoundRegions::of(model);
+    pub(crate) fn rank_movable_levels(graph: &WorkflowGraph) -> Vec<ElementPath> {
+        let compound_regions = CompoundRegions::of(graph);
         let root = ElementPath::root();
-        let containers = model
+        let containers = graph
             .elements()
             .keys()
-            .filter(|path| model.is_container(path));
+            .filter(|path| graph.is_container(path));
         let levels = std::iter::once(&root).chain(containers);
         levels
-            .filter(|level| compound_regions.is_region_root(model, level))
+            .filter(|level| compound_regions.is_region_root(graph, level))
             .cloned()
             .collect()
     }
@@ -150,15 +151,19 @@ impl Arrangements {
     }
 
     /// Return the containers free to arrange: left by edges, packing two or more children with no author's hint and no edge among them.
-    pub(crate) fn free_containers(model: &Model) -> BTreeSet<ElementPath> {
-        let leaving_edges = LeavingEdges::of(model);
-        Self::free_containers_of(model, &leaving_edges)
+    pub(crate) fn free_containers(graph: &WorkflowGraph) -> BTreeSet<ElementPath> {
+        let leaving_edges = LeavingEdges::of(graph);
+        Self::free_containers_of(graph, &leaving_edges)
     }
 
     /// Return the order `level`'s children pack in: the one picked for it, else source order.
-    pub(crate) fn packing_order_of(&self, model: &Model, level: &ElementPath) -> Vec<ElementPath> {
+    pub(crate) fn packing_order_of(
+        &self,
+        graph: &WorkflowGraph,
+        level: &ElementPath,
+    ) -> Vec<ElementPath> {
         let Some(packing_order) = self.packing_orders.get(level) else {
-            return SiblingGraph::source_order_of_children(model, level);
+            return SiblingGraph::source_order_of_children(graph, level);
         };
         packing_order.clone()
     }
@@ -174,10 +179,10 @@ impl Arrangements {
         slot_side.unwrap_or_default()
     }
 
-    /// Face toward their edges, from a first layout `plans` of `model`, the containers free to arrange whose leaving edges run mostly along plan x, stacking their children in a column.
-    pub(super) fn facing_from(model: &Model, plans: &LevelPlans) -> Self {
-        let leaving_edges = LeavingEdges::of(model);
-        let columns = Self::free_containers_of(model, &leaving_edges)
+    /// Face toward their edges, from a first layout `plans` of `graph`, the containers free to arrange whose leaving edges run mostly along plan x, stacking their children in a column.
+    pub(super) fn facing_from(graph: &WorkflowGraph, plans: &LevelPlans) -> Self {
+        let leaving_edges = LeavingEdges::of(graph);
+        let columns = Self::free_containers_of(graph, &leaving_edges)
             .into_iter()
             .filter(|container| Self::is_left_mostly_along_x(container, &leaving_edges, plans))
             .collect();
@@ -195,13 +200,17 @@ impl Arrangements {
     }
 
     /// Order the children of every container free to arrange by where their neighbours sit in `plans`, a layout with these columns, keeping the orders that differ from source order.
-    pub(super) fn with_packing_orders_from(self, model: &Model, plans: &LevelPlans) -> Self {
-        let leaving_edges = LeavingEdges::of(model);
-        let free_containers = Self::free_containers_of(model, &leaving_edges);
+    pub(super) fn with_packing_orders_from(
+        self,
+        graph: &WorkflowGraph,
+        plans: &LevelPlans,
+    ) -> Self {
+        let leaving_edges = LeavingEdges::of(graph);
+        let free_containers = Self::free_containers_of(graph, &leaving_edges);
         let packing_orders = free_containers
             .iter()
             .filter_map(|container| {
-                let source_order = SiblingGraph::source_order_of_children(model, container);
+                let source_order = SiblingGraph::source_order_of_children(graph, container);
                 let packing_order = self.packing_order_by_neighbours(
                     container,
                     source_order.clone(),
@@ -224,9 +233,12 @@ impl Arrangements {
     }
 
     /// Return the hint `level` packs its children by: its author's, else a column when faced.
-    pub(super) fn hint_of(&self, model: &Model, level: &ElementPath) -> Option<PlacementHint> {
-        let level_element = model.element(level);
-        let authored_hint = level_element.and_then(Element::child_placement);
+    pub(super) fn hint_of(
+        &self,
+        graph: &WorkflowGraph,
+        level: &ElementPath,
+    ) -> Option<PlacementHint> {
+        let authored_hint = graph.child_placement(level);
         let is_faced_column = self.columns.contains(level);
         let faced_hint = is_faced_column.then_some(PlacementHint::Column);
         authored_hint.or(faced_hint)
@@ -255,16 +267,18 @@ impl Arrangements {
     }
 
     /// Return the containers left by edges that pack two or more children with no author's hint and no edge among them, so their arrangement is svugy's to pick.
-    fn free_containers_of(model: &Model, leaving_edges: &LeavingEdges) -> BTreeSet<ElementPath> {
-        let homed_edges = HomedEdges::of(model);
+    fn free_containers_of(
+        graph: &WorkflowGraph,
+        leaving_edges: &LeavingEdges,
+    ) -> BTreeSet<ElementPath> {
+        let homed_edges = HomedEdges::of(graph);
         leaving_edges
             .containers_left_by_edges()
             .filter(|container| {
-                let container_element = model.element(container);
-                let authored_hint = container_element.and_then(Element::child_placement);
+                let authored_hint = graph.child_placement(container);
                 let is_unhinted = authored_hint.is_none();
                 let has_no_edge_among_children = homed_edges.homed_in(container).is_empty();
-                let child_count = model.children(container).count();
+                let child_count = graph.children(container).count();
                 let has_children_to_arrange = child_count >= 2;
                 is_unhinted && has_no_edge_among_children && has_children_to_arrange
             })

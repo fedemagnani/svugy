@@ -38,7 +38,7 @@
     diagnostics.hidden = false;
   });
 
-  /** Links the shown diagram's focused level and shown layer as `#svugy=PATH&layer=K`; empty at the root of layer 0 or before the first load. */
+  /** Links the shown diagram's workflow, focused level and shown layer as `#svugy=PATH&layer=K&workflow=ID`; empty at the start state or before the first load. */
   function focusedLevelFragment() {
     const svgDocument = diagram.contentDocument;
     const focusedLevel = svgDocument === null ? null : svgDocument.querySelector('[data-svugy-entered]');
@@ -48,12 +48,21 @@
     const focusedPath = focusedLevel.getAttribute('data-svugy-level');
     const shownLayer = focusedLevel.closest('[data-svugy-layer]');
     const shownLayerIndex = shownLayer === null ? '0' : shownLayer.getAttribute('data-svugy-layer');
-    const isStartState = focusedPath === '' && shownLayerIndex === '0';
+    const shownWorkflow = focusedLevel.closest('[data-svugy-workflow]');
+    const firstWorkflow = svgDocument.querySelector('[data-svugy-workflow]');
+    const isFirstWorkflowShown = shownWorkflow === firstWorkflow;
+    const isStartState = focusedPath === '' && shownLayerIndex === '0' && isFirstWorkflowShown;
     if (isStartState) {
       return '';
     }
     const encodedPath = encodeURIComponent(focusedPath);
-    return `#svugy=${encodedPath}&layer=${shownLayerIndex}`;
+    const levelFragment = `#svugy=${encodedPath}&layer=${shownLayerIndex}`;
+    if (isFirstWorkflowShown) {
+      return levelFragment;
+    }
+    const shownWorkflowId = shownWorkflow.getAttribute('data-svugy-workflow');
+    const encodedWorkflowId = encodeURIComponent(shownWorkflowId);
+    return `${levelFragment}&workflow=${encodedWorkflowId}`;
   }
 </script>
 </body>

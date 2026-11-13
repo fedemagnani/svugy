@@ -1,10 +1,10 @@
-//! Prove d2 lowering merges repeated keys, declares endpoints and warns on every construct the model cannot hold.
+//! Prove d2 lowering merges repeated keys, declares endpoints, lists every edge in one workflow and warns on every construct the model cannot hold.
 
 use miette::SourceSpan;
-use svugy_model::legend::DashKey;
 use svugy_model::model::{EdgeId, Model, Shape};
 use svugy_model::path::ElementPath;
 use svugy_model::problem::Problem;
+use svugy_model::workflow::{Workflow, WorkflowId};
 use svugy_parse::d2::{Construct, D2Import, D2Parse, EdgeOperator};
 use svugy_parse::json::JsonPrinter;
 
@@ -94,6 +94,39 @@ fn fixtures_inside_the_mapped_subset_lower_without_diagnostics() {
         .collect();
 
     assert_eq!(diagnostic_counts, [(0, true); 3]);
+}
+
+#[test]
+fn lineage_edges_are_dropped_with_a_warning_and_their_untouched_leaf_is_still_listed() {
+    let source = "a -> a.b\nb -> b\na.b -> c\n";
+
+    let import = import(source);
+
+    let warnings: Vec<(Construct, &str)> = import
+        .warnings
+        .iter()
+        .map(|warning| {
+            let text = text_at(source, warning.span);
+            (warning.construct.clone(), text)
+        })
+        .collect();
+    let model = import
+        .admission
+        .model
+        .expect("dropping lineage edges leaves a sound model");
+    let main = main_workflow(&model);
+    let edge_ids: Vec<String> = main.edges().keys().map(ToString::to_string).collect();
+    let every_edge_step = &main.steps()[0];
+    let listed_items: Vec<String> = every_edge_step.items().map(ToString::to_string).collect();
+    assert_eq!(
+        warnings,
+        [
+            (Construct::LineageEdge, "a -> a.b"),
+            (Construct::LineageEdge, "b -> b"),
+        ]
+    );
+    assert_eq!(edge_ids, ["(a.b -> c)[0]"]);
+    assert_eq!(listed_items, ["edge `(a.b -> c)[0]`", "element `b`"]);
 }
 
 #[test]
@@ -214,7 +247,7 @@ fn model_warnings_reach_the_import_in_source_order_with_the_importer_warnings() 
     assert_eq!(
         diagnostics,
         [
-            ("svugy::ancestor_descendant_edge".to_owned(), "a.b -> a"),
+            ("svugy::d2::unsupported".to_owned(), "a.b -> a"),
             ("svugy::d2::unsupported".to_owned(), "c.icon: x.svg"),
             ("svugy::unresolved_link".to_owned(), "a.missing"),
         ]
@@ -228,10 +261,11 @@ fn parent_references_climb_one_scope_each() {
     let model = import_model(source);
 
     let element_paths: Vec<String> = model.elements().keys().map(ToString::to_string).collect();
-    let edge_ids: Vec<String> = model.edges().keys().map(ToString::to_string).collect();
+    let main = main_workflow(&model);
+    let edge_ids: Vec<String> = main.edges().keys().map(ToString::to_string).collect();
     let f_fill = model
         .element(&ElementPath::from_segments(["a", "f"]))
-        .map(|element| element.style()["fill"].as_str());
+        .map(|element| element.properties().style()["fill"].as_str());
     assert_eq!(element_paths, ["a", "a.c", "a.d", "a.f", "b", "e"]);
     assert_eq!(edge_ids, ["(b -> a.c)[0]"]);
     assert_eq!(f_fill, Some("red"));
@@ -279,23 +313,29 @@ fn misplaced_or_overreaching_parent_references_are_errors() {
 }
 
 #[test]
-fn the_svugy_variable_carries_caption_primitive_and_position() {
+fn the_svugy_variable_carries_caption_and_primitive_onto_the_element_and_position_onto_its_main_override()
+ {
     let source = "bus: { vars: { svugy: { caption: \"a · b\"; shape: slab; position: { x: 150; y: 91.5 } } } }\nflat.vars: { svugy.caption: dotted; svugy.position.x: 0; svugy.position.y: 2 }\n";
 
     let model = import_model(source);
 
-    let bus = model
-        .element(&ElementPath::from_segments(["bus"]))
-        .expect("bus is declared");
-    let flat = model
-        .element(&ElementPath::from_segments(["flat"]))
-        .expect("flat is declared");
-    let bus_position = bus.position().map(|position| (position.x, position.y));
-    let flat_position = flat.position().map(|position| (position.x, position.y));
-    assert_eq!(bus.caption(), Some("a · b"));
-    assert_eq!(bus.shape(), Some(Shape::Slab));
+    let bus_path = ElementPath::from_segments(["bus"]);
+    let flat_path = ElementPath::from_segments(["flat"]);
+    let bus = model.element(&bus_path).expect("bus is declared");
+    let flat = model.element(&flat_path).expect("flat is declared");
+    let main = main_workflow(&model);
+    let bus_override = main.override_of(&bus_path);
+    let flat_override = main.override_of(&flat_path);
+    let bus_position = bus_override
+        .and_then(|bus_override| bus_override.position())
+        .map(|position| (position.x, position.y));
+    let flat_position = flat_override
+        .and_then(|flat_override| flat_override.position())
+        .map(|position| (position.x, position.y));
+    assert_eq!(bus.properties().caption(), Some("a · b"));
+    assert_eq!(bus.properties().shape(), Some(Shape::Slab));
     assert_eq!(bus_position, Some((150.0, 91.5)));
-    assert_eq!(flat.caption(), Some("dotted"));
+    assert_eq!(flat.properties().caption(), Some("dotted"));
     assert_eq!(flat_position, Some((0.0, 2.0)));
 }
 
@@ -316,23 +356,26 @@ fn the_svugy_variable_carries_a_height_that_validation_then_bounds() {
             _other_problem => None,
         })
         .map(|impossible_height| {
-            let element = impossible_height.element.to_string();
+            let site = impossible_height.site.to_string();
             let span = impossible_height
                 .span
                 .expect("lowered elements carry spans");
             let text = text_at(source, span);
-            (element, impossible_height.height, text)
+            (site, impossible_height.height, text)
         })
         .collect();
     assert!(is_free_of_syntax_errors);
     assert!(admission.model.is_none());
-    assert_eq!(impossible_heights, [("flat".to_owned(), 0.0, "flat")]);
+    assert_eq!(
+        impossible_heights,
+        [("element `flat`".to_owned(), 0.0, "flat")]
+    );
     let sound_source = source.replace("height: 0", "height: 7");
     let model = import_model(&sound_source);
     let heights: Vec<(String, Option<f64>)> = model
         .elements()
         .iter()
-        .map(|(path, element)| (path.to_string(), element.height()))
+        .map(|(path, element)| (path.to_string(), element.properties().height()))
         .collect();
     assert_eq!(
         heights,
@@ -372,12 +415,12 @@ fn a_malformed_height_is_a_spanned_error_that_drops_only_the_height() {
             "tall"
         )]
     );
-    assert_eq!(app.caption(), Some("kept"));
-    assert_eq!(app.height(), None);
+    assert_eq!(app.properties().caption(), Some("kept"));
+    assert_eq!(app.properties().height(), None);
 }
 
 #[test]
-fn the_root_label_titles_the_diagram_and_the_root_carrier_subtitles_it() {
+fn the_root_label_titles_the_main_workflow_and_the_root_carrier_subtitles_it() {
     let source = "label: \"svugy · how it is built\"\nvars: { svugy: { subtitle: \"text in, SVG out\" } }\na: { _.label: \"last write wins\" }\n";
 
     let import = import(source);
@@ -386,12 +429,39 @@ fn the_root_label_titles_the_diagram_and_the_root_carrier_subtitles_it() {
     let model = import
         .admission
         .model
-        .expect("a titled diagram is a sound model");
+        .expect("a titled workflow is a sound model");
     let element_paths: Vec<String> = model.elements().keys().map(ToString::to_string).collect();
+    let main = main_workflow(&model);
     assert_eq!(diagnostic_count, 0);
-    assert_eq!(model.title(), Some("last write wins"));
-    assert_eq!(model.subtitle(), Some("text in, SVG out"));
+    assert_eq!(main.title(), "last write wins");
+    assert_eq!(main.subtitle(), Some("text in, SVG out"));
     assert_eq!(element_paths, ["a"]);
+}
+
+#[test]
+fn a_diagram_declaring_no_shape_is_one_error_at_the_file_start_not_an_empty_main_step() {
+    let label_only_source = "label: Hi\n";
+
+    let import = import(label_only_source);
+
+    let diagnostic_messages: Vec<String> = import
+        .diagnostics()
+        .iter()
+        .map(|diagnostic| diagnostic.to_string())
+        .collect();
+    let error_offsets: Vec<usize> = import
+        .errors
+        .iter()
+        .map(|error| error.span.offset())
+        .collect();
+    let has_admitted_model = import.admitted_model().is_some();
+    assert_eq!(
+        diagnostic_messages,
+        ["the diagram declares no shape, so there is nothing to draw"],
+        "a shapeless diagram is the author's d2 error, never a step they did not write"
+    );
+    assert_eq!(error_offsets, [0]);
+    assert!(!has_admitted_model);
 }
 
 #[test]
@@ -420,15 +490,16 @@ fn the_root_carrier_rejects_element_attributes_and_elements_reject_a_subtitle() 
         .admission
         .model
         .expect("rejected carrier attributes leave a sound model");
+    let main = main_workflow(&model);
     assert_eq!(
         errors,
         [
             (
-                "`svugy.title` is not a svugy attribute of the root: expected `svugy.subtitle` or `svugy.legend` with `title`, `entries`, `dashes` or `badges`, and the title is the root's own `label`",
+                "`svugy.title` is not a svugy attribute of the root: expected `svugy.subtitle`, and the title is the root's own `label`",
                 "title: nope"
             ),
             (
-                "`svugy.height` is not a svugy attribute of the root: expected `svugy.subtitle` or `svugy.legend` with `title`, `entries`, `dashes` or `badges`, and the title is the root's own `label`",
+                "`svugy.height` is not a svugy attribute of the root: expected `svugy.subtitle`, and the title is the root's own `label`",
                 "height: 3"
             ),
             (
@@ -441,8 +512,57 @@ fn the_root_carrier_rejects_element_attributes_and_elements_reject_a_subtitle() 
         warnings,
         [(Construct::FieldOnRoot("shape"), "shape: cylinder")]
     );
-    assert_eq!(model.title(), None);
-    assert_eq!(model.subtitle(), None);
+    assert_eq!(main.title(), "main");
+    assert_eq!(main.subtitle(), None);
+}
+
+#[test]
+fn a_svugy_legend_and_a_d2_legend_are_one_error_each_naming_where_their_meaning_goes() {
+    let source = r#"vars: {
+  svugy: {
+    subtitle: kept
+    legend: {
+      title: Bet lifecycle
+      dashes: { 5: HTTP }
+    }
+  }
+  d2-legend: {
+    a: { label: Microservice }
+  }
+}
+quoter -> desk
+"#;
+
+    let import = import(source);
+
+    let errors: Vec<(&str, &str)> = import
+        .errors
+        .iter()
+        .map(|error| {
+            let text = text_at(source, error.span);
+            let first_line = text.lines().next().unwrap_or_default();
+            (error.message.as_str(), first_line)
+        })
+        .collect();
+    let model = import
+        .admission
+        .model
+        .expect("a rejected legend leaves a sound model");
+    let main = main_workflow(&model);
+    assert_eq!(
+        errors,
+        [
+            (
+                "`svugy.legend` sets a legend, but svugy v4 has no legend: say what each entry meant in step prose or edge descriptions",
+                "legend: {"
+            ),
+            (
+                "`d2-legend` sets a legend, but svugy v4 has no legend: say what each entry meant in step prose or edge descriptions",
+                "d2-legend: {"
+            ),
+        ]
+    );
+    assert_eq!(main.subtitle(), Some("kept"));
 }
 
 #[test]
@@ -454,9 +574,35 @@ fn the_carrier_primitive_outranks_the_d2_shape_whatever_their_order() {
     let shapes: Vec<Option<Shape>> = model
         .elements()
         .values()
-        .map(|element| element.shape())
+        .map(|element| element.properties().shape())
         .collect();
     assert_eq!(shapes, [Some(Shape::Box), Some(Shape::Disc)]);
+}
+
+#[test]
+fn a_badge_mark_badges_each_edge_from_a_leaf_into_the_marked_leaf_the_last_mark_winning() {
+    let source = r#"desk: {
+  sqlite: SQLite { vars: { svugy: { badge: true } } }
+  cache: { vars: { svugy: { badge: TRUE } } }
+  quoter
+  quoter -> sqlite
+  quoter -> cache
+}
+desk.cache.vars: { svugy.badge: false }
+"#;
+
+    let model = import_model(source);
+
+    let main = main_workflow(&model);
+    let quoter_path = ElementPath::from_segments(["desk", "quoter"]);
+    let sqlite_path = ElementPath::from_segments(["desk", "sqlite"]);
+    let cache_path = ElementPath::from_segments(["desk", "cache"]);
+    let writes = EdgeId::new(quoter_path.clone(), sqlite_path, 0);
+    let caches = EdgeId::new(quoter_path, cache_path, 0);
+    let is_writes_badged = main.edge(&writes).is_some_and(|edge| edge.is_badge());
+    let is_caches_badged = main.edge(&caches).is_some_and(|edge| edge.is_badge());
+    assert!(is_writes_badged);
+    assert!(!is_caches_badged);
 }
 
 #[test]
@@ -469,6 +615,8 @@ fn malformed_carrier_values_are_errors_and_the_rest_of_the_carrier_lands() {
       caption: kept
       shape: pyramid
       tilt: 3
+      badge: yes
+      height: [1; 2]
       position: { x: 1.5; y: north }
       x -> y
     }
@@ -501,12 +649,11 @@ e -> f: { vars: { svugy: { traveler: envelope } } }
         .admission
         .model
         .expect("malformed carrier values leave a sound model");
-    let a = model
-        .element(&ElementPath::from_segments(["a"]))
-        .expect("a is declared");
-    let b = model
-        .element(&ElementPath::from_segments(["b"]))
-        .expect("b is declared");
+    let a_path = ElementPath::from_segments(["a"]);
+    let b_path = ElementPath::from_segments(["b"]);
+    let a = model.element(&a_path).expect("a is declared");
+    let b = model.element(&b_path).expect("b is declared");
+    let main = main_workflow(&model);
     assert_eq!(
         errors,
         [
@@ -518,6 +665,11 @@ e -> f: { vars: { svugy: { traveler: envelope } } }
                 "`svugy.tilt` is not a svugy attribute: expected `svugy.caption`, `svugy.shape`, `svugy.height`, `svugy.badge` or `svugy.position` with `x` and `y`",
                 "tilt: 3"
             ),
+            (
+                "`yes` is not a boolean: `svugy.badge` is `true` or `false`",
+                "yes"
+            ),
+            ("a svugy attribute takes one value, not a list", "[1; 2]"),
             (
                 "`north` is not a number: a `svugy.position` coordinate is a plain decimal like `91.5`",
                 "north"
@@ -531,7 +683,7 @@ e -> f: { vars: { svugy: { traveler: envelope } } }
                 "b.vars: { svugy: { shape: slab; position.x: 4 } }"
             ),
             (
-                "`svugy.caption` is not a svugy attribute of the root: expected `svugy.subtitle` or `svugy.legend` with `title`, `entries`, `dashes` or `badges`, and the title is the root's own `label`",
+                "`svugy.caption` is not a svugy attribute of the root: expected `svugy.subtitle`, and the title is the root's own `label`",
                 "caption: nowhere"
             ),
             (
@@ -541,150 +693,14 @@ e -> f: { vars: { svugy: { traveler: envelope } } }
         ]
     );
     assert_eq!(warnings, [(Construct::Variables, "color: red")]);
-    assert_eq!(model.title(), None);
-    assert_eq!(model.subtitle(), None);
-    assert_eq!(a.caption(), Some("kept"));
-    assert_eq!(a.shape(), Some(Shape::Disc));
-    assert_eq!(a.position(), None);
-    assert_eq!(b.shape(), Some(Shape::Slab));
-    assert_eq!(b.position(), None);
-}
-
-#[test]
-fn ancestor_and_descendant_edges_stay_in_the_model_but_not_in_layout() {
-    let model = import_model(ENDPOINTS);
-
-    let cloud = ElementPath::from_segments(["cloud"]);
-    let api = ElementPath::from_segments(["cloud", "vpc", "api"]);
-    let edge_count = model.edges().len();
-    let layoutable_edge_count = model.layoutable_edges().count();
-    let has_ancestor_edge = model
-        .edges()
-        .keys()
-        .any(|id| id.from() == &cloud && id.to() == &api);
-    assert!(has_ancestor_edge);
-    assert_eq!(layoutable_edge_count, edge_count - 1);
-}
-
-#[test]
-fn the_root_legend_lowers_its_lines_dashes_and_badges_resolving_a_later_shape_case_insensitively() {
-    let source = r#"vars: {
-  svugy: {
-    legend: {
-      title: Bet lifecycle
-      entries: [
-        "① quote"
-        "② open"
-      ]
-      dashes: { 5: HTTP; 2: in-process event bus }
-      badges: { Desk.SQLite: writes to SQLite }
-    }
-  }
-}
-desk: {
-  sqlite: SQLite { vars: { svugy: { badge: true } } }
-  cache: { vars: { svugy: { badge: TRUE } } }
-  quoter
-  quoter -> sqlite
-  quoter -> cache
-}
-desk.cache.vars: { svugy.badge: false }
-"#;
-
-    let import = import(source);
-
-    assert!(import.errors.is_empty(), "{:?}", import.errors);
-    let model = import
-        .admission
-        .model
-        .expect("the legend lowers into a sound model");
-    let legend = model.legend().expect("the root carries a legend");
-    let sqlite_path = ElementPath::from_segments(["desk", "sqlite"]);
-    let cache_path = ElementPath::from_segments(["desk", "cache"]);
-    assert_eq!(legend.title(), Some("Bet lifecycle"));
-    assert_eq!(legend.entries(), ["① quote", "② open"]);
-    assert_eq!(legend.dash_description(5.0), Some("HTTP"));
-    assert_eq!(legend.dash_description(2.0), Some("in-process event bus"));
-    assert_eq!(
-        legend.badge_description(&sqlite_path),
-        Some("writes to SQLite")
-    );
-    let quoter_path = ElementPath::from_segments(["desk", "quoter"]);
-    let writes = EdgeId::new(quoter_path.clone(), sqlite_path, 0);
-    let caches = EdgeId::new(quoter_path, cache_path, 0);
-    assert!(model.is_badge_edge(&writes));
-    assert!(!model.is_badge_edge(&caches));
-}
-
-#[test]
-fn malformed_legend_and_badge_values_are_spanned_errors_that_drop_only_themselves() {
-    let source = r#"vars: { svugy: { legend: { entries: one line; dashes: { dotted: bus; 2: kept }; badges: { desk.nowhere: lost; desk.sqlite: kept }; rows: x } } }
-desk.sqlite: { vars: { svugy: { badge: yes; caption: [a; b] } } }
-vars: { svugy: { legend: { entries: ["kept"; [nested]; { map: 1 }] } } }
-desk.quoter -> desk.sqlite
-"#;
-
-    let import = import(source);
-
-    let errors: Vec<(&str, &str)> = import
-        .errors
-        .iter()
-        .map(|error| {
-            let text = text_at(source, error.span);
-            (error.message.as_str(), text)
-        })
-        .collect();
-    assert_eq!(
-        errors,
-        [
-            (
-                "`svugy.legend.entries` is a list of lines, e.g. `[\"① …\"; \"② …\"]`",
-                "one line"
-            ),
-            (
-                "`dotted` is not a dash length: a `svugy.legend.dashes` key is a plain number like `5`, an arc's `stroke-dash`",
-                "dotted: bus"
-            ),
-            (
-                "`desk.nowhere` names no shape: a `svugy.legend.badges` key is the path of a badge target, e.g. `pipeline.inter`",
-                "desk.nowhere: lost"
-            ),
-            (
-                "`svugy.legend.rows` is not a svugy attribute of the root: expected `svugy.subtitle` or `svugy.legend` with `title`, `entries`, `dashes` or `badges`, and the title is the root's own `label`",
-                "rows: x"
-            ),
-            (
-                "`yes` is not a boolean: `svugy.badge` is `true` or `false`",
-                "yes"
-            ),
-            (
-                "`svugy.caption` is not a svugy list attribute: a list carries only the root's `svugy.legend.entries`",
-                "[a; b]"
-            ),
-            (
-                "a list in the `svugy` variable holds only plain values",
-                "[nested]"
-            ),
-            (
-                "a list in the `svugy` variable holds only plain values",
-                "{ map: 1 }"
-            ),
-        ]
-    );
-    let model = import
-        .admission
-        .model
-        .expect("malformed legend values leave a sound model");
-    let legend = model.legend().expect("the root carries a legend");
-    let sqlite_path = ElementPath::from_segments(["desk", "sqlite"]);
-    let sqlite = model.element(&sqlite_path).expect("sqlite is declared");
-    let has_badge_edges = model.badge_edges().next().is_some();
-    assert_eq!(legend.entries(), ["kept"]);
-    let dash_keys: Vec<String> = legend.dashes().keys().map(DashKey::to_string).collect();
-    assert_eq!(dash_keys, ["2"]);
-    assert_eq!(legend.badge_description(&sqlite_path), Some("kept"));
-    assert!(!has_badge_edges);
-    assert_eq!(sqlite.caption(), None);
+    assert_eq!(main.title(), "main");
+    assert_eq!(main.subtitle(), None);
+    assert_eq!(a.properties().caption(), Some("kept"));
+    assert_eq!(a.properties().shape(), Some(Shape::Disc));
+    assert_eq!(a.properties().height(), None);
+    assert_eq!(main.override_of(&a_path), None);
+    assert_eq!(b.properties().shape(), Some(Shape::Slab));
+    assert_eq!(main.override_of(&b_path), None);
 }
 
 fn import(source: &str) -> D2Import {
@@ -698,6 +714,13 @@ fn import_model(source: &str) -> Model {
         .admission
         .model
         .expect("the fixture lowers into a sound model")
+}
+
+fn main_workflow(model: &Model) -> &Workflow {
+    let main_id = WorkflowId::new("main");
+    model
+        .workflow(&main_id)
+        .expect("a d2 import yields the workflow `main`")
 }
 
 fn text_at(source: &str, span: SourceSpan) -> &str {

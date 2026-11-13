@@ -1,6 +1,5 @@
 ---
 source: crates/svugy-parse/tests/markdown.rs
-assertion_line: 40
 expression: model_json
 ---
 {
@@ -8,150 +7,315 @@ expression: model_json
     "api": {
       "label": "api",
       "span": {
-        "start": 353,
-        "end": 356
+        "start": 715,
+        "end": 718
       }
     },
     "billing": {
       "label": "billing",
       "span": {
-        "start": 403,
-        "end": 410
+        "start": 765,
+        "end": 772
       }
     },
     "billing.api": {
       "label": "api",
       "span": {
-        "start": 415,
-        "end": 418
+        "start": 777,
+        "end": 780
       }
     },
     "billing.store": {
       "label": "store",
       "shape": "cylinder",
       "span": {
-        "start": 423,
-        "end": 445
+        "start": 785,
+        "end": 807
       }
     },
     "client": {
       "label": "client",
+      "description": "Probes [the API](#client->api) in every workflow that shows it.",
       "span": {
-        "start": 344,
-        "end": 350
+        "start": 617,
+        "end": 623
       }
     },
     "orders": {
       "label": "orders",
       "span": {
-        "start": 359,
-        "end": 365
+        "start": 721,
+        "end": 727
       }
     },
     "orders.api": {
       "label": "api",
       "span": {
-        "start": 370,
-        "end": 373
+        "start": 732,
+        "end": 735
       }
     },
     "orders.store": {
       "label": "store",
       "shape": "cylinder",
       "span": {
-        "start": 378,
-        "end": 400
+        "start": 740,
+        "end": 762
       }
     }
   },
-  "edges": [
+  "workflows": [
     {
-      "from": "billing.api",
-      "to": "billing.store",
-      "ordinal": 0,
-      "badge": true,
+      "id": "checkout",
+      "title": "A client checks out",
+      "description": "[The client](#client) pays [billing](#billing.api) through [the charge](#orders.api->billing.api[0]), recapped in [the last step](#checkout/recap).",
+      "edges": [
+        {
+          "from": "billing.api",
+          "to": "billing.store",
+          "ordinal": 0,
+          "badge": true,
+          "span": {
+            "start": 1617,
+            "end": 1645
+          }
+        },
+        {
+          "from": "client",
+          "to": "api",
+          "ordinal": 0,
+          "label": "health: ok -> degraded",
+          "span": {
+            "start": 1726,
+            "end": 1739
+          }
+        },
+        {
+          "from": "client",
+          "to": "billing.api",
+          "ordinal": 0,
+          "label": "pays",
+          "description": "Card payments only; invoices go by post. Refunds come back as [a refund](#orders.api->billing.api[1]).",
+          "span": {
+            "start": 1109,
+            "end": 1130
+          }
+        },
+        {
+          "from": "client",
+          "to": "orders.api",
+          "ordinal": 0,
+          "span": {
+            "start": 1039,
+            "end": 1059
+          }
+        },
+        {
+          "from": "orders.api",
+          "to": "billing.api",
+          "ordinal": 0,
+          "label": "charges",
+          "description": "One charge per order, retried **3 times** with backoff:\n- after 1 s\n- after 10 s\n\nPaid by [the client's card](#client->billing.api[0]).",
+          "traveler": "envelope",
+          "span": {
+            "start": 1309,
+            "end": 1334
+          }
+        },
+        {
+          "from": "orders.api",
+          "to": "billing.api",
+          "ordinal": 1,
+          "label": "refunds",
+          "style": {
+            "stroke": "#5b6170",
+            "stroke-dash": "5"
+          },
+          "traveler": "parcel",
+          "span": {
+            "start": 1534,
+            "end": 1559
+          }
+        },
+        {
+          "from": "orders.api",
+          "to": "orders.store",
+          "ordinal": 0,
+          "span": {
+            "start": 1049,
+            "end": 1075
+          }
+        },
+        {
+          "from": "orders.store",
+          "to": "billing.store",
+          "ordinal": 0,
+          "style": {
+            "stroke-dash": "2"
+          },
+          "traveler": "document",
+          "span": {
+            "start": 1661,
+            "end": 1690
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "order",
+          "title": "The order is stored",
+          "items": [
+            {
+              "edge": {
+                "from": "client",
+                "to": "orders.api",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "orders.api",
+                "to": "orders.store",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "orders.api",
+                "to": "billing.api",
+                "ordinal": 1
+              }
+            },
+            {
+              "edge": {
+                "from": "client",
+                "to": "billing.api",
+                "ordinal": 0
+              }
+            }
+          ],
+          "span": {
+            "start": 1010,
+            "end": 1015
+          }
+        },
+        {
+          "id": "charge",
+          "title": "Billing charges and refunds",
+          "items": [
+            {
+              "edge": {
+                "from": "orders.api",
+                "to": "billing.api",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "orders.api",
+                "to": "billing.api",
+                "ordinal": 1
+              }
+            },
+            {
+              "edge": {
+                "from": "billing.api",
+                "to": "billing.store",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "orders.store",
+                "to": "billing.store",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "client",
+                "to": "api",
+                "ordinal": 0
+              }
+            }
+          ],
+          "span": {
+            "start": 1271,
+            "end": 1277
+          }
+        },
+        {
+          "id": "recap",
+          "title": "The client hears back",
+          "description": "[The refund](#orders.api->billing.api[1]) reaches [the client](#client) as [a payment](#client->billing.api[0]) undone.",
+          "items": [
+            {
+              "edge": {
+                "from": "client",
+                "to": "billing.api",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "orders.api",
+                "to": "billing.api",
+                "ordinal": 1
+              }
+            }
+          ],
+          "span": {
+            "start": 1770,
+            "end": 1775
+          }
+        }
+      ],
       "span": {
-        "start": 963,
-        "end": 991
+        "start": 826,
+        "end": 834
       }
     },
     {
-      "from": "client",
-      "to": "api",
-      "ordinal": 0,
-      "label": "health: ok -> degraded",
+      "id": "probe",
+      "title": "A probe checks health",
+      "description": "The probe's [own edge](#client->api[0]) is numbered in this workflow alone, as [the health spec][spec] asks.\n\nHealth states\n---\n* ok\n+ degraded\n\n[spec]: https://example.com/health",
+      "edges": [
+        {
+          "from": "client",
+          "to": "api",
+          "ordinal": 0,
+          "label": "probes",
+          "span": {
+            "start": 2359,
+            "end": 2372
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "ping",
+          "title": "The client pings the API",
+          "items": [
+            {
+              "edge": {
+                "from": "client",
+                "to": "api",
+                "ordinal": 0
+              }
+            },
+            {
+              "element": "billing"
+            }
+          ],
+          "span": {
+            "start": 2326,
+            "end": 2330
+          }
+        }
+      ],
       "span": {
-        "start": 1072,
-        "end": 1085
-      }
-    },
-    {
-      "from": "client",
-      "to": "billing.api",
-      "ordinal": 0,
-      "label": "pays",
-      "description": "Card payments only; invoices go by post. Refunds come back as [a refund](#orders.api->billing.api[1]).",
-      "span": {
-        "start": 497,
-        "end": 518
-      }
-    },
-    {
-      "from": "client",
-      "to": "orders.api",
-      "ordinal": 0,
-      "span": {
-        "start": 458,
-        "end": 478
-      }
-    },
-    {
-      "from": "orders.api",
-      "to": "billing.api",
-      "ordinal": 0,
-      "label": "charges",
-      "description": "One charge per order, retried **3 times** with backoff:\n- after 1 s\n- after 10 s\n\nPaid by [the client's card](#client->billing.api[0]).",
-      "traveler": "envelope",
-      "span": {
-        "start": 655,
-        "end": 680
-      }
-    },
-    {
-      "from": "orders.api",
-      "to": "billing.api",
-      "ordinal": 1,
-      "label": "refunds",
-      "style": {
-        "stroke": "#5b6170",
-        "stroke-dash": "5"
-      },
-      "traveler": "parcel",
-      "span": {
-        "start": 880,
-        "end": 905
-      }
-    },
-    {
-      "from": "orders.api",
-      "to": "orders.store",
-      "ordinal": 0,
-      "span": {
-        "start": 468,
-        "end": 494
-      }
-    },
-    {
-      "from": "orders.store",
-      "to": "billing.store",
-      "ordinal": 0,
-      "style": {
-        "stroke-dash": "2"
-      },
-      "traveler": "document",
-      "span": {
-        "start": 1007,
-        "end": 1036
+        "start": 1979,
+        "end": 1984
       }
     }
   ]

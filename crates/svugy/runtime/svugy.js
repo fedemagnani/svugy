@@ -5,6 +5,7 @@
   const XHTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
 
   const CONTRACT = 'data-svugy-contract';
+  const WORKFLOW = 'data-svugy-workflow';
   const CAMERA = 'data-svugy-camera';
   const LAYER = 'data-svugy-layer';
   const SHOWN = 'data-svugy-shown';
@@ -22,15 +23,20 @@
   const ENTERED = 'data-svugy-entered';
   const DIMMED = 'data-svugy-dimmed';
   const PANNING = 'data-svugy-panning';
+  const STEPS = 'data-svugy-steps';
+  const SELECTED = 'data-svugy-selected';
 
+  const WORKFLOW_SELECTOR = `[${WORKFLOW}]`;
   const CAMERA_SELECTOR = `[${CAMERA}]`;
   const LAYER_SELECTOR = `[${LAYER}]`;
   const LEVEL_SELECTOR = `[${LEVEL}]`;
   const ELEMENT_SELECTOR = `[${ELEMENT}]`;
   const EDGE_SELECTOR = `[${EDGE}]`;
   const SHOWN_SELECTOR = `[${SHOWN}]`;
+  const SHOWN_WORKFLOW_SELECTOR = `[${WORKFLOW}][${SHOWN}]`;
   const ENTERED_SELECTOR = `[${ENTERED}]`;
   const DIMMED_SELECTOR = `[${DIMMED}]`;
+  const SELECTED_SELECTOR = `[${SELECTED}]`;
   const INTERACTIVE_SELECTOR = `[${ELEMENT}],[${EDGE}],[${STUB}]`;
   const HEADING_SELECTOR = `[${HEADING}]`;
   const ELEMENT_OR_LEVEL_SELECTOR = `[${ELEMENT}],[${LEVEL}]`;
@@ -39,20 +45,36 @@
   const LEVEL_LINK_PREFIX = '#svugy=';
   const LEVEL_LINK_PATH_KEY = 'svugy';
   const LEVEL_LINK_LAYER_KEY = 'layer';
+  const LEVEL_LINK_WORKFLOW_KEY = 'workflow';
+  const LEVEL_LINK_STEP_KEY = 'step';
   const TWEEN_DURATION_MS = 450;
   const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
   const FADE_IN_KEYFRAMES = [{ opacity: 0 }, { opacity: 1 }];
   const FADE_OUT_KEYFRAMES = [{ opacity: 1 }, { opacity: 0 }];
 
-  const PANEL_PADDING_PX = 8;
-  const PANEL_LINE_HEIGHT_PX = 16;
-  const PANEL_BASELINE_RAISE_PX = 4;
-  const PANEL_POINTER_OFFSET_PX = 14;
-  const PANEL_VIEW_MARGIN_PX = 6;
-  const PANEL_MAX_LINE_CHARACTERS = 72;
+  const PANEL_HIDDEN = 'hidden';
+  const PANEL_OPEN = 'open';
+  const PANEL_PEEK = 'peek';
+  const PANEL_EXPANDED = 'expanded';
+  const STEPS_CARD = 'steps';
+  const COMPONENT_CARD = 'component';
+  const SIDE_PANEL_MIN_BOX_WIDTH_PX = 640;
+  const SIDE_PANEL_MAX_WIDTH_PX = 360;
+  const SIDE_PANEL_MAX_BOX_SHARE = 0.45;
+  const SIDE_PANEL_TAB_WIDTH_PX = 14;
+  const SIDE_PANEL_TAB_HEIGHT_PX = 48;
+  const SIDE_PANEL_MIN_WIDTH_PX = 240;
+  const SIDE_PANEL_MAX_DRAGGED_BOX_SHARE = 0.7;
+  const STEPS_CARD_MIN_SHARE = 0.15;
+  const GRIP_KEY_STEP_PX = 24;
+  const SHEET_MAX_BOX_SHARE = 0.7;
+  const SHEET_HANDLE_HEIGHT_PX = 24;
+  const SHEET_HANDLE_TAB_WIDTH_PX = 96;
+  const SHEET_LINE_HEIGHT_PX = 40;
 
-  const DESCRIPTION_WIDTH_PX = 320;
-  const DESCRIPTION_VIEW_MARGIN_PX = 12;
+  const WORKFLOW_MENU_WIDTH_PX = 300;
+  const WORKFLOW_MENU_HEADING_GAP_PX = 8;
+  const HEADING_CARET_GAP = 6;
 
   const CAMERA_SWITCH_WIDTH_PX = 280;
   const CAMERA_SWITCH_HEIGHT_PX = 36;
@@ -76,6 +98,7 @@
   const ANY_SCHEME_PATTERN = /^[^/?#]*:/;
   const TARGET_LINK_PREFIX = '#';
   const EDGE_TARGET_PATTERN = /^(.+->.+)\[(\d+)\]$/;
+  const STEP_TARGET_PATTERN = /^([^/]+)\/([^/]+)$/;
   const HEX_COLOR_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
   const RGB_COLOR_PATTERN = /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i;
   const FLOW_PATH_SELECTOR = 'path[data-svugy-flow]';
@@ -99,7 +122,12 @@
   const HEADING_SCREEN_SCALE = 1.2;
 
   const ARROW = '\u2192';
-  const ELLIPSIS = '\u2026';
+  const CARET = '\u25be';
+  const PREVIOUS_SIGN = '\u2039';
+  const NEXT_SIGN = '\u203a';
+  const HIDE_SIGN = '\u203a';
+  const CLEAR_SIGN = '\u2715';
+  const MIDDLE_DOT = '\u00b7';
 
   /** Binds the runtime to its enclosing diagram once the document is parsed. */
   function start() {
@@ -127,7 +155,7 @@
     return isDocumentRootDiagram ? documentRoot : null;
   }
 
-  /** Reads the level path and layer index a `#svugy=PATH&layer=K` fragment of the document's URL links to, PATH URL-encoded, `&layer=K` optional; null without one. */
+  /** Reads a `#svugy=PATH&layer=K&workflow=ID&step=ID` fragment of the document's URL, PATH URL-encoded, every key but `svugy` optional; null without one. */
   function levelLink() {
     const fragment = window.location.hash;
     const isOtherFragment = !fragment.startsWith(LEVEL_LINK_PREFIX);
@@ -139,49 +167,83 @@
     const path = fragmentParameters.get(LEVEL_LINK_PATH_KEY);
     const layerText = fragmentParameters.get(LEVEL_LINK_LAYER_KEY);
     const layerIndex = layerText === null ? 0 : Number(layerText);
-    return { path, layerIndex };
+    const workflowId = fragmentParameters.get(LEVEL_LINK_WORKFLOW_KEY);
+    const stepId = fragmentParameters.get(LEVEL_LINK_STEP_KEY);
+    return { path, layerIndex, workflowId, stepId };
   }
 
-  /** Wires navigation, the camera switch, the detail and description panels and dimming onto one diagram. */
+  /** Wires navigation, the reader's panel and scene marks, the camera switch and the workflow menu onto one diagram, then starts where a level link points, if one does. */
   function bindRuntime(svg) {
-    const cameras = Cameras.of(svg);
-    const initialCamera = cameras.find((camera) => camera.hasAttribute(SHOWN)) ?? cameras[0];
-    const layers = Layers.of(initialCamera);
-    const initialLayer = layers[0];
-    const deepestLayer = layers[layers.length - 1];
-    const rootLevel = Contract.levelAt(initialLayer, ROOT_LEVEL_PATH);
+    const workflows = Workflows.of(svg);
+    const renderedWorkflow = svg.querySelector(SHOWN_WORKFLOW_SELECTOR) ?? svg;
+    const link = levelLink();
+    const linkedWorkflow = link === null ? null : linkedWorkflowOf(link, workflows, renderedWorkflow);
+    const initialWorkflow = linkedWorkflow ?? renderedWorkflow;
+    const cameras = Cameras.of(initialWorkflow);
+    const initialCamera = Cameras.shownOf(initialWorkflow);
+    const initialLayers = Layers.of(initialCamera);
+    const rootLevel = Contract.levelAt(initialLayers[0], ROOT_LEVEL_PATH);
     if (rootLevel === null) {
       return;
     }
-    const animator = new ViewBoxAnimator(svg);
+    const uncoveredArea = new UncoveredArea(svg);
+    const animator = new ViewBoxAnimator(svg, uncoveredArea);
     const fader = new LayerFader();
-    const navigator = new LayerNavigator(svg, initialCamera, layers, initialLayer, rootLevel, animator, fader);
-    const panel = new DetailPanel(svg);
-    const dimmer = new UnrelatedGroupDimmer(svg);
-    const descriptionPanel = new DescriptionPanel(svg, deepestLayer);
+    const navigator = new LayerNavigator(svg, initialWorkflow, initialCamera, rootLevel, animator, fader);
     const highlighter = new TargetHighlighter();
+    const reader = new Reader(svg, workflows, navigator, uncoveredArea, highlighter);
     const gestures = new ViewGestures(svg, animator, navigator);
     gestures.bind();
+    reader.bind();
     const headingPins = new HeadingPins(svg);
+    const hasOtherWorkflows = workflows.length > 1;
+    const workflowMenu = hasOtherWorkflows ? new WorkflowMenu(svg, workflows, navigator, reader) : null;
+    workflowMenu?.bind();
     headingPins.bind();
     const hasOtherCameras = cameras.length > 1;
     if (hasOtherCameras) {
-      const cameraSwitch = new CameraSwitch(svg, cameras, navigator);
+      const angles = cameras.map((camera) => camera.getAttribute(CAMERA));
+      const showCameraAngle = (angle) => reader.showCameraAngle(angle);
+      const cameraSwitch = new CameraSwitch(svg, angles, navigator, uncoveredArea, showCameraAngle);
       cameraSwitch.bind();
     }
-    navigator.addNavigationListener((focusedLevel) => {
-      panel.hide();
-      dimmer.clear();
-      const focusedPath = focusedLevel.getAttribute(LEVEL);
-      descriptionPanel.describeFocusedLevel(focusedPath);
-    });
-    descriptionPanel.describeFocusedLevel(ROOT_LEVEL_PATH);
-    Interactions.bind(svg, navigator, panel, dimmer, descriptionPanel, highlighter);
-    const link = levelLink();
-    if (link !== null) {
-      navigator.jumpTo(link.path, link.layerIndex);
+    Interactions.bind(svg, reader, workflowMenu);
+    const isStartLinked = linkedWorkflow !== null;
+    if (isStartLinked) {
+      reader.startAt(link);
     }
   }
+
+  /** Returns the workflow a level link starts in, the one it names, else `renderedWorkflow`; null when its PATH names no level of that workflow's shown camera, so the link leaves the start as it is. */
+  function linkedWorkflowOf(link, workflows, renderedWorkflow) {
+    const namedWorkflow = workflows.find((workflow) => {
+      const workflowId = workflow.getAttribute(WORKFLOW);
+      return workflowId === link.workflowId;
+    });
+    const linkedWorkflow = namedWorkflow ?? renderedWorkflow;
+    const linkedCamera = Cameras.shownOf(linkedWorkflow);
+    const linkedLayers = Layers.of(linkedCamera);
+    const isLinkedLevel = linkedLayers.some((layer) => {
+      const linkedLevel = Contract.levelAt(layer, link.path);
+      return linkedLevel !== null;
+    });
+    return isLinkedLevel ? linkedWorkflow : null;
+  }
+
+  /** Lists the workflows a document draws, in written order; empty for a document without workflow groups. */
+  const Workflows = {
+    of(svg) {
+      const workflowGroups = svg.querySelectorAll(WORKFLOW_SELECTOR);
+      return Array.from(workflowGroups);
+    },
+
+    /** Reads a workflow group's details, or empty ones for a document without workflow groups. */
+    detailsOf(workflow) {
+      const details = Contract.detailsOf(workflow);
+      const isWorkflowDetails = details !== null && Array.isArray(details.steps);
+      return isWorkflowDetails ? details : { steps: [] };
+    },
+  };
 
   /** Lists the cameras a document draws the diagram from; a document without camera groups is its own single camera. */
   const Cameras = {
@@ -189,6 +251,13 @@
       const cameraGroups = Array.from(svg.querySelectorAll(CAMERA_SELECTOR));
       const hasCameraGroups = cameraGroups.length > 0;
       return hasCameraGroups ? cameraGroups : [svg];
+    },
+
+    /** Returns the camera `workflow` is rendered from, the author's, else its first. */
+    shownOf(workflow) {
+      const cameras = Cameras.of(workflow);
+      const shownCamera = cameras.find((camera) => camera.hasAttribute(SHOWN));
+      return shownCamera ?? cameras[0];
     },
   };
 
@@ -254,17 +323,6 @@
         const isCandidateOuter = levelDepthOf(candidate) < levelDepthOf(homeGroup);
         return isCandidateOuter ? candidate : homeGroup;
       });
-    },
-
-    /** Lists the groups of `scope` drawing the element or edge `group` draws: the element's group, or every group of the edge, its label's included. */
-    groupsDrawing(scope, group) {
-      const elementPath = group.getAttribute(ELEMENT);
-      if (elementPath === null) {
-        const edgeName = group.getAttribute(EDGE);
-        return Contract.edgesAt(scope, edgeName);
-      }
-      const element = Contract.elementAt(scope, elementPath);
-      return element === null ? [] : [element];
     },
 
     levelDisplaying(scope, path) {
@@ -370,6 +428,102 @@
         return null;
       }
     },
+
+    stepIdsOf(group) {
+      const stepsText = group.getAttribute(STEPS) ?? '';
+      const stepIds = stepsText.split(' ');
+      return stepIds.filter((stepId) => stepId !== '');
+    },
+
+    /** Describes the item `group` draws, for selecting it: an element item for an element group, else an edge item. */
+    itemDrawnBy(group) {
+      const isElement = group.hasAttribute(ELEMENT);
+      return isElement ? new ElementItem(group) : new EdgeItem(group);
+    },
+
+    /** Lists the element and edge groups of `layer` that dimming may touch: every one but badges. */
+    dimmableGroupsOf(layer) {
+      const layerElements = Array.from(layer.querySelectorAll(ELEMENT_SELECTOR));
+      const layerEdges = Array.from(layer.querySelectorAll(EDGE_SELECTOR));
+      const dimmableEdges = layerEdges.filter((edge) => !Contract.isBadge(edge));
+      return [...layerElements, ...dimmableEdges];
+    },
+
+    headingOf(layer) {
+      return layer.querySelector(HEADING_SELECTOR);
+    },
+  };
+
+  /** Names a selected element by its path, with its title, details and steps. */
+  class ElementItem {
+    constructor(group) {
+      this.path = group.getAttribute(ELEMENT);
+      this.title = Contract.titleOf(group);
+      this.details = Contract.detailsOf(group) ?? {};
+      this.stepIds = Contract.stepIdsOf(group);
+      this.kindLabel = 'Component';
+    }
+
+    /** Lists the groups of `layer` drawing the element: its group, else the group of its closest ancestor `layer` draws. */
+    groupsIn(layer, deepestLayer) {
+      const element = Contract.elementAt(layer, this.path);
+      if (element !== null) {
+        return [element];
+      }
+      const deepestElement = Contract.elementAt(deepestLayer, this.path);
+      const deepestAncestors = deepestElement === null ? [] : Contract.ancestorElementsOf(deepestElement);
+      const ancestorPaths = deepestAncestors.map((ancestor) => ancestor.getAttribute(ELEMENT));
+      const drawnAncestors = ancestorPaths.map((path) => Contract.elementAt(layer, path));
+      const closestDrawnAncestor = drawnAncestors.find((ancestor) => ancestor !== null);
+      return closestDrawnAncestor === undefined ? [] : [closestDrawnAncestor];
+    }
+
+    /** Names the element: its label, else its title, else its path. */
+    nameIn(_deepestLayer) {
+      return this.details.label ?? this.title ?? this.path;
+    }
+
+    factNodesBy(content, _deepestLayer) {
+      return content.elementNodesOf(this.details);
+    }
+  }
+
+  /** Names a selected written or lifted connection by its edge name, with its title, details and steps. */
+  class EdgeItem {
+    constructor(group) {
+      this.edgeName = group.getAttribute(EDGE);
+      this.title = Contract.titleOf(group);
+      this.details = Contract.detailsOf(group) ?? {};
+      this.stepIds = Contract.stepIdsOf(group);
+      this.isLifted = this.details.kind === LIFTED_KIND;
+      this.kindLabel = 'Edge';
+    }
+
+    /** Lists the groups of `layer` drawing the connection, its label's included. */
+    groupsIn(layer, _deepestLayer) {
+      return Contract.edgesAt(layer, this.edgeName);
+    }
+
+    /** Names the connection: a lifted one's title, else its label, else its endpoints' labels joined by an arrow. */
+    nameIn(deepestLayer) {
+      if (this.isLifted) {
+        return this.title ?? this.edgeName;
+      }
+      return this.details.label ?? CardContent.endpointsNameOf(this.details, deepestLayer);
+    }
+
+    factNodesBy(content, deepestLayer) {
+      return content.connectionNodesOf(this, deepestLayer);
+    }
+  }
+
+  /** Compares standpoints, the shown layer's index and the focused level's path. */
+  const Standpoints = {
+    areSame(standpoint, otherStandpoint) {
+      const isSameLayer = standpoint.layerIndex === otherStandpoint.layerIndex;
+      const isSameLevel = standpoint.levelPath === otherStandpoint.levelPath;
+      return isSameLayer && isSameLevel;
+    },
   };
 
   /** Parses and interpolates "min-x min-y width height" views. */
@@ -443,10 +597,64 @@
     },
   };
 
-  /** Tweens or jumps the root viewBox to a target view fitted to the canvas aspect, so changing view never changes the document's shape; tweens jump under reduced motion. */
-  class ViewBoxAnimator {
+  /** Tracks the uncovered area, the SVG's on-screen box minus the description panel, and fits views into it. */
+  class UncoveredArea {
     constructor(svg) {
       this.svg = svg;
+      this.coveredRightPx = 0;
+      this.coveredBottomPx = 0;
+      this.changeListeners = [];
+    }
+
+    /** Calls `listener()` whenever the covered strip changes. */
+    addChangeListener(listener) {
+      this.changeListeners.push(listener);
+    }
+
+    /** Records the panel covering `rightPx` of the box's right edge and `bottomPx` of its bottom edge. */
+    cover(rightPx, bottomPx) {
+      const isSameCover = rightPx === this.coveredRightPx && bottomPx === this.coveredBottomPx;
+      if (isSameCover) {
+        return;
+      }
+      this.coveredRightPx = rightPx;
+      this.coveredBottomPx = bottomPx;
+      this.changeListeners.forEach((listener) => listener());
+    }
+
+    clientRect() {
+      const box = this.svg.getBoundingClientRect();
+      const width = Math.max(0, box.width - this.coveredRightPx);
+      const height = Math.max(0, box.height - this.coveredBottomPx);
+      return { left: box.left, top: box.top, width, height, right: box.left + width, bottom: box.top + height };
+    }
+
+    // s = min(U_w / v_w, U_h / v_h) px per unit; W = min(B_w, B_h·A) / s, H = W / A; o = (B − s·(W, H)) / 2 the meet letterbox; x = c_x − (U_w/2 − o_x) / s, likewise y: v's centre c lands on U's centre
+    viewBoxShowing(view, canvasAspect) {
+      const box = this.svg.getBoundingClientRect();
+      const uncovered = this.clientRect();
+      const isUnmeasurable = uncovered.width === 0 || uncovered.height === 0;
+      if (isUnmeasurable) {
+        return View.fittedToAspect(view, canvasAspect);
+      }
+      const pixelsPerUnit = Math.min(uncovered.width / view.width, uncovered.height / view.height);
+      const boxWidthAtAspect = Math.min(box.width, box.height * canvasAspect);
+      const width = boxWidthAtAspect / pixelsPerUnit;
+      const height = width / canvasAspect;
+      const letterboxX = (box.width - pixelsPerUnit * width) / 2;
+      const letterboxY = (box.height - pixelsPerUnit * height) / 2;
+      const viewCentre = centreOf(view);
+      const x = viewCentre.x - (uncovered.width / 2 - letterboxX) / pixelsPerUnit;
+      const y = viewCentre.y - (uncovered.height / 2 - letterboxY) / pixelsPerUnit;
+      return { x, y, width, height };
+    }
+  }
+
+  /** Tweens or jumps the root viewBox to a target view fitted into the uncovered area at the canvas aspect, so changing view never changes the document's shape; tweens jump under reduced motion. */
+  class ViewBoxAnimator {
+    constructor(svg, uncoveredArea) {
+      this.svg = svg;
+      this.uncoveredArea = uncoveredArea;
       this.frameRequest = 0;
       this.canvasView = this.currentView();
       this.canvasAspect = this.canvasView.width / this.canvasView.height;
@@ -459,7 +667,7 @@
         return;
       }
       cancelAnimationFrame(this.frameRequest);
-      const targetView = View.fittedToAspect(requestedView, this.canvasAspect);
+      const targetView = this.fitted(requestedView);
       this.show(startView);
       let startTime = null;
       const step = (now) => {
@@ -477,9 +685,19 @@
     }
 
     jumpTo(requestedView) {
+      const targetView = this.fitted(requestedView);
+      this.jumpToViewBox(targetView);
+    }
+
+    /** Shows `viewBox` as it is, ending any tween: for gestures, whose views are already viewBoxes. */
+    jumpToViewBox(viewBox) {
       cancelAnimationFrame(this.frameRequest);
-      const targetView = View.fittedToAspect(requestedView, this.canvasAspect);
-      this.show(targetView);
+      this.show(viewBox);
+    }
+
+    /** Returns the viewBox showing `view` fitted into the uncovered area and centred in it. */
+    fitted(view) {
+      return this.uncoveredArea.viewBoxShowing(view, this.canvasAspect);
     }
 
     currentView() {
@@ -629,7 +847,7 @@
         x: view.x - pannedX * userUnitsPerPixel,
         y: view.y - pannedY * userUnitsPerPixel,
       };
-      this.animator.jumpTo(pannedView);
+      this.animator.jumpToViewBox(pannedView);
     }
 
     /** Zooms in around the pointer, and out toward the focused level's view, so zooming back out lands on it; the width stays within [MIN_VIEW_WIDTH, MAX_ZOOM_OUT_CANVASES · canvas width]. */
@@ -645,7 +863,7 @@
       const zoomedView = isZoomingOut
         ? this.zoomedOutTowardHome(view, appliedFactor)
         : this.zoomedInAround(clientPoint, view, appliedFactor);
-      this.animator.jumpTo(zoomedView);
+      this.animator.jumpToViewBox(zoomedView);
     }
 
     // the point under the pointer stays put: x' = p − (p − x) · f
@@ -662,7 +880,7 @@
     // c' = c + (h − c) · min(1, (w' − w) / (H − w)), c the view's centre, h and H the home view's centre and width: the centre reaches home as the width does
     zoomedOutTowardHome(view, appliedFactor) {
       const focusedView = this.navigator.focusedView();
-      const homeView = View.fittedToAspect(focusedView, this.animator.canvasAspect);
+      const homeView = this.animator.fitted(focusedView);
       const zoomedWidth = view.width * appliedFactor;
       const zoomedHeight = view.height * appliedFactor;
       const widthLeftToHome = homeView.width - view.width;
@@ -759,11 +977,11 @@
     }
   }
 
-  /** Keeps one camera and one of its layers shown and one of its levels focused, and moves the view to them. */
+  /** Keeps one workflow, one of its cameras and one of its layers shown and one of its levels focused, and moves the view to them. */
   class LayerNavigator {
-    constructor(svg, initialCamera, layers, initialLayer, rootLevel, animator, fader) {
+    constructor(svg, initialWorkflow, initialCamera, rootLevel, animator, fader) {
       this.svg = svg;
-      this.layers = layers;
+      this.layers = Layers.of(initialCamera);
       this.animator = animator;
       this.fader = fader;
       const staleMarks = svg.querySelectorAll(`${SHOWN_SELECTOR},${ENTERED_SELECTOR}`);
@@ -771,18 +989,83 @@
         node.removeAttribute(SHOWN);
         node.removeAttribute(ENTERED);
       });
+      const initialLayer = this.layers[0];
+      initialWorkflow.setAttribute(SHOWN, '');
       initialCamera.setAttribute(SHOWN, '');
       initialLayer.setAttribute(SHOWN, '');
       rootLevel.setAttribute(ENTERED, '');
+      this.shownWorkflow = initialWorkflow;
       this.shownCamera = initialCamera;
       this.shownLayer = initialLayer;
       this.focusedLevel = rootLevel;
       this.navigationListeners = [];
     }
 
-    /** Calls `listener(focusedLevel)` after every change of the shown layer or the focused level. */
+    /** Calls `listener()` after every change of the shown workflow, camera or layer or the focused level. */
     addNavigationListener(listener) {
       this.navigationListeners.push(listener);
+    }
+
+    /** Shows `workflow` from the shown camera's angle, at the root of its layer 0, jumping to the root's view; tells whether the workflow changed. */
+    showWorkflow(workflow) {
+      const isShownWorkflow = workflow === this.shownWorkflow;
+      if (isShownWorkflow) {
+        return false;
+      }
+      const shownAngle = this.shownCamera.getAttribute(CAMERA);
+      const cameras = Cameras.of(workflow);
+      const sameAngleCamera = cameras.find((camera) => camera.getAttribute(CAMERA) === shownAngle);
+      const camera = sameAngleCamera ?? cameras[0];
+      const layers = Layers.of(camera);
+      const firstLayer = layers[0];
+      const rootLevel = Contract.levelAt(firstLayer, ROOT_LEVEL_PATH);
+      if (rootLevel === null) {
+        return false;
+      }
+      this.fader.finishRunningFade();
+      const previousLayer = this.shownLayer;
+      const previousMarks = [this.shownWorkflow, this.shownCamera, this.shownLayer];
+      previousMarks.forEach((node) => node.removeAttribute(SHOWN));
+      const shownMarks = [workflow, camera, firstLayer];
+      shownMarks.forEach((node) => node.setAttribute(SHOWN, ''));
+      this.shownWorkflow = workflow;
+      this.shownCamera = camera;
+      this.layers = layers;
+      this.shownLayer = firstLayer;
+      this.moveEnteredMarkTo(rootLevel);
+      this.announceNavigation();
+      this.carryKeyboardFocus(previousLayer, firstLayer);
+      const rootView = this.viewOf(rootLevel);
+      if (rootView !== null) {
+        this.animator.jumpTo(rootView);
+      }
+      return true;
+    }
+
+    /** Discloses a step: shows layer max(K, `layerIndex`), focused on the root when a group of it taking part in `stepId` lies outside the focused level, neither inside it nor enclosing it; tells whether the view moved. */
+    discloseStep(layerIndex, stepId) {
+      const shownLayerIndex = this.layers.indexOf(this.shownLayer);
+      const disclosingLayerIndex = Math.max(shownLayerIndex, layerIndex);
+      const disclosingLayer = this.layers[disclosingLayerIndex] ?? this.shownLayer;
+      const focusedPath = this.focusedLevel.getAttribute(LEVEL);
+      const focusedLevelThere = Contract.levelAt(disclosingLayer, focusedPath);
+      const disclosingGroups = Contract.dimmableGroupsOf(disclosingLayer);
+      const stepGroups = disclosingGroups.filter((group) => {
+        const groupStepIds = Contract.stepIdsOf(group);
+        return groupStepIds.includes(stepId);
+      });
+      const isStepOutsideFocusedLevel = stepGroups.some((group) => {
+        const isInsideFocusedLevel = focusedLevelThere.contains(group);
+        const isEnclosingFocusedLevel = group.contains(focusedLevelThere);
+        return !isInsideFocusedLevel && !isEnclosingFocusedLevel;
+      });
+      const disclosedPath = isStepOutsideFocusedLevel ? ROOT_LEVEL_PATH : focusedPath;
+      return this.focusLevelIn(disclosingLayer, disclosedPath, this.focusedLevel);
+    }
+
+    /** Returns the layer drawing the shown workflow whole, from the shown camera. */
+    deepestLayer() {
+      return this.layers.at(-1);
     }
 
     /** Shows layer `layerIndex` focused on level `path`, without animation, or the first layer holding that level when layer `layerIndex` does not; a path that is no level changes nothing. */
@@ -790,7 +1073,10 @@
       const requestedLayer = this.layers[layerIndex];
       const levelInRequestedLayer = requestedLayer === undefined ? null : Contract.levelAt(requestedLayer, path);
       const isLevelInRequestedLayer = levelInRequestedLayer !== null;
-      const firstOpeningLayer = this.layers.find((layer) => Contract.levelAt(layer, path) !== null);
+      const firstOpeningLayer = this.layers.find((layer) => {
+        const level = Contract.levelAt(layer, path);
+        return level !== null;
+      });
       const openingLayer = isLevelInRequestedLayer ? requestedLayer : firstOpeningLayer;
       if (openingLayer === undefined) {
         return;
@@ -807,10 +1093,12 @@
       }
     }
 
-    /** Shows the diagram from `camera`, on its layer as deep as the shown one, focused on the same level, framed by that level's own view; tells whether the camera changed. */
-    showCamera(camera) {
-      const isShownCamera = camera === this.shownCamera;
-      if (isShownCamera) {
+    /** Shows the shown workflow from its camera at `angle`, on its layer as deep as the shown one, focused on the same level, framed by that level's own view; tells whether the camera changed. */
+    showCameraAngle(angle) {
+      const cameras = Cameras.of(this.shownWorkflow);
+      const camera = cameras.find((candidate) => candidate.getAttribute(CAMERA) === angle);
+      const isShownOrMissingCamera = camera === undefined || camera === this.shownCamera;
+      if (isShownOrMissingCamera) {
         return false;
       }
       const cameraLayers = Layers.of(camera);
@@ -842,7 +1130,7 @@
       return true;
     }
 
-    /** Follows a click on `group` and tells whether the view moved; when it did not, the group's details are due. */
+    /** Follows a click on `group`; tells whether the view moved. */
     followClickOn(group) {
       const gotoPath = group.getAttribute(GOTO);
       const hasGoto = gotoPath !== null;
@@ -876,7 +1164,7 @@
       }
       const leafView = View.aroundLeaf(leafBounds, levelView);
       const currentView = this.animator.currentView();
-      const fittedLeafView = View.fittedToAspect(leafView, this.animator.canvasAspect);
+      const fittedLeafView = this.animator.fitted(leafView);
       const isAwayFromLeafView = !View.isNear(currentView, fittedLeafView);
       if (isAwayFromLeafView) {
         this.animator.tweenTo(leafView);
@@ -959,11 +1247,28 @@
       return Contract.levelAt(this.shownLayer, ROOT_LEVEL_PATH);
     }
 
+    /** Tells where the reader stands: the shown layer's index and the focused level's path, the same in every camera. */
+    standpoint() {
+      const layerIndex = this.layers.indexOf(this.shownLayer);
+      const levelPath = this.focusedLevel.getAttribute(LEVEL);
+      return { layerIndex, levelPath };
+    }
+
+    /** Returns to `standpoint` at its level's own view, discarding any zoom or pan. */
+    returnTo(standpoint) {
+      const layer = this.layers[standpoint.layerIndex];
+      const hasMoved = this.focusLevelIn(layer, standpoint.levelPath, this.focusedLevel);
+      if (hasMoved) {
+        return;
+      }
+      this.returnToFocusedView();
+    }
+
     /** Animates back to the focused level's own view when the reader zoomed or panned away from it; returns whether it did. */
     returnToFocusedView() {
       const currentView = this.animator.currentView();
       const focusedView = this.focusedView();
-      const fittedFocusedView = View.fittedToAspect(focusedView, this.animator.canvasAspect);
+      const fittedFocusedView = this.animator.fitted(focusedView);
       const isAwayFromFocusedView = !View.isNear(currentView, fittedFocusedView);
       if (isAwayFromFocusedView) {
         this.animator.tweenTo(focusedView);
@@ -971,21 +1276,22 @@
       return isAwayFromFocusedView;
     }
 
-    /** Steps out once: focuses the focused level's parent, keeping the open containers open, so every step widens the view; at the root, closes the deepest open containers; any navigation discards a pan or zoom. */
+    /** Steps out once: focuses the focused level's parent, keeping the open containers open, so every step widens the view; at the root, closes the deepest open containers; any navigation discards a pan or zoom. Tells whether it stepped out: never from the root of layer 0. */
     exitOneStep() {
       const parentLevel = Contract.enclosingLevelOf(this.focusedLevel);
       if (parentLevel !== null) {
         this.focus(parentLevel);
-        return;
+        return true;
       }
       const shownLayerIndex = this.layers.indexOf(this.shownLayer);
       const isOnFirstLayer = shownLayerIndex === 0;
       if (isOnFirstLayer) {
-        return;
+        return false;
       }
       const shallowerLayer = this.layers[shownLayerIndex - 1];
       const focusedPath = this.focusedLevel.getAttribute(LEVEL);
       this.showLayer(shallowerLayer, focusedPath, this.focusedLevel);
+      return true;
     }
 
     /** Returns the focused level's own view, as its `data-svugy-view` frames it. */
@@ -1105,13 +1411,19 @@
     }
   }
 
-  /** Lets the reader switch the angle the diagram is seen from: one button per camera, pinned inside the view's bottom-left corner at a constant on-screen size. */
+  /** Lets the reader switch the angle the diagram is seen from: one button per camera angle, pinned inside the uncovered area's bottom-left corner at a constant on-screen size. */
   class CameraSwitch {
-    constructor(svg, cameras, navigator) {
+    constructor(svg, angles, navigator, uncoveredArea, showCameraAngle) {
       this.svg = svg;
       this.navigator = navigator;
+      this.uncoveredArea = uncoveredArea;
+      this.showCameraAngle = showCameraAngle;
       this.body = createXhtmlElement('div', { class: 'svugy-cameras', role: 'group', 'aria-label': 'view angle' });
-      this.buttonsByCamera = new Map(cameras.map((camera) => [camera, this.buttonShowing(camera)]));
+      const buttonEntries = angles.map((angle) => {
+        const button = this.buttonShowing(angle);
+        return [angle, button];
+      });
+      this.buttonsByAngle = new Map(buttonEntries);
       this.frame = createSvgElement('foreignObject', {
         class: 'svugy-cameras-frame',
         width: CAMERA_SWITCH_WIDTH_PX,
@@ -1120,7 +1432,7 @@
       this.frame.appendChild(this.body);
       this.panel = createSvgElement('g', { class: 'svugy-cameras-panel' });
       this.panel.appendChild(this.frame);
-      this.panel.addEventListener('click', (event) => event.stopPropagation());
+      isolateOverlayEvents(this.panel);
     }
 
     bind() {
@@ -1129,263 +1441,717 @@
       viewBoxObserver.observe(this.svg, { attributes: true, attributeFilter: ['viewBox'] });
       const resizeObserver = new ResizeObserver(() => this.place());
       resizeObserver.observe(this.svg);
+      this.uncoveredArea.addChangeListener(() => this.place());
       this.navigator.addNavigationListener(() => this.pressShownCameraButton());
       this.pressShownCameraButton();
       this.place();
     }
 
-    buttonShowing(camera) {
-      const angle = camera.getAttribute(CAMERA);
+    buttonShowing(angle) {
       const button = createXhtmlElement('button', { type: 'button' });
       button.textContent = angle;
-      button.addEventListener('click', () => this.navigator.showCamera(camera));
+      button.addEventListener('click', () => this.showCameraAngle(angle));
       this.body.appendChild(button);
       return button;
     }
 
     pressShownCameraButton() {
-      this.buttonsByCamera.forEach((button, camera) => {
-        const isShownCamera = camera === this.navigator.shownCamera;
-        button.setAttribute('aria-pressed', String(isShownCamera));
+      const shownAngle = this.navigator.shownCamera.getAttribute(CAMERA);
+      this.buttonsByAngle.forEach((button, angle) => {
+        const isShownAngle = angle === shownAngle;
+        button.setAttribute('aria-pressed', String(isShownAngle));
       });
     }
 
+    // top-left = (U_left + m, U_bottom − m − h): m pixels inside the uncovered area's bottom-left corner
     place() {
-      const screenMatrix = this.svg.getScreenCTM();
-      if (screenMatrix === null) {
-        return;
-      }
-      const screenToUserMatrix = screenMatrix.inverse();
-      const svgBounds = this.svg.getBoundingClientRect();
-      const clientCorner = new DOMPoint(svgBounds.left, svgBounds.bottom);
-      const userCorner = clientCorner.matrixTransform(screenToUserMatrix);
-      const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
-      // x = corner.x + m·u, y = corner.y − (m + h)·u, with u user units per pixel, so the switch sits m pixels inside the bottom-left corner
-      const x = userCorner.x + CAMERA_SWITCH_VIEW_MARGIN_PX * userUnitsPerPixel;
-      const y = userCorner.y - (CAMERA_SWITCH_VIEW_MARGIN_PX + CAMERA_SWITCH_HEIGHT_PX) * userUnitsPerPixel;
-      this.panel.setAttribute('transform', `translate(${x} ${y}) scale(${userUnitsPerPixel})`);
+      const uncovered = this.uncoveredArea.clientRect();
+      const clientCorner = {
+        x: uncovered.left + CAMERA_SWITCH_VIEW_MARGIN_PX,
+        y: uncovered.bottom - CAMERA_SWITCH_VIEW_MARGIN_PX - CAMERA_SWITCH_HEIGHT_PX,
+      };
+      pinOverlayAt(this.svg, this.panel, clientCorner);
     }
   }
 
-  /** Shows a group's details beside a client point, at a constant on-screen size inside the current view. */
-  class DetailPanel {
-    constructor(svg) {
-      this.svg = svg;
-      this.panel = createSvgElement('g', { class: 'svugy-panel', 'aria-hidden': 'true' });
-      this.shownGroup = null;
-      this.width = 0;
-      this.height = 0;
-      const viewBoxObserver = new MutationObserver(() => this.followShownGroup());
-      viewBoxObserver.observe(svg, { attributes: true, attributeFilter: ['viewBox'] });
+  /** Pins `overlay`'s top-left at a client point, one overlay unit per screen pixel, wherever the view is. */
+  function pinOverlayAt(svg, overlay, clientPoint) {
+    const screenMatrix = svg.getScreenCTM();
+    if (screenMatrix === null) {
+      return;
+    }
+    const screenToUserMatrix = screenMatrix.inverse();
+    const clientDomPoint = new DOMPoint(clientPoint.x, clientPoint.y);
+    const userPoint = clientDomPoint.matrixTransform(screenToUserMatrix);
+    const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
+    overlay.setAttribute('transform', `translate(${userPoint.x} ${userPoint.y}) scale(${userUnitsPerPixel})`);
+  }
+
+  /** Keeps an overlay's pointer, click and wheel events from reaching the diagram, so they never pan, zoom or navigate. */
+  function isolateOverlayEvents(overlay) {
+    const isolatedEventNames = ['pointerdown', 'click', 'wheel'];
+    isolatedEventNames.forEach((eventName) => {
+      overlay.addEventListener(eventName, (event) => event.stopPropagation());
+    });
+  }
+
+  /** Orchestrates the reader's intents: applies each to the reader state and lays the panel out for it, then navigates, so every fit fills the area the new panel leaves uncovered, and paints the scene marks last. */
+  class Reader {
+    constructor(svg, workflows, navigator, uncoveredArea, highlighter) {
+      this.workflows = workflows;
+      this.navigator = navigator;
+      this.highlighter = highlighter;
+      const workflowDetails = Workflows.detailsOf(navigator.shownWorkflow);
+      const svgBox = svg.getBoundingClientRect();
+      this.state = new ReaderState(workflowDetails, svgBox.width);
+      this.selectionTrail = null;
+      this.marks = new SceneMarks(svg, this.state);
+      const linkTargets = new LinkTargets(workflows, navigator);
+      this.panel = new DescriptionPanel(svg, uncoveredArea, this, linkTargets);
     }
 
-    show(group, clientPoint) {
-      const isShownGroup = group === this.shownGroup;
-      if (isShownGroup) {
-        this.placeNear(clientPoint);
+    /** Attaches the panel to the diagram and draws the start state. */
+    bind() {
+      this.panel.bind();
+      this.renderPanel();
+      this.paintMarks();
+    }
+
+    /** Starts where a level link points: on its step, when it names one of the shown workflow, then at its level. */
+    startAt(link) {
+      this.applyThenNavigate((state) => state.goToStep(link.stepId), (startingStep) => {
+        this.navigator.jumpTo(link.path, link.layerIndex);
+        this.disclose(startingStep);
+      });
+    }
+
+    /** Applies `transition(state)`, then discloses the step that starts dimming, if one does. */
+    apply(transition) {
+      this.applyThenNavigate(transition, (startingStep) => this.disclose(startingStep));
+    }
+
+    /** Applies `transition(state)` and lays the panel out for it, then calls `navigate(startingStep)`, `startingStep` being the step that starts dimming or null, then paints the scene marks. */
+    applyThenNavigate(transition, navigate) {
+      const dimmingStepBefore = this.state.dimmingStep();
+      transition(this.state);
+      this.renderPanel();
+      const dimmingStep = this.state.dimmingStep();
+      const isStepStartingToDim = dimmingStep !== null && dimmingStep !== dimmingStepBefore;
+      const startingStep = isStepStartingToDim ? dimmingStep : null;
+      navigate(startingStep);
+      this.paintMarks();
+    }
+
+    disclose(step) {
+      const isNoStep = step === null;
+      if (isNoStep) {
         return;
       }
-      const details = Contract.detailsOf(group);
-      const lines = DetailLines.of(details);
-      const isDetailless = lines.length === 0;
-      if (isDetailless) {
-        this.hide();
+      this.navigator.discloseStep(step.layer, step.id);
+    }
+
+    /** Follows a click on an element, edge, badge or stub; one that jumps nowhere else first selects the clicked item, its navigation winning over the step the opening panel starts dimming. */
+    activateGroup(group) {
+      const followClick = () => this.navigator.followClickOn(group);
+      const isJumpOrStub = group.hasAttribute(GOTO);
+      if (isJumpOrStub) {
+        followClick();
+        this.paintMarks();
         return;
       }
-      this.render(lines);
-      this.shownGroup = group;
-      this.placeNear(clientPoint);
+      const item = Contract.itemDrawnBy(group);
+      this.selectThenNavigate(item, followClick);
     }
 
-    hide() {
-      this.panel.remove();
-      this.shownGroup = null;
+    /** Selects `item`, then navigates, remembering the standpoint before the first of consecutive selections and the one this selection reaches. */
+    selectThenNavigate(item, navigate) {
+      const departureCandidate = this.navigator.standpoint();
+      const previousTrail = this.selectionTrail;
+      const hasSelection = this.state.selection !== null;
+      const isStillWhereSelectionLeftIt = previousTrail !== null && Standpoints.areSame(previousTrail.reached, departureCandidate);
+      const isChainedSelection = hasSelection && isStillWhereSelectionLeftIt;
+      const departure = isChainedSelection ? previousTrail.departure : departureCandidate;
+      this.applyThenNavigate((state) => state.select(item), navigate);
+      const reached = this.navigator.standpoint();
+      this.selectionTrail = { departure, reached };
     }
 
-    followShownGroup() {
-      const isHidden = this.shownGroup === null;
+    /** Returns to where the reader stood before selecting, when it has not navigated since the selection; else to the focused level's view. */
+    returnFrom(selectionTrail) {
+      const currentStandpoint = this.navigator.standpoint();
+      const isTrailCurrent = selectionTrail !== null && Standpoints.areSame(selectionTrail.reached, currentStandpoint);
+      if (isTrailCurrent) {
+        this.navigator.returnTo(selectionTrail.departure);
+        return;
+      }
+      this.navigator.returnToFocusedView();
+    }
+
+    /** Follows a description link: selects, reveals and highlights an element or edge, or goes to a step, switching workflow first when the step is another's. */
+    followLink(target) {
+      const isStepTarget = target.group === undefined;
+      if (isStepTarget) {
+        this.goToStepOf(target.workflowId, target.stepId);
+        return;
+      }
+      const item = Contract.itemDrawnBy(target.group);
+      const revealAndHighlight = () => {
+        this.navigator.revealGroup(target.group);
+        const shownLayer = this.navigator.shownLayer;
+        const deepestLayer = this.navigator.deepestLayer();
+        const shownGroups = item.groupsIn(shownLayer, deepestLayer);
+        this.highlighter.highlight(shownGroups);
+      };
+      this.selectThenNavigate(item, revealAndHighlight);
+    }
+
+    goToStepOf(workflowId, stepId) {
+      const workflow = this.workflows.find((candidate) => {
+        const candidateId = candidate.getAttribute(WORKFLOW);
+        return candidateId === workflowId;
+      });
+      if (workflow === undefined) {
+        return;
+      }
+      const workflowDetails = Workflows.detailsOf(workflow);
+      this.applyThenNavigate((state) => state.goToStepOf(workflowDetails, stepId), (startingStep) => {
+        this.navigator.showWorkflow(workflow);
+        this.disclose(startingStep);
+      });
+    }
+
+    /** Shows `workflow` from the root of its layer 0, the panel hidden. */
+    switchWorkflow(workflow) {
+      const workflowDetails = Workflows.detailsOf(workflow);
+      this.applyThenNavigate((state) => state.showWorkflow(workflowDetails), () => this.navigator.showWorkflow(workflow));
+    }
+
+    showCameraAngle(angle) {
+      this.navigator.showCameraAngle(angle);
+      this.paintMarks();
+    }
+
+    /** Undoes one step: clears the selected item and returns from it, else returns to the focused level's view, else steps out, else returns to the workflow's start. */
+    escape() {
+      const hasSelection = this.state.selection !== null;
+      if (hasSelection) {
+        this.deselect();
+        return;
+      }
+      const hasReturnedToFocusedView = this.navigator.returnToFocusedView();
+      if (hasReturnedToFocusedView) {
+        return;
+      }
+      const hasSteppedOut = this.navigator.exitOneStep();
+      if (hasSteppedOut) {
+        this.paintMarks();
+        return;
+      }
+      this.apply((state) => state.returnToStart());
+    }
+
+    /** Clears the selected item, collapsing the component card, and returns from it: its highlight and its focus go together. */
+    deselect() {
+      const selectionTrail = this.selectionTrail;
+      this.selectionTrail = null;
+      this.applyThenNavigate((state) => state.clearSelection(), () => this.returnFrom(selectionTrail));
+    }
+
+    /** Collapses the component card while its body shows, deselecting its item; else expands it. */
+    toggleComponentCard() {
+      const isComponentBodyShowing = this.state.isComponentBodyShowing();
+      if (isComponentBodyShowing) {
+        this.deselect();
+        return;
+      }
+      const itemOfStepItem = (stepItem) => this.itemOfStepItem(stepItem);
+      this.apply((state) => state.expandComponentCard(itemOfStepItem));
+    }
+
+    /** Describes the component a step item names, as layer D draws it: its element, or its edge's source; null when layer D draws neither. */
+    itemOfStepItem(stepItem) {
+      const deepestLayer = this.navigator.deepestLayer();
+      const isEdgeItem = stepItem.edge !== undefined;
+      const edgeGroups = isEdgeItem ? Contract.edgesAt(deepestLayer, stepItem.edge) : [];
+      const edgeSourcePath = edgeGroups.length === 0 ? null : edgeGroups[0].getAttribute(FROM);
+      const elementPath = stepItem.element ?? edgeSourcePath;
+      const element = elementPath === null ? null : Contract.elementAt(deepestLayer, elementPath);
+      return element === null ? null : Contract.itemDrawnBy(element);
+    }
+
+    hover(group) {
+      const isHoverChanged = this.marks.hover(group);
+      if (isHoverChanged) {
+        this.paintMarks();
+      }
+    }
+
+    renderPanel() {
+      const deepestLayer = this.navigator.deepestLayer();
+      this.panel.render(deepestLayer);
+    }
+
+    paintMarks() {
+      const shownLayer = this.navigator.shownLayer;
+      const deepestLayer = this.navigator.deepestLayer();
+      this.marks.paint(shownLayer, deepestLayer);
+    }
+  }
+
+  /** Decides the reader's workflow, slot, panel and selected item, and which groups they dim; reads and writes no DOM. */
+  class ReaderState {
+    constructor(workflow, boxWidth) {
+      const panelKind = panelKindFor(boxWidth);
+      this.panel = panelKind.hidden();
+      this.restartIn(workflow);
+    }
+
+    /** Shows `workflow` with the panel hidden, nothing selected and its first slot. */
+    showWorkflow(workflow) {
+      this.restartIn(workflow);
+      this.panel = this.panel.hidden();
+    }
+
+    /** Goes to step `stepId` of `workflow`, keeping the panel and restarting in `workflow` first when it is not the shown one. */
+    goToStepOf(workflow, stepId) {
+      const isOtherWorkflow = workflow.id !== this.workflow.id;
+      if (isOtherWorkflow) {
+        this.restartIn(workflow);
+      }
+      this.goToStep(stepId);
+    }
+
+    // slot 0 is where the panel first opens in a workflow: the overview, else step 1
+    restartIn(workflow) {
+      this.workflow = workflow;
+      this.slotIndex = 0;
+      this.selection = null;
+      this.isStepsCardCollapsed = false;
+      this.frontCard = STEPS_CARD;
+    }
+
+    /** Makes step `stepId` the slot and expands the steps card, opening a hidden panel; an unknown step changes nothing. */
+    goToStep(stepId) {
+      const stepIndex = this.workflow.steps.findIndex((step) => step.id === stepId);
+      const isUnknownStep = stepIndex === -1;
+      if (isUnknownStep) {
+        return;
+      }
+      this.openPanel();
+      this.slotIndex = this.overviewSlotCount() + stepIndex;
+      this.expandStepsCard();
+    }
+
+    /** Moves the slot `delta` slots on while the panel is visible, never past the first or the last, keeping the steps card collapsed or expanded. */
+    moveSlotBy(delta) {
+      const isPanelHidden = !this.panel.isVisible;
+      if (isPanelHidden) {
+        return;
+      }
+      const lastSlotIndex = this.slotCount() - 1;
+      const movedSlotIndex = this.slotIndex + delta;
+      const slotIndexFromFirst = Math.max(0, movedSlotIndex);
+      this.slotIndex = Math.min(lastSlotIndex, slotIndexFromFirst);
+    }
+
+    /** Shows slot 0 again, where the workflow starts, so nothing dims: the overview, or, without one, a hidden panel. */
+    returnToStart() {
+      this.slotIndex = 0;
+      const hasOverview = this.overviewSlotCount() === 1;
+      if (hasOverview) {
+        return;
+      }
+      this.hidePanel();
+    }
+
+    openPanel() {
+      this.panel = this.panel.opened();
+    }
+
+    hidePanel() {
+      const hiddenPanel = this.panel.hidden();
+      this.changePanelTo(hiddenPanel);
+    }
+
+    tapHandle() {
+      const tappedPanel = this.panel.handleTapped();
+      this.changePanelTo(tappedPanel);
+    }
+
+    snapPanelNear(heightPx, boxHeightPx) {
+      const snappedPanel = this.panel.snappedNear(heightPx, boxHeightPx);
+      this.changePanelTo(snappedPanel);
+    }
+
+    /** Shows `panel` in place of the current one; hiding the panel clears the selected item. */
+    changePanelTo(panel) {
+      this.panel = panel;
+      const isPanelHidden = !panel.isVisible;
+      if (isPanelHidden) {
+        this.clearSelection();
+      }
+    }
+
+    /** Turns the panel into the kind an on-screen box `boxWidth` px wide takes, a visible one staying visible. */
+    fitPanelTo(boxWidth) {
+      const panelKind = panelKindFor(boxWidth);
+      const isSameKind = this.panel instanceof panelKind;
+      if (isSameKind) {
+        return;
+      }
+      this.panel = panelKind.like(this.panel);
+    }
+
+    /** Selects `item`, opening a hidden panel, expanding a peeking sheet and expanding the component card. */
+    select(item) {
+      this.openPanel();
+      this.panel = this.panel.showingCardBodies();
+      this.selection = item;
+      this.frontCard = COMPONENT_CARD;
+    }
+
+    /** Clears the selected item, which collapses the component card. */
+    clearSelection() {
+      this.selection = null;
+      this.frontCard = STEPS_CARD;
+    }
+
+    /** Collapses the steps card while its body shows, which stops its step dimming; else expands it. */
+    toggleStepsCard() {
+      const parts = this.panel.partsShowing(this);
+      const isStepsBodyShowing = parts.isStepsCardExpanded;
+      if (isStepsBodyShowing) {
+        this.isStepsCardCollapsed = true;
+        this.frontCard = COMPONENT_CARD;
+        return;
+      }
+      this.expandStepsCard();
+    }
+
+    /** Expands the steps card and brings it to the front, out of a peeking sheet too. */
+    expandStepsCard() {
+      this.isStepsCardCollapsed = false;
+      this.frontCard = STEPS_CARD;
+      this.panel = this.panel.showingCardBodies();
+    }
+
+    /** Tells whether the component card's body shows. */
+    isComponentBodyShowing() {
+      const parts = this.panel.partsShowing(this);
+      return parts.isComponentCardExpanded;
+    }
+
+    /** Brings the component card to the front; with nothing selected, first selects the component `itemOfStepItem` finds for the first item of the shown step, step 1's on the overview. */
+    expandComponentCard(itemOfStepItem) {
+      const hasSelection = this.selection !== null;
+      if (hasSelection) {
+        this.frontCard = COMPONENT_CARD;
+        this.panel = this.panel.showingCardBodies();
+        return;
+      }
+      const shownStep = this.stepAt(this.slotIndex);
+      const firstStep = this.workflow.steps[0];
+      const describedStep = shownStep ?? firstStep;
+      const firstStepItem = describedStep === undefined ? undefined : describedStep.items[0];
+      const item = firstStepItem === undefined ? null : itemOfStepItem(firstStepItem);
+      if (item === null) {
+        return;
+      }
+      this.select(item);
+    }
+
+    /** Tells whether a group is dimmed: never when selected; else, while a step dims, when it takes no part in that step; else when it is unrelated to the hovered group. */
+    dimsGroup(groupFacts) {
+      if (groupFacts.isSelected) {
+        return false;
+      }
+      const dimmingStep = this.dimmingStep();
+      const isStepDimming = dimmingStep !== null;
+      if (isStepDimming) {
+        const isOutsideStep = !groupFacts.stepIds.includes(dimmingStep.id);
+        return isOutsideStep;
+      }
+      return groupFacts.isUnrelatedToHovered;
+    }
+
+    /** Returns the step dimming the scene: the shown slot's while the panel is visible and the steps card expanded; null on the overview. */
+    dimmingStep() {
+      const isPanelHidden = !this.panel.isVisible;
+      const isDimmingOff = isPanelHidden || this.isStepsCardCollapsed;
+      if (isDimmingOff) {
+        return null;
+      }
+      return this.stepAt(this.slotIndex);
+    }
+
+    slotCount() {
+      return this.overviewSlotCount() + this.workflow.steps.length;
+    }
+
+    overviewSlotCount() {
+      const hasOverview = typeof this.workflow.description === 'string';
+      return hasOverview ? 1 : 0;
+    }
+
+    /** Returns the step at `slotIndex`, null for the overview. */
+    stepAt(slotIndex) {
+      const stepIndex = slotIndex - this.overviewSlotCount();
+      const step = this.workflow.steps[stepIndex];
+      return step ?? null;
+    }
+  }
+
+  /** Picks the panel kind for an on-screen box `boxWidth` px wide: a side panel from SIDE_PANEL_MIN_BOX_WIDTH_PX on, else a sheet. */
+  function panelKindFor(boxWidth) {
+    const isNarrowBox = boxWidth < SIDE_PANEL_MIN_BOX_WIDTH_PX;
+    return isNarrowBox ? Sheet : SidePanel;
+  }
+
+  /** Holds the side panel's state, hidden or open, and frames it along the box's right edge: a tab while hidden, the full height while open. */
+  class SidePanel {
+    static hidden() {
+      return new SidePanel(false);
+    }
+
+    static open() {
+      return new SidePanel(true);
+    }
+
+    /** Turns `panel` into a side panel, open when it is visible. */
+    static like(panel) {
+      return panel.isVisible ? SidePanel.open() : SidePanel.hidden();
+    }
+
+    constructor(isOpen) {
+      this.isVisible = isOpen;
+      this.stateName = isOpen ? PANEL_OPEN : PANEL_HIDDEN;
+    }
+
+    opened() {
+      return SidePanel.open();
+    }
+
+    hidden() {
+      return SidePanel.hidden();
+    }
+
+    // an open side panel always shows its cards' bodies
+    showingCardBodies() {
+      return this;
+    }
+
+    // a side panel has no handle
+    handleTapped() {
+      return this;
+    }
+
+    snappedNear(_heightPx, _boxHeightPx) {
+      return this;
+    }
+
+    /** Tells which parts show for `cards`: the tab while hidden; the resizing edge, both cards and, between two expanded cards, their divider while open, the steps card expanded unless collapsed, the component card while an item is selected. */
+    partsShowing(cards) {
+      const isOpen = this.isVisible;
+      const hasSelection = cards.selection !== null;
+      const isStepsCardExpanded = !cards.isStepsCardCollapsed;
+      return {
+        kindClass: 'svugy-panel-side',
+        hasTab: !isOpen,
+        hasHandle: false,
+        hasEdge: isOpen,
+        hasCardDivider: isOpen,
+        hasStepsCard: isOpen,
+        hasComponentCard: isOpen,
+        isStepsCardExpanded,
+        isComponentCardExpanded: hasSelection,
+        isHandleExpanded: false,
+      };
+    }
+
+    // hidden: the tab, centred on the right edge; open: min(W_max, ρ·B_w) wide, the box's full height
+    frameRectIn(box, _measureContentHeight, preferredWidthPx) {
+      const isHidden = !this.isVisible;
       if (isHidden) {
-        return;
+        const tabX = box.width - SIDE_PANEL_TAB_WIDTH_PX;
+        const tabY = (box.height - SIDE_PANEL_TAB_HEIGHT_PX) / 2;
+        return { x: tabX, y: tabY, width: SIDE_PANEL_TAB_WIDTH_PX, height: SIDE_PANEL_TAB_HEIGHT_PX, coveredRight: 0, coveredBottom: 0 };
       }
-      const groupCenter = clientCenterOf(this.shownGroup);
-      this.placeNear(groupCenter);
+      const width = SidePanel.widthIn(box, preferredWidthPx);
+      return { x: box.width - width, y: 0, width, height: box.height, coveredRight: width, coveredBottom: 0 };
     }
 
-    render(lines) {
-      const plate = createSvgElement('rect', { class: 'svugy-panel-plate', rx: 6 });
-      const texts = lines.map((line, index) => {
-        const baseline = PANEL_PADDING_PX + (index + 1) * PANEL_LINE_HEIGHT_PX - PANEL_BASELINE_RAISE_PX;
-        const text = createSvgElement('text', { class: `svugy-panel-${line.role}`, x: PANEL_PADDING_PX, y: baseline });
-        text.textContent = DetailLines.truncate(line.text);
-        return text;
-      });
-      this.panel.replaceChildren(plate, ...texts);
-      this.svg.appendChild(this.panel);
-      const textWidths = texts.map((text) => text.getComputedTextLength());
-      this.width = Math.max(...textWidths) + 2 * PANEL_PADDING_PX;
-      this.height = lines.length * PANEL_LINE_HEIGHT_PX + 2 * PANEL_PADDING_PX - PANEL_BASELINE_RAISE_PX;
-      plate.setAttribute('width', String(this.width));
-      plate.setAttribute('height', String(this.height));
-    }
-
-    placeNear(clientPoint) {
-      const screenMatrix = this.svg.getScreenCTM();
-      if (screenMatrix === null) {
-        return;
+    // w = clamp(w_pref, w_min, σ_drag·B_w), else min(w_max, σ·B_w)
+    /** Sizes the open side panel for `box`: the width the reader dragged it to, within its bounds, else the default. */
+    static widthIn(box, preferredWidthPx) {
+      const isDefaultWidth = preferredWidthPx === null;
+      if (isDefaultWidth) {
+        const boxShareWidth = SIDE_PANEL_MAX_BOX_SHARE * box.width;
+        return Math.min(SIDE_PANEL_MAX_WIDTH_PX, boxShareWidth);
       }
-      const screenToUserMatrix = screenMatrix.inverse();
-      const clientDomPoint = new DOMPoint(clientPoint.x, clientPoint.y);
-      const pointer = clientDomPoint.matrixTransform(screenToUserMatrix);
-      const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
-      const offset = PANEL_POINTER_OFFSET_PX * userUnitsPerPixel;
-      const margin = PANEL_VIEW_MARGIN_PX * userUnitsPerPixel;
-      const view = this.svg.viewBox.baseVal;
-      const scaledWidth = this.width * userUnitsPerPixel;
-      const scaledHeight = this.height * userUnitsPerPixel;
-      const x = panelStartBesidePointer(pointer.x, offset, scaledWidth, view.x, view.width, margin);
-      const y = panelStartBesidePointer(pointer.y, offset, scaledHeight, view.y, view.height, margin);
-      this.panel.setAttribute('transform', `translate(${x} ${y}) scale(${userUnitsPerPixel})`);
+      const maxWidth = SIDE_PANEL_MAX_DRAGGED_BOX_SHARE * box.width;
+      const widthAboveMin = Math.max(SIDE_PANEL_MIN_WIDTH_PX, preferredWidthPx);
+      return Math.min(maxWidth, widthAboveMin);
     }
   }
 
-  // start = p + o, or p − o − e when that overflows v + w − m; then max(start, v + m)
-  function panelStartBesidePointer(pointer, offset, extent, viewStart, viewExtent, margin) {
-    const preferredStart = pointer + offset;
-    const viewEnd = viewStart + viewExtent - margin;
-    const isOverflowingView = preferredStart + extent > viewEnd;
-    const start = isOverflowingView ? pointer - offset - extent : preferredStart;
-    return Math.max(start, viewStart + margin);
+  /** Holds the sheet's state, hidden, peek or expanded, and frames it along the box's bottom edge: the handle while hidden, else its content's height. */
+  class Sheet {
+    static hidden() {
+      return new Sheet(PANEL_HIDDEN);
+    }
+
+    static peek() {
+      return new Sheet(PANEL_PEEK);
+    }
+
+    static expanded() {
+      return new Sheet(PANEL_EXPANDED);
+    }
+
+    /** Turns `panel` into a sheet, expanded when it is visible. */
+    static like(panel) {
+      return panel.isVisible ? Sheet.expanded() : Sheet.hidden();
+    }
+
+    /** Frames a sheet `heightPx` tall along the box's bottom edge. */
+    static frameRectAtHeight(box, heightPx) {
+      return { x: 0, y: box.height - heightPx, width: box.width, height: heightPx, coveredRight: 0, coveredBottom: heightPx };
+    }
+
+    constructor(stateName) {
+      this.stateName = stateName;
+      this.isVisible = stateName !== PANEL_HIDDEN;
+    }
+
+    /** Opens a hidden sheet expanded; a visible one stays as it is. */
+    opened() {
+      return this.isVisible ? this : Sheet.expanded();
+    }
+
+    hidden() {
+      return Sheet.hidden();
+    }
+
+    /** Expands a peeking sheet, the only visible state hiding the cards' bodies. */
+    showingCardBodies() {
+      const isPeek = this.stateName === PANEL_PEEK;
+      return isPeek ? Sheet.expanded() : this;
+    }
+
+    /** Taps the handle: hidden → peek → expanded, expanded → peek. */
+    handleTapped() {
+      const isPeek = this.stateName === PANEL_PEEK;
+      return isPeek ? Sheet.expanded() : Sheet.peek();
+    }
+
+    // argmin over resting heights: hidden = handle, peek = handle + one line, expanded = σ·B_h
+    snappedNear(heightPx, boxHeightPx) {
+      const restingSheets = [
+        [Sheet.hidden(), SHEET_HANDLE_HEIGHT_PX],
+        [Sheet.peek(), SHEET_HANDLE_HEIGHT_PX + SHEET_LINE_HEIGHT_PX],
+        [Sheet.expanded(), SHEET_MAX_BOX_SHARE * boxHeightPx],
+      ];
+      const distances = restingSheets.map(([sheet, restingHeight]) => {
+        const distance = Math.abs(heightPx - restingHeight);
+        return [sheet, distance];
+      });
+      const [nearestSheet] = distances.reduce((nearest, candidate) => (candidate[1] < nearest[1] ? candidate : nearest));
+      return nearestSheet;
+    }
+
+    /** Tells which parts show for `cards`: the handle always; the steps card while visible, down to its line on peek; once expanded, the body of at most one expanded card, the front one, the other down to its line. */
+    partsShowing(cards) {
+      const isExpanded = this.stateName === PANEL_EXPANDED;
+      const hasSelection = cards.selection !== null;
+      const isStepsCardOpen = !cards.isStepsCardCollapsed;
+      const isComponentInFront = cards.frontCard === COMPONENT_CARD;
+      const isComponentBodyInFront = hasSelection && isComponentInFront;
+      const isStepsCardExpanded = isExpanded && isStepsCardOpen && !isComponentBodyInFront;
+      const isComponentCardExpanded = isExpanded && hasSelection && (isComponentInFront || !isStepsCardOpen);
+      return {
+        kindClass: 'svugy-panel-sheet',
+        hasTab: false,
+        hasHandle: true,
+        hasEdge: false,
+        hasCardDivider: false,
+        hasStepsCard: this.isVisible,
+        hasComponentCard: isExpanded,
+        isStepsCardExpanded,
+        isComponentCardExpanded,
+        isHandleExpanded: isExpanded,
+      };
+    }
+
+    // hidden: the handle, centred on the bottom edge; else the content's height, at most σ·B_h
+    frameRectIn(box, measureContentHeight) {
+      const isHidden = !this.isVisible;
+      if (isHidden) {
+        const handleX = (box.width - SHEET_HANDLE_TAB_WIDTH_PX) / 2;
+        const handleY = box.height - SHEET_HANDLE_HEIGHT_PX;
+        return { x: handleX, y: handleY, width: SHEET_HANDLE_TAB_WIDTH_PX, height: SHEET_HANDLE_HEIGHT_PX, coveredRight: 0, coveredBottom: 0 };
+      }
+      const maxHeight = SHEET_MAX_BOX_SHARE * box.height;
+      const contentHeight = measureContentHeight(box.width, maxHeight);
+      return Sheet.frameRectAtHeight(box, contentHeight);
+    }
   }
 
-  /** Turns details JSON into panel lines, one builder per details kind. */
-  const DetailLines = {
-    of(details) {
-      if (details === null) {
-        return [];
-      }
-      const linesForKind = DETAIL_LINES_BY_KIND.get(details.kind);
-      if (linesForKind === undefined) {
-        return [];
-      }
-      const lines = linesForKind(details);
-      return lines.filter((line) => line !== null);
-    },
-
-    ofElement(details) {
-      const titleLine = DetailLines.line('title', details.label ?? details.path);
-      const captionLine = DetailLines.line('body', details.caption);
-      const hasLabel = details.label !== undefined;
-      const pathLine = hasLabel ? DetailLines.line('body', details.path) : null;
-      const hasCode = typeof details.code === 'string';
-      const codeLine = hasCode ? DetailLines.line('body', `code: ${details.code}`) : null;
-      const metadata = DetailLines.isPlainObject(details.metadata) ? details.metadata : {};
-      const metadataLines = Object.entries(metadata).map(([key, value]) => {
-        const valueText = typeof value === 'string' ? value : JSON.stringify(value);
-        return DetailLines.line('body', `${key}: ${valueText}`);
+  /** Marks the shown layer's groups `data-svugy-dimmed` and `data-svugy-selected` as the reader state decides, given the hovered or focused group. */
+  class SceneMarks {
+    constructor(svg, state) {
+      const staleMarks = svg.querySelectorAll(`${DIMMED_SELECTOR},${SELECTED_SELECTOR}`);
+      staleMarks.forEach((node) => {
+        node.removeAttribute(DIMMED);
+        node.removeAttribute(SELECTED);
       });
-      return [titleLine, captionLine, pathLine, codeLine, ...metadataLines];
-    },
-
-    ofEdge(details) {
-      const titleLine = DetailLines.line('title', details.label ?? details.edge);
-      const endpointsText = DetailLines.endpointsTextOf(details);
-      const endpointsLine = DetailLines.line('body', endpointsText);
-      return [titleLine, endpointsLine];
-    },
-
-    ofLifted(details) {
-      const endpointsText = DetailLines.endpointsTextOf(details);
-      const titleLine = DetailLines.line('title', details.label ?? endpointsText);
-      const sourceEdges = DetailLines.plainObjectsIn(details.edges);
-      const sourceEdgeLines = sourceEdges.map(DetailLines.sourceEdgeLine);
-      return [titleLine, ...sourceEdgeLines];
-    },
-
-    ofStub(details) {
-      const titleLine = DetailLines.line('title', `${ARROW} ${details.target}`);
-      const connections = DetailLines.plainObjectsIn(details.edges);
-      const connectionLines = connections.flatMap((connection) => DetailLines.of(connection));
-      return [titleLine, ...connectionLines];
-    },
-
-    sourceEdgeLine(edge) {
-      const endpointsText = DetailLines.endpointsTextOf(edge) ?? edge.edge;
-      const hasLabel = edge.label !== undefined;
-      const hasEndpointsText = endpointsText !== undefined;
-      const isLabelBesideEndpoints = hasLabel && hasEndpointsText;
-      const text = isLabelBesideEndpoints ? `${edge.label}: ${endpointsText}` : edge.label ?? endpointsText;
-      return DetailLines.line('body', text);
-    },
-
-    endpointsTextOf(details) {
-      const hasEndpoints = details.from !== undefined && details.to !== undefined;
-      return hasEndpoints ? `${details.from} ${ARROW} ${details.to}` : undefined;
-    },
-
-    line(role, value) {
-      const isAbsent = value === undefined || value === null;
-      return isAbsent ? null : { role, text: String(value) };
-    },
-
-    plainObjectsIn(value) {
-      const isArray = Array.isArray(value);
-      return isArray ? value.filter(DetailLines.isPlainObject) : [];
-    },
-
-    isPlainObject(value) {
-      return typeof value === 'object' && value !== null && !Array.isArray(value);
-    },
-
-    truncate(text) {
-      const isTooLong = text.length > PANEL_MAX_LINE_CHARACTERS;
-      return isTooLong ? `${text.slice(0, PANEL_MAX_LINE_CHARACTERS - 1)}${ELLIPSIS}` : text;
-    },
-  };
-
-  const DETAIL_LINES_BY_KIND = new Map([
-    ['element', DetailLines.ofElement],
-    ['edge', DetailLines.ofEdge],
-    ['lifted', DetailLines.ofLifted],
-    ['stub', DetailLines.ofStub],
-  ]);
-
-  /** Dims the element and edge groups of the shown layer unrelated to one hovered or focused group; stubs and badges are never dimmed. */
-  class UnrelatedGroupDimmer {
-    constructor(svg) {
-      const staleMarks = svg.querySelectorAll(DIMMED_SELECTOR);
-      staleMarks.forEach((node) => node.removeAttribute(DIMMED));
-      this.anchorGroup = null;
+      this.state = state;
+      this.hoveredGroup = null;
       this.dimmedGroups = [];
+      this.selectedGroups = [];
     }
 
-    dimUnrelatedTo(group, shownLayer) {
-      const isAnchorGroup = group === this.anchorGroup;
-      if (isAnchorGroup) {
-        return;
-      }
+    /** Records the hovered or focused group, null for none; tells whether it changed. */
+    hover(group) {
+      const isHoverChanged = group !== this.hoveredGroup;
+      this.hoveredGroup = group;
+      return isHoverChanged;
+    }
+
+    paint(shownLayer, deepestLayer) {
       this.clear();
-      const isGroupOutsideShownLayer = !shownLayer.contains(group);
-      if (isGroupOutsideShownLayer) {
-        return;
+      const selection = this.state.selection;
+      this.selectedGroups = selection === null ? [] : selection.groupsIn(shownLayer, deepestLayer);
+      const selectedGroupSet = new Set(this.selectedGroups);
+      const hoveredRelatives = this.hoveredRelativesIn(shownLayer);
+      const dimmableGroups = Contract.dimmableGroupsOf(shownLayer);
+      this.dimmedGroups = dimmableGroups.filter((group) => {
+        const stepIds = Contract.stepIdsOf(group);
+        const isSelected = selectedGroupSet.has(group);
+        const isRelatedToHovered = hoveredRelatives === null ? true : hoveredRelatives.has(group);
+        const groupFacts = { stepIds, isSelected, isUnrelatedToHovered: !isRelatedToHovered };
+        return this.state.dimsGroup(groupFacts);
+      });
+      this.selectedGroups.forEach((group) => group.setAttribute(SELECTED, ''));
+      this.dimmedGroups.forEach((group) => group.setAttribute(DIMMED, ''));
+    }
+
+    /** Collects the hovered group's relatives in `shownLayer`; null when no element or edge group of it is hovered. */
+    hoveredRelativesIn(shownLayer) {
+      const group = this.hoveredGroup;
+      if (group === null) {
+        return null;
       }
+      const isGroupInShownLayer = shownLayer.contains(group);
       const isStub = group.hasAttribute(STUB);
-      if (isStub) {
-        return;
-      }
-      const relatives = Relatives.of(group, shownLayer);
-      const layerElements = Array.from(shownLayer.querySelectorAll(ELEMENT_SELECTOR));
-      const layerEdges = Array.from(shownLayer.querySelectorAll(EDGE_SELECTOR));
-      const dimmableEdges = layerEdges.filter((edge) => !Contract.isBadge(edge));
-      const dimmableGroups = [...layerElements, ...dimmableEdges];
-      this.dimmedGroups = dimmableGroups.filter((candidate) => !relatives.has(candidate));
-      this.dimmedGroups.forEach((dimmedGroup) => dimmedGroup.setAttribute(DIMMED, ''));
-      this.anchorGroup = group;
+      const isDimmingHover = isGroupInShownLayer && !isStub;
+      return isDimmingHover ? Relatives.of(group, shownLayer) : null;
     }
 
     clear() {
-      this.dimmedGroups.forEach((dimmedGroup) => dimmedGroup.removeAttribute(DIMMED));
+      this.dimmedGroups.forEach((group) => group.removeAttribute(DIMMED));
+      this.selectedGroups.forEach((group) => group.removeAttribute(SELECTED));
       this.dimmedGroups = [];
-      this.anchorGroup = null;
+      this.selectedGroups = [];
     }
   }
 
@@ -1426,208 +2192,827 @@
     },
   };
 
-  /** Shows the author's description of the focused level, or of the last clicked group or heading, in a panel floating top-right at a constant on-screen width; nothing without a description. */
-  class DescriptionPanel {
-    constructor(svg, deepestLayer) {
-      this.svg = svg;
-      this.deepestLayer = deepestLayer;
-      this.body = createXhtmlElement('aside', { class: 'svugy-description', 'aria-label': 'description' });
-      this.frame = createSvgElement('foreignObject', { class: 'svugy-description-frame' });
-      this.frame.appendChild(this.body);
-      this.panel = createSvgElement('g', { class: 'svugy-description-panel' });
-      this.panel.appendChild(this.frame);
-      this.panel.addEventListener('click', (event) => event.stopPropagation());
-      this.focusedPath = ROOT_LEVEL_PATH;
-      this.isClickShown = false;
-      this.isShownContentKept = false;
-      this.width = 0;
-      this.targetLinkListeners = [];
-      const markdown = new SafeMarkdown(deepestLayer, (target) => this.announceTargetLink(target));
-      this.content = new DescriptionContent(deepestLayer, markdown);
-      const viewBoxObserver = new MutationObserver(() => this.place());
-      viewBoxObserver.observe(svg, { attributes: true, attributeFilter: ['viewBox'] });
-      const resizeObserver = new ResizeObserver(() => this.layOut());
-      resizeObserver.observe(svg);
+  /** Resolves a description link's `#TARGET`: a step of any workflow as `WORKFLOW/STEP`, else an element or written-edge group of the shown workflow's layer D; null when it names nothing. */
+  class LinkTargets {
+    constructor(workflows, navigator) {
+      const workflowEntries = workflows.map((workflow) => {
+        const workflowId = workflow.getAttribute(WORKFLOW);
+        const workflowDetails = Workflows.detailsOf(workflow);
+        return [workflowId, workflowDetails];
+      });
+      this.workflowDetailsById = new Map(workflowEntries);
+      this.navigator = navigator;
     }
 
-    /** Calls `listener(target)` when a description link to `target`, an element or edge group of the deepest layer, is activated. */
-    addTargetLinkListener(listener) {
-      this.targetLinkListeners.push(listener);
-    }
-
-    /** Runs `navigate` without replacing the shown description, so a link's reader keeps reading while the view moves to its target. */
-    keepShownContentWhile(navigate) {
-      this.isShownContentKept = true;
-      navigate();
-      this.isShownContentKept = false;
-    }
-
-    describeFocusedLevel(path) {
-      this.focusedPath = path;
-      if (this.isShownContentKept) {
-        this.isClickShown = true;
-        return;
+    resolve(target) {
+      const stepTarget = this.stepTargetOf(target);
+      if (stepTarget !== null) {
+        return stepTarget;
       }
-      this.isClickShown = false;
-      const focusedContent = this.contentOfFocusedLevel();
-      this.show(focusedContent);
+      const deepestLayer = this.navigator.deepestLayer();
+      const group = Contract.groupTargetedBy(deepestLayer, target);
+      return group === null ? null : { group };
     }
 
-    /** Describes a clicked group: the focused level's own description when the group is that level's container, else the group's. */
-    describeClickedGroup(group) {
-      const groupPath = group.getAttribute(ELEMENT);
-      const isFocusedContainer = groupPath === this.focusedPath;
-      if (isFocusedContainer) {
-        this.describeFocusedLevel(this.focusedPath);
-        return;
+    stepTargetOf(target) {
+      const targetName = target.slice(TARGET_LINK_PREFIX.length);
+      const stepTargetMatch = STEP_TARGET_PATTERN.exec(targetName);
+      if (stepTargetMatch === null) {
+        return null;
       }
-      const groupContent = this.content.of(group);
-      this.showClicked(groupContent);
-    }
-
-    describeClickedHeading() {
-      const diagramContent = this.content.of(this.svg);
-      this.showClicked(diagramContent);
-    }
-
-    /** Goes back from a clicked description to the focused level's. */
-    stepBackFromClick() {
-      const isFocusedLevelShown = !this.isClickShown;
-      if (isFocusedLevelShown) {
-        return;
-      }
-      this.describeFocusedLevel(this.focusedPath);
-    }
-
-    contentOfFocusedLevel() {
-      const isRoot = this.focusedPath === ROOT_LEVEL_PATH;
-      const describedNode = isRoot ? this.svg : Contract.elementAt(this.deepestLayer, this.focusedPath);
-      return describedNode === null ? [] : this.content.of(describedNode);
-    }
-
-    showClicked(content) {
-      this.isClickShown = true;
-      this.show(content);
-    }
-
-    show(content) {
-      const wasFocusInside = this.panel.contains(document.activeElement);
-      this.body.replaceChildren(...content);
-      if (wasFocusInside) {
-        this.svg.focus({ preventScroll: true });
-      }
-      const isContentless = content.length === 0;
-      if (isContentless) {
-        this.panel.remove();
-        return;
-      }
-      const isDetached = !this.panel.isConnected;
-      if (isDetached) {
-        this.svg.appendChild(this.panel);
-      }
-      this.layOut();
-      this.body.scrollTop = 0;
-    }
-
-    /** Sizes and places the shown panel. */
-    layOut() {
-      const isDetached = !this.panel.isConnected;
-      if (isDetached) {
-        return;
-      }
-      this.fit();
-      this.place();
-    }
-
-    // w = min(W, client width − 2m), h = min(content height, client height − 2m): the panel never leaves the viewport
-    fit() {
-      const svgBounds = this.svg.getBoundingClientRect();
-      const viewportMargins = 2 * DESCRIPTION_VIEW_MARGIN_PX;
-      const availableWidth = Math.max(0, svgBounds.width - viewportMargins);
-      const availableHeight = Math.max(0, svgBounds.height - viewportMargins);
-      this.width = Math.min(DESCRIPTION_WIDTH_PX, availableWidth);
-      this.frame.setAttribute('width', String(this.width));
-      this.frame.setAttribute('height', String(availableHeight));
-      const contentHeight = this.body.offsetHeight;
-      this.frame.setAttribute('height', String(contentHeight));
-    }
-
-    place() {
-      const isDetached = !this.panel.isConnected;
-      if (isDetached) {
-        return;
-      }
-      const screenMatrix = this.svg.getScreenCTM();
-      if (screenMatrix === null) {
-        return;
-      }
-      const screenToUserMatrix = screenMatrix.inverse();
-      const svgBounds = this.svg.getBoundingClientRect();
-      const clientCorner = new DOMPoint(svgBounds.right, svgBounds.top);
-      const userCorner = clientCorner.matrixTransform(screenToUserMatrix);
-      const userUnitsPerPixel = 1 / Math.hypot(screenMatrix.a, screenMatrix.b);
-      // x = corner.x − (m + w)·u, y = corner.y + m·u, with u user units per pixel, so the panel sits m pixels inside the top-right corner
-      const x = userCorner.x - (DESCRIPTION_VIEW_MARGIN_PX + this.width) * userUnitsPerPixel;
-      const y = userCorner.y + DESCRIPTION_VIEW_MARGIN_PX * userUnitsPerPixel;
-      this.panel.setAttribute('transform', `translate(${x} ${y}) scale(${userUnitsPerPixel})`);
-    }
-
-    announceTargetLink(target) {
-      this.targetLinkListeners.forEach((listener) => listener(target));
+      const [_targetName, workflowId, stepId] = stepTargetMatch;
+      const workflowDetails = this.workflowDetailsById.get(workflowId);
+      const steps = workflowDetails === undefined ? [] : workflowDetails.steps;
+      const isStepOfWorkflow = steps.some((step) => step.id === stepId);
+      return isStepOfWorkflow ? { workflowId, stepId } : null;
     }
   }
 
-  /** Builds the description panel's XHTML from a group's or the diagram's details: its description as Markdown, or for a lifted edge each described source edge's description under that edge's name. */
-  class DescriptionContent {
-    constructor(deepestLayer, markdown) {
-      this.deepestLayer = deepestLayer;
+  /** Lets the reader pick the shown workflow from a menu below the heading, listing every workflow's title and subtitle. */
+  class WorkflowMenu {
+    constructor(svg, workflows, navigator, reader) {
+      this.svg = svg;
+      this.workflows = workflows;
+      this.navigator = navigator;
+      this.reader = reader;
+      this.list = createXhtmlElement('div', { class: 'svugy-workflows', role: 'listbox', 'aria-label': 'workflows' });
+      this.frame = createSvgElement('foreignObject', { class: 'svugy-workflows-frame', width: WORKFLOW_MENU_WIDTH_PX, height: 0 });
+      this.frame.appendChild(this.list);
+      this.pin = createSvgElement('g', { class: 'svugy-workflows-pin' });
+      this.pin.appendChild(this.frame);
+      isolateOverlayEvents(this.pin);
+      this.pin.addEventListener('keydown', (event) => this.followKey(event));
+      this.isOpen = false;
+    }
+
+    /** Marks every heading as the menu's trigger, closes the menu on a press outside it and keeps it under the shown heading. */
+    bind() {
+      const headings = this.svg.querySelectorAll(HEADING_SELECTOR);
+      headings.forEach((heading) => WorkflowMenu.markAsTrigger(heading));
+      // capture, so a press on an overlay that keeps its events still closes the menu
+      this.svg.addEventListener('pointerdown', (event) => this.closeOnPressOutside(event), true);
+      const viewBoxObserver = new MutationObserver(() => this.place());
+      viewBoxObserver.observe(this.svg, { attributes: true, attributeFilter: ['viewBox'] });
+      const resizeObserver = new ResizeObserver(() => this.place());
+      resizeObserver.observe(this.svg);
+    }
+
+    static markAsTrigger(heading) {
+      heading.setAttribute('tabindex', '0');
+      heading.setAttribute('role', 'button');
+      heading.setAttribute('aria-haspopup', 'listbox');
+      heading.setAttribute('aria-expanded', 'false');
+      heading.setAttribute('aria-label', 'choose workflow');
+      const title = heading.querySelector('text');
+      if (title === null) {
+        return;
+      }
+      const titleX = Number(title.getAttribute('x'));
+      const writtenLength = Number(title.getAttribute('textLength'));
+      const hasWrittenLength = writtenLength > 0;
+      const titleLength = hasWrittenLength ? writtenLength : title.getComputedTextLength();
+      const caret = title.cloneNode(false);
+      caret.removeAttribute('textLength');
+      caret.removeAttribute('lengthAdjust');
+      caret.setAttribute('x', String(titleX + titleLength + HEADING_CARET_GAP));
+      caret.textContent = CARET;
+      title.after(caret);
+    }
+
+    toggle() {
+      if (this.isOpen) {
+        this.close();
+        return;
+      }
+      this.open();
+    }
+
+    open() {
+      const shownWorkflow = this.navigator.shownWorkflow;
+      const options = this.workflows.map((workflow) => this.optionChoosing(workflow, shownWorkflow));
+      this.list.replaceChildren(...options);
+      this.svg.appendChild(this.pin);
+      this.isOpen = true;
+      this.markTriggersExpanded(true);
+      const svgBox = this.svg.getBoundingClientRect();
+      this.frame.setAttribute('height', String(svgBox.height));
+      const listHeight = this.list.offsetHeight;
+      this.frame.setAttribute('height', String(listHeight));
+      this.place();
+      const shownIndex = this.workflows.indexOf(shownWorkflow);
+      const shownOption = options[shownIndex] ?? options[0];
+      shownOption.focus({ preventScroll: true });
+    }
+
+    optionChoosing(workflow, shownWorkflow) {
+      const details = Workflows.detailsOf(workflow);
+      const isShownWorkflow = workflow === shownWorkflow;
+      const option = createXhtmlElement('div', {
+        class: 'svugy-workflows-option',
+        role: 'option',
+        tabindex: '-1',
+        'aria-selected': String(isShownWorkflow),
+      });
+      const titleText = details.title ?? workflow.getAttribute(WORKFLOW);
+      const title = createTextElement('div', 'svugy-workflows-title', titleText);
+      const subtitle = createTextElement('div', 'svugy-workflows-subtitle', details.subtitle);
+      const parts = [title, subtitle].filter((part) => part !== null);
+      option.append(...parts);
+      option.addEventListener('click', () => this.choose(workflow));
+      return option;
+    }
+
+    choose(workflow) {
+      this.close();
+      const isShownWorkflow = workflow === this.navigator.shownWorkflow;
+      if (isShownWorkflow) {
+        return;
+      }
+      this.reader.switchWorkflow(workflow);
+    }
+
+    close() {
+      const isClosed = !this.isOpen;
+      if (isClosed) {
+        return;
+      }
+      const wasFocusInside = this.pin.contains(document.activeElement);
+      this.pin.remove();
+      this.isOpen = false;
+      this.markTriggersExpanded(false);
+      if (wasFocusInside) {
+        const shownHeading = Contract.headingOf(this.navigator.shownLayer);
+        shownHeading?.focus({ preventScroll: true });
+      }
+    }
+
+    closeOnPressOutside(event) {
+      const isInsideMenu = this.pin.contains(event.target);
+      const heading = Interactions.headingAt(event.target);
+      const isOnHeading = heading !== null;
+      const isPressOutside = !isInsideMenu && !isOnHeading;
+      if (isPressOutside) {
+        this.close();
+      }
+    }
+
+    // ↑ and ↓ move between options, Enter and Space choose, Escape closes; none reaches the diagram
+    followKey(event) {
+      event.stopPropagation();
+      const options = Array.from(this.list.children);
+      const focusedIndex = options.indexOf(document.activeElement);
+      const key = event.key;
+      if (key === 'Escape') {
+        this.close();
+        return;
+      }
+      const isChoosingKey = key === 'Enter' || key === ' ';
+      if (isChoosingKey) {
+        event.preventDefault();
+        options[focusedIndex]?.click();
+        return;
+      }
+      const focusDelta = OPTION_FOCUS_DELTA_BY_KEY.get(key);
+      if (focusDelta === undefined) {
+        return;
+      }
+      event.preventDefault();
+      const movedIndex = focusedIndex + focusDelta;
+      const clampedIndex = Math.min(options.length - 1, Math.max(0, movedIndex));
+      options[clampedIndex].focus({ preventScroll: true });
+    }
+
+    markTriggersExpanded(isExpanded) {
+      const headings = this.svg.querySelectorAll(HEADING_SELECTOR);
+      headings.forEach((heading) => heading.setAttribute('aria-expanded', String(isExpanded)));
+    }
+
+    // top-left = the shown heading's bottom-left, g pixels lower
+    place() {
+      const isClosed = !this.isOpen;
+      if (isClosed) {
+        return;
+      }
+      const shownHeading = Contract.headingOf(this.navigator.shownLayer);
+      if (shownHeading === null) {
+        return;
+      }
+      const headingBounds = shownHeading.getBoundingClientRect();
+      const clientCorner = { x: headingBounds.left, y: headingBounds.bottom + WORKFLOW_MENU_HEADING_GAP_PX };
+      pinOverlayAt(this.svg, this.pin, clientCorner);
+    }
+  }
+
+  const OPTION_FOCUS_DELTA_BY_KEY = new Map([
+    ['ArrowDown', 1],
+    ['ArrowUp', -1],
+  ]);
+
+  /** Draws the reader state's description panel as its side panel or sheet strategy presents and frames it, and reports the strip it covers to the uncovered area. */
+  class DescriptionPanel {
+    constructor(svg, uncoveredArea, reader, linkTargets) {
+      this.svg = svg;
+      this.uncoveredArea = uncoveredArea;
+      this.reader = reader;
+      const resolveTarget = (target) => linkTargets.resolve(target);
+      const followTarget = (target) => reader.followLink(target);
+      const markdown = new SafeMarkdown(resolveTarget, followTarget);
+      const goToStep = (stepId) => reader.apply((state) => state.goToStep(stepId));
+      this.content = new CardContent(markdown, goToStep);
+      this.previousButtons = [];
+      this.nextButtons = [];
+      this.root = createXhtmlElement('aside', { class: 'svugy-panel', 'aria-label': 'description' });
+      const openPanel = () => reader.apply((state) => state.openPanel());
+      this.tab = this.signButton(PREVIOUS_SIGN, 'show description', openPanel);
+      this.tab.classList.add('svugy-panel-tab');
+      this.handle = createXhtmlElement('div', { class: 'svugy-panel-handle', role: 'button', tabindex: '0', 'aria-label': 'description sheet' });
+      const handleBar = createXhtmlElement('div', { class: 'svugy-panel-handle-bar' });
+      this.handle.appendChild(handleBar);
+      this.stepsLine = this.lineShowingSlot();
+      this.stepsBody = createXhtmlElement('div', { class: 'svugy-panel-body' });
+      this.stepsCard = createXhtmlElement('section', { class: 'svugy-panel-card svugy-panel-steps', 'aria-label': 'steps' });
+      this.stepsCard.append(this.stepsLine, this.stepsBody);
+      this.componentLine = this.lineShowingItem();
+      this.componentBody = createXhtmlElement('div', { class: 'svugy-panel-body' });
+      this.componentCard = createXhtmlElement('section', { class: 'svugy-panel-card svugy-panel-component', 'aria-label': 'component' });
+      this.componentCard.append(this.componentLine, this.componentBody);
+      this.edge = createXhtmlElement('div', { class: 'svugy-panel-edge', role: 'separator', tabindex: '0', 'aria-orientation': 'vertical', 'aria-label': 'resize description' });
+      this.hideTab = this.signButton(HIDE_SIGN, 'hide description', (event) => this.hideOnKeyboardActivation(event));
+      this.hideTab.classList.add('svugy-panel-hide');
+      this.edge.appendChild(this.hideTab);
+      this.cardDivider = createXhtmlElement('div', { class: 'svugy-panel-divider', role: 'separator', tabindex: '0', 'aria-orientation': 'horizontal', 'aria-label': 'resize cards; double click toggles the component card' });
+      this.root.append(this.tab, this.handle, this.edge, this.stepsCard, this.cardDivider, this.componentCard);
+      this.frame = createSvgElement('foreignObject', { class: 'svugy-panel-frame', width: 0, height: 0 });
+      this.frame.appendChild(this.root);
+      this.pin = createSvgElement('g', { class: 'svugy-panel-pin' });
+      this.pin.appendChild(this.frame);
+      isolateOverlayEvents(this.pin);
+      this.sheetHandle = new SheetHandle(svg, this.handle, this, reader);
+      this.sheetDragHeight = null;
+      this.sidePanelWidthPx = null;
+      this.stepsCardShare = null;
+      this.resizeStart = null;
+      this.bindResizers();
+      this.frameRect = { x: 0, y: 0, width: 0, height: 0 };
+      this.renderedWorkflow = null;
+      this.renderedSlotIndex = null;
+      this.renderedItem = null;
+    }
+
+    /** Attaches the panel to the diagram, keeps it pinned as the view moves, and refits it to the box, as a side panel or a sheet, whenever the box resizes. */
+    bind() {
+      this.svg.appendChild(this.pin);
+      const viewBoxObserver = new MutationObserver(() => this.place());
+      viewBoxObserver.observe(this.svg, { attributes: true, attributeFilter: ['viewBox'] });
+      const resizeObserver = new ResizeObserver(() => this.refitToBox());
+      resizeObserver.observe(this.svg);
+    }
+
+    refitToBox() {
+      const box = this.svg.getBoundingClientRect();
+      const isUnlaidOut = box.width === 0 || box.height === 0;
+      if (isUnlaidOut) {
+        return;
+      }
+      const boxWidth = box.width;
+      this.reader.apply((state) => state.fitPanelTo(boxWidth));
+    }
+
+    /** The steps card's line: a toggle showing `i/N TITLE` that collapses or expands the steps card, then ‹ ›. */
+    lineShowingSlot() {
+      this.stepsLineLabel = createXhtmlElement('span', { class: 'svugy-panel-line-label' });
+      this.stepsLineTitle = createXhtmlElement('span', { class: 'svugy-panel-line-title' });
+      const toggleStepsCard = () => this.reader.apply((state) => state.toggleStepsCard());
+      this.stepsLineToggle = DescriptionPanel.lineToggle(this.stepsLineLabel, this.stepsLineTitle, toggleStepsCard);
+      const slotButtons = this.slotButtons();
+      const line = createXhtmlElement('div', { class: 'svugy-panel-line' });
+      line.append(this.stepsLineToggle, ...slotButtons);
+      return line;
+    }
+
+    /** Lets the reader drag, or move with arrow keys, the side panel's edge to resize the panel and the divider to resize the steps card's share of the two cards. */
+    bindResizers() {
+      const rememberResizeStart = () => this.rememberResizeStart();
+      const resizeSidePanelBy = (draggedX) => this.resizeSidePanelBy(draggedX);
+      const hideOnTabTap = (pressTarget) => this.hideOnTabTap(pressTarget);
+      new DragGrip(this.edge, { start: rememberResizeStart, drag: resizeSidePanelBy, tap: hideOnTabTap });
+      const hidePanel = () => this.reader.apply((state) => state.hidePanel());
+      this.edge.addEventListener('dblclick', hidePanel);
+      this.edge.addEventListener('keydown', (event) => DescriptionPanel.actOnActivationKey(event, hidePanel));
+      const resizeStepsCardBy = (_draggedX, draggedY) => this.resizeStepsCardBy(draggedY);
+      new DragGrip(this.cardDivider, { start: rememberResizeStart, drag: resizeStepsCardBy });
+      const toggleComponentCard = () => this.reader.toggleComponentCard();
+      this.cardDivider.addEventListener('dblclick', toggleComponentCard);
+      const widenSidePanelBy = (keyStepPx) => this.resizeSidePanelBy(-keyStepPx);
+      this.edge.addEventListener('keydown', (event) => this.resizeOnArrowKey(event, 'ArrowLeft', 'ArrowRight', widenSidePanelBy));
+      const growStepsCardBy = (keyStepPx) => this.resizeStepsCardBy(keyStepPx);
+      this.cardDivider.addEventListener('keydown', (event) => this.resizeOnArrowKey(event, 'ArrowDown', 'ArrowUp', growStepsCardBy));
+      this.cardDivider.addEventListener('keydown', (event) => DescriptionPanel.actOnActivationKey(event, toggleComponentCard));
+    }
+
+    // a pointer press on the tab is the edge's: a drag resizes, a tap hides, as does a double click anywhere on the edge
+    hideOnTabTap(pressTarget) {
+      const isTabPress = this.hideTab.contains(pressTarget);
+      if (isTabPress) {
+        this.reader.apply((state) => state.hidePanel());
+      }
+    }
+
+    // a pointer tap on the tab reaches hideOnTabTap; only Enter or Space click it with no pointer, detail 0
+    hideOnKeyboardActivation(event) {
+      const isKeyboardActivation = event.detail === 0;
+      if (isKeyboardActivation) {
+        this.reader.apply((state) => state.hidePanel());
+      }
+    }
+
+    // Enter or Space on a focused resizer acts like its double click, and never reaches the diagram
+    static actOnActivationKey(event, act) {
+      const isActivationKey = event.key === 'Enter' || event.key === ' ';
+      if (isActivationKey) {
+        event.preventDefault();
+        event.stopPropagation();
+        act();
+      }
+    }
+
+    // a handled arrow key never reaches the diagram, whose ← and → change step
+    resizeOnArrowKey(event, growKey, shrinkKey, resizeBy) {
+      const key = event.key;
+      const isGrowKey = key === growKey;
+      const isShrinkKey = key === shrinkKey;
+      const isOtherKey = !isGrowKey && !isShrinkKey;
+      if (isOtherKey) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      this.rememberResizeStart();
+      const keyStepPx = isGrowKey ? GRIP_KEY_STEP_PX : -GRIP_KEY_STEP_PX;
+      resizeBy(keyStepPx);
+    }
+
+    rememberResizeStart() {
+      const panelWidth = this.frameRect.width;
+      const stepsCardHeight = this.stepsCard.offsetHeight;
+      const cardsHeight = stepsCardHeight + this.componentCard.offsetHeight;
+      this.resizeStart = { panelWidth, stepsCardHeight, cardsHeight };
+    }
+
+    /** Widens the side panel by the pixels its left edge was dragged leftwards, within its bounds, and lays it out again. */
+    resizeSidePanelBy(draggedX) {
+      const box = this.svg.getBoundingClientRect();
+      const draggedWidth = this.resizeStart.panelWidth - draggedX;
+      this.sidePanelWidthPx = SidePanel.widthIn(box, draggedWidth);
+      this.layOut();
+    }
+
+    // s = clamp((h_s + Δy) / (h_s + h_c), s_min, 1 − s_min)
+    /** Gives the steps card the share of the two cards' height its divider was dragged to, while both cards are expanded, and lays the cards out again. */
+    resizeStepsCardBy(draggedY) {
+      const state = this.reader.state;
+      const shownParts = state.panel.partsShowing(state);
+      const isSplitHidden = !DescriptionPanel.areBothCardsExpandedIn(shownParts);
+      if (isSplitHidden) {
+        return;
+      }
+      const resizeStart = this.resizeStart;
+      const draggedShare = (resizeStart.stepsCardHeight + draggedY) / resizeStart.cardsHeight;
+      const maxShare = 1 - STEPS_CARD_MIN_SHARE;
+      const shareAboveMin = Math.max(STEPS_CARD_MIN_SHARE, draggedShare);
+      this.stepsCardShare = Math.min(maxShare, shareAboveMin);
+      this.renderParts(state);
+    }
+
+    /** The component card's line: a toggle showing the selected item's kind and name, or `COMPONENTS`, that collapses or expands the component card, then ✕. */
+    lineShowingItem() {
+      this.componentLineLabel = createXhtmlElement('span', { class: 'svugy-panel-line-label' });
+      this.componentLineTitle = createXhtmlElement('span', { class: 'svugy-panel-line-title' });
+      const toggleComponentCard = () => this.reader.toggleComponentCard();
+      this.componentLineToggle = DescriptionPanel.lineToggle(this.componentLineLabel, this.componentLineTitle, toggleComponentCard);
+      const deselect = () => this.reader.deselect();
+      this.clearButton = this.signButton(CLEAR_SIGN, 'clear selection', deselect);
+      const line = createXhtmlElement('div', { class: 'svugy-panel-line' });
+      line.append(this.componentLineToggle, this.clearButton);
+      return line;
+    }
+
+    static lineToggle(label, title, toggleCard) {
+      const toggle = createXhtmlElement('button', { type: 'button', class: 'svugy-panel-line-toggle', 'aria-expanded': 'false' });
+      toggle.append(label, title);
+      toggle.addEventListener('click', toggleCard);
+      return toggle;
+    }
+
+    slotButtons() {
+      const showPreviousSlot = () => this.reader.apply((state) => state.moveSlotBy(-1));
+      const showNextSlot = () => this.reader.apply((state) => state.moveSlotBy(1));
+      const previousButton = this.signButton(PREVIOUS_SIGN, 'previous step', showPreviousSlot);
+      const nextButton = this.signButton(NEXT_SIGN, 'next step', showNextSlot);
+      this.previousButtons.push(previousButton);
+      this.nextButtons.push(nextButton);
+      return [previousButton, nextButton];
+    }
+
+    signButton(sign, label, activate) {
+      const button = createXhtmlElement('button', { type: 'button', class: 'svugy-panel-sign', 'aria-label': label });
+      button.textContent = sign;
+      button.addEventListener('click', activate);
+      return button;
+    }
+
+    render(deepestLayer) {
+      const state = this.reader.state;
+      this.renderSlot(state);
+      this.renderItem(state, deepestLayer);
+      this.renderedWorkflow = state.workflow;
+      const wasFocusInPanel = this.pin.contains(document.activeElement);
+      this.renderParts(state);
+      this.layOut();
+      this.keepKeyboardFocusInDiagram(wasFocusInPanel);
+    }
+
+    // a control hidden while focused hands focus to the root, so ← → and Escape keep reaching the diagram
+    keepKeyboardFocusInDiagram(wasFocusInPanel) {
+      const focusedNode = document.activeElement;
+      const isFocusInPanel = this.pin.contains(focusedNode);
+      const hiddenAncestor = isFocusInPanel ? focusedNode.closest('[hidden]') : null;
+      const isFocusHidden = hiddenAncestor !== null;
+      const isFocusDropped = wasFocusInPanel && !isFocusInPanel;
+      const isFocusLost = isFocusHidden || isFocusDropped;
+      if (isFocusLost) {
+        this.svg.focus({ preventScroll: true });
+      }
+    }
+
+    renderSlot(state) {
+      const slotIndex = state.slotIndex;
+      const step = state.stepAt(slotIndex);
+      const isOverview = step === null;
+      const stepCount = state.workflow.steps.length;
+      const stepNumber = state.workflow.steps.indexOf(step) + 1;
+      this.stepsLineLabel.textContent = isOverview ? 'Overview' : `${stepNumber}/${stepCount}`;
+      const slotTitle = isOverview ? state.workflow.title : step.title;
+      this.stepsLineTitle.textContent = slotTitle ?? '';
+      const isFirstSlot = slotIndex === 0;
+      const isLastSlot = slotIndex >= state.slotCount() - 1;
+      this.previousButtons.forEach((button) => { button.disabled = isFirstSlot; });
+      this.nextButtons.forEach((button) => { button.disabled = isLastSlot; });
+      const isSameSlot = state.workflow === this.renderedWorkflow && slotIndex === this.renderedSlotIndex;
+      if (isSameSlot) {
+        return;
+      }
+      this.renderedSlotIndex = slotIndex;
+      const slotNodes = this.content.ofSlot(state.workflow, step);
+      this.stepsBody.replaceChildren(...slotNodes);
+      this.stepsBody.scrollTop = 0;
+    }
+
+    renderItem(state, deepestLayer) {
+      const item = state.selection;
+      const hasItem = item !== null;
+      const kindLabel = hasItem ? item.kindLabel : 'Components';
+      this.componentLineLabel.textContent = kindLabel;
+      const itemName = hasItem ? item.nameIn(deepestLayer) : '';
+      this.componentLineTitle.textContent = itemName;
+      showIf(this.clearButton, hasItem);
+      const isSameItem = state.workflow === this.renderedWorkflow && item === this.renderedItem;
+      if (isSameItem) {
+        return;
+      }
+      this.renderedItem = item;
+      const itemNodes = this.content.ofItem(item, state.workflow, deepestLayer);
+      this.componentBody.replaceChildren(...itemNodes);
+      this.componentBody.scrollTop = 0;
+    }
+
+    // a dragged sheet presents as an expanded one
+    renderParts(state) {
+      const isDragging = this.sheetDragHeight !== null;
+      const presentedPanel = isDragging ? Sheet.expanded() : state.panel;
+      const parts = presentedPanel.partsShowing(state);
+      this.root.className = `svugy-panel ${parts.kindClass} svugy-panel-${presentedPanel.stateName}`;
+      this.root.classList.toggle('svugy-panel-component-expanded', parts.isComponentCardExpanded);
+      this.stepsCard.classList.toggle('svugy-panel-card-expanded', parts.isStepsCardExpanded);
+      this.componentCard.classList.toggle('svugy-panel-card-expanded', parts.isComponentCardExpanded);
+      this.stepsLineToggle.setAttribute('aria-expanded', String(parts.isStepsCardExpanded));
+      this.componentLineToggle.setAttribute('aria-expanded', String(parts.isComponentCardExpanded));
+      this.handle.setAttribute('aria-expanded', String(parts.isHandleExpanded));
+      showIf(this.tab, parts.hasTab);
+      showIf(this.handle, parts.hasHandle);
+      showIf(this.edge, parts.hasEdge);
+      showIf(this.cardDivider, parts.hasCardDivider);
+      this.splitCards(parts);
+      showIf(this.stepsCard, parts.hasStepsCard);
+      showIf(this.stepsLineTitle, !parts.isStepsCardExpanded);
+      showIf(this.stepsBody, parts.isStepsCardExpanded);
+      showIf(this.componentCard, parts.hasComponentCard);
+      showIf(this.componentLineTitle, !parts.isComponentCardExpanded);
+      showIf(this.componentBody, parts.isComponentCardExpanded);
+    }
+
+    /** Tells whether `parts` show both cards expanded beside the divider, the only time the divider splits them. */
+    static areBothCardsExpandedIn(parts) {
+      return parts.hasCardDivider && parts.isStepsCardExpanded && parts.isComponentCardExpanded;
+    }
+
+    /** Gives the steps card the share the reader dragged its divider to, while both cards are expanded; else the default split. */
+    splitCards(parts) {
+      const areBothCardsExpanded = DescriptionPanel.areBothCardsExpandedIn(parts);
+      const isDefaultSplit = !areBothCardsExpanded || this.stepsCardShare === null;
+      if (isDefaultSplit) {
+        this.stepsCard.style.removeProperty('flex');
+        this.stepsCard.style.removeProperty('max-height');
+        return;
+      }
+      const sharePercent = this.stepsCardShare * 100;
+      this.stepsCard.style.flex = `0 0 ${sharePercent}%`;
+      this.stepsCard.style.maxHeight = 'none';
+    }
+
+    /** Sizes and places the panel's frame for the box it floats over and reports the strip it covers to the uncovered area. */
+    layOut() {
+      const box = this.svg.getBoundingClientRect();
+      const isUnlaidOut = box.width === 0 || box.height === 0;
+      if (isUnlaidOut) {
+        return;
+      }
+      this.frameRect = this.frameRectIn(box);
+      this.sizeFrameTo(this.frameRect);
+      this.place();
+      this.uncoveredArea.cover(this.frameRect.coveredRight, this.frameRect.coveredBottom);
+    }
+
+    frameRectIn(box) {
+      const isDragging = this.sheetDragHeight !== null;
+      if (isDragging) {
+        return Sheet.frameRectAtHeight(box, this.sheetDragHeight);
+      }
+      const measureContentHeight = (width, maxHeight) => this.measureContentHeight(width, maxHeight);
+      return this.reader.state.panel.frameRectIn(box, measureContentHeight, this.sidePanelWidthPx);
+    }
+
+    /** Lays the content out `width` px wide, at most `maxHeight` px tall, and returns its height. */
+    measureContentHeight(width, maxHeight) {
+      this.frame.setAttribute('width', String(width));
+      this.frame.setAttribute('height', String(maxHeight));
+      this.root.style.width = `${width}px`;
+      this.root.style.removeProperty('height');
+      this.root.style.maxHeight = `${maxHeight}px`;
+      return this.root.offsetHeight;
+    }
+
+    sizeFrameTo(frameRect) {
+      this.frame.setAttribute('width', String(frameRect.width));
+      this.frame.setAttribute('height', String(frameRect.height));
+      this.root.style.removeProperty('max-height');
+      this.root.style.width = `${frameRect.width}px`;
+      this.root.style.height = `${frameRect.height}px`;
+    }
+
+    place() {
+      const box = this.svg.getBoundingClientRect();
+      const clientCorner = { x: box.left + this.frameRect.x, y: box.top + this.frameRect.y };
+      pinOverlayAt(this.svg, this.pin, clientCorner);
+    }
+
+    /** Shows the sheet as expanded at `heightPx` while its handle is dragged; null ends the preview. */
+    previewSheetHeight(heightPx) {
+      this.sheetDragHeight = heightPx;
+      const state = this.reader.state;
+      this.renderParts(state);
+      this.layOut();
+    }
+
+    frameHeightPx() {
+      return this.frameRect.height;
+    }
+  }
+
+  /** Turns a tap on the sheet's handle into a handle tap, and a drag into a sheet following the pointer that snaps on release to the nearest of hidden, peek and expanded. */
+  /** Turns a pointer press on `grip` into a drag once it moves DRAG_THRESHOLD_PX, reporting each move as the pixels dragged since the press, then a release; a press that never moves that far is a tap. */
+  class DragGrip {
+    constructor(grip, gestures) {
+      this.grip = grip;
+      this.gestures = gestures;
+      this.press = null;
+      grip.addEventListener('pointerdown', (event) => this.startPress(event));
+      grip.addEventListener('pointermove', (event) => this.movePress(event));
+      grip.addEventListener('pointerup', () => this.endPress());
+      grip.addEventListener('pointercancel', () => this.endPress());
+    }
+
+    startPress(event) {
+      const isOtherMouseButton = event.pointerType === 'mouse' && event.button !== 0;
+      if (isOtherMouseButton) {
+        return;
+      }
+      event.preventDefault();
+      this.grip.setPointerCapture(event.pointerId);
+      this.gestures.start?.();
+      this.press = { target: event.target, startX: event.clientX, startY: event.clientY, isDragging: false };
+    }
+
+    movePress(event) {
+      const press = this.press;
+      if (press === null) {
+        return;
+      }
+      const draggedX = event.clientX - press.startX;
+      const draggedY = event.clientY - press.startY;
+      const draggedDistance = Math.hypot(draggedX, draggedY);
+      const isStillATap = !press.isDragging && draggedDistance < DRAG_THRESHOLD_PX;
+      if (isStillATap) {
+        return;
+      }
+      press.isDragging = true;
+      this.gestures.drag(draggedX, draggedY);
+    }
+
+    endPress() {
+      const press = this.press;
+      if (press === null) {
+        return;
+      }
+      this.press = null;
+      if (press.isDragging) {
+        this.gestures.release?.();
+        return;
+      }
+      this.gestures.tap?.(press.target);
+    }
+  }
+
+  /** Turns the sheet's handle into its controls: a tap or an activation key steps the sheet's state, a drag moves the sheet and snaps it to the nearest state on release. */
+  class SheetHandle {
+    constructor(svg, handle, panel, reader) {
+      this.svg = svg;
+      this.panel = panel;
+      this.reader = reader;
+      this.startHeight = 0;
+      const gestures = {
+        start: () => this.rememberStartHeight(),
+        drag: (_draggedX, draggedY) => this.previewDraggedHeight(draggedY),
+        release: () => this.snapReleasedSheet(),
+        tap: () => this.tap(),
+      };
+      new DragGrip(handle, gestures);
+      handle.addEventListener('keydown', (event) => this.tapOnActivationKey(event));
+    }
+
+    rememberStartHeight() {
+      this.startHeight = this.panel.frameHeightPx();
+    }
+
+    // h = clamp(h₀ − Δy, handle height, σ·B_h)
+    previewDraggedHeight(draggedY) {
+      const box = this.svg.getBoundingClientRect();
+      const maxHeight = SHEET_MAX_BOX_SHARE * box.height;
+      const draggedHeight = this.startHeight - draggedY;
+      const heightAboveHandle = Math.max(SHEET_HANDLE_HEIGHT_PX, draggedHeight);
+      const height = Math.min(maxHeight, heightAboveHandle);
+      this.panel.previewSheetHeight(height);
+    }
+
+    snapReleasedSheet() {
+      const releasedHeight = this.panel.frameHeightPx();
+      this.panel.previewSheetHeight(null);
+      const box = this.svg.getBoundingClientRect();
+      const boxHeight = box.height;
+      this.reader.apply((state) => state.snapPanelNear(releasedHeight, boxHeight));
+    }
+
+    tap() {
+      this.reader.apply((state) => state.tapHandle());
+    }
+
+    tapOnActivationKey(event) {
+      const isActivationKey = event.key === 'Enter' || event.key === ' ';
+      if (isActivationKey) {
+        event.preventDefault();
+        this.tap();
+      }
+    }
+  }
+
+  /** Builds the panel cards' XHTML: a slot's title and description, and the selected item's facts, description and steps. */
+  class CardContent {
+    constructor(markdown, goToStep) {
       this.markdown = markdown;
+      this.goToStep = goToStep;
     }
 
-    of(node) {
-      const details = Contract.detailsOf(node);
-      const isLifted = details?.kind === LIFTED_KIND;
-      return isLifted ? this.ofLiftedEdge(details) : this.descriptionBlocksOf(details);
+    /** The overview's title, subtitle and description, or a step's title and description. */
+    ofSlot(workflow, step) {
+      const isOverview = step === null;
+      const describedSlot = isOverview ? workflow : step;
+      const title = createTextElement('h3', 'svugy-panel-title', describedSlot.title);
+      const subtitle = isOverview ? createTextElement('p', 'svugy-panel-subtitle', workflow.subtitle) : null;
+      const descriptionNodes = this.descriptionNodesOf(describedSlot.description);
+      const headNodes = [title, subtitle].filter((node) => node !== null);
+      return [...headNodes, ...descriptionNodes];
     }
 
-    ofLiftedEdge(details) {
-      const sourceEdges = DetailLines.plainObjectsIn(details.edges);
-      const describedSourceEdges = sourceEdges.filter(DescriptionContent.isDescribed);
-      return describedSourceEdges.map((sourceEdge) => this.sourceEdgeSectionOf(sourceEdge));
+    /** The selected item's facts and description by its kind, then one button per step it takes part in; nothing without an item. */
+    ofItem(item, workflow, deepestLayer) {
+      if (item === null) {
+        return [];
+      }
+      const factNodes = item.factNodesBy(this, deepestLayer);
+      const stepNodes = this.stepNodesOf(item.stepIds, workflow);
+      return [...factNodes, ...stepNodes];
     }
 
-    /** A section headed by the source edge's label, else its endpoints' names joined by an arrow, then its description. */
-    sourceEdgeSectionOf(sourceEdge) {
-      const fromName = this.nameOfElementAt(sourceEdge.from);
-      const toName = this.nameOfElementAt(sourceEdge.to);
-      const isLabelled = typeof sourceEdge.label === 'string';
-      const headingText = isLabelled ? sourceEdge.label : `${fromName} ${ARROW} ${toName}`;
-      const heading = createXhtmlElement('h3', { class: 'svugy-description-source-edge' });
-      heading.textContent = headingText;
-      const descriptionNodes = this.markdown.blocksOf(sourceEdge.description);
+    /** Label, caption, code, each metadata entry as `NAME: value`, description. */
+    elementNodesOf(details) {
+      const label = createTextElement('h3', 'svugy-panel-title', details.label ?? details.path);
+      const caption = createTextElement('p', 'svugy-panel-subtitle', details.caption);
+      const code = CardContent.codeNodeOf(details.code);
+      const metadata = isPlainObject(details.metadata) ? details.metadata : {};
+      const metadataEntries = Object.entries(metadata);
+      const metadataNodes = metadataEntries.map(([name, value]) => {
+        const valueText = typeof value === 'string' ? value : JSON.stringify(value);
+        return createTextElement('p', 'svugy-panel-fact', `${name}: ${valueText}`);
+      });
+      const descriptionNodes = this.descriptionNodesOf(details.description);
+      const nodes = [label, caption, code, ...metadataNodes, ...descriptionNodes];
+      return nodes.filter((node) => node !== null);
+    }
+
+    /** A written edge's name and description, or a lifted connection's title then each source edge's name and description. */
+    connectionNodesOf(item, deepestLayer) {
+      const itemName = item.nameIn(deepestLayer);
+      const title = createTextElement('h3', 'svugy-panel-title', itemName);
+      if (item.isLifted) {
+        const listedEdges = item.details.edges;
+        const sourceEdges = Array.isArray(listedEdges) ? listedEdges.filter(isPlainObject) : [];
+        const sourceEdgeSections = sourceEdges.map((sourceEdge) => this.sourceEdgeSectionOf(sourceEdge, deepestLayer));
+        return [title, ...sourceEdgeSections];
+      }
+      const descriptionNodes = this.descriptionNodesOf(item.details.description);
+      return [title, ...descriptionNodes];
+    }
+
+    sourceEdgeSectionOf(sourceEdge, deepestLayer) {
+      const endpointsName = CardContent.endpointsNameOf(sourceEdge, deepestLayer);
+      const headingText = sourceEdge.label ?? endpointsName;
+      const heading = createTextElement('h4', 'svugy-panel-source-edge', headingText);
+      const descriptionNodes = this.descriptionNodesOf(sourceEdge.description);
       const section = createXhtmlElement('section', {});
       section.append(heading, ...descriptionNodes);
       return section;
     }
 
-    descriptionBlocksOf(details) {
-      const isDescribed = DescriptionContent.isDescribed(details);
-      return isDescribed ? this.markdown.blocksOf(details.description) : [];
+    /** `Steps`, then one `i · TITLE` button per step of `workflow` among `stepIds`, in step order, going to that step. */
+    stepNodesOf(stepIds, workflow) {
+      const steps = workflow.steps.filter((step) => stepIds.includes(step.id));
+      const isStepless = steps.length === 0;
+      if (isStepless) {
+        return [];
+      }
+      const heading = createTextElement('h4', 'svugy-panel-steps-heading', 'Steps');
+      const stepButtons = steps.map((step) => {
+        const stepNumber = workflow.steps.indexOf(step) + 1;
+        const button = createXhtmlElement('button', { type: 'button', class: 'svugy-panel-step' });
+        button.textContent = `${stepNumber} ${MIDDLE_DOT} ${step.title ?? step.id}`;
+        button.addEventListener('click', () => this.goToStep(step.id));
+        return button;
+      });
+      const stepList = createXhtmlElement('div', { class: 'svugy-panel-step-list' });
+      stepList.append(...stepButtons);
+      return [heading, stepList];
     }
 
-    static isDescribed(details) {
-      const description = details?.description;
-      return typeof description === 'string';
+    descriptionNodesOf(description) {
+      const isDescribed = typeof description === 'string';
+      return isDescribed ? this.markdown.blocksOf(description) : [];
     }
 
-    nameOfElementAt(path) {
-      const element = Contract.elementAt(this.deepestLayer, path);
+    static codeNodeOf(code) {
+      const isCodeless = typeof code !== 'string';
+      if (isCodeless) {
+        return null;
+      }
+      const codeText = createXhtmlElement('code', {});
+      codeText.textContent = code;
+      const paragraph = createXhtmlElement('p', { class: 'svugy-panel-fact' });
+      paragraph.appendChild(codeText);
+      return paragraph;
+    }
+
+    static endpointsNameOf(details, deepestLayer) {
+      const fromName = CardContent.nameOfElementAt(deepestLayer, details.from);
+      const toName = CardContent.nameOfElementAt(deepestLayer, details.to);
+      return `${fromName} ${ARROW} ${toName}`;
+    }
+
+    static nameOfElementAt(deepestLayer, path) {
+      const element = Contract.elementAt(deepestLayer, path);
       const title = element === null ? null : Contract.titleOf(element);
       return title ?? path;
     }
   }
 
-  /** Renders the panel's Markdown subset as XHTML nodes: paragraphs keeping their line breaks, `-`/`*` and `1.` lists nested one level, `#`–`###` headings as h4–h6, fenced code, `**bold**`, `*em*`, `` `code` ``, `[text](url)` links to http(s) or relative URLs, and `[text](#target)` buttons following a link to a diagram object; author text only ever becomes text nodes, never markup. */
   /** Picks the colour a description link takes on hover: its element's top face or its edge's stroke, when that colour reads against the canvas. */
   const TargetColor = {
     readableHoverColorOf(group) {
@@ -1707,10 +3092,11 @@
     },
   };
 
+  /** Renders the panel's Markdown subset as XHTML nodes: paragraphs keeping their line breaks, `-`/`*` and `1.` lists nested one level, `#`–`###` headings as h4–h6, fenced code, `**bold**`, `*em*`, `` `code` ``, `[text](url)` links to http(s) or relative URLs, and `[text](#target)` buttons following a link to a diagram object or a step; author text only ever becomes text nodes, never markup. */
   class SafeMarkdown {
-    constructor(deepestLayer, followTargetLink) {
-      this.deepestLayer = deepestLayer;
-      this.followTargetLink = followTargetLink;
+    constructor(resolveTarget, followTarget) {
+      this.resolveTarget = resolveTarget;
+      this.followTarget = followTarget;
     }
 
     blocksOf(markdown) {
@@ -1817,16 +3203,21 @@
       return this.elementHoldingLines('span', [linkText]);
     }
 
-    /** A button following the link to the element or edge `target` names, or the link's text alone when it names nothing in the diagram. */
+    /** A button following the link to the element, edge or step `target` names, or the link's text alone when it names nothing. */
     targetLinkNodeOf(linkText, target) {
-      const targetedGroup = Contract.groupTargetedBy(this.deepestLayer, target);
-      if (targetedGroup === null) {
+      const resolvedTarget = this.resolveTarget(target);
+      if (resolvedTarget === null) {
         return this.elementHoldingLines('span', [linkText]);
       }
       const button = this.elementHoldingLines('button', [linkText]);
       button.setAttribute('type', 'button');
-      button.addEventListener('click', () => this.followTargetLink(targetedGroup));
-      const hoverColor = TargetColor.readableHoverColorOf(targetedGroup);
+      button.setAttribute('class', 'svugy-panel-link');
+      button.addEventListener('click', () => this.followTarget(resolvedTarget));
+      const isStepTarget = resolvedTarget.group === undefined;
+      if (isStepTarget) {
+        return button;
+      }
+      const hoverColor = TargetColor.readableHoverColorOf(resolvedTarget.group);
       if (hoverColor !== null) {
         button.style.setProperty(LINK_HOVER_PROPERTY, hoverColor);
       }
@@ -1983,81 +3374,25 @@
     }
   }
 
-  /** Translates pointer, focus and key events and description links into navigation, detail and description panels, dimming and highlights. */
+  /** Translates pointer, focus and key events on the diagram into the reader's intents and the workflow menu. */
   const Interactions = {
-    bind(svg, navigator, panel, dimmer, descriptionPanel, highlighter) {
+    bind(svg, reader, workflowMenu) {
       Interactions.makeGroupsFocusable(svg);
-      descriptionPanel.addTargetLinkListener((target) => {
-        Interactions.followTargetLink(target, navigator, panel, descriptionPanel, highlighter);
-      });
-      svg.addEventListener('click', (event) => {
-        const heading = Interactions.headingAt(event.target);
-        if (heading !== null) {
-          descriptionPanel.describeClickedHeading();
-          return;
-        }
-        const group = Interactions.groupAt(event.target);
-        const clientPoint = { x: event.clientX, y: event.clientY };
-        // a double click on empty canvas steps out once: its second click is ignored
-        if (group === null) {
-          const isSecondClick = event.detail > 1;
-          if (isSecondClick) return;
-          Interactions.exitOneStep(navigator, panel, descriptionPanel);
-          return;
-        }
-        Interactions.activate(group, clientPoint, navigator, panel, descriptionPanel);
-      });
-      svg.addEventListener('keydown', (event) => {
-        const isEscape = event.key === 'Escape';
-        if (isEscape) {
-          Interactions.exitOneStep(navigator, panel, descriptionPanel);
-          return;
-        }
-        const isActivationKey = event.key === 'Enter' || event.key === ' ';
-        const isElementTarget = event.target instanceof Element;
-        const isFocusedHeading = isElementTarget && event.target.matches(HEADING_SELECTOR);
-        const isHeadingActivated = isActivationKey && isFocusedHeading;
-        if (isHeadingActivated) {
-          event.preventDefault();
-          descriptionPanel.describeClickedHeading();
-          return;
-        }
-        const isFocusedGroup = isElementTarget && event.target.matches(INTERACTIVE_SELECTOR);
-        const isGroupActivated = isActivationKey && isFocusedGroup;
-        if (isGroupActivated) {
-          event.preventDefault();
-          const groupCenter = clientCenterOf(event.target);
-          Interactions.activate(event.target, groupCenter, navigator, panel, descriptionPanel);
-        }
-      });
+      const clickMemory = { wasPreviousOnCanvas: false };
+      svg.addEventListener('click', (event) => Interactions.followClick(event, reader, workflowMenu, clickMemory));
+      svg.addEventListener('keydown', (event) => Interactions.followKey(event, reader, workflowMenu));
       svg.addEventListener('pointermove', (event) => {
         const group = Interactions.groupAt(event.target);
-        if (group === null) {
-          panel.hide();
-          dimmer.clear();
-          return;
-        }
-        const clientPoint = { x: event.clientX, y: event.clientY };
-        panel.show(group, clientPoint);
-        dimmer.dimUnrelatedTo(group, navigator.shownLayer);
+        reader.hover(group);
       });
-      svg.addEventListener('pointerleave', () => {
-        panel.hide();
-        dimmer.clear();
-      });
+      svg.addEventListener('pointerleave', () => reader.hover(null));
       svg.addEventListener('focusin', (event) => {
         const group = Interactions.groupAt(event.target);
-        if (group === null) {
-          return;
+        if (group !== null) {
+          reader.hover(group);
         }
-        const groupCenter = clientCenterOf(group);
-        panel.show(group, groupCenter);
-        dimmer.dimUnrelatedTo(group, navigator.shownLayer);
       });
-      svg.addEventListener('focusout', () => {
-        panel.hide();
-        dimmer.clear();
-      });
+      svg.addEventListener('focusout', () => reader.hover(null));
     },
 
     makeGroupsFocusable(svg) {
@@ -2071,44 +3406,71 @@
           group.setAttribute('aria-label', title);
         }
       });
-      const headings = svg.querySelectorAll(HEADING_SELECTOR);
-      headings.forEach((heading) => {
-        heading.setAttribute('tabindex', '0');
-        heading.setAttribute('role', 'button');
-        heading.setAttribute('aria-label', 'diagram description');
-      });
     },
 
-    activate(group, clientPoint, navigator, panel, descriptionPanel) {
-      const hasViewMoved = navigator.followClickOn(group);
-      if (hasViewMoved) {
-        panel.hide();
-      } else {
-        panel.show(group, clientPoint);
-      }
-      const isJumpElsewhere = group.hasAttribute(GOTO);
-      if (isJumpElsewhere) {
+    // a double click on empty canvas steps out once: its second click is ignored, but a canvas click right after a click on a group is a click of its own
+    followClick(event, reader, workflowMenu, clickMemory) {
+      const wasPreviousOnCanvas = clickMemory.wasPreviousOnCanvas;
+      const heading = Interactions.headingAt(event.target);
+      const group = Interactions.groupAt(event.target);
+      const isOnCanvas = heading === null && group === null;
+      clickMemory.wasPreviousOnCanvas = isOnCanvas;
+      if (heading !== null) {
+        workflowMenu?.toggle();
         return;
       }
-      descriptionPanel.describeClickedGroup(group);
-    },
-
-    followTargetLink(target, navigator, panel, descriptionPanel, highlighter) {
-      panel.hide();
-      descriptionPanel.keepShownContentWhile(() => navigator.revealGroup(target));
-      const shownGroups = Contract.groupsDrawing(navigator.shownLayer, target);
-      highlighter.highlight(shownGroups);
-    },
-
-    // the focused level's own description comes back at once; a view zoomed or panned away first returns to the focused level, a view already there steps out
-    exitOneStep(navigator, panel, descriptionPanel) {
-      panel.hide();
-      descriptionPanel.stepBackFromClick();
-      const hasReturnedToFocusedView = navigator.returnToFocusedView();
-      if (hasReturnedToFocusedView) {
+      if (group !== null) {
+        reader.activateGroup(group);
         return;
       }
-      navigator.exitOneStep();
+      const isSecondClickOnCanvas = event.detail > 1 && wasPreviousOnCanvas;
+      if (isSecondClickOnCanvas) {
+        return;
+      }
+      reader.escape();
+    },
+
+    // Escape closes the open menu before undoing a step; ← and → change step while the panel is visible and the menu closed
+    followKey(event, reader, workflowMenu) {
+      const isMenuOpen = workflowMenu !== null && workflowMenu.isOpen;
+      const key = event.key;
+      if (key === 'Escape') {
+        if (isMenuOpen) {
+          workflowMenu.close();
+          return;
+        }
+        reader.escape();
+        return;
+      }
+      const slotDelta = SLOT_DELTA_BY_KEY.get(key);
+      const isSlotKey = slotDelta !== undefined;
+      if (isSlotKey) {
+        const isPanelHidden = !reader.state.panel.isVisible;
+        const isSlotKeyIgnored = isPanelHidden || isMenuOpen;
+        if (isSlotKeyIgnored) {
+          return;
+        }
+        event.preventDefault();
+        reader.apply((state) => state.moveSlotBy(slotDelta));
+        return;
+      }
+      const isActivationKey = key === 'Enter' || key === ' ';
+      const isElementTarget = event.target instanceof Element;
+      const isOtherKeyOrTarget = !isActivationKey || !isElementTarget;
+      if (isOtherKeyOrTarget) {
+        return;
+      }
+      const isFocusedHeading = event.target.matches(HEADING_SELECTOR);
+      if (isFocusedHeading) {
+        event.preventDefault();
+        workflowMenu?.toggle();
+        return;
+      }
+      const isFocusedGroup = event.target.matches(INTERACTIVE_SELECTOR);
+      if (isFocusedGroup) {
+        event.preventDefault();
+        reader.activateGroup(event.target);
+      }
     },
 
     groupAt(target) {
@@ -2120,8 +3482,12 @@
       const isElementTarget = target instanceof Element;
       return isElementTarget ? target.closest(HEADING_SELECTOR) : null;
     },
-
   };
+
+  const SLOT_DELTA_BY_KEY = new Map([
+    ['ArrowLeft', -1],
+    ['ArrowRight', 1],
+  ]);
 
   function distanceBetween(firstPoint, secondPoint) {
     return Math.hypot(secondPoint.x - firstPoint.x, secondPoint.y - firstPoint.y);
@@ -2135,9 +3501,23 @@
     return { x: (firstPoint.x + secondPoint.x) / 2, y: (firstPoint.y + secondPoint.y) / 2 };
   }
 
-  function clientCenterOf(node) {
-    const bounds = node.getBoundingClientRect();
-    return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+  function isPlainObject(value) {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+  }
+
+  function showIf(node, isShown) {
+    node.hidden = !isShown;
+  }
+
+  /** Creates an XHTML element holding `text` as its only text node; null when `text` is no string. */
+  function createTextElement(name, className, text) {
+    const isTextless = typeof text !== 'string';
+    if (isTextless) {
+      return null;
+    }
+    const element = createXhtmlElement(name, { class: className });
+    element.textContent = text;
+    return element;
   }
 
   function createSvgElement(name, attributes) {

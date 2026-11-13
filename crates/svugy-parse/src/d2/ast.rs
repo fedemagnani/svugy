@@ -88,15 +88,8 @@ pub struct StyleProperty {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SvugyProperty {
     pub attribute_path: Vec<String>,
-    pub value: SvugyValue,
+    pub value: Scalar,
     pub span: Span,
-}
-
-/// Carry the value of one `svugy` attribute: a plain value, or a `[ … ]` list of plain values.
-#[derive(Debug, Clone, PartialEq)]
-pub enum SvugyValue {
-    Scalar(Scalar),
-    List { items: Vec<Scalar>, span: Span },
 }
 
 /// Address a shape by the dotted path of its key, e.g. `a.b."c.d"`, after climbing one scope per leading `_`.

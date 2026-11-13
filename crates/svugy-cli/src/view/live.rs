@@ -156,7 +156,8 @@ impl FileWatcher {
             live_diagram.publish_diagnostics(diagnostics);
             return;
         };
-        let svg = self.flavor.render(&model);
+        let first_workflow = model.showing_first_workflow();
+        let svg = self.flavor.render(first_workflow);
         live_diagram.publish_svg(svg);
     }
 

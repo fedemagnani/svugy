@@ -1,0 +1,1 @@
+{"elements": {"a": {"label": "a"}, "b": {"label": "b"}}, "workflows": [{"id": "main", "title": "main", "steps": [{"id": "main", "title": "main", "items": [{"element": "a"}]}]}]}

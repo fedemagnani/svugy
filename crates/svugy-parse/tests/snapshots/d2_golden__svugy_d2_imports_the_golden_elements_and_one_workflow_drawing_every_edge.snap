@@ -1,0 +1,506 @@
+---
+source: crates/svugy-parse/tests/d2_golden.rs
+expression: imported_workflows_json
+---
+[
+  {
+    "edges": [
+      {
+        "from": "cli",
+        "ordinal": 0,
+        "to": "import"
+      },
+      {
+        "from": "cli",
+        "ordinal": 0,
+        "to": "pipeline"
+      },
+      {
+        "from": "d2",
+        "label": "grammar",
+        "ordinal": 0,
+        "style": {
+          "stroke": "#5b6170",
+          "stroke-dash": "5"
+        },
+        "to": "import"
+      },
+      {
+        "from": "import",
+        "label": "①",
+        "ordinal": 0,
+        "to": "model"
+      },
+      {
+        "from": "model",
+        "label": "②",
+        "ordinal": 0,
+        "to": "pipeline"
+      },
+      {
+        "from": "model.graph",
+        "ordinal": 0,
+        "to": "model.validate"
+      },
+      {
+        "from": "model.path",
+        "ordinal": 0,
+        "to": "model.graph"
+      },
+      {
+        "from": "pipeline",
+        "label": "④",
+        "ordinal": 0,
+        "to": "svg"
+      },
+      {
+        "from": "pipeline.geometry",
+        "ordinal": 0,
+        "to": "pipeline.render"
+      },
+      {
+        "from": "pipeline.geometry.primitive",
+        "ordinal": 0,
+        "to": "pipeline.geometry.depth"
+      },
+      {
+        "from": "pipeline.geometry.projection",
+        "ordinal": 0,
+        "to": "pipeline.geometry.primitive"
+      },
+      {
+        "from": "pipeline.layout",
+        "label": "③",
+        "ordinal": 0,
+        "to": "pipeline.geometry"
+      },
+      {
+        "from": "pipeline.layout.place",
+        "ordinal": 0,
+        "to": "pipeline.layout.route"
+      },
+      {
+        "from": "pipeline.layout.route",
+        "ordinal": 0,
+        "to": "pipeline.layout.stub"
+      },
+      {
+        "badge": true,
+        "from": "pipeline.metrics",
+        "label": "measures",
+        "ordinal": 0,
+        "to": "pipeline.inter"
+      },
+      {
+        "from": "pipeline.metrics",
+        "ordinal": 0,
+        "to": "pipeline.layout"
+      },
+      {
+        "badge": true,
+        "from": "pipeline.render.profile",
+        "label": "outlines",
+        "ordinal": 0,
+        "to": "pipeline.inter"
+      },
+      {
+        "from": "pipeline.render.profile",
+        "ordinal": 0,
+        "to": "pipeline.render.writer"
+      },
+      {
+        "from": "pipeline.render.theme",
+        "ordinal": 0,
+        "to": "pipeline.render.profile"
+      },
+      {
+        "from": "pipeline.render.writer",
+        "label": "emits",
+        "ordinal": 0,
+        "style": {
+          "stroke-dash": "2"
+        },
+        "to": "contract"
+      },
+      {
+        "from": "runtime",
+        "label": "reads",
+        "ordinal": 0,
+        "style": {
+          "stroke-dash": "2"
+        },
+        "to": "contract"
+      },
+      {
+        "from": "runtime",
+        "ordinal": 0,
+        "style": {
+          "stroke-dash": "2"
+        },
+        "to": "svg"
+      },
+      {
+        "from": "text",
+        "ordinal": 0,
+        "to": "cli"
+      }
+    ],
+    "id": "main",
+    "overrides": {
+      "cli": {
+        "position": {
+          "x": 0.0,
+          "y": 330.0
+        }
+      },
+      "contract": {
+        "position": {
+          "x": 1560.0,
+          "y": 760.0
+        }
+      },
+      "d2": {
+        "position": {
+          "x": 260.0,
+          "y": -220.0
+        }
+      },
+      "import": {
+        "position": {
+          "x": 260.0,
+          "y": 0.0
+        }
+      },
+      "import.d2": {
+        "position": {
+          "x": 150.0,
+          "y": 18.0
+        }
+      },
+      "import.json": {
+        "position": {
+          "x": 282.0,
+          "y": 18.0
+        }
+      },
+      "import.markdown": {
+        "position": {
+          "x": 18.0,
+          "y": 18.0
+        }
+      },
+      "model": {
+        "position": {
+          "x": 260.0,
+          "y": 330.0
+        }
+      },
+      "model.graph": {
+        "position": {
+          "x": 150.0,
+          "y": 18.0
+        }
+      },
+      "model.path": {
+        "position": {
+          "x": 18.0,
+          "y": 18.0
+        }
+      },
+      "model.validate": {
+        "position": {
+          "x": 18.0,
+          "y": 180.0
+        }
+      },
+      "pipeline": {
+        "position": {
+          "x": 760.0,
+          "y": 0.0
+        }
+      },
+      "pipeline.geometry": {
+        "position": {
+          "x": 36.0,
+          "y": 300.0
+        }
+      },
+      "pipeline.geometry.depth": {
+        "position": {
+          "x": 282.0,
+          "y": 18.0
+        }
+      },
+      "pipeline.geometry.primitive": {
+        "position": {
+          "x": 150.0,
+          "y": 18.0
+        }
+      },
+      "pipeline.geometry.projection": {
+        "position": {
+          "x": 18.0,
+          "y": 18.0
+        }
+      },
+      "pipeline.inter": {
+        "position": {
+          "x": 780.0,
+          "y": 54.0
+        }
+      },
+      "pipeline.layout": {
+        "position": {
+          "x": 36.0,
+          "y": 36.0
+        }
+      },
+      "pipeline.layout.place": {
+        "position": {
+          "x": 18.0,
+          "y": 18.0
+        }
+      },
+      "pipeline.layout.route": {
+        "position": {
+          "x": 150.0,
+          "y": 18.0
+        }
+      },
+      "pipeline.layout.stub": {
+        "position": {
+          "x": 282.0,
+          "y": 18.0
+        }
+      },
+      "pipeline.metrics": {
+        "position": {
+          "x": 600.0,
+          "y": 36.0
+        }
+      },
+      "pipeline.render": {
+        "position": {
+          "x": 560.0,
+          "y": 300.0
+        }
+      },
+      "pipeline.render.profile": {
+        "position": {
+          "x": 150.0,
+          "y": 18.0
+        }
+      },
+      "pipeline.render.theme": {
+        "position": {
+          "x": 18.0,
+          "y": 18.0
+        }
+      },
+      "pipeline.render.writer": {
+        "position": {
+          "x": 282.0,
+          "y": 18.0
+        }
+      },
+      "runtime": {
+        "position": {
+          "x": 1900.0,
+          "y": 620.0
+        }
+      },
+      "svg": {
+        "position": {
+          "x": 1900.0,
+          "y": 330.0
+        }
+      },
+      "text": {
+        "position": {
+          "x": 0.0,
+          "y": 40.0
+        }
+      }
+    },
+    "steps": [
+      {
+        "id": "main",
+        "items": [
+          {
+            "edge": {
+              "from": "model.path",
+              "ordinal": 0,
+              "to": "model.graph"
+            }
+          },
+          {
+            "edge": {
+              "from": "model.graph",
+              "ordinal": 0,
+              "to": "model.validate"
+            }
+          },
+          {
+            "edge": {
+              "from": "pipeline.layout.place",
+              "ordinal": 0,
+              "to": "pipeline.layout.route"
+            }
+          },
+          {
+            "edge": {
+              "from": "pipeline.layout.route",
+              "ordinal": 0,
+              "to": "pipeline.layout.stub"
+            }
+          },
+          {
+            "edge": {
+              "from": "pipeline.geometry.projection",
+              "ordinal": 0,
+              "to": "pipeline.geometry.primitive"
+            }
+          },
+          {
+            "edge": {
+              "from": "pipeline.geometry.primitive",
+              "ordinal": 0,
+              "to": "pipeline.geometry.depth"
+            }
+          },
+          {
+            "edge": {
+              "from": "pipeline.render.theme",
+              "ordinal": 0,
+              "to": "pipeline.render.profile"
+            }
+          },
+          {
+            "edge": {
+              "from": "pipeline.render.profile",
+              "ordinal": 0,
+              "to": "pipeline.render.writer"
+            }
+          },
+          {
+            "edge": {
+              "from": "pipeline.metrics",
+              "ordinal": 0,
+              "to": "pipeline.layout"
+            }
+          },
+          {
+            "edge": {
+              "from": "pipeline.layout",
+              "ordinal": 0,
+              "to": "pipeline.geometry"
+            }
+          },
+          {
+            "edge": {
+              "from": "pipeline.geometry",
+              "ordinal": 0,
+              "to": "pipeline.render"
+            }
+          },
+          {
+            "edge": {
+              "from": "pipeline.metrics",
+              "ordinal": 0,
+              "to": "pipeline.inter"
+            }
+          },
+          {
+            "edge": {
+              "from": "pipeline.render.profile",
+              "ordinal": 0,
+              "to": "pipeline.inter"
+            }
+          },
+          {
+            "edge": {
+              "from": "text",
+              "ordinal": 0,
+              "to": "cli"
+            }
+          },
+          {
+            "edge": {
+              "from": "cli",
+              "ordinal": 0,
+              "to": "import"
+            }
+          },
+          {
+            "edge": {
+              "from": "cli",
+              "ordinal": 0,
+              "to": "pipeline"
+            }
+          },
+          {
+            "edge": {
+              "from": "import",
+              "ordinal": 0,
+              "to": "model"
+            }
+          },
+          {
+            "edge": {
+              "from": "model",
+              "ordinal": 0,
+              "to": "pipeline"
+            }
+          },
+          {
+            "edge": {
+              "from": "pipeline",
+              "ordinal": 0,
+              "to": "svg"
+            }
+          },
+          {
+            "edge": {
+              "from": "runtime",
+              "ordinal": 0,
+              "to": "svg"
+            }
+          },
+          {
+            "edge": {
+              "from": "d2",
+              "ordinal": 0,
+              "to": "import"
+            }
+          },
+          {
+            "edge": {
+              "from": "pipeline.render.writer",
+              "ordinal": 0,
+              "to": "contract"
+            }
+          },
+          {
+            "edge": {
+              "from": "runtime",
+              "ordinal": 0,
+              "to": "contract"
+            }
+          },
+          {
+            "element": "import.markdown"
+          },
+          {
+            "element": "import.d2"
+          },
+          {
+            "element": "import.json"
+          }
+        ],
+        "title": "Every edge"
+      }
+    ],
+    "subtitle": "text in → model → layout → geometry → SVG out",
+    "title": "svugy · how it is built"
+  }
+]

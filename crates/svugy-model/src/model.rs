@@ -1,143 +1,35 @@
-//! Hold the canonical description of a system: elements keyed by path and edges keyed by endpoints plus ordinal.
+//! Hold the canonical description of a system: components keyed by path, and the workflows that show them.
 
 use std::collections::BTreeMap;
 use std::fmt;
-use std::ops::Bound;
+use std::ops::RangeInclusive;
 
 use miette::SourceSpan;
 use serde::de;
 use serde::{Deserialize, Deserializer, Serialize};
 use strum::{EnumString, IntoStaticStr, VariantNames};
 
-use crate::legend::Legend;
+use crate::graph::WorkflowGraph;
 use crate::path::ElementPath;
+use crate::properties::{ComponentProperties, SpannedText};
 use crate::unique_key_map::UniqueKeyMapVisitor;
+use crate::workflow::{Workflow, WorkflowId};
 
 /// Largest magnitude a numeric style value, a position coordinate or a height may take, so no valid model can explode the output.
 pub const MAX_MAGNITUDE: f64 = 1_000_000.0;
 
-/// Model a system as the diagram's title, subtitle, view angle, description and legend, elements keyed by path and edges keyed by id; every model handed out of this crate has its edge endpoints and ancestors declared.
-#[derive(Clone, Debug, Default, PartialEq)]
+/// Model a system as its view angle, its elements keyed by path and its workflows in written order; every model handed out of this crate has its ancestors declared and every workflow's edges and steps naming its own elements.
+#[derive(Clone, Debug, PartialEq)]
 pub struct Model {
-    pub(crate) title: Option<String>,
-    pub(crate) subtitle: Option<String>,
     pub(crate) view: Option<ViewAngle>,
-    pub(crate) description: Option<String>,
-    pub(crate) legend: Option<Legend>,
     pub(crate) elements: BTreeMap<ElementPath, Element>,
-    pub(crate) edges: BTreeMap<EdgeId, Edge>,
+    pub(crate) workflows: Vec<Workflow>,
 }
 
 impl Model {
-    /// Insert `edge` from `from` to `to` with the next free ordinal for that pair, so parallel edges stay distinct.
-    pub(crate) fn insert_edge_with_next_free_ordinal(
-        &mut self,
-        from: ElementPath,
-        to: ElementPath,
-        edge: Edge,
-    ) -> EdgeId {
-        let first_parallel_id = EdgeId::new(from, to, 0);
-        let last_parallel_id = first_parallel_id.parallel(u32::MAX);
-        let parallel_ids = &first_parallel_id..=&last_parallel_id;
-        let mut parallel_edges = self.edges.range::<EdgeId, _>(parallel_ids);
-        let last_parallel_edge = parallel_edges.next_back();
-        let ordinal = last_parallel_edge.map_or(0, |(id, _edge)| id.ordinal() + 1);
-        let id = first_parallel_id.parallel(ordinal);
-        let inserted_id = id.clone();
-        self.edges.insert(inserted_id, edge);
-        id
-    }
-
-    /// Yield the edges Layout may see: every edge except those joining an element to its ancestor or descendant.
-    pub fn layoutable_edges(&self) -> impl Iterator<Item = (&EdgeId, &Edge)> {
-        self.edges
-            .iter()
-            .filter(|(id, _edge)| !id.joins_ancestor_and_descendant())
-    }
-
-    /// Yield the layoutable edges drawn as arcs: every one Layout may see but the badges.
-    pub fn arc_edges(&self) -> impl Iterator<Item = (&EdgeId, &Edge)> {
-        self.layoutable_edges()
-            .filter(|(_id, edge)| !edge.is_badge())
-    }
-
-    /// Yield the edges drawn as badges, in edge order.
-    pub fn badge_edges(&self) -> impl Iterator<Item = &EdgeId> {
-        let badge_edges = self.edges.iter().filter(|(_id, edge)| edge.is_badge());
-        badge_edges.map(|(id, _edge)| id)
-    }
-
-    /// Yield the edges drawn as badges on `source`, in edge order.
-    pub fn badge_edges_from<'a>(
-        &'a self,
-        source: &'a ElementPath,
-    ) -> impl Iterator<Item = &'a EdgeId> {
-        let source_path = source.clone();
-        let root = ElementPath::root();
-        let first_edge_from_source = EdgeId::new(source_path, root, 0);
-        let from_source_onwards = self.edges.range(first_edge_from_source..);
-        let edges_from_source =
-            from_source_onwards.take_while(move |(id, _edge)| id.from() == source);
-        let badge_edges_from_source = edges_from_source.filter(|(_id, edge)| edge.is_badge());
-        badge_edges_from_source.map(|(id, _edge)| id)
-    }
-
-    /// Tell whether `id` is drawn as a badge on its source's top face instead of an arc, as its edge is marked.
-    pub fn is_badge_edge(&self, id: &EdgeId) -> bool {
-        let edge = self.edge(id);
-        edge.is_some_and(Edge::is_badge)
-    }
-
-    /// Yield the elements one level below `parent`; the root yields the top-level elements.
-    pub fn children<'a>(
-        &'a self,
-        parent: &'a ElementPath,
-    ) -> impl Iterator<Item = (&'a ElementPath, &'a Element)> {
-        let child_depth = parent.depth() + 1;
-        self.descendants(parent)
-            .filter(move |(path, _element)| path.depth() == child_depth)
-    }
-
-    /// Yield every element strictly below `ancestor`, in path order.
-    pub fn descendants<'a>(
-        &'a self,
-        ancestor: &'a ElementPath,
-    ) -> impl Iterator<Item = (&'a ElementPath, &'a Element)> {
-        let after_ancestor = (Bound::Excluded(ancestor), Bound::Unbounded);
-        self.elements
-            .range::<ElementPath, _>(after_ancestor)
-            .take_while(|(path, _element)| ancestor.is_ancestor_of(path))
-    }
-
-    /// Tell whether the element at `path` has children, which is what makes it a container.
-    pub fn is_container(&self, path: &ElementPath) -> bool {
-        let mut descendants = self.descendants(path);
-        descendants.next().is_some()
-    }
-
-    /// Return the diagram's title, drawn at the top-left of the top-level view.
-    pub fn title(&self) -> Option<&str> {
-        self.title.as_deref()
-    }
-
-    /// Return the diagram's subtitle, drawn under its title.
-    pub fn subtitle(&self) -> Option<&str> {
-        self.subtitle.as_deref()
-    }
-
     /// Return the angle the diagram is first seen from, if the author picked one.
     pub fn view(&self) -> Option<ViewAngle> {
         self.view
-    }
-
-    /// Return the diagram's description, Markdown shown in the side panel while nothing is focused.
-    pub fn description(&self) -> Option<&str> {
-        self.description.as_deref()
-    }
-
-    /// Return the diagram's legend, drawn at the top-right of the top-level view.
-    pub fn legend(&self) -> Option<&Legend> {
-        self.legend.as_ref()
     }
 
     /// Return the element at `path`, if one is declared there.
@@ -150,30 +42,119 @@ impl Model {
         &self.elements
     }
 
-    /// Return the edge identified by `id`, if there is one.
-    pub fn edge(&self, id: &EdgeId) -> Option<&Edge> {
-        self.edges.get(id)
+    /// Return the workflow with `id`, the first written when several share it.
+    pub fn workflow(&self, id: &WorkflowId) -> Option<&Workflow> {
+        let mut workflows = self.workflows.iter();
+        workflows.find(|workflow| workflow.id() == id)
     }
 
-    /// Return every edge keyed by its id, in edge order.
-    pub fn edges(&self) -> &BTreeMap<EdgeId, Edge> {
-        &self.edges
+    /// Return every workflow in written order, the first being the one a reader starts on.
+    pub fn workflows(&self) -> &[Workflow] {
+        &self.workflows
+    }
+
+    /// Show the workflow with `id`, the first written when several share it, if the model has one.
+    pub fn showing(&self, id: &WorkflowId) -> Option<ShownWorkflow<'_>> {
+        let workflow = self.workflow(id)?;
+        let shown_workflow = ShownWorkflow {
+            model: self,
+            workflow,
+        };
+        Some(shown_workflow)
+    }
+
+    /// Show the first workflow, the one a reader starts on.
+    pub fn showing_first_workflow(&self) -> ShownWorkflow<'_> {
+        let workflow = self
+            .workflows
+            .first()
+            .expect("every model handed out of this crate has a workflow");
+        ShownWorkflow {
+            model: self,
+            workflow,
+        }
+    }
+
+    /// Show each workflow in turn, in written order.
+    pub fn showing_each_workflow(&self) -> impl Iterator<Item = ShownWorkflow<'_>> {
+        self.workflows.iter().map(|workflow| ShownWorkflow {
+            model: self,
+            workflow,
+        })
     }
 }
 
-/// Reject an element's `badge` field, which moved onto edges, naming where it went instead of serde's bare unknown field.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-struct MovedElementBadge;
+/// Pair a model with the workflow a reader is shown, so the workflow is always one of that model's own.
+#[derive(Clone, Copy, Debug)]
+pub struct ShownWorkflow<'m> {
+    model: &'m Model,
+    workflow: &'m Workflow,
+}
+
+impl<'m> ShownWorkflow<'m> {
+    /// Project the shown workflow into the graph it draws, paired with it.
+    pub fn projected(self) -> ProjectedWorkflow<'m> {
+        let graph = WorkflowGraph::of(self.model, self.workflow);
+        ProjectedWorkflow {
+            workflow: self.workflow,
+            graph,
+        }
+    }
+
+    /// Return the model the workflow belongs to.
+    pub fn model(self) -> &'m Model {
+        self.model
+    }
+
+    /// Return the shown workflow.
+    pub fn workflow(self) -> &'m Workflow {
+        self.workflow
+    }
+}
+
+/// Pair a workflow with the graph projected from it, so every step index of the graph names a step of that workflow.
+#[derive(Clone, Debug)]
+pub struct ProjectedWorkflow<'m> {
+    workflow: &'m Workflow,
+    graph: WorkflowGraph,
+}
+
+impl<'m> ProjectedWorkflow<'m> {
+    /// Hand out the graph alone, for a caller that never reads the steps of its workflow.
+    pub fn into_graph(self) -> WorkflowGraph {
+        self.graph
+    }
+
+    /// Return the projected workflow.
+    pub fn workflow(&self) -> &'m Workflow {
+        self.workflow
+    }
+
+    /// Return the graph the workflow draws.
+    pub fn graph(&self) -> &WorkflowGraph {
+        &self.graph
+    }
+}
 
 /// Describe an element: a component or container, everything except its path and its children.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(from = "ElementDocument", into = "ElementDocument")]
 pub struct Element {
+    label: String,
+    pub(crate) description: Option<String>,
+    pub(crate) properties: ComponentProperties,
+    span: Option<ByteRange>,
+}
+
+/// Spell an element as model JSON: every field flat, each field v3 elements had and v4 moved rejected with its fix.
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ElementDocument {
     label: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     caption: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) description: Option<String>,
+    description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     shape: Option<Shape>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -184,10 +165,6 @@ pub struct Element {
         deserialize_with = "UniqueKeyMapVisitor::deserialize"
     )]
     style: BTreeMap<String, String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    child_placement: Option<PlacementHint>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    position: Option<Position>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     link: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -204,8 +181,27 @@ pub struct Element {
     metadata: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     span: Option<ByteRange>,
-    #[serde(default, rename = "badge", skip_serializing)]
-    moved_badge: MovedElementBadge,
+    #[serde(
+        default,
+        rename = "badge",
+        skip_serializing,
+        deserialize_with = "ElementDocument::reject_badge"
+    )]
+    _moved_badge: (),
+    #[serde(
+        default,
+        rename = "position",
+        skip_serializing,
+        deserialize_with = "ElementDocument::reject_position"
+    )]
+    _moved_position: (),
+    #[serde(
+        default,
+        rename = "child_placement",
+        skip_serializing,
+        deserialize_with = "ElementDocument::reject_child_placement"
+    )]
+    _moved_child_placement: (),
 }
 
 impl Element {
@@ -214,20 +210,9 @@ impl Element {
         let label = label.into();
         Self {
             label,
-            caption: None,
             description: None,
-            shape: None,
-            height: None,
-            style: BTreeMap::new(),
-            child_placement: None,
-            position: None,
-            link: None,
-            link_span: None,
-            code: None,
-            code_span: None,
-            metadata: BTreeMap::new(),
+            properties: ComponentProperties::new(),
             span: None,
-            moved_badge: MovedElementBadge,
         }
     }
 
@@ -237,83 +222,50 @@ impl Element {
         self
     }
 
-    /// Set the secondary line drawn under the label.
-    pub fn with_caption(mut self, caption: impl Into<String>) -> Self {
-        let caption = caption.into();
-        self.caption = Some(caption);
-        self
-    }
-
-    /// Set the Markdown describing the element in the side panel.
+    /// Set the Markdown describing the element in the description panel.
     pub fn with_description(mut self, description: impl Into<String>) -> Self {
         let description = description.into();
         self.description = Some(description);
         self
     }
 
+    /// Replace every property of how the element is drawn and where it points.
+    pub fn with_properties(mut self, properties: ComponentProperties) -> Self {
+        self.properties = properties;
+        self
+    }
+
+    /// Set the secondary line drawn under the label.
+    pub fn with_caption(mut self, caption: impl Into<String>) -> Self {
+        self.properties = self.properties.with_caption(caption);
+        self
+    }
+
     /// Set the shape the element is drawn as, overriding the renderer's pick.
     pub fn with_shape(mut self, shape: Shape) -> Self {
-        self.shape = Some(shape);
+        self.properties = self.properties.with_shape(shape);
         self
     }
 
     /// Stand a leaf's top face `height` plan units above its floor instead of its primitive's default; validation bounds it.
     pub fn with_height(mut self, height: f64) -> Self {
-        self.height = Some(height);
+        self.properties = self.properties.with_height(height);
         self
     }
 
     /// Record a raw style entry; validation decides later whether the key is known.
     pub fn with_style(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
-        let key = key.into();
-        let value = value.into();
-        self.style.insert(key, value);
+        self.properties = self.properties.with_style(key, value);
         self
     }
 
-    /// Set how this element, once a container, places its children.
-    pub fn with_child_placement(mut self, child_placement: PlacementHint) -> Self {
-        self.child_placement = Some(child_placement);
-        self
-    }
-
-    /// Pin this element at an explicit plan-space position inside its parent, overriding automatic placement.
-    pub fn with_position(mut self, position: Position) -> Self {
-        self.position = Some(position);
-        self
-    }
-
-    /// Set the drill-down target (an element path) or URL this element points to, unresolved.
-    pub fn with_link(mut self, link: impl Into<String>) -> Self {
-        let link = link.into();
-        self.link = Some(link);
-        self
-    }
-
-    /// Record where in an imported source this element's link value was written.
-    pub fn with_link_span(mut self, link_span: ByteRange) -> Self {
-        self.link_span = Some(link_span);
-        self
-    }
-
-    /// Point the element at a place in the source tree, written `FILE` or `FILE#SYMBOL` relative to the repository root; validation checks its shape.
-    pub fn with_code(mut self, code: impl Into<String>) -> Self {
-        let code = code.into();
-        self.code = Some(code);
-        self
-    }
-
-    /// Record where in an imported source this element's code value was written.
-    pub fn with_code_span(mut self, code_span: ByteRange) -> Self {
-        self.code_span = Some(code_span);
-        self
-    }
-
-    /// Record a free-form metadata entry, carried into the rendered element's annotations.
-    pub fn with_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
-        let key = key.into();
-        let value = value.into();
-        self.metadata.insert(key, value);
+    /// Set the unresolved link, written at `span` of an imported source when there is one.
+    pub fn with_link_written_at(
+        mut self,
+        link: impl Into<String>,
+        span: Option<ByteRange>,
+    ) -> Self {
+        self.properties = self.properties.with_link_written_at(link, span);
         self
     }
 
@@ -328,64 +280,14 @@ impl Element {
         &self.label
     }
 
-    /// Return the secondary line drawn under the label, if any.
-    pub fn caption(&self) -> Option<&str> {
-        self.caption.as_deref()
-    }
-
-    /// Return the Markdown describing the element in the side panel, if any.
+    /// Return the Markdown describing the element in the description panel, if any.
     pub fn description(&self) -> Option<&str> {
         self.description.as_deref()
     }
 
-    /// Return the authored shape, or `None` to let the renderer pick (box for components, slab for containers).
-    pub fn shape(&self) -> Option<Shape> {
-        self.shape
-    }
-
-    /// Return the authored height, or `None` to stand at the primitive's default height.
-    pub fn height(&self) -> Option<f64> {
-        self.height
-    }
-
-    /// Return the element's raw style entries, keyed by style name.
-    pub fn style(&self) -> &BTreeMap<String, String> {
-        &self.style
-    }
-
-    /// Return how this element, once a container, places its children, if authored.
-    pub fn child_placement(&self) -> Option<PlacementHint> {
-        self.child_placement
-    }
-
-    /// Return the pinned plan-space position inside the parent, if authored.
-    pub fn position(&self) -> Option<Position> {
-        self.position
-    }
-
-    /// Return the unresolved drill-down target or URL the element links to, if any.
-    pub fn link(&self) -> Option<&str> {
-        self.link.as_deref()
-    }
-
-    /// Return where in an imported source the link value was written, as a byte range.
-    pub fn link_span(&self) -> Option<ByteRange> {
-        self.link_span
-    }
-
-    /// Return the unchecked `FILE#SYMBOL` place in the source tree the element points at, if any.
-    pub fn code(&self) -> Option<&str> {
-        self.code.as_deref()
-    }
-
-    /// Return where in an imported source the code value was written, as a byte range.
-    pub fn code_span(&self) -> Option<ByteRange> {
-        self.code_span
-    }
-
-    /// Return the element's metadata entries, keyed by name.
-    pub fn metadata(&self) -> &BTreeMap<String, String> {
-        &self.metadata
+    /// Return how the element is drawn and where it points.
+    pub fn properties(&self) -> &ComponentProperties {
+        &self.properties
     }
 
     /// Return where in an imported source this element was declared, as a byte range.
@@ -399,11 +301,99 @@ impl Element {
     }
 }
 
-impl<'de> Deserialize<'de> for MovedElementBadge {
-    fn deserialize<D: Deserializer<'de>>(_deserializer: D) -> Result<Self, D::Error> {
+impl From<ElementDocument> for Element {
+    fn from(document: ElementDocument) -> Self {
+        let ElementDocument {
+            label,
+            caption,
+            description,
+            shape,
+            height,
+            style,
+            link,
+            link_span,
+            code,
+            code_span,
+            metadata,
+            span,
+            _moved_badge,
+            _moved_position,
+            _moved_child_placement,
+        } = document;
+        let link = SpannedText::written(link, link_span);
+        let code = SpannedText::written(code, code_span);
+        let properties = ComponentProperties {
+            caption,
+            shape,
+            height,
+            style,
+            link,
+            code,
+            metadata,
+        };
+        Self {
+            label,
+            description,
+            properties,
+            span,
+        }
+    }
+}
+
+impl From<Element> for ElementDocument {
+    fn from(element: Element) -> Self {
+        let ComponentProperties {
+            caption,
+            shape,
+            height,
+            style,
+            link,
+            code,
+            metadata,
+        } = element.properties;
+        let (link, link_span) = SpannedText::unpaired(link);
+        let (code, code_span) = SpannedText::unpaired(code);
+        Self {
+            label: element.label,
+            caption,
+            description: element.description,
+            shape,
+            height,
+            style,
+            link,
+            link_span,
+            code,
+            code_span,
+            metadata,
+            span: element.span,
+            _moved_badge: (),
+            _moved_position: (),
+            _moved_child_placement: (),
+        }
+    }
+}
+
+impl ElementDocument {
+    /// Reject an element's `badge`, which moved onto edges.
+    fn reject_badge<'de, D: Deserializer<'de>>(_value: D) -> Result<(), D::Error> {
         let moved_badge_message = "`badge` moved from elements to edges: set `\"badge\": true` on each edge into this element";
         let moved_badge_error = de::Error::custom(moved_badge_message);
         Err(moved_badge_error)
+    }
+
+    /// Reject an element's `position`, which moved into each workflow's overrides.
+    fn reject_position<'de, D: Deserializer<'de>>(_value: D) -> Result<(), D::Error> {
+        let moved_position_message =
+            "`position` moved from elements to workflows: set it in each workflow's `overrides`";
+        let moved_position_error = de::Error::custom(moved_position_message);
+        Err(moved_position_error)
+    }
+
+    /// Reject an element's `child_placement`, which moved into each workflow's overrides.
+    fn reject_child_placement<'de, D: Deserializer<'de>>(_value: D) -> Result<(), D::Error> {
+        let moved_child_placement_message = "`child_placement` moved from elements to workflows: set it in each workflow's `overrides`";
+        let moved_child_placement_error = de::Error::custom(moved_child_placement_message);
+        Err(moved_child_placement_error)
     }
 }
 
@@ -486,7 +476,7 @@ pub struct Position {
     pub y: f64,
 }
 
-/// Locate an imported element, edge or link value as a byte range in its source, convertible to a miette span.
+/// Locate where an imported source wrote a component, workflow, step, edge, override or property value, as a byte range convertible to a miette span.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ByteRange {
@@ -522,27 +512,42 @@ impl EdgeId {
         Self { from, to, ordinal }
     }
 
-    /// Return the level the edge is laid out in: the endpoints' lowest common ancestor, or a self-loop's parent.
+    /// Return the id `from -> to` takes when added to `edges`: the next free ordinal for that pair, so parallel edges stay distinct.
+    pub(crate) fn next_free_in(
+        edges: &BTreeMap<EdgeId, Edge>,
+        from: ElementPath,
+        to: ElementPath,
+    ) -> Self {
+        let parallel_ids = Self::every_parallel_id(from, to);
+        let first_parallel_id = parallel_ids.start();
+        let mut parallel_edges = edges.range(parallel_ids.clone());
+        let last_parallel_edge = parallel_edges.next_back();
+        let ordinal = last_parallel_edge.map_or(0, |(id, _edge)| id.ordinal() + 1);
+        first_parallel_id.parallel(ordinal)
+    }
+
+    /// Return every id an edge `from -> to` can take, ordinal 0 to the last, as an edge-ordered range.
+    pub(crate) fn every_parallel_id(from: ElementPath, to: ElementPath) -> RangeInclusive<Self> {
+        let first_parallel_id = Self::new(from, to, 0);
+        let last_parallel_id = first_parallel_id.parallel(u32::MAX);
+        first_parallel_id..=last_parallel_id
+    }
+
+    /// Return the level the edge is laid out in: the endpoints' lowest common ancestor.
     pub fn home_level(&self) -> ElementPath {
-        let is_self_loop = self.from == self.to;
-        if is_self_loop {
-            return self.from.enclosing_level();
-        }
         self.from.lowest_common_ancestor(&self.to)
     }
 
     /// Return the id of the parallel edge numbered `ordinal` between this id's endpoints.
-    pub(crate) fn parallel(&self, ordinal: u32) -> Self {
+    fn parallel(&self, ordinal: u32) -> Self {
         let from = self.from.clone();
         let to = self.to.clone();
         Self { from, to, ordinal }
     }
 
-    /// Tell whether one endpoint contains the other, which Layout cannot draw.
-    pub fn joins_ancestor_and_descendant(&self) -> bool {
-        let is_from_ancestor = self.from.is_ancestor_of(&self.to);
-        let is_to_ancestor = self.to.is_ancestor_of(&self.from);
-        is_from_ancestor || is_to_ancestor
+    /// Tell whether the edge joins an element to itself, its ancestor or its descendant, which no layer can draw.
+    pub fn joins_element_to_itself_or_its_lineage(&self) -> bool {
+        self.from.shares_lineage_with(&self.to)
     }
 
     /// Return the path the edge starts from.
@@ -595,7 +600,7 @@ impl Edge {
         self
     }
 
-    /// Set the Markdown describing the dataflow in the side panel.
+    /// Set the Markdown describing the dataflow in the description panel.
     pub fn with_description(mut self, description: impl Into<String>) -> Self {
         let description = description.into();
         self.description = Some(description);
@@ -633,7 +638,7 @@ impl Edge {
         self.label.as_deref()
     }
 
-    /// Return the Markdown describing the dataflow in the side panel, if any.
+    /// Return the Markdown describing the dataflow in the description panel, if any.
     pub fn description(&self) -> Option<&str> {
         self.description.as_deref()
     }

@@ -25,17 +25,19 @@ const CLUSTER_SVG: &str = include_str!("../cluster/cluster.svg");
 #[test]
 fn every_twin_lowers_to_the_model_of_its_markdown_spans_aside() {
     let svugy_markdown_json = markdown_model_json(SVUGY_MD);
-    let svugy_markdown_json_in_d2_reach = without_what_d2_cannot_say(&svugy_markdown_json);
+    let svugy_markdown_json_in_d2_reach = within_d2_reach(&svugy_markdown_json);
     let svugy_d2_json = d2_model_json(SVUGY_D2);
+    let svugy_d2_json_in_d2_reach = within_d2_reach(&svugy_d2_json);
     let svugy_json_json = json_model_json(SVUGY_JSON);
     let webapp_markdown_json = markdown_model_json(WEBAPP_MD);
-    let webapp_markdown_json_in_d2_reach = without_what_d2_cannot_say(&webapp_markdown_json);
+    let webapp_markdown_json_in_d2_reach = within_d2_reach(&webapp_markdown_json);
     let webapp_d2_json = d2_model_json(WEBAPP_D2);
+    let webapp_d2_json_in_d2_reach = within_d2_reach(&webapp_d2_json);
 
     let twins = [
         (
             "examples/svugy/svugy.d2",
-            svugy_d2_json,
+            svugy_d2_json_in_d2_reach,
             svugy_markdown_json_in_d2_reach,
         ),
         (
@@ -45,14 +47,14 @@ fn every_twin_lowers_to_the_model_of_its_markdown_spans_aside() {
         ),
         (
             "examples/webapp/webapp.d2",
-            webapp_d2_json,
+            webapp_d2_json_in_d2_reach,
             webapp_markdown_json_in_d2_reach,
         ),
     ];
     for (twin_path, twin_json, markdown_json) in twins {
         assert_eq!(
             twin_json, markdown_json,
-            "{twin_path} must describe the model of the .md beside it, spans aside and, for d2, what d2 can't say aside"
+            "{twin_path} must describe the model of the .md beside it, spans aside and, for d2, what d2 can't say aside on both sides"
         );
     }
 }
@@ -68,7 +70,7 @@ fn every_committed_svg_is_the_interactive_render_of_its_markdown() {
     ];
     for (svg_path, markdown_source, committed_svg) in renders {
         let model = markdown_model(markdown_source);
-        let fresh_svg = InteractiveSvg::render(&model);
+        let fresh_svg = InteractiveSvg::render(model.showing_first_workflow());
         let is_committed_svg_fresh = fresh_svg == committed_svg;
         assert!(
             is_committed_svg_fresh,
@@ -111,35 +113,51 @@ fn json_model_json(json_source: &str) -> String {
     without_spans(&model_json)
 }
 
-/// Re-print model JSON without the `span` and `link_span` of each element and edge, source provenance no twin shares.
+/// Re-print model JSON without any `span`, `link_span` or `code_span`, source provenance no twin shares.
 fn without_spans(model_json: &str) -> String {
     let mut model: Value = serde_json::from_str(model_json).expect("a model saves as JSON");
-    let elements = model["elements"]
-        .as_object_mut()
-        .expect("a model saves its elements as an object");
-    for element in elements.values_mut() {
-        remove_fields(element, &["span", "link_span"]);
-    }
-    let edges = model["edges"]
+    remove_fields_everywhere(&mut model, &["span", "link_span", "code_span"]);
+    serde_json::to_string_pretty(&model).expect("a JSON value prints")
+}
+
+/// Re-print model JSON as far as the d2 subset can say it: each workflow keeps only its overrides and its edges, travelers dropped, since d2 has no syntax for workflow titles, prose, steps or travelers.
+fn within_d2_reach(model_json: &str) -> String {
+    let mut model: Value = serde_json::from_str(model_json).expect("a model saves as JSON");
+    let workflows = model["workflows"]
         .as_array_mut()
-        .expect("a model saves its edges as an array");
-    for edge in edges {
-        remove_fields(edge, &["span", "link_span"]);
+        .expect("a model saves its workflows as an array");
+    for workflow in workflows {
+        remove_fields(
+            workflow,
+            &["id", "title", "subtitle", "description", "steps"],
+        );
+        let Some(edges) = workflow["edges"].as_array_mut() else {
+            continue;
+        };
+        for edge in edges {
+            remove_fields(edge, &["traveler"]);
+        }
     }
     serde_json::to_string_pretty(&model).expect("a JSON value prints")
 }
 
-/// Re-print model JSON without the diagram's description and the edges' travelers, which the d2 subset has no syntax for.
-fn without_what_d2_cannot_say(model_json: &str) -> String {
-    let mut model: Value = serde_json::from_str(model_json).expect("a model saves as JSON");
-    remove_fields(&mut model, &["description"]);
-    let edges = model["edges"]
-        .as_array_mut()
-        .expect("a model saves its edges as an array");
-    for edge in edges {
-        remove_fields(edge, &["traveler"]);
+fn remove_fields_everywhere(value: &mut Value, field_names: &[&str]) {
+    match value {
+        Value::Object(fields) => {
+            for field_name in field_names {
+                fields.remove(*field_name);
+            }
+            for field_value in fields.values_mut() {
+                remove_fields_everywhere(field_value, field_names);
+            }
+        }
+        Value::Array(items) => {
+            for item in items {
+                remove_fields_everywhere(item, field_names);
+            }
+        }
+        _scalar => {}
     }
-    serde_json::to_string_pretty(&model).expect("a JSON value prints")
 }
 
 fn remove_fields(record: &mut Value, field_names: &[&str]) {

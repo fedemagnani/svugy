@@ -1,101 +1,133 @@
 ---
 source: crates/svugy-parse/tests/d2_lower.rs
-expression: import.model.to_json()
+expression: model_json
 ---
 {
   "elements": {
     "cloud": {
       "label": "cloud",
       "span": {
-        "start": 100,
-        "end": 105
+        "start": 141,
+        "end": 146
       }
     },
     "cloud.cache": {
       "label": "cache",
       "span": {
-        "start": 156,
-        "end": 161
+        "start": 197,
+        "end": 202
       }
     },
     "cloud.vpc": {
       "label": "vpc",
       "span": {
-        "start": 100,
-        "end": 109
+        "start": 141,
+        "end": 150
       }
     },
     "cloud.vpc.api": {
       "label": "api",
       "span": {
-        "start": 100,
-        "end": 113
+        "start": 141,
+        "end": 154
       }
     },
     "onprem": {
       "label": "onprem",
       "span": {
-        "start": 117,
-        "end": 123
+        "start": 158,
+        "end": 164
       }
     },
     "onprem.db": {
       "label": "db",
       "span": {
-        "start": 117,
-        "end": 126
+        "start": 158,
+        "end": 167
       }
     }
   },
-  "edges": [
+  "workflows": [
     {
-      "from": "cloud",
-      "to": "cloud.vpc.api",
-      "ordinal": 0,
-      "label": "owns",
-      "span": {
-        "start": 238,
-        "end": 260
-      }
-    },
-    {
-      "from": "cloud.vpc.api",
-      "to": "cloud.cache",
-      "ordinal": 0,
-      "span": {
-        "start": 145,
-        "end": 161
-      }
-    },
-    {
-      "from": "cloud.vpc.api",
-      "to": "onprem.db",
-      "ordinal": 0,
-      "label": "reads",
-      "span": {
-        "start": 100,
-        "end": 126
-      }
-    },
-    {
-      "from": "cloud.vpc.api",
-      "to": "onprem.db",
-      "ordinal": 1,
-      "label": "writes",
-      "span": {
-        "start": 164,
-        "end": 190
-      }
-    },
-    {
-      "from": "cloud.vpc.api",
-      "to": "onprem.db",
-      "ordinal": 2,
-      "label": "replicates",
-      "span": {
-        "start": 199,
-        "end": 225
-      }
+      "id": "main",
+      "title": "main",
+      "edges": [
+        {
+          "from": "cloud.vpc.api",
+          "to": "cloud.cache",
+          "ordinal": 0,
+          "span": {
+            "start": 186,
+            "end": 202
+          }
+        },
+        {
+          "from": "cloud.vpc.api",
+          "to": "onprem.db",
+          "ordinal": 0,
+          "label": "reads",
+          "span": {
+            "start": 141,
+            "end": 167
+          }
+        },
+        {
+          "from": "cloud.vpc.api",
+          "to": "onprem.db",
+          "ordinal": 1,
+          "label": "writes",
+          "span": {
+            "start": 205,
+            "end": 231
+          }
+        },
+        {
+          "from": "cloud.vpc.api",
+          "to": "onprem.db",
+          "ordinal": 2,
+          "label": "replicates",
+          "span": {
+            "start": 240,
+            "end": 266
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "main",
+          "title": "Every edge",
+          "items": [
+            {
+              "edge": {
+                "from": "cloud.vpc.api",
+                "to": "onprem.db",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "cloud.vpc.api",
+                "to": "cloud.cache",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "cloud.vpc.api",
+                "to": "onprem.db",
+                "ordinal": 1
+              }
+            },
+            {
+              "edge": {
+                "from": "cloud.vpc.api",
+                "to": "onprem.db",
+                "ordinal": 2
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

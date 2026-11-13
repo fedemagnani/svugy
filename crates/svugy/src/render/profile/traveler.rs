@@ -3,7 +3,8 @@
 use std::collections::BTreeMap;
 
 use kurbo::{BezPath, Point, Rect, Vec2};
-use svugy_model::model::{Edge, EdgeId, Model, Traveler};
+use svugy_model::graph::WorkflowGraph;
+use svugy_model::model::{Edge, EdgeId, Traveler};
 
 use crate::geometry::Group;
 use crate::render::contract::RuntimeContract;
@@ -77,7 +78,7 @@ struct Document;
 /// Draws a key: a ring, a shaft and two teeth.
 struct Key;
 
-/// Resolves an edge's traveler to the symbol it is drawn as, the one place a model `Traveler` becomes a `TravelerSymbol`.
+/// Resolves an edge's traveler to the symbol it is drawn as, the one place a graph `Traveler` becomes a `TravelerSymbol`.
 #[derive(Clone, Copy)]
 pub(crate) struct ResolvedTraveler {
     name: &'static str,
@@ -92,16 +93,16 @@ pub(crate) struct TravelerSymbols {
 }
 
 impl TravelerSymbols {
-    /// Collect the traveler of every connection of `drawn_layers` that moves one, traces and arcs, interiors included, each resolved in the model its layer is drawn from.
-    pub(crate) fn collect(drawn_layers: &[(&Group, &Model)]) -> Self {
+    /// Collect the traveler of every connection of `drawn_layers` that moves one, traces and arcs, interiors included, each resolved in the graph its layer is drawn from.
+    pub(crate) fn collect(drawn_layers: &[(&Group, &WorkflowGraph)]) -> Self {
         let mut travelers_by_name = BTreeMap::new();
-        for &(root, model) in drawn_layers {
+        for &(root, graph) in drawn_layers {
             let levels = root.this_and_nested_levels();
             let connections =
                 levels.flat_map(|(group, _to_root)| group.traces.iter().chain(&group.connections));
             let moving_connections = connections.filter(|connection| connection.dot_path.is_some());
             let layer_travelers = moving_connections.map(|connection| {
-                let traveler = ResolvedTraveler::carried_along(&connection.edge, model);
+                let traveler = ResolvedTraveler::carried_along(&connection.edge, graph);
                 (traveler.name, traveler)
             });
             travelers_by_name.extend(layer_travelers);
@@ -123,9 +124,9 @@ impl TravelerSymbols {
 }
 
 impl ResolvedTraveler {
-    /// Resolve the traveler `edge` carries in `model`, else the dot.
-    pub(crate) fn carried_along(edge: &EdgeId, model: &Model) -> Self {
-        let authored_edge = model.edge(edge);
+    /// Resolve the traveler `edge` carries in `graph`, else the dot.
+    pub(crate) fn carried_along(edge: &EdgeId, graph: &WorkflowGraph) -> Self {
+        let authored_edge = graph.edge(edge);
         let authored_traveler = authored_edge.and_then(Edge::traveler);
         let traveler = authored_traveler.unwrap_or(Traveler::Dot);
         match traveler {

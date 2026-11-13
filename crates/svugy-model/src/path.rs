@@ -70,6 +70,13 @@ impl ElementPath {
         is_shorter && is_prefix
     }
 
+    /// Tell whether `other` is `self`, its ancestor or its descendant.
+    pub fn shares_lineage_with(&self, other: &Self) -> bool {
+        let is_other_ancestor_or_self = self.segments.starts_with(&other.segments);
+        let is_other_descendant_or_self = other.segments.starts_with(&self.segments);
+        is_other_ancestor_or_self || is_other_descendant_or_self
+    }
+
     /// Return the longest common prefix of both paths.
     pub fn lowest_common_ancestor(&self, other: &Self) -> Self {
         let shared_segments = self
@@ -98,6 +105,22 @@ impl ElementPath {
         let own_depth = self.depth();
         let prefix_length = own_depth.min(depth);
         self.ancestor_or_self_at_depth(prefix_length)
+    }
+
+    /// Tell whether `text` follows the component id rules: ASCII letters, digits, `_` and single inner `-`, starting with a letter or `_`.
+    pub fn is_component_id(text: &str) -> bool {
+        let mut characters = text.chars();
+        let Some(first_character) = characters.next() else {
+            return false;
+        };
+        let is_valid_start = first_character.is_ascii_alphabetic() || first_character == '_';
+        let has_only_id_characters = characters
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '_' | '-'));
+        let has_double_hyphen = text.contains("--");
+        let has_trailing_hyphen = text.ends_with('-');
+        let has_dangling_hyphen = has_double_hyphen || has_trailing_hyphen;
+        let is_every_hyphen_inner_and_single = !has_dangling_hyphen;
+        is_valid_start && has_only_id_characters && is_every_hyphen_inner_and_single
     }
 
     /// Write a segment bare when it parses back unchanged, otherwise quoted.

@@ -4,7 +4,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::iter;
 
 use kurbo::{ParamCurve, Point, Rect, Vec2};
-use svugy_model::model::{EdgeId, Model};
+use svugy_model::graph::WorkflowGraph;
+use svugy_model::model::EdgeId;
 use svugy_model::path::ElementPath;
 
 use super::arrangements::{Arrangements, GroupId, SlotSide};
@@ -231,14 +232,14 @@ impl PlacedLevels {
 }
 
 impl GroupId {
-    /// List every complete group of `model` that may bundle, in level and edge order: two or more edges entering a container among the children they join, every entered endpoint a direct child of it.
-    pub(crate) fn bundle_candidates_of(model: &Model) -> Vec<Self> {
-        let homed_edges = HomedEdges::of(model);
+    /// List every complete group of `graph` that may bundle, in level and edge order: two or more edges entering a container among the children they join, every entered endpoint a direct child of it.
+    pub(crate) fn bundle_candidates_of(graph: &WorkflowGraph) -> Vec<Self> {
+        let homed_edges = HomedEdges::of(graph);
         let root = ElementPath::root();
-        let containers = model
+        let containers = graph
             .elements()
             .keys()
-            .filter(|path| model.is_container(path));
+            .filter(|path| graph.is_container(path));
         let levels = iter::once(&root).chain(containers);
         let mut candidates = Vec::new();
         for level in levels {
@@ -488,22 +489,26 @@ impl<'a> ContainerFloors<'a> {
 
 #[cfg(test)]
 mod tests {
-    use svugy_model::builder::{ElementRef, ModelBuilder};
+    use crate::one_step::OneStepModelBuilder;
+    use svugy_model::builder::ElementRef;
     use svugy_model::model::{Edge, Element, PlacementHint};
     use svugy_parse::diagnostic::SourceLanguage;
     use svugy_parse::markdown::MarkdownLanguage;
 
     use super::*;
     use crate::layout::LevelPlans;
+    use svugy_model::workflow::ElementOverride;
+
     use crate::metrics::{BundledFont, InterFaces};
 
     #[test]
     fn edges_from_a_leaf_into_one_container_share_a_trunk_and_branch_flat_unless_one_ends_deeper() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let site = builder.add_top_level("site", Element::new("site"));
         let client = builder.add_child(&site, "client", Element::new("client"));
-        let column_pool = Element::new("pool").with_child_placement(PlacementHint::Column);
-        let pool = builder.add_child(&site, "pool", column_pool);
+        let pool = builder.add_child(&site, "pool", Element::new("pool"));
+        let columning = ElementOverride::new().with_child_placement(PlacementHint::Column);
+        builder.override_element(&pool, columning);
         let alpha = builder.add_child(&pool, "alpha", Element::new("alpha"));
         let beta = builder.add_child(&pool, "beta", Element::new("beta"));
         let deep = builder.add_child(&site, "deep", Element::new("deep"));
@@ -513,10 +518,10 @@ mod tests {
         for inner in [&alpha, &beta, &shallow, &core] {
             builder.add_edge(&client, inner, Edge::new());
         }
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
         let font = BundledFont::<InterFaces>::new();
 
-        let plans = LevelPlans::lay_out(&model, &font);
+        let plans = LevelPlans::lay_out(&graph, &font);
 
         let site_plan = plans.level(site.path()).expect("site is a level");
         let site_routes = site_plan.routes();
@@ -639,8 +644,11 @@ mod tests {
             let model = import_parts
                 .model
                 .unwrap_or_else(|| panic!("examples/{example_name} is a valid diagram"));
-            let homed_edges = HomedEdges::of(&model);
-            let home_levels: BTreeSet<ElementPath> = model
+            let first_workflow = model.showing_first_workflow();
+            let projection = first_workflow.projected();
+            let graph = projection.graph();
+            let homed_edges = HomedEdges::of(graph);
+            let home_levels: BTreeSet<ElementPath> = graph
                 .arc_edges()
                 .map(|(edge, _attributes)| edge.home_level())
                 .collect();

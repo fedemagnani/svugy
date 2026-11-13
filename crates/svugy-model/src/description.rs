@@ -3,8 +3,9 @@
 use std::fmt;
 use std::ops::Range;
 
-use crate::model::{EdgeId, Model};
+use crate::model::EdgeId;
 use crate::path::ElementPath;
+use crate::workflow::{StepId, WorkflowId};
 
 /// Spell the separator between an edge target's two endpoints.
 const EDGE_ARROW: &str = "->";
@@ -12,20 +13,25 @@ const EDGE_ARROW: &str = "->";
 const FENCE: &str = "```";
 /// Spell the first character of a link destination that targets a diagram object.
 const TARGET_MARKER: char = '#';
+/// Spell the separator between a step target's workflow and step.
+const STEP_SEPARATOR: char = '/';
 
-/// Name whose description a text is: the diagram's, an element's or an edge's.
+/// Name whose description a text is: an element's, a workflow's, a step's or a workflow edge's.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DescriptionOwner {
-    Diagram,
     Element(ElementPath),
-    Edge(EdgeId),
+    Workflow(WorkflowId),
+    Step(WorkflowId, StepId),
+    Edge(WorkflowId, EdgeId),
 }
 
-/// Name the diagram object a description link targets, canonically spelled after its `#` as `PATH` or `FROM->TO[n]`.
+/// Name the diagram object a description link targets, canonically spelled after its `#` as `PATH`, `FROM->TO[n]`, `FROM->TO` or `WORKFLOW/STEP`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DescriptionTarget {
     Element(ElementPath),
     Edge(EdgeId),
+    UnnumberedEdge { from: ElementPath, to: ElementPath },
+    Step { workflow: WorkflowId, step: StepId },
 }
 
 /// Locate a description link `[TEXT](#TARGET)`: the target spelled after its `#`, and that spelling's byte range in the description.
@@ -51,19 +57,20 @@ enum InlineMatch {
 }
 
 impl DescriptionTarget {
-    /// Read the canonical spelling after a link's `#`: `FROM->TO[n]` when it parses as an edge, else `PATH`; `None` when it spells neither.
+    /// Read the canonical spelling after a link's `#`, trying in order `FROM->TO[n]`, `WORKFLOW/STEP`, `FROM->TO`, then `PATH`; `None` when it spells none.
     pub fn parse(target: &str) -> Option<Self> {
-        let edge_target = Self::parse_edge(target);
-        if edge_target.is_some() {
-            return edge_target;
-        }
-        let path = target.parse().ok()?;
-        let element_target = Self::Element(path);
-        Some(element_target)
+        let numbered_edge = Self::parse_numbered_edge(target);
+        let step = || Self::parse_step(target);
+        let unnumbered_edge = || Self::parse_unnumbered_edge(target);
+        let element = || Self::parse_element(target);
+        numbered_edge
+            .or_else(step)
+            .or_else(unnumbered_edge)
+            .or_else(element)
     }
 
     /// Read `FROM->TO[n]`, splitting at the first `->` that leaves a path on both sides.
-    fn parse_edge(target: &str) -> Option<Self> {
+    fn parse_numbered_edge(target: &str) -> Option<Self> {
         let endpoints_and_ordinal = target.strip_suffix(']')?;
         let (endpoints, ordinal_text) = endpoints_and_ordinal.rsplit_once('[')?;
         let has_non_digit = ordinal_text.bytes().any(|byte| !byte.is_ascii_digit());
@@ -72,6 +79,41 @@ impl DescriptionTarget {
             return None;
         }
         let ordinal = ordinal_text.parse().ok()?;
+        let (from, to) = Self::split_endpoints(endpoints)?;
+        let id = EdgeId::new(from, to, ordinal);
+        let edge_target = Self::Edge(id);
+        Some(edge_target)
+    }
+
+    /// Read `WORKFLOW/STEP`, both well-formed ids.
+    fn parse_step(target: &str) -> Option<Self> {
+        let (workflow_text, step_text) = target.split_once(STEP_SEPARATOR)?;
+        let workflow = WorkflowId::new(workflow_text);
+        let step = StepId::new(step_text);
+        let is_either_id_malformed = !workflow.is_well_formed() || !step.is_well_formed();
+        if is_either_id_malformed {
+            return None;
+        }
+        let step_target = Self::Step { workflow, step };
+        Some(step_target)
+    }
+
+    /// Read `FROM->TO`, splitting at the first `->` that leaves a path on both sides.
+    fn parse_unnumbered_edge(target: &str) -> Option<Self> {
+        let (from, to) = Self::split_endpoints(target)?;
+        let unnumbered_edge_target = Self::UnnumberedEdge { from, to };
+        Some(unnumbered_edge_target)
+    }
+
+    /// Read `PATH`.
+    fn parse_element(target: &str) -> Option<Self> {
+        let path = target.parse().ok()?;
+        let element_target = Self::Element(path);
+        Some(element_target)
+    }
+
+    /// Split `FROM->TO` at the first `->` that leaves a path on both sides.
+    fn split_endpoints(endpoints: &str) -> Option<(ElementPath, ElementPath)> {
         for (arrow_start, _arrow) in endpoints.match_indices(EDGE_ARROW) {
             let from_text = &endpoints[..arrow_start];
             let to_start = arrow_start + EDGE_ARROW.len();
@@ -79,19 +121,9 @@ impl DescriptionTarget {
             let (Ok(from), Ok(to)) = (from_text.parse(), to_text.parse()) else {
                 continue;
             };
-            let id = EdgeId::new(from, to, ordinal);
-            let edge_target = Self::Edge(id);
-            return Some(edge_target);
+            return Some((from, to));
         }
         None
-    }
-
-    /// Tell whether `model` holds the element or edge this target names.
-    pub fn is_in(&self, model: &Model) -> bool {
-        match self {
-            Self::Element(path) => model.element(path).is_some(),
-            Self::Edge(id) => model.edge(id).is_some(),
-        }
     }
 }
 
@@ -105,6 +137,8 @@ impl fmt::Display for DescriptionTarget {
                 let ordinal = id.ordinal();
                 write!(formatter, "{from}{EDGE_ARROW}{to}[{ordinal}]")
             }
+            Self::UnnumberedEdge { from, to } => write!(formatter, "{from}{EDGE_ARROW}{to}"),
+            Self::Step { workflow, step } => write!(formatter, "{workflow}{STEP_SEPARATOR}{step}"),
         }
     }
 }
@@ -112,9 +146,10 @@ impl fmt::Display for DescriptionTarget {
 impl fmt::Display for DescriptionOwner {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Diagram => formatter.write_str("the diagram"),
             Self::Element(path) => write!(formatter, "element `{path}`"),
-            Self::Edge(id) => write!(formatter, "edge `{id}`"),
+            Self::Workflow(workflow) => write!(formatter, "workflow `{workflow}`"),
+            Self::Step(workflow, step) => write!(formatter, "step `{workflow}/{step}`"),
+            Self::Edge(workflow, id) => write!(formatter, "edge `{id}` of workflow `{workflow}`"),
         }
     }
 }
@@ -318,7 +353,13 @@ mod tests {
 
     #[test]
     fn a_canonical_target_reads_back_as_itself() {
-        let canonical_targets = ["backend.api", "backend.api->backend.queue[0]", "a->b[12]"];
+        let canonical_targets = [
+            "backend.api",
+            "backend.api->backend.queue[0]",
+            "a->b[12]",
+            "a->b",
+            "checkout/charge",
+        ];
         for canonical_target in canonical_targets {
             let target = DescriptionTarget::parse(canonical_target)
                 .unwrap_or_else(|| panic!("{canonical_target} is canonical"));
@@ -328,12 +369,12 @@ mod tests {
                 "parse then display is the identity on canonical targets"
             );
         }
-        let element_named_like_an_unnumbered_edge = DescriptionTarget::parse("a->b");
-        let expected_element = ElementPath::from_segments(["a->b"]);
+        let element_named_like_a_url = DescriptionTarget::parse("docs/guide.html");
+        let expected_element = ElementPath::from_segments(["docs/guide", "html"]);
         assert_eq!(
-            element_named_like_an_unnumbered_edge,
+            element_named_like_a_url,
             Some(DescriptionTarget::Element(expected_element)),
-            "an edge target always carries `[n]`; without it the text is a path"
+            "a step target joins two well-formed ids; anything else with a `/` is a path"
         );
     }
 }

@@ -10,6 +10,7 @@ Every input becomes the same model, so a diagram renders to the same SVG whichev
 | JSON (`.json`) | tools that generate diagrams; `svugy import FILE -o model.json` writes one |
 
 - Run `svugy validate` after each edit: a misspelt key, style or reference comes back with the name you probably meant.
-- Leave `position` out at first. The automatic layout puts each hop of a chain one step further along, which draws as a diagonal; pin positions only where that shape is wrong.
+- Write one workflow per story the diagram tells, and one step per moment of it. Each workflow draws only the components its steps list.
+- Leave `position` out at first. The automatic layout puts each hop of a chain one step further along, which draws as a diagonal; pin positions, in a workflow's overrides, only where that shape is wrong.
 
 Next: [Markdown](markdown.md)

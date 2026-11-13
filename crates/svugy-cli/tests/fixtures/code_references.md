@@ -4,3 +4,10 @@
 - validate: Validate command (code=crates/svugy-cli/src/main.rs#ValidateCommand::run)
 - gone: Removed module (code=crates/svugy-cli/src/removed.rs)
 - renamed: Renamed method (code=crates/svugy-cli/src/main.rs#ValidateCommand::check_everything)
+
+## Workflows
+### main: Every component
+#### main: Each component alone
+- validate
+- gone
+- renamed

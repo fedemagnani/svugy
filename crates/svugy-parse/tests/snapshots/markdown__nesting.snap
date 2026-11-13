@@ -3,63 +3,118 @@ source: crates/svugy-parse/tests/markdown.rs
 expression: model_json
 ---
 {
-  "title": "Order desk",
-  "subtitle": "How an order becomes a trade, from click to ledger.",
   "view": "top",
-  "description": "Orders arrive from the **client** and settle in [the store](#ledger.store).\n\n- the desk matches them\n- the ledger records them",
   "elements": {
     "client": {
       "label": "client",
       "description": "Sends orders over [FIX](https://www.fixtrading.org) to [the API](#desk.api).",
       "span": {
-        "start": 644,
-        "end": 650
+        "start": 504,
+        "end": 510
       }
     },
     "desk": {
       "label": "Order desk",
       "description": "Matches orders *during* market hours.\n\n> Closed on weekends.",
       "span": {
-        "start": 750,
-        "end": 766
+        "start": 610,
+        "end": 626
       }
     },
     "desk.api": {
       "label": "api",
       "span": {
-        "start": 861,
-        "end": 864
+        "start": 721,
+        "end": 724
       }
     },
     "desk.engine": {
       "label": "Matching engine",
       "span": {
-        "start": 869,
-        "end": 894
+        "start": 729,
+        "end": 754
       }
     },
     "desk.engine.book": {
       "label": "book",
       "description": "Price levels, best first:\n\n```\n[bid](#bid) | ask\n```",
       "span": {
-        "start": 901,
-        "end": 905
+        "start": 761,
+        "end": 765
       }
     },
     "ledger": {
       "label": "Ledger (append-only)",
       "span": {
-        "start": 1019,
-        "end": 1049
+        "start": 879,
+        "end": 909
       }
     },
     "ledger.store": {
       "label": "store",
       "span": {
-        "start": 1054,
-        "end": 1059
+        "start": 914,
+        "end": 919
       }
     }
   },
-  "edges": []
+  "workflows": [
+    {
+      "id": "trade",
+      "title": "Order desk",
+      "subtitle": "How an order becomes a trade, from click to ledger.",
+      "description": "Orders arrive from the **client** and settle in [the store](#ledger.store).\n\n> The desk matches them; the ledger records them.\n\n```\n- not an item, a line of code\n```",
+      "edges": [
+        {
+          "from": "client",
+          "to": "desk.api",
+          "ordinal": 0,
+          "span": {
+            "start": 1212,
+            "end": 1225
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "match",
+          "title": "The desk matches",
+          "items": [
+            {
+              "edge": {
+                "from": "client",
+                "to": "desk.api",
+                "ordinal": 0
+              }
+            },
+            {
+              "element": "desk.engine.book"
+            }
+          ],
+          "span": {
+            "start": 1186,
+            "end": 1191
+          }
+        },
+        {
+          "id": "settle",
+          "title": "The ledger records",
+          "description": "[The book](#desk.engine.book) hands each trade to [the ledger](#ledger).",
+          "items": [
+            {
+              "element": "ledger.store"
+            }
+          ],
+          "span": {
+            "start": 1239,
+            "end": 1245
+          }
+        }
+      ],
+      "span": {
+        "start": 938,
+        "end": 943
+      }
+    }
+  ]
 }

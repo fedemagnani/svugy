@@ -6,7 +6,7 @@ use svugy_parse::json::JsonPrinter;
 use svugy_parse::markdown::MarkdownParse;
 
 /// Name the fixtures that lower into a model, each snapshotted under its name.
-const MODEL_FIXTURES: [&str; 5] = ["nesting", "edges", "properties", "styles", "legend"];
+const MODEL_FIXTURES: [&str; 4] = ["nesting", "edges", "properties", "styles"];
 
 /// Read a Markdown diagram from the crate's directory.
 fn read_source(relative_path: &str) -> String {

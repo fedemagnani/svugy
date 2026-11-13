@@ -1,14 +1,11 @@
-//! Track what a plate, a badge or the legend must keep clear of in one view.
+//! Track what a plate or a badge must keep clear of in one view.
 
 use kurbo::{Affine, BezPath, PathEl, Point, Rect, Vec2};
 use svugy_model::path::ElementPath;
 
-use super::{
-    Drawable, Face, Group, Heading, Label, NestedInterior, NestedInteriors, PlatedLabel, Scene,
-    Solid,
-};
+use super::{Drawable, Face, Group, Label, NestedInterior, NestedInteriors, PlatedLabel, Solid};
 
-/// Collects the obstructions a plate, a badge or the legend must not overlap in one view: the outlines of what that view draws and of what was placed before.
+/// Collects the obstructions a plate or a badge must not overlap in one view: the outlines of what that view draws and of what was placed before.
 pub(super) struct Obstructions {
     outlines: Vec<ScreenPolygon>,
 }
@@ -54,20 +51,6 @@ impl Obstructions {
                     .map(move |drawable| ScreenPolygon::of_drawable(drawable, to_interior))
             })
             .collect();
-        Self { outlines }
-    }
-
-    /// Collect in document space everything `scene`'s top-level view draws: every drawable of every level, and the heading's lines.
-    pub(super) fn around_document(scene: &Scene) -> Self {
-        let levels = scene.root.this_and_nested_levels();
-        let level_outlines = levels.flat_map(|(group, group_to_document)| {
-            let drawables = group.drawables();
-            drawables.map(move |drawable| ScreenPolygon::of_drawable(drawable, group_to_document))
-        });
-        let heading_lines = scene.heading.iter().flat_map(Heading::lines);
-        let heading_outlines =
-            heading_lines.map(|label| ScreenPolygon::of_label(label, Affine::IDENTITY));
-        let outlines = level_outlines.chain(heading_outlines).collect();
         Self { outlines }
     }
 

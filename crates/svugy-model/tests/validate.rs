@@ -1,48 +1,17 @@
-use miette::Diagnostic;
-use svugy_model::builder::ModelBuilder;
-use svugy_model::legend::Legend;
-use svugy_model::model::{ByteRange, Edge, Element, MAX_MAGNITUDE, PlacementHint, Position, Shape};
+use std::collections::BTreeMap;
+
+use svugy_model::builder::{DescribedRef, ModelBuilder, StepRef, WorkflowRef};
+use svugy_model::model::{
+    ByteRange, Edge, EdgeId, Element, MAX_MAGNITUDE, PlacementHint, Position, Shape,
+};
 use svugy_model::path::ElementPath;
-use svugy_model::problem::{ErrorSeverity, Problem, StyleOwner, Suggestion};
+use svugy_model::problem::{
+    ElementSite, ErrorSeverity, Problem, StyleOwner, Suggestion, UnresolvedTargetReason,
+};
+use svugy_model::properties::ComponentProperties;
 use svugy_model::style::AnyStyleKey;
 use svugy_model::validate::ModelReport;
-
-fn parse(text: &str) -> ElementPath {
-    text.parse().expect("well-formed path")
-}
-
-fn rejected_report(builder: ModelBuilder) -> ModelReport {
-    let admission = builder.build();
-    let is_admitted = admission.model.is_some();
-    assert!(!is_admitted, "the model has errors: {:?}", admission.report);
-    admission.report
-}
-
-fn admitted_report(builder: ModelBuilder) -> ModelReport {
-    let admission = builder.build();
-    let is_admitted = admission.model.is_some();
-    assert!(
-        is_admitted,
-        "the model has no error: {:?}",
-        admission.report
-    );
-    admission.report
-}
-
-fn report_of_top_level(element: Element) -> ModelReport {
-    let mut builder = ModelBuilder::new();
-    let _element = builder.add_top_level("api", element);
-    rejected_report(builder)
-}
-
-fn report_of_link(link: &str) -> ModelReport {
-    let mut builder = ModelBuilder::new();
-    let backend = builder.add_top_level("backend", Element::new("backend"));
-    let _api = builder.add_child(&backend, "api", Element::new("API"));
-    let linked = Element::new("docs").with_link(link);
-    let _docs = builder.add_top_level("docs", linked);
-    admitted_report(builder)
-}
+use svugy_model::workflow::{ElementOverride, Step, StepId, StepItem, Workflow, WorkflowId};
 
 #[test]
 fn a_clean_model_validates_to_an_empty_report() {
@@ -52,7 +21,9 @@ fn a_clean_model_validates_to_an_empty_report() {
         .with_style("font", "mono")
         .with_style("stroke-width", "2")
         .with_style("shadow", "true");
-    let _api = builder.add_top_level("api", styled);
+    let api = builder.add_top_level("api", styled);
+    let (_main, all) = main_step(&mut builder);
+    builder.list_element(&all, &api);
 
     let report = admitted_report(builder);
 
@@ -61,36 +32,69 @@ fn a_clean_model_validates_to_an_empty_report() {
 }
 
 #[test]
-fn an_ancestor_descendant_edge_is_a_warning_that_keeps_its_span() {
+fn description_targets_resolve_in_the_scope_their_description_is_written_in() {
     let mut builder = ModelBuilder::new();
-    let desk = builder.add_top_level("desk", Element::new("desk"));
-    let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
-    let into_child = Edge::new().with_span(ByteRange::new(3, 17));
-    let down_edge = builder.add_edge(&desk, &quoter, into_child);
+    let web = builder.add_top_level("web", Element::new("web"));
+    let api = builder.add_top_level("api", Element::new("api"));
+    let vault = builder.add_top_level("vault", Element::new("vault"));
+    let checkout_workflow = Workflow::new(WorkflowId::new("checkout"), "A customer pays");
+    let checkout = builder.add_workflow(checkout_workflow);
+    let order_step = Step::new(StepId::new("order"), "The shop takes the order");
+    let order = builder.add_step(&checkout, order_step);
+    let _places_order = builder.add_edge(&order, &web, &api, Edge::new());
+    let _retries = builder.add_edge(&order, &web, &api, Edge::new());
+    let refund_workflow = Workflow::new(WorkflowId::new("refund"), "A customer is refunded");
+    let refund = builder.add_workflow(refund_workflow);
+    let give_back_step = Step::new(StepId::new("give-back"), "The vault gives the money back");
+    let give_back = builder.add_step(&refund, give_back_step);
+    let _repays = builder.add_edge(&give_back, &vault, &web, Edge::new());
+    let web_owner = DescribedRef::Element(web);
+    let order_owner = DescribedRef::Step(order);
+    builder.describe(
+        &web_owner,
+        "Sends [the cart](#web->api) and is [repaid](#vault->web).",
+    );
+    builder.describe(
+        &order_owner,
+        "[The vault](#vault) waits; see [the refund](#refund/give-back).",
+    );
 
     let report = admitted_report(builder);
 
-    let [Problem::AncestorDescendantEdge(problem)] = report.problems() else {
-        panic!("expected one ancestor-descendant edge, got {report:?}");
-    };
-    assert_eq!(problem.edge, down_edge);
-    assert_eq!(problem.span, Some((3..17).into()));
-    assert!(!report.has_errors());
-}
-
-#[test]
-fn an_unknown_style_key_fails_the_build_with_a_suggestion() {
-    let typo = Element::new("api").with_style("fil", "#fff");
-
-    let report = report_of_top_level(typo);
-
-    let [Problem::UnknownStyleKey(problem)] = report.problems() else {
-        panic!("expected one unknown style key, got {report:?}");
-    };
-    let help = problem.help().map(|help| help.to_string());
-    assert_eq!(problem.owner, StyleOwner::Element(parse("api")));
-    assert_eq!(problem.suggestion, Some(Suggestion("fill")));
-    assert_eq!(help.as_deref(), Some("did you mean `fill`?"));
+    let reasons: Vec<(String, &UnresolvedTargetReason)> = report
+        .problems()
+        .iter()
+        .map(|problem| {
+            let Problem::UnresolvedDescriptionTarget(unresolved_target) = problem else {
+                panic!("expected only unresolved targets, got {problem:?}");
+            };
+            (unresolved_target.target.clone(), &unresolved_target.reason)
+        })
+        .collect();
+    let checkout_id = WorkflowId::new("checkout");
+    let refund_id = WorkflowId::new("refund");
+    let expected_reasons = [
+        (
+            "web->api".to_owned(),
+            &UnresolvedTargetReason::NamesSeveralEdgesIn(checkout_id.clone()),
+        ),
+        (
+            "web->api".to_owned(),
+            &UnresolvedTargetReason::NamesNothingIn(refund_id),
+        ),
+        (
+            "vault->web".to_owned(),
+            &UnresolvedTargetReason::NamesNothingIn(checkout_id.clone()),
+        ),
+        (
+            "vault".to_owned(),
+            &UnresolvedTargetReason::IsNotShownBy(checkout_id),
+        ),
+    ];
+    assert_eq!(
+        reasons, expected_reasons,
+        "a component's edge target resolves in each workflow showing it; a step's targets resolve in its workflow, steps of any workflow included"
+    );
 }
 
 #[test]
@@ -98,8 +102,10 @@ fn a_style_value_of_the_wrong_kind_fails_the_build() {
     let mut builder = ModelBuilder::new();
     let a = builder.add_top_level("a", Element::new("a"));
     let b = builder.add_top_level("b", Element::new("b"));
+    let (_main, all) = main_step(&mut builder);
     let dashed = Edge::new().with_style("stroke-dash", "dashed");
-    let edge = builder.add_edge(&a, &b, dashed);
+    let edge_ref = builder.add_edge(&all, &a, &b, dashed);
+    let edge = edge_ref.id().clone();
 
     let report = rejected_report(builder);
 
@@ -107,39 +113,19 @@ fn a_style_value_of_the_wrong_kind_fails_the_build() {
         panic!("expected one mismatched style value, got {report:?}");
     };
     let stroke_dash = AnyStyleKey::find("stroke-dash").expect("v1 key");
-    assert_eq!(problem.owner, StyleOwner::Edge(edge));
+    let workflow = WorkflowId::new("main");
+    assert_eq!(problem.owner, StyleOwner::Edge { workflow, edge });
     assert_eq!(problem.key, stroke_dash);
     assert_eq!(problem.value, "dashed");
 }
 
 #[test]
-fn a_grid_of_zero_columns_fails_the_build() {
-    let mut builder = ModelBuilder::new();
-    let empty_grid =
-        Element::new("cluster").with_child_placement(PlacementHint::Grid { columns: 0 });
-    let cluster = builder.add_top_level("cluster", empty_grid);
-    let _member = builder.add_child(&cluster, "member", Element::new("member"));
-
-    let report = rejected_report(builder);
-
-    let [Problem::EmptyGridHint(problem)] = report.problems() else {
-        panic!("expected one empty grid, got {report:?}");
-    };
-    assert_eq!(problem.element, parse("cluster"));
-}
-
-#[test]
 fn a_grid_of_more_columns_than_a_packed_level_holds_fails_the_build() {
-    let mut builder = ModelBuilder::new();
     let too_wide = PlacementHint::MAX_PACKED_TRACKS + 2;
     let wide_grid =
-        Element::new("cluster").with_child_placement(PlacementHint::Grid { columns: too_wide });
-    let cluster = builder.add_top_level("cluster", wide_grid);
-    for name in ["a", "b", "c"] {
-        builder.add_child(&cluster, name, Element::new(name));
-    }
+        ElementOverride::new().with_child_placement(PlacementHint::Grid { columns: too_wide });
 
-    let report = rejected_report(builder);
+    let report = rejected_report(cluster_overridden_by(wide_grid, 3));
 
     let [Problem::UncountablePackedTracks(problem)] = report.problems() else {
         panic!("expected one uncountable grid, got {report:?}");
@@ -153,15 +139,9 @@ fn a_grid_of_more_columns_than_a_packed_level_holds_fails_the_build() {
 fn a_row_or_column_longer_than_a_packed_level_holds_fails_the_build() {
     let child_count = PlacementHint::MAX_PACKED_TRACKS as usize + 1;
     for hint in [PlacementHint::Row, PlacementHint::Column] {
-        let mut builder = ModelBuilder::new();
-        let line_element = Element::new("line").with_child_placement(hint);
-        let line = builder.add_top_level("line", line_element);
-        for child_index in 0..child_count {
-            let child_id = format!("c{child_index}");
-            builder.add_child(&line, &child_id, Element::new("c"));
-        }
+        let line = ElementOverride::new().with_child_placement(hint);
 
-        let report = rejected_report(builder);
+        let report = rejected_report(cluster_overridden_by(line, child_count));
 
         let [Problem::UncountablePackedTracks(problem)] = report.problems() else {
             panic!(
@@ -174,18 +154,20 @@ fn a_row_or_column_longer_than_a_packed_level_holds_fails_the_build() {
 }
 
 #[test]
-fn a_round_container_warns_that_its_shape_is_ignored_with_its_span() {
+fn a_round_container_warns_that_its_shape_is_ignored_where_it_was_written() {
     let mut builder = ModelBuilder::new();
     let round_element = Element::new("pond")
         .with_shape(Shape::Cylinder)
         .with_span(ByteRange::new(5, 9));
     let pond = builder.add_top_level("pond", round_element);
-    builder.add_child(&pond, "fish", Element::new("fish"));
-    let round_leaf = Element::new("store").with_shape(Shape::Disc);
-    builder.add_top_level("store", round_leaf);
-    let slab_element = Element::new("desk").with_shape(Shape::Slab);
-    let desk = builder.add_top_level("desk", slab_element);
-    builder.add_child(&desk, "quoter", Element::new("quoter"));
+    let fish = builder.add_child(&pond, "fish", Element::new("fish"));
+    let store = builder.add_top_level("store", Element::new("store"));
+    let (main, all) = main_step(&mut builder);
+    builder.list_element(&all, &fish);
+    builder.list_element(&all, &store);
+    let disc = ComponentProperties::new().with_shape(Shape::Disc);
+    let round_store = ElementOverride::new().with_properties(disc);
+    builder.override_element(&main, &store, round_store);
 
     let report = admitted_report(builder);
 
@@ -198,22 +180,27 @@ fn a_round_container_warns_that_its_shape_is_ignored_with_its_span() {
 }
 
 #[test]
-fn a_container_height_warns_that_it_is_ignored_with_its_span_and_a_leaf_height_passes() {
+fn a_container_height_warns_that_it_is_ignored_only_where_the_element_is_a_container() {
     let mut builder = ModelBuilder::new();
-    let tall_container = Element::new("desk")
+    let tall_desk = Element::new("desk")
         .with_height(40.0)
         .with_span(ByteRange::new(3, 7));
-    let desk = builder.add_top_level("desk", tall_container);
-    builder.add_child(&desk, "quoter", Element::new("quoter").with_height(40.0));
-    let tall_leaf = Element::new("app").with_height(84.0);
-    builder.add_top_level("app", tall_leaf);
+    let desk = builder.add_top_level("desk", tall_desk);
+    let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
+    let (_main, all) = main_step(&mut builder);
+    builder.list_element(&all, &quoter);
+    let closed_workflow = Workflow::new(WorkflowId::new("closed"), "The desk alone");
+    let closed = builder.add_workflow(closed_workflow);
+    let alone_step = Step::new(StepId::new("alone"), "Alone");
+    let alone = builder.add_step(&closed, alone_step);
+    builder.list_element(&alone, &desk);
 
     let report = admitted_report(builder);
 
     let [Problem::IgnoredContainerHeight(problem)] = report.problems() else {
         panic!("expected one ignored container height, got {report:?}");
     };
-    assert_eq!(problem.element, parse("desk"));
+    assert_eq!(problem.workflow, WorkflowId::new("main"));
     assert_eq!(problem.height, 40.0);
     assert_eq!(problem.span, Some((3..7).into()));
 }
@@ -224,77 +211,59 @@ fn a_height_that_is_not_a_positive_bounded_number_fails_the_build_and_one_at_the
     for impossible_height in impossible_heights {
         let raised = Element::new("api").with_height(impossible_height);
 
-        let report = report_of_top_level(raised);
+        let report = report_of_listed_top_level(raised);
 
         let [Problem::ImpossibleHeight(problem)] = report.problems() else {
             panic!("expected one impossible height, got {report:?}");
         };
-        assert_eq!(problem.element, parse("api"));
+        assert_eq!(problem.site, ElementSite::Declaration(parse("api")));
         let message = problem.to_string();
         assert!(message.contains("no greater than 1000000"), "{message}");
     }
     let mut builder = ModelBuilder::new();
     let tallest = Element::new("api").with_height(MAX_MAGNITUDE);
-    let _api = builder.add_top_level("api", tallest);
+    let api = builder.add_top_level("api", tallest);
+    let (_main, all) = main_step(&mut builder);
+    builder.list_element(&all, &api);
     let _report = admitted_report(builder);
 }
 
 #[test]
-fn a_child_placement_on_a_leaf_is_only_a_warning() {
-    let mut builder = ModelBuilder::new();
-    let row_without_children = Element::new("leaf").with_child_placement(PlacementHint::Row);
-    let _leaf = builder.add_top_level("leaf", row_without_children);
+fn a_position_not_within_the_magnitude_bound_fails_the_build_and_one_at_it_passes() {
+    let unreachable_positions = [
+        Position {
+            x: f64::NAN,
+            y: 0.0,
+        },
+        Position {
+            x: 0.0,
+            y: f64::INFINITY,
+        },
+        Position { x: 1e7, y: 0.0 },
+    ];
+    for unreachable_position in unreachable_positions {
+        let pinned = ElementOverride::new().with_position(unreachable_position);
 
-    let report = admitted_report(builder);
+        let report = rejected_report(cluster_overridden_by(pinned, 0));
 
-    let [Problem::ChildPlacementWithoutChildren(problem)] = report.problems() else {
-        panic!("expected one child placement without children, got {report:?}");
-    };
-    assert_eq!(problem.child_placement, PlacementHint::Row);
-}
-
-#[test]
-fn a_non_finite_position_fails_the_build() {
-    let unreachable_position = Position {
-        x: f64::NAN,
-        y: f64::INFINITY,
-    };
-    let pinned = Element::new("api").with_position(unreachable_position);
-
-    let report = report_of_top_level(pinned);
-
-    let [Problem::UnboundedPosition(problem)] = report.problems() else {
-        panic!("expected one unbounded position, got {report:?}");
-    };
-    assert_eq!(problem.element, parse("api"));
-}
-
-#[test]
-fn a_position_beyond_the_magnitude_bound_fails_the_build_and_one_at_it_passes() {
-    let far_position = Position { x: 1e7, y: 0.0 };
-    let far_pinned = Element::new("api").with_position(far_position);
-
-    let report = report_of_top_level(far_pinned);
-
-    let [Problem::UnboundedPosition(problem)] = report.problems() else {
-        panic!("expected one unbounded position, got {report:?}");
-    };
-    assert_eq!(problem.position, far_position);
-    let mut builder = ModelBuilder::new();
+        let [Problem::UnboundedPosition(problem)] = report.problems() else {
+            panic!("expected one unbounded position, got {report:?}");
+        };
+        assert_eq!(problem.element, parse("cluster"));
+    }
     let edge_position = Position {
         x: -MAX_MAGNITUDE,
         y: MAX_MAGNITUDE,
     };
-    let edge_pinned = Element::new("api").with_position(edge_position);
-    let _api = builder.add_top_level("api", edge_pinned);
-    let _report = admitted_report(builder);
+    let pinned_at_bound = ElementOverride::new().with_position(edge_position);
+    let _report = admitted_report(cluster_overridden_by(pinned_at_bound, 0));
 }
 
 #[test]
 fn a_style_number_beyond_the_magnitude_bound_fails_the_build() {
     let huge_dash = Element::new("api").with_style("stroke-dash", "10000000000000");
 
-    let report = report_of_top_level(huge_dash);
+    let report = report_of_listed_top_level(huge_dash);
 
     let [Problem::MismatchedStyleValue(problem)] = report.problems() else {
         panic!("expected one mismatched style value, got {report:?}");
@@ -331,7 +300,7 @@ fn a_path_shaped_link_to_no_element_warns_with_a_suggestion() {
         panic!("expected one unresolved link, got {report:?}");
     };
     let expected_suggestion = Suggestion(parse("backend.api"));
-    assert_eq!(problem.element, parse("docs"));
+    assert_eq!(problem.site, ElementSite::Declaration(parse("docs")));
     assert_eq!(problem.suggestion, Some(expected_suggestion));
     assert!(!report.has_errors());
 }
@@ -339,15 +308,20 @@ fn a_path_shaped_link_to_no_element_warns_with_a_suggestion() {
 #[test]
 fn an_unresolved_link_labels_its_link_value_else_its_declaration() {
     let mut builder = ModelBuilder::new();
+    let link_value_span = Some(ByteRange::new(12, 19));
+    let spanned_link = ComponentProperties::new().with_link_written_at("nowhere", link_value_span);
     let with_link_span = Element::new("docs")
-        .with_link("nowhere")
-        .with_span(ByteRange::new(0, 4))
-        .with_link_span(ByteRange::new(12, 19));
+        .with_properties(spanned_link)
+        .with_span(ByteRange::new(0, 4));
+    let unspanned_link = ComponentProperties::new().with_link("nowhere");
     let declaration_only = Element::new("guide")
-        .with_link("nowhere")
+        .with_properties(unspanned_link)
         .with_span(ByteRange::new(30, 35));
-    let _docs = builder.add_top_level("docs", with_link_span);
-    let _guide = builder.add_top_level("guide", declaration_only);
+    let docs = builder.add_top_level("docs", with_link_span);
+    let guide = builder.add_top_level("guide", declaration_only);
+    let (_main, all) = main_step(&mut builder);
+    builder.list_element(&all, &docs);
+    builder.list_element(&all, &guide);
 
     let report = admitted_report(builder);
 
@@ -384,9 +358,12 @@ fn resolved_links_urls_and_relative_paths_raise_nothing() {
 #[test]
 fn a_model_with_only_warnings_is_admitted() {
     let mut builder = ModelBuilder::new();
-    let desk = builder.add_top_level("desk", Element::new("desk").with_link("dsk"));
-    let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
-    let _desk_to_quoter = builder.add_edge(&desk, &quoter, Edge::new());
+    let misspelled_link = ComponentProperties::new().with_link("dsk");
+    let desk_element = Element::new("desk").with_properties(misspelled_link);
+    let desk = builder.add_top_level("desk", desk_element);
+    let _idle = builder.add_top_level("idle", Element::new("idle"));
+    let (_main, all) = main_step(&mut builder);
+    builder.list_element(&all, &desk);
 
     let admission = builder.build();
 
@@ -398,167 +375,90 @@ fn a_model_with_only_warnings_is_admitted() {
 }
 
 #[test]
-fn edges_marked_badge_are_badges_and_every_other_edge_an_arc() {
-    let mut builder = ModelBuilder::new();
-    let desk = builder.add_top_level("desk", Element::new("desk"));
-    let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
-    let store = builder.add_child(&desk, "sqlite", Element::new("SQLite"));
-    let app = builder.add_top_level("app", Element::new("app"));
-    let writes = builder.add_edge(&quoter, &store, Edge::new().with_badge());
-    let app_writes = builder.add_edge(&app, &store, Edge::new().with_badge());
-    let reads = builder.add_edge(&store, &quoter, Edge::new());
-    let admission = builder.build();
-    let model = admission.model.expect("the model has no error");
-
-    let quoter_path = parse("desk.quoter");
-    let quoter_badges: Vec<_> = model.badge_edges_from(&quoter_path).collect();
-    let badges: Vec<_> = model.badge_edges().collect();
-    let arcs: Vec<_> = model.arc_edges().map(|(id, _edge)| id).collect();
-
-    assert!(model.is_badge_edge(&writes));
-    assert!(model.is_badge_edge(&app_writes));
-    assert!(!model.is_badge_edge(&reads));
-    assert_eq!(quoter_badges, [&writes]);
-    assert_eq!(badges, [&app_writes, &writes]);
-    assert_eq!(arcs, [&reads]);
-    assert!(
-        admission.report.problems().is_empty(),
-        "{:?}",
-        admission.report
-    );
-}
-
-#[test]
-fn a_badge_edge_with_a_container_at_either_end_is_an_error_labelled_at_the_edge() {
-    let mut builder = ModelBuilder::new();
-    let desk = builder.add_top_level("desk", Element::new("desk"));
-    let quoter = builder.add_child(&desk, "quoter", Element::new("quoter"));
-    let app = builder.add_top_level("app", Element::new("app"));
-    let calls_desk = Edge::new().with_badge().with_span(ByteRange::new(0, 4));
-    let calls = builder.add_edge(&app, &desk, calls_desk);
-    let notifies = builder.add_edge(&desk, &app, Edge::new().with_badge());
-    let _quotes = builder.add_edge(&quoter, &app, Edge::new().with_badge());
-
-    let report = rejected_report(builder);
-
-    let problems = report.problems();
-    let [
-        Problem::BadgeEdgeOnContainer(badge_into_container),
-        Problem::BadgeEdgeOnContainer(badge_from_container),
-    ] = problems
-    else {
-        panic!(
-            "the badges into and from a container are reported, the badge between leaves being sound: {problems:?}"
-        );
-    };
-    assert_eq!(badge_into_container.edge, calls);
-    assert_eq!(badge_from_container.edge, notifies);
-    let labels: Vec<_> = problems[0]
-        .labels()
-        .expect("the error is labelled")
-        .collect();
-    assert_eq!(labels[0].offset(), 0);
-}
-
-#[test]
-fn a_legend_describing_what_the_diagram_never_draws_warns_with_the_closest_badge_target() {
-    let mut builder = ModelBuilder::new();
-    let legend = Legend::new()
-        .with_dash_description(5.0, "HTTP")
-        .with_dash_description(3.0, "never dashed")
-        .with_badge_description(parse("sqlite"), "writes")
-        .with_badge_description(parse("ledgr"), "typo");
-    builder = builder.with_legend(legend);
-    let app = builder.add_top_level("app", Element::new("app"));
-    let api = builder.add_top_level("api", Element::new("api"));
-    let sqlite = builder.add_top_level("sqlite", Element::new("SQLite"));
-    let ledger = builder.add_top_level("ledger", Element::new("ledger"));
-    let _calls = builder.add_edge(&app, &api, Edge::new());
-    let _writes = builder.add_edge(&app, &sqlite, Edge::new().with_badge());
-    let _settles = builder.add_edge(&api, &ledger, Edge::new().with_badge());
-
-    let report = admitted_report(builder);
-
-    let undrawn: Vec<(String, Option<String>)> = report
-        .problems()
-        .iter()
-        .filter_map(|problem| match problem {
-            Problem::UndrawnLegendKey(undrawn_key) => {
-                let suggestion = undrawn_key.suggestion.as_ref();
-                let suggested = suggestion.map(|suggestion| suggestion.0.to_string());
-                Some((undrawn_key.key.to_string(), suggested))
-            }
-            _other => None,
-        })
-        .collect();
-    let expected = [
-        ("the arcs dashed `3`".to_owned(), None),
-        (
-            "the badges of `ledgr`".to_owned(),
-            Some("ledger".to_owned()),
-        ),
-    ];
-    assert_eq!(undrawn, expected);
-    assert_eq!(report.problems().len(), 2);
-}
-
-#[test]
 fn every_problem_kind_reaches_the_machine_readable_report_with_its_severity() {
     let mut other_builder = ModelBuilder::new();
     let foreign_parent = other_builder.add_top_level("cache", Element::new("cache"));
     let foreign_endpoint = other_builder.add_top_level("dbb", Element::new("dbb"));
-    let legend = Legend::new()
-        .with_dash_description(3.0, "never dashed")
-        .with_badge_description(parse("ledgr"), "typo");
-    let mut builder = ModelBuilder::new().with_legend(legend);
+    let mut builder = ModelBuilder::new();
     let desk_element = Element::new("desk")
         .with_style("fil", "#1b2436")
         .with_style("bold", "very")
-        .with_child_placement(PlacementHint::Grid { columns: 0 })
         .with_shape(Shape::Disc)
         .with_height(30.0)
-        .with_span(ByteRange::new(0, 4));
+        .with_span(ByteRange::new(0, 4))
+        .with_description("Feeds [the ledger](#desk->ledger).");
     let desk = builder.add_top_level("desk", desk_element);
-    let wide_grid = PlacementHint::Grid { columns: 40_000 };
-    let wide_element = Element::new("wide").with_child_placement(wide_grid);
-    let wide = builder.add_top_level("wide", wide_element);
-    let _cell = builder.add_child(&wide, "cell", Element::new("cell"));
-    let ledger = builder.add_top_level("ledger", Element::new("ledger"));
-    let _wide_writes = builder.add_edge(
-        &wide,
-        &ledger,
-        Edge::new().with_badge().with_span(ByteRange::new(60, 74)),
-    );
-    let quoter_element = Element::new("quoter")
-        .with_child_placement(PlacementHint::Column)
-        .with_link("desk.quoterr");
+    let wide = builder.add_top_level("wide", Element::new("wide"));
+    let cell = builder.add_child(&wide, "cell", Element::new("cell"));
+    let db_link = ComponentProperties::new().with_link("db");
+    let ledger = builder.add_top_level("ledger", Element::new("ledger").with_properties(db_link));
+    let misspelled_link = ComponentProperties::new().with_link("desk.quoterr");
+    let quoter_element = Element::new("quoter").with_properties(misspelled_link);
     let quoter = builder.add_child(&desk, "quoter", quoter_element);
     let _duplicate = builder.add_child(
         &desk,
         "quoter",
         Element::new("again").with_span(ByteRange::new(20, 26)),
     );
-    let db_element = Element::new("db")
-        .with_code("../store/db.rs#Db")
-        .with_code_span(ByteRange::new(80, 97));
-    let _db = builder.add_top_level("db", db_element);
-    let pinned_nowhere = Position {
-        x: f64::INFINITY,
-        y: 0.0,
-    };
-    let _hot = builder.add_child(
-        &foreign_parent,
-        "hot",
-        Element::new("hot")
-            .with_position(pinned_nowhere)
-            .with_height(0.0),
+    let code_value_span = Some(ByteRange::new(80, 97));
+    let spanned_code =
+        ComponentProperties::new().with_code_written_at("../store/db.rs#Db", code_value_span);
+    let db_element = Element::new("db").with_properties(spanned_code);
+    let db = builder.add_top_level("db", db_element);
+    let _hot = builder.add_child(&foreign_parent, "hot", Element::new("hot").with_height(0.0));
+    let main_workflow =
+        Workflow::new(WorkflowId::new("main"), "Main").with_description("See [the vault](#vault).");
+    let main = builder.add_workflow(main_workflow);
+    let all = builder.add_step(&main, Step::new(StepId::new("all"), "All"));
+    let _wide_writes = builder.add_edge(
+        &all,
+        &wide,
+        &ledger,
+        Edge::new().with_badge().with_span(ByteRange::new(60, 74)),
     );
-    let _dangling = builder.add_edge(&quoter, &foreign_endpoint, Edge::new());
+    let _dangling = builder.add_edge(&all, &quoter, &foreign_endpoint, Edge::new());
     let _down_edge = builder.add_edge(
+        &all,
         &desk,
         &quoter,
         Edge::new().with_span(ByteRange::new(40, 52)),
     );
+    let _self_loop = builder.add_edge(&all, &quoter, &quoter, Edge::new());
+    let _badge_into_container = builder.add_edge(&all, &ledger, &wide, Edge::new().with_badge());
+    builder.list_element(&all, &cell);
+    builder.list_element(&all, &cell);
+    builder.list_edge(&all, EdgeId::new(parse("desk"), parse("ledger"), 3));
+    let desk_override = ElementOverride::new()
+        .with_child_placement(PlacementHint::Grid { columns: 0 })
+        .with_position(Position {
+            x: f64::INFINITY,
+            y: 0.0,
+        });
+    builder.override_element(&main, &desk, desk_override);
+    builder.override_element(
+        &main,
+        &desk,
+        ElementOverride::new().with_span(ByteRange::new(90, 95)),
+    );
+    let wide_override =
+        ElementOverride::new().with_child_placement(PlacementHint::Grid { columns: 40_000 });
+    builder.override_element(&main, &wide, wide_override);
+    let cell_override = ElementOverride::new().with_child_placement(PlacementHint::Column);
+    builder.override_element(&main, &cell, cell_override);
+    builder.override_element(&main, &db, ElementOverride::new());
+    let _empty = builder.add_step(&main, Step::new(StepId::new("all"), "All again"));
+    let malformed = Workflow::new(WorkflowId::new("not an id"), "Malformed");
+    let malformed_workflow = builder.add_workflow(malformed);
+    let _bad_step = builder.add_step(&malformed_workflow, Step::new(StepId::new("-x"), "Bad"));
+    let _again = builder.add_workflow(Workflow::new(WorkflowId::new("main"), "Main again"));
+    let unlisted_edge = EdgeId::new(parse("ledger"), parse("wide"), 0);
+    let only_ledger =
+        Step::new(StepId::new("only"), "Only").with_item(StepItem::Element(parse("ledger")));
+    let loose_edges = BTreeMap::from([(unlisted_edge, Edge::new())]);
+    let loose = Workflow::new(WorkflowId::new("loose"), "Loose")
+        .with_edges(loose_edges)
+        .with_step(only_ledger);
+    let _loose = builder.add_workflow(loose);
     let report = rejected_report(builder);
 
     let rendered = report.to_json();
@@ -566,4 +466,69 @@ fn every_problem_kind_reaches_the_machine_readable_report_with_its_severity() {
     let pretty = serde_json::to_string_pretty(&parsed).expect("re-serializes");
 
     insta::assert_snapshot!(pretty);
+}
+
+fn parse(text: &str) -> ElementPath {
+    text.parse().expect("well-formed path")
+}
+
+fn main_step(builder: &mut ModelBuilder) -> (WorkflowRef, StepRef) {
+    let main_workflow = Workflow::new(WorkflowId::new("main"), "Main");
+    let main = builder.add_workflow(main_workflow);
+    let all_step = Step::new(StepId::new("all"), "All");
+    let all = builder.add_step(&main, all_step);
+    (main, all)
+}
+
+fn cluster_overridden_by(cluster_override: ElementOverride, member_count: usize) -> ModelBuilder {
+    let mut builder = ModelBuilder::new();
+    let cluster = builder.add_top_level("cluster", Element::new("cluster"));
+    let (main, all) = main_step(&mut builder);
+    builder.list_element(&all, &cluster);
+    for member_index in 0..member_count {
+        let member_id = format!("m{member_index}");
+        let member = builder.add_child(&cluster, &member_id, Element::new("member"));
+        builder.list_element(&all, &member);
+    }
+    builder.override_element(&main, &cluster, cluster_override);
+    builder
+}
+
+fn report_of_listed_top_level(element: Element) -> ModelReport {
+    let mut builder = ModelBuilder::new();
+    let api = builder.add_top_level("api", element);
+    let (_main, all) = main_step(&mut builder);
+    builder.list_element(&all, &api);
+    rejected_report(builder)
+}
+
+fn report_of_link(link: &str) -> ModelReport {
+    let mut builder = ModelBuilder::new();
+    let backend = builder.add_top_level("backend", Element::new("backend"));
+    let api = builder.add_child(&backend, "api", Element::new("API"));
+    let link_property = ComponentProperties::new().with_link(link);
+    let linked = Element::new("docs").with_properties(link_property);
+    let docs = builder.add_top_level("docs", linked);
+    let (_main, all) = main_step(&mut builder);
+    builder.list_element(&all, &api);
+    builder.list_element(&all, &docs);
+    admitted_report(builder)
+}
+
+fn rejected_report(builder: ModelBuilder) -> ModelReport {
+    let admission = builder.build();
+    let is_admitted = admission.model.is_some();
+    assert!(!is_admitted, "the model has errors: {:?}", admission.report);
+    admission.report
+}
+
+fn admitted_report(builder: ModelBuilder) -> ModelReport {
+    let admission = builder.build();
+    let is_admitted = admission.model.is_some();
+    assert!(
+        is_admitted,
+        "the model has no error: {:?}",
+        admission.report
+    );
+    admission.report
 }

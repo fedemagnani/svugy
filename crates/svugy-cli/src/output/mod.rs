@@ -5,10 +5,10 @@ pub mod browser;
 use std::ffi::OsStr;
 use std::fs;
 use std::io::{self, Write};
-use std::path::{Path, PathBuf};
+use std::path::{self, Path, PathBuf};
 
 use clap::Args;
-use miette::{IntoDiagnostic, WrapErr};
+use miette::{IntoDiagnostic, WrapErr, miette};
 use svugy_model::model::Model;
 use svugy_parse::json::JsonPrinter;
 use svugy_parse::markdown::MarkdownPrinter;
@@ -41,6 +41,39 @@ impl OutputTarget {
             return Self::write_stdout(contents);
         };
         Self::write_file(output, contents)
+    }
+
+    /// Target the file at `path`.
+    pub fn file(path: PathBuf) -> Self {
+        let output = Some(path);
+        Self { output }
+    }
+
+    /// Name the file `STEM.TAG.EXTENSION` beside `output`, STEM being `output`'s file name up to its last dot; an `output` naming no such stem is a usage failure.
+    pub fn tagged_path(output: &Path, tag: &str, extension: &str) -> Result<PathBuf, Failure> {
+        let unusable_output = || {
+            let output_path = output.display();
+            let report = miette!(
+                help = "name a file, like -o diagram.svg, to write diagram.ID.svg per workflow",
+                "-o {output_path} names no file stem to tag with each workflow id"
+            );
+            Failure::Usage(report)
+        };
+        let output_text = output.to_str().ok_or_else(unusable_output)?;
+        let file_name = output_text
+            .rsplit_once(path::is_separator)
+            .map_or(output_text, |(_directory, file_name)| file_name);
+        let stem = file_name
+            .rsplit_once('.')
+            .map_or(file_name, |(stem, _extension)| stem);
+        let is_stem_unusable = stem.trim_matches('.').is_empty();
+        if is_stem_unusable {
+            let unusable_output_failure = unusable_output();
+            return Err(unusable_output_failure);
+        }
+        let tagged_name = format!("{stem}.{tag}.{extension}");
+        let tagged_path = output.with_file_name(tagged_name);
+        Ok(tagged_path)
     }
 
     /// Open the output file in the default browser; stdout has nothing to open, and clap rejects `--open` without `-o`.

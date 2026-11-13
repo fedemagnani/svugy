@@ -26,22 +26,22 @@ fn svugy_example_renders_as_stable_static_svg() {
 #[test]
 fn svugy_example_renders_as_stable_interactive_svg() {
     let model = svugy_example_model();
-    let interactive_svg = InteractiveSvg::render(&model);
+    let interactive_svg = InteractiveSvg::render(model.showing_first_workflow());
     insta::assert_snapshot!(interactive_svg);
 }
 
 #[test]
 fn svugy_example_renders_the_same_interactive_bytes_twice() {
     let model = svugy_example_model();
-    let first_render = InteractiveSvg::render(&model);
-    let second_render = InteractiveSvg::render(&model);
+    let first_render = InteractiveSvg::render(model.showing_first_workflow());
+    let second_render = InteractiveSvg::render(model.showing_first_workflow());
     assert!(first_render == second_render);
 }
 
 #[test]
 fn svugy_example_interactive_svg_parses_as_xml() {
     let model = svugy_example_model();
-    let interactive_svg = InteractiveSvg::render(&model);
+    let interactive_svg = InteractiveSvg::render(model.showing_first_workflow());
     let options = usvg::Options::default();
     let parse_result = usvg::Tree::from_str(&interactive_svg, &options);
     assert!(parse_result.is_ok(), "{parse_result:?}");
@@ -58,7 +58,7 @@ fn svugy_example_static_svg_needs_no_css_script_font_or_animation() {
 
 fn render_svugy_example() -> String {
     let model = svugy_example_model();
-    StaticSvg::render(&model)
+    StaticSvg::render(model.showing_first_workflow())
 }
 
 /// Parse examples/svugy/svugy.md into its admitted model.

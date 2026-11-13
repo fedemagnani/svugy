@@ -12,8 +12,9 @@ use std::collections::BTreeMap;
 use std::iter;
 
 use kurbo::{Line, Point, Rect, Size, Vec2};
-use svugy_model::disclose::DisclosedModel;
-use svugy_model::model::{EdgeId, Model};
+use svugy_model::disclose::DisclosedGraph;
+use svugy_model::graph::WorkflowGraph;
+use svugy_model::model::EdgeId;
 use svugy_model::path::ElementPath;
 
 use crate::metrics::TextMeasure;
@@ -53,43 +54,43 @@ impl<L> Levels<L> {
 impl LevelPlans {
     /// Lay out every level, ranking each ranked level and the ranked containers absorbed in it with one compound dagre layout, the containers free to arrange faced toward their edges and ordered by their neighbours.
     #[cfg(test)]
-    pub(crate) fn lay_out(model: &Model, measure: &impl TextMeasure) -> Self {
-        let (plans, _arrangements) = Self::lay_out_seeded(model, measure);
+    pub(crate) fn lay_out(graph: &WorkflowGraph, measure: &impl TextMeasure) -> Self {
+        let (plans, _arrangements) = Self::lay_out_seeded(graph, measure);
         plans
     }
 
-    /// Lay out every level of `model` following exactly `arrangements`, nothing picked on the way: ranked levels as compound layouts, reused from `cache` when it holds them for the same inputs, with their children then moved within their ranks.
+    /// Lay out every level of `graph` following exactly `arrangements`, nothing picked on the way: ranked levels as compound layouts, reused from `cache` when it holds them for the same inputs, with their children then moved within their ranks.
     pub(crate) fn lay_out_with(
-        model: &Model,
+        graph: &WorkflowGraph,
         arrangements: &Arrangements,
         cache: &PlacementCache,
         measure: &impl TextMeasure,
     ) -> Self {
-        let compound_regions = CompoundRegions::of(model);
+        let compound_regions = CompoundRegions::of(graph);
         let memoized_placement = MemoizedPlacement::new(&compound_regions, cache);
         let moved_within_ranks = MovedWithinRanks::new(&memoized_placement, arrangements);
-        Self::lay_out_ranking_by(model, &moved_within_ranks, arrangements, measure)
+        Self::lay_out_ranking_by(graph, &moved_within_ranks, arrangements, measure)
     }
 
     /// Lay out every layer following exactly `arrangements`, the deepest one afresh and every shallower one rearranged from it, so each layer keeps the deepest arrangement.
     pub(crate) fn lay_out_layers_with(
-        layers: &[DisclosedModel],
+        layers: &[DisclosedGraph],
         arrangements: &Arrangements,
         measure: &impl TextMeasure,
     ) -> Vec<Self> {
         let Some((deepest_layer, shallower_layers)) = layers.split_last() else {
             return Vec::new();
         };
-        let deepest_model = deepest_layer.model();
+        let deepest_graph = deepest_layer.graph();
         let placement_cache = PlacementCache::new();
         let deepest_plans =
-            Self::lay_out_with(deepest_model, arrangements, &placement_cache, measure);
+            Self::lay_out_with(deepest_graph, arrangements, &placement_cache, measure);
         let rearranged_from_seed = RearrangedFromSeed::new(&deepest_plans);
         let mut layer_plans: Vec<Self> = shallower_layers
             .iter()
             .map(|layer| {
-                let layer_model = layer.model();
-                Self::lay_out_ranking_by(layer_model, &rearranged_from_seed, arrangements, measure)
+                let layer_graph = layer.graph();
+                Self::lay_out_ranking_by(layer_graph, &rearranged_from_seed, arrangements, measure)
             })
             .collect();
         layer_plans.push(deepest_plans);
@@ -98,40 +99,40 @@ impl LevelPlans {
 
     /// Lay out every level as authored, again with the containers free to arrange faced toward their edges, and once more with their children ordered by where their neighbours sit, skipping a pass that changes nothing; return the final plans and the arrangements, the seed an arrangement search starts from.
     pub(crate) fn lay_out_seeded(
-        model: &Model,
+        graph: &WorkflowGraph,
         measure: &impl TextMeasure,
     ) -> (Self, Arrangements) {
-        let compound_regions = CompoundRegions::of(model);
+        let compound_regions = CompoundRegions::of(graph);
         let authored = Arrangements::none();
-        let authored_plans = Self::lay_out_ranking_by(model, &compound_regions, &authored, measure);
-        let facing = Arrangements::facing_from(model, &authored_plans);
+        let authored_plans = Self::lay_out_ranking_by(graph, &compound_regions, &authored, measure);
+        let facing = Arrangements::facing_from(graph, &authored_plans);
         let faces_none = facing.faces_none();
         let faced_plans = if faces_none {
             authored_plans
         } else {
-            Self::lay_out_ranking_by(model, &compound_regions, &facing, measure)
+            Self::lay_out_ranking_by(graph, &compound_regions, &facing, measure)
         };
-        let arrangements = facing.with_packing_orders_from(model, &faced_plans);
+        let arrangements = facing.with_packing_orders_from(graph, &faced_plans);
         let keeps_source_orders = arrangements.keeps_source_orders();
         if keeps_source_orders {
             return (faced_plans, arrangements);
         }
         let arranged_plans =
-            Self::lay_out_ranking_by(model, &compound_regions, &arrangements, measure);
+            Self::lay_out_ranking_by(graph, &compound_regions, &arrangements, measure);
         (arranged_plans, arrangements)
     }
 
     /// Lay out every level: place them bottom-up with `ranked_placement` for the ranked ones and `arrangements` picking the unhinted packings, anchor every level's routes, bundle the routes entering containers together as `arrangements` decides, side every container's stubs where those routes leave it, then plan each level with all three.
     fn lay_out_ranking_by(
-        model: &Model,
+        graph: &WorkflowGraph,
         ranked_placement: &impl RankedPlacement,
         arrangements: &Arrangements,
         measure: &impl TextMeasure,
     ) -> Self {
-        let homed_edges = HomedEdges::of(model);
-        let leaving_edges = LeavingEdges::of(model);
+        let homed_edges = HomedEdges::of(graph);
+        let leaving_edges = LeavingEdges::of(graph);
         let placed_levels = PlacedLevels::place_bottom_up(
-            model,
+            graph,
             ranked_placement,
             arrangements,
             &homed_edges,
@@ -163,7 +164,7 @@ impl LevelPlans {
 impl PlacedLevels {
     /// Place every level after the levels nested in it, so each container's extent is known before its parent places it: ranked levels by `ranked_placement`, the rest packed or layered by the hint and order `arrangements` gives them.
     fn place_bottom_up(
-        model: &Model,
+        graph: &WorkflowGraph,
         ranked_placement: &impl RankedPlacement,
         arrangements: &Arrangements,
         homed_edges: &HomedEdges,
@@ -171,19 +172,19 @@ impl PlacedLevels {
         measure: &impl TextMeasure,
     ) -> Self {
         let root = ElementPath::root();
-        let containers = model
+        let containers = graph
             .elements()
             .keys()
-            .filter(|path| model.is_container(path));
+            .filter(|path| graph.is_container(path));
         let root_level = iter::once(&root);
         let levels_innermost_first = containers.rev().chain(root_level);
         let no_levels_yet = BTreeMap::new();
         let mut placed_levels = Self::new(no_levels_yet);
         for level in levels_innermost_first {
-            let is_ranked = CompoundRegions::is_ranked(model, level);
+            let is_ranked = CompoundRegions::is_ranked(graph, level);
             if is_ranked {
                 let ranked_levels = ranked_placement.place_ranked_level(
-                    model,
+                    graph,
                     level,
                     leaving_edges,
                     &placed_levels,
@@ -194,7 +195,7 @@ impl PlacedLevels {
             }
             let joined_pairs = homed_edges.lifted_pairs_in(level);
             let siblings = SiblingGraph::of_measured_children(
-                model,
+                graph,
                 level,
                 joined_pairs,
                 &placed_levels,
@@ -202,9 +203,9 @@ impl PlacedLevels {
             );
             let is_left_by_edges = leaving_edges.is_left_by_edges(level);
             let arranged_siblings = arrangements.arranged_siblings(level, siblings);
-            let hint = arrangements.hint_of(model, level);
+            let hint = arrangements.hint_of(graph, level);
             let placed_level = PlacedLevel::place_children(
-                model,
+                graph,
                 level,
                 arranged_siblings,
                 hint,
@@ -500,8 +501,8 @@ mod fixtures {
 
 #[cfg(test)]
 mod tests {
+    use crate::one_step::OneStepModelBuilder;
     use kurbo::Shape;
-    use svugy_model::builder::ModelBuilder;
     use svugy_model::model::{Edge, Element};
 
     use std::collections::BTreeSet;
@@ -510,9 +511,9 @@ mod tests {
     use crate::metrics::{BundledFont, InterFaces};
     use crate::svugy_example::SvugyExample;
 
-    fn lay_out(model: &Model) -> LevelPlans {
+    fn lay_out(graph: &WorkflowGraph) -> LevelPlans {
         let font = BundledFont::<InterFaces>::new();
-        LevelPlans::lay_out(model, &font)
+        LevelPlans::lay_out(graph, &font)
     }
 
     fn path(segments: &[&str]) -> ElementPath {
@@ -527,8 +528,8 @@ mod tests {
     }
 
     /// Build `a { b { c } }` beside `d` and `e`, with `c` calling `d` twice and `e` calling `c`.
-    fn three_levels_model() -> Model {
-        let mut builder = ModelBuilder::new();
+    fn three_levels_graph() -> WorkflowGraph {
+        let mut builder = OneStepModelBuilder::new();
         let a = builder.add_top_level("a", Element::new("a"));
         let b = builder.add_child(&a, "b", Element::new("b"));
         let c = builder.add_child(&b, "c", Element::new("c"));
@@ -537,15 +538,15 @@ mod tests {
         builder.add_edge(&c, &d, Edge::new().with_label("calls"));
         builder.add_edge(&c, &d, Edge::new());
         builder.add_edge(&e, &c, Edge::new());
-        builder.build().model.expect("fixture model is valid")
+        builder.build_graph()
     }
 
     #[test]
     fn repeated_layouts_give_identical_plans() {
-        let model = SvugyExample::model();
+        let graph = SvugyExample::graph();
 
-        let first_plans = lay_out(&model);
-        let repeated_plans: Vec<LevelPlans> = (0..5).map(|_repeat_index| lay_out(&model)).collect();
+        let first_plans = lay_out(&graph);
+        let repeated_plans: Vec<LevelPlans> = (0..5).map(|_repeat_index| lay_out(&graph)).collect();
 
         for repeated_plan in &repeated_plans {
             assert_eq!(*repeated_plan, first_plans);
@@ -554,9 +555,9 @@ mod tests {
 
     #[test]
     fn every_level_three_deep_is_planned_and_sized_as_its_footprint_in_its_parent() {
-        let model = three_levels_model();
+        let graph = three_levels_graph();
 
-        let plans = lay_out(&model);
+        let plans = lay_out(&graph);
 
         let planned_levels: Vec<&ElementPath> = plans.levels().keys().collect();
         let root = ElementPath::root();
@@ -577,15 +578,15 @@ mod tests {
 
     #[test]
     fn a_lifted_edge_ranks_the_endpoints_ancestors_like_a_sibling_edge() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let a = builder.add_top_level("a", Element::new("a"));
         let x = builder.add_child(&a, "x", Element::new("x"));
         let b = builder.add_top_level("b", Element::new("b"));
         let y = builder.add_child(&b, "y", Element::new("y"));
         builder.add_edge(&x, &y, Edge::new());
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
 
-        let plans = lay_out(&model);
+        let plans = lay_out(&graph);
 
         let root_plan = plan_of(&plans, &[]);
         let a_footprint = root_plan.placed.footprints[&path(&["a"])];
@@ -595,12 +596,12 @@ mod tests {
 
     #[test]
     fn a_cross_container_route_joins_its_true_endpoints_in_its_home_level() {
-        let model = three_levels_model();
+        let graph = three_levels_graph();
         let c = path(&["a", "b", "c"]);
         let d = path(&["d"]);
         let root = ElementPath::root();
 
-        let plans = lay_out(&model);
+        let plans = lay_out(&graph);
 
         let root_plan = plan_of(&plans, &[]);
         let labelled_edge = EdgeId::new(c.clone(), d.clone(), 0);
@@ -614,7 +615,7 @@ mod tests {
 
     #[test]
     fn edges_toward_one_external_endpoint_merge_into_one_stub_in_every_container_they_leave() {
-        let model = three_levels_model();
+        let graph = three_levels_graph();
         let c = path(&["a", "b", "c"]);
         let d = path(&["d"]);
         let e = path(&["e"]);
@@ -624,7 +625,7 @@ mod tests {
         ]);
         let from_e_edges = BTreeSet::from([EdgeId::new(e.clone(), c.clone(), 0)]);
 
-        let plans = lay_out(&model);
+        let plans = lay_out(&graph);
 
         for container in [&["a"][..], &["a", "b"][..]] {
             let plan = plan_of(&plans, container);
@@ -640,9 +641,9 @@ mod tests {
 
     #[test]
     fn a_level_routes_only_the_edges_homed_in_it_never_its_stubbed_edges() {
-        let model = three_levels_model();
+        let graph = three_levels_graph();
 
-        let plans = lay_out(&model);
+        let plans = lay_out(&graph);
 
         for (level, plan) in plans.levels() {
             for edge_id in plan.routes.keys() {
@@ -657,38 +658,38 @@ mod tests {
 
     #[test]
     fn each_stub_slot_sits_on_the_side_its_home_route_leaves_through_at_its_crossing() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let west = builder.add_top_level("west", Element::new("west"));
         let hub = builder.add_top_level("hub", Element::new("hub"));
         let inner = builder.add_child(&hub, "inner", Element::new("inner"));
         let east = builder.add_top_level("east", Element::new("east"));
         builder.add_edge(&west, &inner, Edge::new());
         builder.add_edge(&inner, &east, Edge::new());
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
 
-        let plans = lay_out(&model);
+        let plans = lay_out(&graph);
 
         let hub_plan = plan_of(&plans, &["hub"]);
         let west_slot = hub_plan.stubs[west.path()].slot;
         let east_slot = hub_plan.stubs[east.path()].slot;
         assert_eq!(west_slot.side, Side::West);
         assert_eq!(east_slot.side, Side::East);
-        assert_every_single_edge_slot_sits_on_its_home_route_crossing(&model, &plans);
+        assert_every_single_edge_slot_sits_on_its_home_route_crossing(&graph, &plans);
     }
 
     #[test]
     fn every_stub_slot_of_the_example_sits_where_most_of_its_home_routes_leave_the_container() {
-        let model = SvugyExample::model();
+        let graph = SvugyExample::graph();
 
-        let plans = lay_out(&model);
+        let plans = lay_out(&graph);
 
-        assert_every_single_edge_slot_sits_on_its_home_route_crossing(&model, &plans);
+        assert_every_single_edge_slot_sits_on_its_home_route_crossing(&graph, &plans);
         for (level, plan) in plans.levels() {
             for (external_endpoint, stub) in &plan.stubs {
                 let is_badge_stub = stub
                     .edges
                     .iter()
-                    .any(|edge_id| model.is_badge_edge(edge_id));
+                    .any(|edge_id| graph.is_badge_edge(edge_id));
                 if is_badge_stub {
                     continue;
                 }
@@ -761,14 +762,14 @@ mod tests {
 
     /// Assert every routed single-edge stub sits where its home route crosses the boundary; a badge stub has no route to cross.
     fn assert_every_single_edge_slot_sits_on_its_home_route_crossing(
-        model: &Model,
+        graph: &WorkflowGraph,
         plans: &LevelPlans,
     ) {
         for (level, plan) in plans.levels() {
             let single_edge_stubs = plan.stubs.values().filter(|stub| stub.edges.len() == 1);
             for stub in single_edge_stubs {
                 let edge_id = stub.edges.first().expect("a stub carries an edge");
-                let is_badge_stub = model.is_badge_edge(edge_id);
+                let is_badge_stub = graph.is_badge_edge(edge_id);
                 if is_badge_stub {
                     continue;
                 }
@@ -786,9 +787,9 @@ mod tests {
 
     #[test]
     fn no_footprint_of_a_stubbed_level_of_the_example_enters_its_stub_bands() {
-        let model = SvugyExample::model();
+        let graph = SvugyExample::graph();
 
-        let plans = lay_out(&model);
+        let plans = lay_out(&graph);
 
         let stubbed_plans = plans
             .levels()
@@ -811,9 +812,9 @@ mod tests {
 
     #[test]
     fn every_route_of_the_example_attaches_to_its_true_endpoints() {
-        let model = SvugyExample::model();
+        let graph = SvugyExample::graph();
 
-        let plans = lay_out(&model);
+        let plans = lay_out(&graph);
 
         for (level, plan) in plans.levels() {
             for (edge_id, route) in &plan.routes {
@@ -826,13 +827,10 @@ mod tests {
     }
 
     #[test]
-    fn an_empty_model_lays_out_an_empty_root_level() {
-        let model = ModelBuilder::new()
-            .build()
-            .model
-            .expect("an empty model is valid");
+    fn an_empty_graph_lays_out_an_empty_root_level() {
+        let graph = WorkflowGraph::default();
 
-        let plans = lay_out(&model);
+        let plans = lay_out(&graph);
 
         let root_plan = plan_of(&plans, &[]);
         assert_eq!(plans.levels().len(), 1);

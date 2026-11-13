@@ -10,31 +10,25 @@ description: Draw architecture diagrams as interactive isometric SVGs by writing
 1. Write `NAME.md`, starting from the example below; to edit a diagram, change it in place.
 2. `svugy validate NAME.md --format json`: every problem in one pass, with line, column and a `did you mean` for typos. Fix all of them; repeat until exit code 0 (warnings don't block).
 3. Once per diagram, run `svugy view NAME.md` in the background: the user's browser shows it and reloads on every later save. Don't rerun it after edits.
-4. For the final file: `svugy render NAME.md -o NAME.svg`; add `--theme sketch` if the user asks for a hand-drawn look.
-   - PNG instead: `svugy render NAME.md --png -o NAME.png`. Add `--depth N` for layer N only (0 = top-level components, containers closed), or `--all-depths` for `NAME-depth-N.png` per layer.
+4. For the final file: `svugy render NAME.md -o NAME.svg`, an interactive SVG holding every workflow; `--workflow ID` picks the one it opens on. `--profile static` draws one workflow and needs `--workflow ID`, or `--all-workflows` to write `NAME.ID.svg` per workflow. Add `--theme sketch` if the user asks for a hand-drawn look.
+   - PNG instead: `svugy render NAME.md --png --workflow ID -o NAME.png`, or `--all-workflows` for `NAME.ID.png` per workflow. Add `--depth N` for layer N only (0 = top-level components, containers closed), or `--all-depths` for `NAME-depth-N.png` per layer (`NAME.ID-depth-N.png` with `--all-workflows`).
    - If you can read images, render the PNG to a scratch path and look at it to check the layout.
 
-Starting from a `.d2` or `.json` file: `svugy import IN.d2 -o NAME.md` first. If the input holds something Markdown can't say, it lists every such part and writes nothing. Imported items spell every property out; factor repeated sets into frontmatter styles if the user will keep editing.
+Starting from a `.d2` or `.json` file: `svugy import IN.d2 -o NAME.md` first. If the input holds something Markdown can't say, it lists every such part and writes nothing. A d2 import puts every edge in workflow `main`, step `main`: split it into scenarios. Imported items spell every property out; factor repeated sets into frontmatter styles if the user will keep editing.
 
 ## Example
 
-Uses every property in the table below, and descriptions.
+Uses every property in the table below but `code`.
 
 ````markdown
 ---
-title: Checkout
-subtitle: from cart to charged card
 styles:
   store: (shape=cylinder, color=#d5dcea)
 ---
 
-```description
-Checkout turns a cart into a charged card.
-```
-
 ## Components
 - web: Web app (caption=React, color=#9945ff, link=https://example.com)
-- shop: Shop backend (layout=row, meta.owner=checkout team)
+- shop: Shop backend (meta.owner=checkout team)
 
   ```description
   Owns the cart and the *orders* table:
@@ -44,29 +38,60 @@ Checkout turns a cart into a charged card.
 
   - api (caption=REST, stroke=#14f195)
   - orders (store)
-- payments (layout=grid, columns=2)
+- payments
   - gateway: Card gateway (shape=slab, height=40)
   - fraud (shape=disc, line=dashed)
   - ledger (store)
 - vault (link=ledger)
 
-## Edges
+## Workflows
+### checkout: A customer pays (subtitle=from cart to charged card)
+[The web app](#web) sends the cart; [the ledger](#ledger) records the charge.
+
+- shop (layout=row)
+- payments (layout=grid, columns=2)
+
+#### order: The shop takes the order
+[The API](#api) saves the cart before [charging it](#checkout/charge).
 - web -> api: places order (traveler=envelope)
   ```description
   One request per click on **Pay**.
   ```
 - api -> orders: saves it (traveler=document, line=dotted)
+
+#### charge: The gateway charges the card
 - api -> gateway: charges (traveler=parcel, color=#f0a020)
-- gateway -> fraud: checks (traveler=key, line=solid)
-- gateway -> ledger
+- gateway -> fraud -> ledger
 - gateway -> vault (line=badge)
+
+#### confirm: The web app learns the result
+The answer travels back over [the charge request](#api->gateway).
+- api -> gateway[0]
+- api -> web: approved (traveler=key, line=solid)
+- orders
+
+### refund: A customer gets a refund
+#### reverse: The ledger reverses the charge
+- web -> api: asks for a refund
+- api -> ledger: reverses it
 ````
 
+- Sections, in order: frontmatter (`styles`, `view`; optional), `## Components`, `## Workflows`; both required.
 - Component: `- ID[: LABEL] [(PROPERTIES)]`; indent children two spaces. A component with children is a container.
-- Edge: `- REF -> REF[: LABEL] [(PROPERTIES)]`.
-- Description: a ```` ```description ```` fenced block of free Markdown, bullets included, indented under a component or an edge; before `## Components` it describes the diagram.
-- Description link to the diagram: `[the API](#api)` targets a component REF, `[the job](#api->queue)` the edge, `#api->queue[1]` its second parallel edge.
-- Sections, in order: `## Components` (required), `## Edges`, `## Legend`.
+- Workflow: `### ID: TITLE [(subtitle=TEXT)]`, then optional prose, then optional overrides `- REF (PROPERTIES)`, then ≥ 1 step.
+- Step: `#### ID: TITLE`, then optional prose, then ≥ 1 item:
+  - `- REF -> REF[: LABEL] [(PROPERTIES)]` declares an edge; a chain `a -> b -> c` one per hop.
+  - `- REF -> REF[n]` lists again the n-th edge (from 0) between the pair declared in this workflow.
+  - `- REF` puts a component in the step without an edge.
+- Prose under `###` and `####` is unfenced Markdown, without `- ` bullets or headings; a fence there renders as a code block. A ```` ```description ```` block goes only under a component or a declared edge.
+- Links in prose and descriptions: `[the API](#api)` a component, `#api->gateway` the edge, `#api->gateway[1]` the second one, `#checkout/charge` a step.
+
+## Modeling
+
+- One workflow per scenario: a request, a deploy, a nightly job. One step per group of hops that happen together, in order.
+- A workflow draws only the components its steps list, plus their ancestors. A component no workflow uses is never drawn.
+- Edges belong to their workflow: repeat one in another workflow by declaring it again; repeat it in a later step of the same workflow with `[n]`.
+- The reader walks the steps in a panel that dims everything outside the current step; write each step's prose for that reader.
 
 ## Properties
 
@@ -78,31 +103,32 @@ Checkout turns a cart into a charged card.
 | `line` | both | `solid`, `dashed`, `dotted`; edges also `badge`: a mini of the target on the source, both ends leaves. Edges default to `dashed` |
 | `shape` | leaf | `box` (default), `slab`, `cylinder`, `disc` |
 | `height` | leaf | number > 0 |
-| `layout` | container | `layered` (default), `row`, `column`, `grid` |
-| `columns` | container | integer > 0; requires `layout=grid` |
+| `layout` | container, override only | `layered` (default), `row`, `column`, `grid` |
+| `columns` | container, override only | integer > 0; requires `layout=grid` |
+| `position` | override only | `X,Y`; only when the user asks for a fixed layout |
 | `traveler` | edge | `dot` (default), `envelope`, `parcel`, `document`, `key` |
 | `link` | component | a URL (holds `:`, `/`, `?` or `#`) or a component REF; opened on click |
 | `code` | component | `FILE#SYMBOL`, FILE relative to the repository root; `svugy validate` fails when the file or symbol is gone |
-| `meta.NAME` | component | text shown as `NAME: value` in the detail panel |
+| `meta.NAME` | component | text shown as `NAME: value` in the component card |
 
 ## Rules
 
-- Title and subtitle go in the frontmatter; `# Title` is an error. Notes go in `<!-- … -->`.
+- No `# Title` and no frontmatter `title`: a workflow's heading is its title. Notes go in `<!-- … -->`.
 - A bare word in `( )` is a style name; styles apply first, `key=value` entries override them.
+- An override takes any component key and applies to its workflow only. `position`, `layout` and `columns` go only in overrides, directly or through a style used there.
 - Quote a label or value only if it holds `,`, `(`, `)` or `"`, or if a label ends in `(…)`: `- cache: "Cache (Redis)"`.
 - REF is the shortest unique dotted suffix of a path: `api`, or `shop.api` if two components are named `api`.
-- A chain `a -> b -> c` takes no label or properties; write one hop per line to add them.
+- Chains, `[n]` items and bare items take no label, properties or description.
 - No edge from a component to itself, its ancestor or its descendant.
 - An item's line is read verbatim: no emphasis or backticks there. Its description is Markdown.
-- Under an item, the only non-item block is one ```` ```description ```` block, before the component's children; unfenced text there is an error. Legend items and chains take none.
+- Under a component or edge, the only non-item block is one ```` ```description ```` block, before the component's children; unfenced text there is an error.
 - Indent a comment like the item after it; a shallower one breaks nesting.
-- Add `position=X,Y` only when the user asks for a fixed layout.
 
 ## References
 
 Read one only when its case applies:
 
-- [references/syntax.md](references/syntax.md): a case the example and rules above don't settle: IDs, paths, REF resolution, descriptions, description links, quoting.
-- [references/legend.md](references/legend.md): the user wants a legend.
+- [references/syntax.md](references/syntax.md): a case the example and rules above don't settle: IDs, paths, REF resolution, overrides, steps, descriptions, links, quoting, migrating a v3 file.
 - [references/troubleshoot.md](references/troubleshoot.md): `validate` fails and its message doesn't say how to fix it, or you need its JSON fields or exit codes.
+- [references/json.md](references/json.md): the input or the wanted output is a `.json` model.
 - [references/install.md](references/install.md): `svugy` is not on `PATH`. Install only once the user agrees.

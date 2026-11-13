@@ -29,5 +29,5 @@ github-release = "host"
 
 # Publish the skill the binary embeds, its references flattened; svugy.dev/install.md serves the released, attested install.md
 [[dist.extra-artifacts]]
-artifacts = ["crates/svugy-cli/skill/SKILL.md", "crates/svugy-cli/skill/references/syntax.md", "crates/svugy-cli/skill/references/legend.md", "crates/svugy-cli/skill/references/troubleshoot.md", "crates/svugy-cli/skill/references/install.md"]
+artifacts = ["crates/svugy-cli/skill/SKILL.md", "crates/svugy-cli/skill/references/syntax.md", "crates/svugy-cli/skill/references/troubleshoot.md", "crates/svugy-cli/skill/references/json.md", "crates/svugy-cli/skill/references/install.md"]
 build = ["true"]

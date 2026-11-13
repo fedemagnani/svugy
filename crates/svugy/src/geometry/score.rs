@@ -861,8 +861,8 @@ impl PlanCourse {
 mod tests {
     use std::collections::BTreeMap;
 
+    use crate::one_step::OneStepModelBuilder;
     use kurbo::{Point, Rect, Size};
-    use svugy_model::builder::ModelBuilder;
     use svugy_model::model::{Edge, Element};
 
     use super::*;
@@ -872,7 +872,7 @@ mod tests {
 
     #[test]
     fn crossing_arcs_and_a_trace_behind_a_tall_block_score_one_crossing_and_the_hidden_stretch() {
-        let mut builder = ModelBuilder::new();
+        let mut builder = OneStepModelBuilder::new();
         let west = builder.add_top_level("west", Element::new("west"));
         let east = builder.add_top_level("east", Element::new("east"));
         let north = builder.add_top_level("north", Element::new("north"));
@@ -884,7 +884,7 @@ mod tests {
         let west_to_east = builder.add_edge(&west, &east, Edge::new());
         let north_to_south = builder.add_edge(&north, &south, Edge::new());
         let left_to_right = builder.add_edge(&left, &right, Edge::new());
-        let model = builder.build().model.expect("fixture model is valid");
+        let graph = builder.build_graph();
         let footprints = BTreeMap::from([
             (path("west"), Rect::new(0.0, 140.0, 40.0, 180.0)),
             (path("east"), Rect::new(200.0, 140.0, 240.0, 180.0)),
@@ -913,7 +913,7 @@ mod tests {
         let placed = PlacedLevel::new(extent, footprints);
         let plan = LevelPlan::new(placed, routes, BTreeMap::new());
         let plans = LevelPlans::root_only(plan);
-        let scene = Scene::project::<Isometric>(&model, &plans, &FixedAdvanceMeasure);
+        let scene = Scene::project::<Isometric>(&graph, &plans, &FixedAdvanceMeasure);
 
         let score = scene.score::<Isometric>();
 

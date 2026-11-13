@@ -1,4 +1,4 @@
-//! Split one item line into tokens with byte spans, reporting unterminated strings and unknown escapes.
+//! Split one item or heading line into tokens with byte spans, reporting unterminated strings and unknown escapes.
 
 use std::fmt;
 
@@ -8,7 +8,7 @@ use super::ast::Span;
 use super::diagnostic::Diagnostics;
 use super::skeleton::SourceText;
 
-/// Tag one lexeme of an item line as a token; a bare value or label is any run of tokens the parser joins back by span, and a dashed name is a name ending with `-` or holding `--`.
+/// Tag one lexeme of an item line as a token; a bare value or label is any run of tokens the parser joins back by span.
 #[derive(Logos, Debug, Clone, Copy, PartialEq)]
 #[logos(error = LexError)]
 #[logos(skip r"[ \t]+")]
@@ -27,14 +27,19 @@ pub(crate) enum Token<'src> {
     LeftParen,
     #[token(")")]
     RightParen,
+    #[token("[")]
+    LeftBracket,
+    #[token("]")]
+    RightBracket,
     #[regex(r#""([^"\\]|\\.)*""#, LexError::reject_unknown_escape)]
     #[regex(r#""([^"\\]|\\.)*\\?"#, LexError::reject_unterminated_string)]
     Quoted(&'src str),
-    #[regex(r"[A-Za-z_]([A-Za-z0-9_]|-[A-Za-z0-9_])*", priority = 4)]
+    #[regex(
+        r"[A-Za-z_][A-Za-z0-9_]*(-+[A-Za-z0-9_]+)*",
+        Token::absorb_trailing_dashes
+    )]
     Name(&'src str),
-    #[regex(r"[A-Za-z_][A-Za-z0-9_-]*", priority = 3)]
-    DashedName(&'src str),
-    #[regex(r#"[^ \t,()"=:.A-Za-z_]+"#)]
+    #[regex(r#"[^ \t,()\[\]"=:.A-Za-z_]+"#)]
     Other(&'src str),
 }
 
@@ -89,6 +94,21 @@ impl<'src> Token<'src> {
         }
         decoded
     }
+
+    /// Extend a name over the `-` run after it, except the `-` opening an arrow `->`, so `a->b` lexes as an edge.
+    fn absorb_trailing_dashes(lexer: &mut logos::Lexer<'src, Token<'src>>) -> &'src str {
+        let remainder = lexer.remainder();
+        let after_dashes = remainder.trim_start_matches('-');
+        let dash_count = remainder.len() - after_dashes.len();
+        let is_arrow_after_dashes = dash_count > 0 && after_dashes.starts_with('>');
+        let absorbed_dash_count = if is_arrow_after_dashes {
+            dash_count - 1
+        } else {
+            dash_count
+        };
+        lexer.bump(absorbed_dash_count);
+        lexer.slice()
+    }
 }
 
 impl LexError {
@@ -139,7 +159,9 @@ impl fmt::Display for Token<'_> {
             Self::Comma => formatter.write_str("`,`"),
             Self::LeftParen => formatter.write_str("`(`"),
             Self::RightParen => formatter.write_str("`)`"),
-            Self::Quoted(text) | Self::Name(text) | Self::DashedName(text) | Self::Other(text) => {
+            Self::LeftBracket => formatter.write_str("`[`"),
+            Self::RightBracket => formatter.write_str("`]`"),
+            Self::Quoted(text) | Self::Name(text) | Self::Other(text) => {
                 let holds_backtick = text.contains('`');
                 if holds_backtick {
                     return write!(formatter, "`` {text} ``");

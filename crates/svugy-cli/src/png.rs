@@ -1,15 +1,16 @@
-//! Export `render`'s static SVG as PNG: the whole model, one disclosure layer, or every layer.
+//! Export `render`'s static SVG of one workflow as PNG: the whole workflow, one disclosure layer, or every layer.
 
 use std::path::{Path, PathBuf};
 
 use clap::Args;
 use miette::miette;
 use resvg::tiny_skia::{Pixmap, Transform};
-use svugy_model::model::Model;
+use svugy_model::model::ShownWorkflow;
 
 use crate::failure::Failure;
 use crate::flavor::RenderTheme;
 use crate::output::OutputTarget;
+use crate::workflow_choice::WORKFLOW_CHOICE_GROUP;
 
 /// Rasterize the PNG at this many pixels per SVG unit, sharp on high-density screens.
 const PIXELS_PER_SVG_UNIT: f32 = 2.0;
@@ -17,8 +18,8 @@ const PIXELS_PER_SVG_UNIT: f32 = 2.0;
 /// Pick whether `render` exports a PNG instead of an SVG, and which disclosure layers it exports.
 #[derive(Args)]
 pub struct PngExport {
-    /// Write a PNG of the static SVG instead of an SVG; --theme applies.
-    #[arg(long, conflicts_with = "profile")]
+    /// Write a PNG of one workflow's static SVG instead of an SVG, so it needs --workflow or --all-workflows; --theme applies.
+    #[arg(long, conflicts_with = "profile", requires = WORKFLOW_CHOICE_GROUP)]
     png: bool,
     /// With --png, export only layer N: 0 shows the top-level elements, each next layer opens one more depth of containers.
     #[arg(
@@ -34,25 +35,25 @@ pub struct PngExport {
 }
 
 impl PngExport {
-    /// Write `model`'s PNG drawn in `theme` to `output`, or one PNG per layer beside it with --all-depths.
+    /// Write the PNG of the shown workflow of `shown` drawn in `theme` to `output`, or one PNG per layer beside it with --all-depths.
     pub fn write(
         &self,
-        model: &Model,
+        shown: ShownWorkflow<'_>,
         theme: RenderTheme,
         output: &OutputTarget,
     ) -> Result<(), Failure> {
-        let is_whole_model = self.depth.is_none() && !self.all_depths;
-        if is_whole_model {
-            let svg = theme.render_static(model);
+        let is_whole_workflow = self.depth.is_none() && !self.all_depths;
+        if is_whole_workflow {
+            let svg = theme.render_static(shown);
             let png = Self::rasterize(&svg);
             return output.write(png);
         }
-        let layer_svgs = theme.render_every_static_layer(model);
+        let layer_svgs = theme.render_every_static_layer(shown);
         if let Some(depth) = self.depth {
             let Some(layer_svg) = layer_svgs.get(depth) else {
                 let deepest_depth = layer_svgs.len() - 1;
                 let out_of_range = miette!(
-                    "--depth {depth} is out of range: the input has layers 0 to {deepest_depth}"
+                    "--depth {depth} is out of range: the workflow has layers 0 to {deepest_depth}"
                 );
                 return Err(Failure::Usage(out_of_range));
             };

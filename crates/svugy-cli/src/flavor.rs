@@ -4,13 +4,20 @@ use clap::{Args, ValueEnum};
 use svugy::{
     InteractiveSvg, RenderSvg, RenderSvgLayers, SketchInteractiveSvg, SketchStaticSvg, StaticSvg,
 };
-use svugy_model::model::Model;
+use svugy_model::model::ShownWorkflow;
+
+use crate::workflow_choice::WORKFLOW_CHOICE_GROUP;
 
 /// Render a model as the SVG of the chosen profile and theme.
 #[derive(Args, Clone, Copy)]
 pub struct SvgFlavor {
-    /// Which SVG to write.
-    #[arg(long, value_enum, default_value_t = RenderProfile::Interactive)]
+    /// Which SVG to write; static draws one workflow, so it needs --workflow or --all-workflows.
+    #[arg(
+        long,
+        value_enum,
+        default_value_t = RenderProfile::Interactive,
+        requires_if("static", WORKFLOW_CHOICE_GROUP)
+    )]
     profile: RenderProfile,
     /// How to draw the diagram.
     #[arg(long, value_enum, default_value_t = RenderTheme::Standard)]
@@ -22,7 +29,7 @@ pub struct SvgFlavor {
 pub enum RenderProfile {
     /// Explorable in a browser: themed, animated, with the embedded runtime.
     Interactive,
-    /// Self-contained for <img> embeds and design tools: no CSS, script, fonts or animation.
+    /// Self-contained for <img> embeds and design tools: one workflow, no CSS, script, fonts or animation.
     Static,
 }
 
@@ -41,14 +48,14 @@ impl SvgFlavor {
         Self { profile, theme }
     }
 
-    /// Render `model` as the SVG of this flavor's profile and theme.
-    pub fn render(self, model: &Model) -> String {
+    /// Render the model of `shown` as the SVG of this flavor's profile and theme, showing its workflow.
+    pub fn render(self, shown: ShownWorkflow<'_>) -> String {
         match (self.profile, self.theme) {
-            (RenderProfile::Interactive, RenderTheme::Standard) => InteractiveSvg::render(model),
+            (RenderProfile::Interactive, RenderTheme::Standard) => InteractiveSvg::render(shown),
             (RenderProfile::Interactive, RenderTheme::Sketch) => {
-                SketchInteractiveSvg::render(model)
+                SketchInteractiveSvg::render(shown)
             }
-            (RenderProfile::Static, theme) => theme.render_static(model),
+            (RenderProfile::Static, theme) => theme.render_static(shown),
         }
     }
 
@@ -59,19 +66,19 @@ impl SvgFlavor {
 }
 
 impl RenderTheme {
-    /// Render `model` as the static SVG drawn in this theme.
-    pub fn render_static(self, model: &Model) -> String {
+    /// Render the shown workflow of `shown` as the static SVG drawn in this theme.
+    pub fn render_static(self, shown: ShownWorkflow<'_>) -> String {
         match self {
-            Self::Standard => StaticSvg::render(model),
-            Self::Sketch => SketchStaticSvg::render(model),
+            Self::Standard => StaticSvg::render(shown),
+            Self::Sketch => SketchStaticSvg::render(shown),
         }
     }
 
-    /// Render every disclosure layer of `model` as a static SVG drawn in this theme, layer 0 first.
-    pub fn render_every_static_layer(self, model: &Model) -> Vec<String> {
+    /// Render every disclosure layer of the shown workflow of `shown` as a static SVG drawn in this theme, layer 0 first.
+    pub fn render_every_static_layer(self, shown: ShownWorkflow<'_>) -> Vec<String> {
         match self {
-            Self::Standard => StaticSvg::render_every_layer(model),
-            Self::Sketch => SketchStaticSvg::render_every_layer(model),
+            Self::Standard => StaticSvg::render_every_layer(shown),
+            Self::Sketch => SketchStaticSvg::render_every_layer(shown),
         }
     }
 }

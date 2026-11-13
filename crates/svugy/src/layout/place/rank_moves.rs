@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use kurbo::{Rect, Vec2};
-use svugy_model::model::Model;
+use svugy_model::graph::WorkflowGraph;
 use svugy_model::path::ElementPath;
 
 use super::footprints::Footprints;
@@ -36,7 +36,7 @@ impl<P: RankedPlacement> RankedPlacement for MovedWithinRanks<'_, P> {
     /// Place `level` with the inner placement, then apply its rank moves to it alone: the containers placed jointly with it keep their extents.
     fn place_ranked_level(
         &self,
-        model: &Model,
+        graph: &WorkflowGraph,
         level: &ElementPath,
         leaving_edges: &LeavingEdges,
         interiors: &PlacedLevels,
@@ -44,7 +44,7 @@ impl<P: RankedPlacement> RankedPlacement for MovedWithinRanks<'_, P> {
     ) -> Vec<(ElementPath, PlacedLevel)> {
         let mut placed_levels =
             self.inner
-                .place_ranked_level(model, level, leaving_edges, interiors, measure);
+                .place_ranked_level(graph, level, leaving_edges, interiors, measure);
         let rank_moves = self.arrangements.rank_moves_of(level);
         let has_no_move = rank_moves.is_empty();
         if has_no_move {
@@ -57,7 +57,7 @@ impl<P: RankedPlacement> RankedPlacement for MovedWithinRanks<'_, P> {
                 continue;
             }
             let moved_level = placed_level.moved_within_ranks(
-                model,
+                graph,
                 level,
                 rank_moves,
                 is_left_by_edges,
@@ -73,7 +73,7 @@ impl PlacedLevel {
     /// Apply `rank_moves` in order to the footprints of `level`'s children, clear the overlaps they leave keeping their new order, and refit the level's margin and extent.
     fn moved_within_ranks(
         &self,
-        model: &Model,
+        graph: &WorkflowGraph,
         level: &ElementPath,
         rank_moves: &[RankMove],
         is_left_by_edges: bool,
@@ -87,7 +87,7 @@ impl PlacedLevel {
         let cleared_footprints = Footprints::new(cleared_by_path);
         let inset = Self::inset_inside_boundary(is_left_by_edges);
         let inset_footprints = cleared_footprints.shifted_onto_inset(inset);
-        let level_element = model.element(level);
+        let level_element = graph.element(level);
         let extent = Self::extent_fitting_footprints_and_tag(
             &inset_footprints,
             inset,

@@ -1,74 +1,95 @@
 ---
 source: crates/svugy-parse/tests/markdown_print.rs
-assertion_line: 58
 expression: printed
 ---
----
-title: "svugy · how it is built"
-subtitle: "text in → model → layout → geometry → SVG out"
----
-
 ## Components
-- cli: svugy-cli (caption=render · validate · import, color=#9945ff, height=70, position=0,330, link=pipeline)
-- contract: runtime contract (caption=data-svugy-*, color=#334566, shape=slab, position=1560,760)
-- d2: d2 v0.9.0 (caption=reference grammar, color=transparent, stroke=#5b6170, line=dashed, position=260,-220, link=https://d2lang.com)
-- import: svugy-parse (caption=text → model, color=#2a2418, position=260,0)
-  - d2 (caption=import, color=#f0a020, position=150,18)
-  - json: JSON (caption=load · save, color=#f0a020, position=282,18)
-  - markdown: Markdown (caption=parse · print, color=#f0a020, position=18,18)
-- model: svugy-model (caption=the hub, color=#17271f, position=260,330)
-  - graph: model (caption=elements · edges, color=#14f195, position=150,18)
-  - path (caption=ids, color=#14f195, position=18,18)
-  - validate (caption=problems · bounds, color=#14f195, position=18,180)
-- pipeline: svugy (caption=the pipeline, color=#1b2436, position=760,0)
-  - geometry (caption=screen space, color=#1f3566, position=36,300)
-    - depth (caption=painter's order, color=#3478f6, position=282,18)
-    - primitive (caption=4 primitives, color=#3478f6, position=150,18)
-    - projection (caption=exact constants, color=#3478f6, position=18,18)
-  - inter: Inter (color=#d5dcea, shape=cylinder, position=780,54)
-  - layout (caption=plan space, color=#1f3566, position=36,36)
-    - place (caption=dagre · taffy · pins, color=#3478f6, position=18,18)
-    - route (caption=ports, color=#3478f6, position=150,18)
-    - stub (caption=boundary slots, color=#3478f6, position=282,18)
-  - metrics (caption=measures labels, color=#3478f6, position=600,36)
-  - render (caption=markup, color=#1f3566, position=560,300)
-    - profile (caption=static · interactive, color=#3478f6, position=150,18)
-    - theme (caption=tokens · Oklab, color=#3478f6, position=18,18)
-    - writer (caption=escaping · decimals, color=#3478f6, position=282,18)
-- runtime (caption=svugy.js · svugy.css, color=#3a3f4b, position=1900,620)
-- svg: one .svg file (color=#d5dcea, shape=disc, position=1900,330)
-- text: your text (caption=Markdown · d2 · JSON, color=#3a3f4b, position=0,40)
+- cli: svugy-cli (caption=render · validate · import, color=#9945ff, height=70, link=pipeline)
+- contract: runtime contract (caption=data-svugy-*, color=#334566, shape=slab)
+- d2: d2 v0.9.0 (caption=reference grammar, color=transparent, stroke=#5b6170, line=dashed, link=https://d2lang.com)
+- import: svugy-parse (caption=text → model, color=#2a2418)
+  - d2 (caption=import, color=#f0a020)
+  - json: JSON (caption=load · save, color=#f0a020)
+  - markdown: Markdown (caption=parse · print, color=#f0a020)
+- model: svugy-model (caption=the hub, color=#17271f)
+  - graph: model (caption=elements · edges, color=#14f195)
+  - path (caption=ids, color=#14f195)
+  - validate (caption=problems · bounds, color=#14f195)
+- pipeline: svugy (caption=the pipeline, color=#1b2436)
+  - geometry (caption=screen space, color=#1f3566)
+    - depth (caption=painter's order, color=#3478f6)
+    - primitive (caption=4 primitives, color=#3478f6)
+    - projection (caption=exact constants, color=#3478f6)
+  - inter: Inter (color=#d5dcea, shape=cylinder)
+  - layout (caption=plan space, color=#1f3566)
+    - place (caption=dagre · taffy · pins, color=#3478f6)
+    - route (caption=ports, color=#3478f6)
+    - stub (caption=boundary slots, color=#3478f6)
+  - metrics (caption=measures labels, color=#3478f6)
+  - render (caption=markup, color=#1f3566)
+    - profile (caption=static · interactive, color=#3478f6)
+    - theme (caption=tokens · Oklab, color=#3478f6)
+    - writer (caption=escaping · decimals, color=#3478f6)
+- runtime (caption=svugy.js · svugy.css, color=#3a3f4b)
+- svg: one .svg file (color=#d5dcea, shape=disc)
+- text: your text (caption=Markdown · d2 · JSON, color=#3a3f4b)
 
-## Edges
-- cli -> import
-- cli -> pipeline
-- d2 -> import: grammar (line=dashed, color=#5b6170)
-- import -> model: ①
-- model -> pipeline: ②
-- graph -> validate
+## Workflows
+
+### main: svugy · how it is built (subtitle=text in → model → layout → geometry → SVG out)
+- cli (position=0,330)
+- contract (position=1560,760)
+- d2 (position=260,-220)
+- import (position=260,0)
+- import.d2 (position=150,18)
+- json (position=282,18)
+- markdown (position=18,18)
+- model (position=260,330)
+- graph (position=150,18)
+- path (position=18,18)
+- validate (position=18,180)
+- pipeline (position=760,0)
+- geometry (position=36,300)
+- depth (position=282,18)
+- primitive (position=150,18)
+- projection (position=18,18)
+- inter (position=780,54)
+- layout (position=36,36)
+- place (position=18,18)
+- route (position=150,18)
+- stub (position=282,18)
+- metrics (position=600,36)
+- render (position=560,300)
+- profile (position=150,18)
+- theme (position=18,18)
+- writer (position=282,18)
+- runtime (position=1900,620)
+- svg (position=1900,330)
+- text (position=0,40)
+
+#### main: Every edge
 - path -> graph
-- pipeline -> svg: ④
-- geometry -> render
-- primitive -> depth
-- projection -> primitive
-- layout -> geometry: ③
+- graph -> validate
 - place -> route
 - route -> stub
-- metrics -> inter: measures (line=badge)
-- metrics -> layout
-- profile -> inter: outlines (line=badge)
-- profile -> writer
+- projection -> primitive
+- primitive -> depth
 - theme -> profile
+- profile -> writer
+- metrics -> layout
+- layout -> geometry: ③
+- geometry -> render
+- metrics -> inter: measures (line=badge)
+- profile -> inter: outlines (line=badge)
+- text -> cli
+- cli -> import
+- cli -> pipeline
+- import -> model: ①
+- model -> pipeline: ②
+- pipeline -> svg: ④
+- runtime -> svg (line=dotted)
+- d2 -> import: grammar (line=dashed, color=#5b6170)
 - writer -> contract: emits (line=dotted)
 - runtime -> contract: reads (line=dotted)
-- runtime -> svg (line=dotted)
-- text -> cli
-
-## Legend: Read it as a story
-- ① your text becomes a model
-- ② the model becomes boxes in plan space
-- ③ boxes become isometric shapes
-- ④ shapes become one SVG file, runtime inside
-- (line=dotted): embedded at build time
-- (line=dashed): data flows this way
-- (line=badge, target=inter): reads the bundled font
+- markdown
+- import.d2
+- json

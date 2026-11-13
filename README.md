@@ -22,23 +22,26 @@ To let your agent do both, paste it the [installation prompt](https://svugy.dev/
 
 ## How it works
 
-- Input text in any of the [supported languages](https://svugy.dev/docs/run/writing-diagrams.html) is parsed into a tree of elements: the `Model`.
-- The `Model` is split into layers by depth. Each layer contains every component of the layer above it. The interactive feature is mostly a switch between these layers.
+- Input text in any of the [supported languages](https://svugy.dev/docs/run/writing-diagrams.html) is parsed into the `Model`: a tree of elements and a list of workflows.
+- A workflow is one scenario, such as a request or a deploy, split into ordered steps. Each step lists the edges and components it involves. A workflow draws only the components its steps use, plus their ancestors.
+- Each workflow's scene is split into layers by depth. Each layer contains every component of the layer above it. The interactive feature is mostly a switch between these layers.
 - Each layer is placed on an isometric 2D plane, where its components turn into [solids](crates/svugy/src/geometry).
 - The scene is rendered in two flavors:
-  - static: no CSS or JS, the deepest layer only.
-  - interactive: every layer, with the embedded [runtime](crates/svugy/runtime/svugy.js) driving the interactive feature.
+  - static: no CSS or JS, one workflow, the deepest layer only.
+  - interactive: every workflow and layer, with the embedded [runtime](crates/svugy/runtime/svugy.js) driving the interactive feature: a workflow menu, and a description panel that walks the steps, dims everything outside the current one, and describes the clicked component or edge.
 
 ## Export SVG, PNG and rendering
 
 ```sh
-svugy render my.md -o my.svg                    # export interactive SVG
-svugy render my.md --profile static -o my.svg   # export static SVG
-svugy render my.md --theme sketch -o my.svg     # hand-drawn look, with either profile
-svugy render my.md --png -o my.png              # export PNG of the static SVG
-svugy render my.md --png --depth 0 -o my.png    # export PNG of layer 0 only
-svugy render my.md --png --all-depths -o my.png # export my-depth-0.png, my-depth-1.png, ...
-svugy view my.md                                # live rendering in the browser, reloaded on every save
+svugy render my.md -o my.svg                                       # export interactive SVG
+svugy render my.md --profile static --workflow ID -o my.svg        # export the static SVG of workflow ID
+svugy render my.md --profile static --all-workflows -o my.svg      # export the static my.ID.svg of every workflow
+svugy render my.md --theme sketch -o my.svg                        # hand-drawn look, with either profile
+svugy render my.md --png --workflow ID -o my.png                   # export PNG of workflow ID's static SVG
+svugy render my.md --png --workflow ID --depth 0 -o my.png         # export PNG of its layer 0 only
+svugy render my.md --png --workflow ID --all-depths -o my.png      # export my-depth-0.png, my-depth-1.png, ...
+svugy render my.md --png --all-workflows --all-depths -o my.png    # export my.ID-depth-N.png for every workflow and layer
+svugy view my.md                                                   # live rendering in the browser, reloaded on every save
 ```
 
 The interactive SVG inlines [`svugy.js`](crates/svugy/runtime/svugy.js) in a `<script>` tag, with no external URL. The interactive feature works only where the host lets the SVG's own script run:

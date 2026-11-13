@@ -64,10 +64,11 @@ impl SourceTree {
         path: &ElementPath,
         element: &Element,
     ) -> Option<StaleCodeReference> {
-        let raw_code = element.code()?;
+        let properties = element.properties();
+        let raw_code = properties.code()?;
         let code_reference = CodeReference::parse(raw_code).ok()?;
         let reason = self.find_stale_reason(code_reference)?;
-        let code_span = element.code_span().map(SourceSpan::from);
+        let code_span = properties.code_span().map(SourceSpan::from);
         let span = code_span.or_else(|| element.source_span());
         let pointing_path = path.clone();
         let stale_raw_code = raw_code.to_owned();

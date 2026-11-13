@@ -6,7 +6,8 @@ use std::slice;
 
 use glam::DVec3;
 use kurbo::{Affine, BezPath, Point, Rect, Shape as _, Size};
-use svugy_model::model::{EdgeId, Element, Model};
+use svugy_model::graph::WorkflowGraph;
+use svugy_model::model::{EdgeId, Element};
 use svugy_model::path::ElementPath;
 
 use super::camera::Camera;
@@ -34,13 +35,13 @@ impl<C: Camera> BadgeIcon<C> {
     /// Screen width of every icon, as wide as the reference's SQLite badges (2 × 9.6).
     const SCREEN_WIDTH: f64 = 19.2;
 
-    /// Shrink the leaf at `target` of `model`, laid out where `plans` place it, into its badge icon, or `None` when either lacks it.
+    /// Shrink the leaf at `target` of `graph`, laid out where `plans` place it, into its badge icon, or `None` when either lacks it.
     pub(super) fn of_target_in(
-        model: &Model,
+        graph: &WorkflowGraph,
         plans: &LevelPlans,
         target: &ElementPath,
     ) -> Option<Self> {
-        let target_element = model.element(target)?;
+        let target_element = graph.element(target)?;
         let target_footprint = plans.footprint_of(target)?;
         let icon = Self::of_target(target_element, target_footprint);
         Some(icon)
@@ -79,15 +80,6 @@ impl<C: Camera> BadgeIcon<C> {
             .iter()
             .map(|face| face.transformed(raise))
             .collect()
-    }
-
-    /// Return the icon's faces upright in its own space, over the plan footprint centred on the origin with its floor on the ground, and their screen bounds.
-    pub(super) fn upright_faces_with_bounds(&self) -> (Vec<Face>, Rect) {
-        let ground_floor = 0.0;
-        let upright_faces = self.faces_centered_on(Point::ORIGIN, ground_floor);
-        let face_bounds = Face::bounds_of(&upright_faces);
-        let upright_bounds = face_bounds.unwrap_or(Rect::ZERO);
-        (upright_faces, upright_bounds)
     }
 }
 
@@ -289,11 +281,11 @@ mod tests {
 
     #[test]
     fn every_badge_of_the_example_stays_clear_of_its_sources_labels_and_other_badges() {
-        let model = SvugyExample::model();
+        let graph = SvugyExample::graph();
         let font = BundledFont::<InterFaces>::new();
-        let plans = LevelPlans::lay_out(&model, &font);
+        let plans = LevelPlans::lay_out(&graph, &font);
 
-        let scene = Scene::project::<Isometric>(&model, &plans, &font);
+        let scene = Scene::project::<Isometric>(&graph, &plans, &font);
 
         let interiors = scene.root.nested_interiors();
         let solids = interiors.flat_map(|interior| &interior.group.solids);

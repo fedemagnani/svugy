@@ -11,8 +11,8 @@ expression: model_json
         "fill": "#3478f6"
       },
       "span": {
-        "start": 281,
-        "end": 294
+        "start": 373,
+        "end": 386
       }
     },
     "archive": {
@@ -23,8 +23,8 @@ expression: model_json
         "fill": "#3478f6"
       },
       "span": {
-        "start": 355,
-        "end": 379
+        "start": 447,
+        "end": 471
       }
     },
     "db": {
@@ -34,8 +34,29 @@ expression: model_json
         "fill": "#d5dcea"
       },
       "span": {
-        "start": 342,
-        "end": 352
+        "start": 434,
+        "end": 444
+      }
+    },
+    "storage": {
+      "label": "storage",
+      "span": {
+        "start": 474,
+        "end": 481
+      }
+    },
+    "storage.cold": {
+      "label": "cold",
+      "span": {
+        "start": 494,
+        "end": 498
+      }
+    },
+    "storage.hot": {
+      "label": "hot",
+      "span": {
+        "start": 486,
+        "end": 489
       }
     },
     "worker": {
@@ -45,46 +66,127 @@ expression: model_json
         "fill": "#3478f6"
       },
       "span": {
-        "start": 297,
-        "end": 339
+        "start": 389,
+        "end": 431
       }
     }
   },
-  "edges": [
+  "workflows": [
     {
-      "from": "api",
-      "to": "worker",
-      "ordinal": 0,
-      "label": "enqueue",
-      "style": {
-        "stroke-dash": "5"
+      "id": "jobs",
+      "title": "Jobs flow to storage",
+      "overrides": {
+        "db": {
+          "caption": "a service",
+          "style": {
+            "fill": "#3478f6"
+          },
+          "span": {
+            "start": 577,
+            "end": 589
+          }
+        },
+        "storage": {
+          "style": {
+            "fill": "#334566"
+          },
+          "child_placement": "row",
+          "span": {
+            "start": 546,
+            "end": 574
+          }
+        }
       },
-      "traveler": "envelope",
+      "edges": [
+        {
+          "from": "api",
+          "to": "worker",
+          "ordinal": 0,
+          "label": "enqueue",
+          "style": {
+            "stroke-dash": "5"
+          },
+          "traveler": "envelope",
+          "span": {
+            "start": 624,
+            "end": 637
+          }
+        },
+        {
+          "from": "worker",
+          "to": "archive",
+          "ordinal": 0,
+          "span": {
+            "start": 699,
+            "end": 716
+          }
+        },
+        {
+          "from": "worker",
+          "to": "db",
+          "ordinal": 0,
+          "style": {
+            "stroke-dash": "5"
+          },
+          "traveler": "document",
+          "span": {
+            "start": 657,
+            "end": 669
+          }
+        }
+      ],
+      "steps": [
+        {
+          "id": "enqueue",
+          "title": "The API enqueues",
+          "items": [
+            {
+              "edge": {
+                "from": "api",
+                "to": "worker",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "worker",
+                "to": "db",
+                "ordinal": 0
+              }
+            },
+            {
+              "edge": {
+                "from": "worker",
+                "to": "archive",
+                "ordinal": 0
+              }
+            }
+          ],
+          "span": {
+            "start": 596,
+            "end": 603
+          }
+        },
+        {
+          "id": "tier",
+          "title": "Storage tiers",
+          "items": [
+            {
+              "element": "storage.hot"
+            },
+            {
+              "element": "storage.cold"
+            }
+          ],
+          "span": {
+            "start": 723,
+            "end": 727
+          }
+        }
+      ],
       "span": {
-        "start": 392,
-        "end": 405
-      }
-    },
-    {
-      "from": "worker",
-      "to": "archive",
-      "ordinal": 0,
-      "span": {
-        "start": 467,
-        "end": 484
-      }
-    },
-    {
-      "from": "worker",
-      "to": "db",
-      "ordinal": 0,
-      "style": {
-        "stroke-dash": "5"
-      },
-      "traveler": "document",
-      "span": {
-        "start": 425,
-        "end": 437
+        "start": 517,
+        "end": 521
       }
     }
   ]
