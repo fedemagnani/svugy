@@ -16,6 +16,12 @@ pub trait RenderSvg {
     fn render(shown: ShownWorkflow<'_>) -> String;
 }
 
+/// Render every disclosure layer of one workflow as its own SVG document, in the flavour of the implementing type.
+pub trait RenderSvgLayers {
+    /// Render each disclosure layer of the shown workflow of `shown` as this flavour's SVG document, layer 0 first, the whole workflow last.
+    fn render_every_layer(shown: ShownWorkflow<'_>) -> Vec<String>;
+}
+
 #[cfg(test)]
 mod tests {
     use svugy_model::graph::WorkflowGraph;

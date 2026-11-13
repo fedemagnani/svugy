@@ -5,6 +5,7 @@ mod failure;
 mod flavor;
 mod input;
 mod output;
+mod png;
 mod report;
 mod skill;
 mod tree;
@@ -22,6 +23,7 @@ use crate::failure::Failure;
 use crate::flavor::SvgFlavor;
 use crate::input::{LoadedInput, ModelInput};
 use crate::output::{ModelFile, OutputTarget};
+use crate::png::PngExport;
 use crate::report::InputReport;
 use crate::skill::SkillCommand;
 use crate::tree::SourceTree;
@@ -44,8 +46,9 @@ Exit codes, identical for every subcommand:
      validation; or validate finds a stale code reference; or import -o FILE.md
      meets a model Markdown cannot say
   2  usage error: unknown flag, missing argument, INPUT not .md, .d2 or .json,
-     render --workflow naming no workflow of the input, or render --all-workflows
-     with an -o naming no file stem
+     render --workflow naming no workflow of the input, render --all-workflows
+     with an -o naming no file stem, or render --depth past the workflow's
+     deepest layer
   3  I/O failure: a file cannot be read, written or opened, or view cannot
      listen on its port";
 
@@ -98,7 +101,7 @@ struct Cli {
 /// Name the subcommand to run.
 #[derive(Subcommand)]
 enum Command {
-    /// Render a model as an SVG, interactive unless --profile static draws one --workflow alone, hand-drawn with --theme sketch.
+    /// Render a model as an SVG, interactive unless --profile static draws one --workflow alone, hand-drawn with --theme sketch, or one --workflow as a PNG with --png.
     Render(RenderCommand),
     /// Serve the interactive SVG in the default browser, reloading it whenever INPUT changes.
     #[command(after_long_help = LIVE_VIEW_HELP)]
@@ -114,7 +117,7 @@ enum Command {
     Example(ExampleCommand),
 }
 
-/// Render the input as an SVG in the chosen profile and theme, into a file or onto stdout, and open the file if asked.
+/// Render the input as an SVG in the chosen profile and theme, or as PNG, into a file or onto stdout, and open the file if asked.
 #[derive(Args)]
 struct RenderCommand {
     /// Diagram (.md), d2 file or JSON model to render.
@@ -125,8 +128,10 @@ struct RenderCommand {
     #[command(flatten)]
     workflow_choice: WorkflowChoice,
     #[command(flatten)]
+    png_export: PngExport,
+    #[command(flatten)]
     output: OutputTarget,
-    /// Open the written SVG in the default browser; needs -o.
+    /// Open the written file in the default browser; needs -o.
     #[arg(long, requires = "output", conflicts_with = "all_workflows")]
     open: bool,
 }
@@ -186,25 +191,19 @@ impl Command {
 }
 
 impl RenderCommand {
-    /// Run `render`: load the input and render the chosen workflow, or each workflow, in the flavor.
+    /// Run `render`: load the input and write the chosen workflow, or each workflow, as the flavor's SVG or as PNG when `--png` asks.
     fn run(self) -> Result<(), Failure> {
         let model = self.input.load_model_printing_diagnostics()?;
         let shown_workflows = self.workflow_choice.shown_workflows(&model)?;
         match shown_workflows {
-            ShownWorkflows::One(shown_workflow) => {
-                self.write_svg_opening_it_if_asked(shown_workflow)
-            }
-            ShownWorkflows::Each(each_workflow) => self.write_svg_per_workflow(each_workflow),
+            ShownWorkflows::One(shown_workflow) => self.write_opening_it_if_asked(shown_workflow),
+            ShownWorkflows::Each(each_workflow) => self.write_per_workflow(each_workflow),
         }
     }
 
-    /// Write the SVG of `shown_workflow` to the output and open it when `--open` asks.
-    fn write_svg_opening_it_if_asked(
-        &self,
-        shown_workflow: ShownWorkflow<'_>,
-    ) -> Result<(), Failure> {
-        let svg = self.flavor.render(shown_workflow);
-        self.output.write(&svg)?;
+    /// Write `shown_workflow` to the output and open it when `--open` asks.
+    fn write_opening_it_if_asked(&self, shown_workflow: ShownWorkflow<'_>) -> Result<(), Failure> {
+        self.write_workflow(shown_workflow, &self.output)?;
         let is_open_requested = self.open;
         if is_open_requested {
             self.output.open_in_default_browser()?;
@@ -212,20 +211,38 @@ impl RenderCommand {
         Ok(())
     }
 
-    /// Write the SVG of each workflow to `STEM.ID.svg` beside the output file.
-    fn write_svg_per_workflow(&self, each_workflow: Vec<ShownWorkflow<'_>>) -> Result<(), Failure> {
+    /// Write each workflow to `STEM.ID.svg`, or `STEM.ID.png` with `--png`, beside the output file.
+    fn write_per_workflow(&self, each_workflow: Vec<ShownWorkflow<'_>>) -> Result<(), Failure> {
         let output_path = self
             .output
             .path()
             .expect("clap requires -o with --all-workflows");
+        let is_png_requested = self.png_export.is_requested();
+        let extension = if is_png_requested { "png" } else { "svg" };
         for shown_workflow in each_workflow {
-            let workflow_id = shown_workflow.workflow().id();
+            let workflow = shown_workflow.workflow();
+            let workflow_id = workflow.id();
             let workflow_tag = workflow_id.as_str();
-            let workflow_svg_path = OutputTarget::tagged_svg_path(output_path, workflow_tag)?;
-            let svg = self.flavor.render(shown_workflow);
-            OutputTarget::write_file(&workflow_svg_path, &svg)?;
+            let workflow_path = OutputTarget::tagged_path(output_path, workflow_tag, extension)?;
+            let workflow_output = OutputTarget::file(workflow_path);
+            self.write_workflow(shown_workflow, &workflow_output)?;
         }
         Ok(())
+    }
+
+    /// Write `shown_workflow` to `output` as PNG when `--png` asks, else as the flavor's SVG.
+    fn write_workflow(
+        &self,
+        shown_workflow: ShownWorkflow<'_>,
+        output: &OutputTarget,
+    ) -> Result<(), Failure> {
+        let is_png_requested = self.png_export.is_requested();
+        if is_png_requested {
+            let theme = self.flavor.theme();
+            return self.png_export.write(shown_workflow, theme, output);
+        }
+        let svg = self.flavor.render(shown_workflow);
+        output.write(svg)
     }
 }
 

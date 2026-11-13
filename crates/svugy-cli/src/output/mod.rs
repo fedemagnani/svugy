@@ -36,15 +36,21 @@ pub struct ModelFile {
 
 impl OutputTarget {
     /// Write `contents` to the output file, or to stdout when there is none.
-    pub fn write(&self, contents: &str) -> Result<(), Failure> {
+    pub fn write(&self, contents: impl AsRef<[u8]>) -> Result<(), Failure> {
         let Some(output) = &self.output else {
             return Self::write_stdout(contents);
         };
         Self::write_file(output, contents)
     }
 
-    /// Name the SVG `STEM.TAG.svg` beside `output`, STEM being `output`'s file name up to its last dot; an `output` naming no such stem is a usage failure.
-    pub fn tagged_svg_path(output: &Path, tag: &str) -> Result<PathBuf, Failure> {
+    /// Target the file at `path`.
+    pub fn file(path: PathBuf) -> Self {
+        let output = Some(path);
+        Self { output }
+    }
+
+    /// Name the file `STEM.TAG.EXTENSION` beside `output`, STEM being `output`'s file name up to its last dot; an `output` naming no such stem is a usage failure.
+    pub fn tagged_path(output: &Path, tag: &str, extension: &str) -> Result<PathBuf, Failure> {
         let unusable_output = || {
             let output_path = output.display();
             let report = miette!(
@@ -65,7 +71,7 @@ impl OutputTarget {
             let unusable_output_failure = unusable_output();
             return Err(unusable_output_failure);
         }
-        let tagged_name = format!("{stem}.{tag}.svg");
+        let tagged_name = format!("{stem}.{tag}.{extension}");
         let tagged_path = output.with_file_name(tagged_name);
         Ok(tagged_path)
     }
@@ -80,9 +86,9 @@ impl OutputTarget {
     }
 
     /// Write `contents` to stdout, a closed pipe being an I/O failure rather than a panic.
-    pub fn write_stdout(contents: &str) -> Result<(), Failure> {
+    pub fn write_stdout(contents: impl AsRef<[u8]>) -> Result<(), Failure> {
         let mut stdout = io::stdout().lock();
-        let content_bytes = contents.as_bytes();
+        let content_bytes = contents.as_ref();
         stdout
             .write_all(content_bytes)
             .into_diagnostic()
@@ -91,7 +97,7 @@ impl OutputTarget {
     }
 
     /// Write `contents` to the file at `path`, an unwritable path being an I/O failure.
-    pub fn write_file(path: &Path, contents: &str) -> Result<(), Failure> {
+    pub fn write_file(path: &Path, contents: impl AsRef<[u8]>) -> Result<(), Failure> {
         let output_path = path.display();
         fs::write(path, contents)
             .into_diagnostic()

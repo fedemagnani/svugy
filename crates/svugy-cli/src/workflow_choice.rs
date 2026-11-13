@@ -17,7 +17,7 @@ pub struct WorkflowChoice {
     /// Workflow to show: the only one --profile static draws, the one the interactive SVG opens on; the first when omitted.
     #[arg(long, value_name = "ID")]
     workflow: Option<WorkflowId>,
-    /// Write one SVG per workflow, each named STEM.ID.svg beside OUTPUT, STEM being OUTPUT's file name up to its last dot; needs -o.
+    /// Write one file per workflow, each named STEM.ID.svg, or STEM.ID.png with --png, beside OUTPUT, STEM being OUTPUT's file name up to its last dot; needs -o.
     #[arg(long, requires = "output")]
     all_workflows: bool,
 }

@@ -1,7 +1,9 @@
 //! Render a model as the SVG flavor the command line's profile and theme pick.
 
 use clap::{Args, ValueEnum};
-use svugy::{InteractiveSvg, RenderSvg, SketchInteractiveSvg, SketchStaticSvg, StaticSvg};
+use svugy::{
+    InteractiveSvg, RenderSvg, RenderSvgLayers, SketchInteractiveSvg, SketchStaticSvg, StaticSvg,
+};
 use svugy_model::model::ShownWorkflow;
 
 use crate::workflow_choice::WORKFLOW_CHOICE_GROUP;
@@ -53,8 +55,30 @@ impl SvgFlavor {
             (RenderProfile::Interactive, RenderTheme::Sketch) => {
                 SketchInteractiveSvg::render(shown)
             }
-            (RenderProfile::Static, RenderTheme::Standard) => StaticSvg::render(shown),
-            (RenderProfile::Static, RenderTheme::Sketch) => SketchStaticSvg::render(shown),
+            (RenderProfile::Static, theme) => theme.render_static(shown),
+        }
+    }
+
+    /// Return the theme this flavor draws in.
+    pub fn theme(self) -> RenderTheme {
+        self.theme
+    }
+}
+
+impl RenderTheme {
+    /// Render the shown workflow of `shown` as the static SVG drawn in this theme.
+    pub fn render_static(self, shown: ShownWorkflow<'_>) -> String {
+        match self {
+            Self::Standard => StaticSvg::render(shown),
+            Self::Sketch => SketchStaticSvg::render(shown),
+        }
+    }
+
+    /// Render every disclosure layer of the shown workflow of `shown` as a static SVG drawn in this theme, layer 0 first.
+    pub fn render_every_static_layer(self, shown: ShownWorkflow<'_>) -> Vec<String> {
+        match self {
+            Self::Standard => StaticSvg::render_every_layer(shown),
+            Self::Sketch => SketchStaticSvg::render_every_layer(shown),
         }
     }
 }

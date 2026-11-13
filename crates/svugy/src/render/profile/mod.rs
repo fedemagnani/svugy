@@ -155,17 +155,39 @@ impl<P: Profile> Renderer<P> {
         Self { profile }
     }
 
-    /// Write `headed_scene`, projected whole from the graph of `projection`, as a document of one unwrapped layer sized to its root view: the definitions, the canvas, then the layer's ground grid, heading and root level.
+    /// Write `headed_scene`, projected whole from the graph of `projection`, as a document of one unwrapped layer sized to its root view.
     pub(crate) fn write_document(
         &self,
         projection: &ProjectedWorkflow,
         headed_scene: &HeadedScene,
     ) -> String {
-        let scene = &headed_scene.scene;
         let graph = projection.graph();
+        let annotator = ContractAnnotator::new(projection);
+        self.write_unwrapped_layer(headed_scene, graph, annotator)
+    }
+
+    /// Write `headed_scene`, projected from `layer`, one disclosure layer of the graph of `projection`, as a document of one unwrapped layer sized to its root view.
+    pub(crate) fn write_layer_document(
+        &self,
+        projection: &ProjectedWorkflow,
+        layer: &DisclosedGraph,
+        headed_scene: &HeadedScene,
+    ) -> String {
+        let layer_graph = layer.graph();
+        let annotator = ContractAnnotator::new(projection).with_disclosure(layer);
+        self.write_unwrapped_layer(headed_scene, layer_graph, annotator)
+    }
+
+    /// Write `headed_scene`, painted from `graph` and annotated by `annotator`, as a document sized to its root view: the definitions, the canvas, then the layer's ground grid, heading and root level.
+    fn write_unwrapped_layer(
+        &self,
+        headed_scene: &HeadedScene,
+        graph: &WorkflowGraph,
+        annotator: ContractAnnotator<'_>,
+    ) -> String {
+        let scene = &headed_scene.scene;
         let drawn_layer = (&scene.root, graph);
         let definitions = Definitions::collect(&[drawn_layer]);
-        let annotator = ContractAnnotator::new(projection);
         let layer_pass =
             LayerPass::new(&self.profile, headed_scene, graph, annotator, &definitions);
         let document_view = scene.root_view();
