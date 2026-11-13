@@ -15,9 +15,18 @@ styles:
   - ci: CI (job, caption=fmt · clippy · tests)
   - releaseplz: release-plz (job, caption=versions · changelogs)
 
-    ```description
-    Every push to `main` opens or updates a release PR. Merging it asks for [approval](#approval), then publishes.
+    ````description
+    Every push to `main` opens or updates a release PR. Merging it asks for [approval](#approval), then publishes. From `release-plz.toml`:
+    ```toml
+    [workspace]
+    release_always = false
+    git_release_enable = false
+
+    [[package]]
+    name = "svugy-cli"
+    version_group = "svugy"
     ```
+    ````
 
   - approval: Approval (shape=slab, color=#f0a020, caption=release environment)
 
@@ -65,6 +74,10 @@ The `svugy-cli` tag starts [dist](#dist). It creates the GitHub release only onc
 [svugy.dev](#site) holds no files: it redirects to [the latest GitHub release](#releases).
 
 #### script: svugy.dev redirects to the installer
+The whole install is one line:
+```sh
+curl -fsSL https://svugy.dev/install.sh | sh   # macOS, Linux
+```
 - terminal -> site: GET /install.sh
 - site -> releases: 302 to the latest installer
 

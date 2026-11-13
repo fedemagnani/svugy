@@ -53,6 +53,13 @@ impl Model {
         &self.workflows
     }
 
+    /// Yield every description the model holds: each element's, then each workflow's prose, its steps' prose and its edges' descriptions.
+    pub fn descriptions(&self) -> impl Iterator<Item = &str> {
+        let element_descriptions = self.elements.values().filter_map(Element::description);
+        let workflow_descriptions = self.workflows.iter().flat_map(Workflow::descriptions);
+        element_descriptions.chain(workflow_descriptions)
+    }
+
     /// Show the workflow with `id`, the first written when several share it, if the model has one.
     pub fn showing(&self, id: &WorkflowId) -> Option<ShownWorkflow<'_>> {
         let workflow = self.workflow(id)?;

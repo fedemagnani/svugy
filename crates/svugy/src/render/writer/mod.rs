@@ -126,7 +126,7 @@ impl SvgWriter {
     }
 
     /// Write a script element holding `source` in CDATA.
-    pub(crate) fn script_element(&mut self, source: &'static str) {
+    pub(crate) fn script_element(&mut self, source: &str) {
         self.cdata_element("script", SCRIPT_CDATA_OPENING, source, SCRIPT_CDATA_CLOSING);
     }
 

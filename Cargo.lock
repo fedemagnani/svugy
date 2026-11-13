@@ -1302,6 +1302,7 @@ dependencies = [
  "roxmltree",
  "serde",
  "serde_json",
+ "strum",
  "svugy-dagre",
  "svugy-model",
  "svugy-parse",

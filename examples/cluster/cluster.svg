@@ -79,7 +79,8 @@
 [data-svugy-contract] .svugy-panel .svugy-panel-line-toggle { flex: 1; align-self: stretch; display: flex; align-items: center; gap: 6px; min-width: 0; padding: 0 0 0 14px; text-align: left; }
 [data-svugy-contract] .svugy-panel-line-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
 [data-svugy-contract] .svugy-panel-body { min-height: 0; overflow-y: auto; padding: 4px 14px 14px; overflow-wrap: anywhere; }
-[data-svugy-contract] .svugy-panel-body :is(h3, h4, h5, h6, p, ul, ol, pre, section) { margin: 0 0 8px; }
+[data-svugy-contract] .svugy-panel-body :is(h3, h4, h5, h6, p, ul, ol, section) { margin: 0 0 8px; }
+[data-svugy-contract] .svugy-panel-body .svugy-code { margin: 0 0 8px; border: 1px solid color-mix(in srgb, var(--svugy-text-muted) 20%, transparent); border-radius: 6px; background: var(--svugy-canvas); }
 [data-svugy-contract] .svugy-panel-body > :last-child,
 [data-svugy-contract] .svugy-panel-body :is(section, li) > :last-child { margin-bottom: 0; }
 [data-svugy-contract] .svugy-panel-body :is(ul, ol) { padding-left: 18px; }
@@ -97,8 +98,11 @@
 [data-svugy-contract] .svugy-panel-step-list { display: flex; flex-direction: column; gap: 2px; }
 [data-svugy-contract] .svugy-panel .svugy-panel-step { padding: 4px 8px; border-radius: 6px; background: color-mix(in srgb, var(--svugy-text) 7%, transparent); text-align: left; }
 [data-svugy-contract] .svugy-panel .svugy-panel-step:hover { background: color-mix(in srgb, var(--svugy-text) 14%, transparent); }
-[data-svugy-contract] .svugy-panel-body pre { padding: 6px 8px; border-radius: 6px; background: color-mix(in srgb, var(--svugy-text) 8%, transparent); overflow-x: auto; white-space: pre; overflow-wrap: normal; }
+[data-svugy-contract] .svugy-panel-body pre { margin: 0; padding: 6px 8px; overflow-x: auto; white-space: pre; overflow-wrap: normal; }
 [data-svugy-contract] .svugy-panel-body pre code { padding: 0; background: none; }
+[data-svugy-contract] .svugy-panel-body .svugy-code-bar { display: flex; justify-content: space-between; align-items: center; padding: 3px 4px 0 8px; color: var(--svugy-text-muted); font: 10.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+[data-svugy-contract] .svugy-panel-body .svugy-code-copy { padding: 0 4px; border-radius: 4px; }
+[data-svugy-contract] .svugy-panel-body .svugy-code-copy:is(:hover, :focus-visible) { color: var(--svugy-text); }
 [data-svugy-contract] .svugy-panel-body code { padding: 1px 4px; border-radius: 4px; background: color-mix(in srgb, var(--svugy-text) 12%, transparent); font: 11.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 [data-svugy-contract] .svugy-panel-body a { color: var(--svugy-container-blue-ink); }
 [data-svugy-contract] .svugy-panel .svugy-panel-link { padding: 0; line-height: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 45%, transparent); text-underline-offset: 2px; }
@@ -109,6 +113,26 @@
   [data-svugy-traveler] { visibility: hidden; }
   [data-svugy-contract] .svugy-highlighted { animation: none; }
 }
+[data-svugy-contract] .svugy-panel-body{pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5px}/*!
+  Theme: GitHub Dark
+  Description: Dark theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-dark
+  Current colors taken from GitHub's CSS
+*/.hljs{color:#c9d1d9;background:#0d1117}.hljs-doctag,.hljs-keyword,.hljs-meta .hljs-keyword,.hljs-template-tag,.hljs-template-variable,.hljs-type,.hljs-variable.language_{color:#ff7b72}.hljs-title,.hljs-title.class_,.hljs-title.class_.inherited__,.hljs-title.function_{color:#d2a8ff}.hljs-attr,.hljs-attribute,.hljs-literal,.hljs-meta,.hljs-number,.hljs-operator,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-id,.hljs-variable{color:#79c0ff}.hljs-meta .hljs-string,.hljs-regexp,.hljs-string{color:#a5d6ff}.hljs-built_in,.hljs-symbol{color:#ffa657}.hljs-code,.hljs-comment,.hljs-formula{color:#8b949e}.hljs-name,.hljs-quote,.hljs-selector-pseudo,.hljs-selector-tag{color:#7ee787}.hljs-subst{color:#c9d1d9}.hljs-section{color:#1f6feb;font-weight:700}.hljs-bullet{color:#f2cc60}.hljs-emphasis{color:#c9d1d9;font-style:italic}.hljs-strong{color:#c9d1d9;font-weight:700}.hljs-addition{color:#aff5b4;background-color:#033a16}.hljs-deletion{color:#ffdcd7;background-color:#67060c}}
+@media (prefers-color-scheme: light){[data-svugy-contract] .svugy-panel-body{pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5px}/*!
+  Theme: GitHub
+  Description: Light theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-light
+  Current colors taken from GitHub's CSS
+*/.hljs{color:#24292e;background:#fff}.hljs-doctag,.hljs-keyword,.hljs-meta .hljs-keyword,.hljs-template-tag,.hljs-template-variable,.hljs-type,.hljs-variable.language_{color:#d73a49}.hljs-title,.hljs-title.class_,.hljs-title.class_.inherited__,.hljs-title.function_{color:#6f42c1}.hljs-attr,.hljs-attribute,.hljs-literal,.hljs-meta,.hljs-number,.hljs-operator,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-id,.hljs-variable{color:#005cc5}.hljs-meta .hljs-string,.hljs-regexp,.hljs-string{color:#032f62}.hljs-built_in,.hljs-symbol{color:#e36209}.hljs-code,.hljs-comment,.hljs-formula{color:#6a737d}.hljs-name,.hljs-quote,.hljs-selector-pseudo,.hljs-selector-tag{color:#22863a}.hljs-subst{color:#24292e}.hljs-section{color:#005cc5;font-weight:700}.hljs-bullet{color:#735c0f}.hljs-emphasis{color:#24292e;font-style:italic}.hljs-strong{color:#24292e;font-weight:700}.hljs-addition{color:#22863a;background-color:#f0fff4}.hljs-deletion{color:#b31d28;background-color:#ffeef0}}}
 /*]]>*/</style>
 <defs>
 <marker id="arrowhead-0" markerHeight="7" markerWidth="7" orient="auto-start-reverse" refX="8" refY="5" viewBox="0 0 10 10">
@@ -218,7 +242,7 @@
 </g>
 <g data-svugy-edge="(cluster.shop -&gt; cluster.data)[0]" data-svugy-from="cluster.shop" data-svugy-steps="state" data-svugy-to="cluster.data">
 <title>shop → data</title>
-<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop","to":"cluster.data","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"},{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}]}</desc>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop","to":"cluster.data","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"},{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}]}</desc>
 <path d="M137.698,148.5 L178.297,171.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
 <animateMotion dur="2.4s" path="M137.698,148.5 L179.267,172.5" repeatCount="indefinite"/>
@@ -339,7 +363,7 @@
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.postgres">
 <title>writes</title>
-<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"}]}</desc>
 <path d="M158.483,160.5 L174.071,169.5 L174.071,169.5 L189.66,178.5" data-svugy-flow="" fill="none" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.redis)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.redis">
@@ -349,7 +373,7 @@
 </g>
 <g data-svugy-element="cluster.shop.api" data-svugy-steps="route call state">
 <title>api</title>
-<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment"}</desc>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment","description":"Two replicas behind the `api` Service; a pod receives traffic only while `/ready` answers.\n```yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: api\n  namespace: shop\nspec:\n  replicas: 2\n  selector:\n    matchLabels: { app: api }\n  template:\n    metadata:\n      labels: { app: api }\n    spec:\n      containers:\n        - name: api\n          image: shop/api:1.4.2\n          readinessProbe:\n            httpGet: { path: /ready, port: 8080 }\n```"}</desc>
 <path d="M67.55,141 L129.904,177 L129.904,154.5 L67.55,118.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M187.061,144 L129.904,177 L129.904,154.5 L187.061,121.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M124.708,85.5 L187.061,121.5 L129.904,154.5 L67.55,118.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
@@ -413,7 +437,7 @@
 <g data-svugy-level="cluster.data" data-svugy-view="304.338 313.091 285.334 177.732" transform="matrix(1 0 0 1 394.908 253.5)">
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.postgres">
 <title>writes</title>
-<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"}]}</desc>
 <path d="M-98.727,57 L-83.138,66 L-44.167,43.5 L-29.549,51.94" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.redis)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.redis">
@@ -441,7 +465,7 @@
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.postgres">
 <title>writes</title>
-<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"}]}</desc>
 <rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="50.808" x="-89.057" y="46.898"/>
 <text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="30.808" x="-63.653" y="58.57">writes</text>
 </g>
@@ -480,7 +504,7 @@
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.postgres">
 <title>writes</title>
-<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"}]}</desc>
 <path d="M254.611,286.5 Q275.396,239.3 296.181,310.5" data-svugy-flow="" fill="none" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="document" fill="var(--svugy-text-muted)" height="10" href="#traveler-document" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
 <animateMotion dur="2.4s" path="M223.434,268.5 L239.023,277.5 L239.023,277.5 L254.611,286.5 Q275.396,239.3 296.181,310.5 L311.769,319.5 L350.74,297 L366.329,306" repeatCount="indefinite"/>
@@ -580,7 +604,7 @@
 </g>
 <g data-svugy-element="cluster.shop.api" data-svugy-steps="route call state">
 <title>api</title>
-<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment"}</desc>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment","description":"Two replicas behind the `api` Service; a pod receives traffic only while `/ready` answers.\n```yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: api\n  namespace: shop\nspec:\n  replicas: 2\n  selector:\n    matchLabels: { app: api }\n  template:\n    metadata:\n      labels: { app: api }\n    spec:\n      containers:\n        - name: api\n          image: shop/api:1.4.2\n          readinessProbe:\n            httpGet: { path: /ready, port: 8080 }\n```"}</desc>
 <path d="M67.55,141 L129.904,177 L129.904,154.5 L67.55,118.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M187.061,144 L129.904,177 L129.904,154.5 L187.061,121.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M124.708,85.5 L187.061,121.5 L129.904,154.5 L67.55,118.5 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
@@ -727,7 +751,7 @@
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.postgres.pg-0">
 <title>writes</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}</desc>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"}</desc>
 <path d="M206.98,261.5 Q291.568,167.353 376.155,311.036" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="document" fill="var(--svugy-text-muted)" height="10" href="#traveler-document" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
 <animateMotion dur="2.4s" path="M206.98,261.5 Q291.851,167.038 376.721,312" repeatCount="indefinite"/>
@@ -743,7 +767,7 @@
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.postgres.pg-0">
 <title>writes</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}</desc>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"}</desc>
 <rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" width="50.808" x="266.447" y="219.042"/>
 <text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="30.808" x="291.851" y="230.714">writes</text>
 </g>
@@ -843,7 +867,7 @@
 </g>
 <g data-svugy-edge="(cluster.shop -&gt; cluster.data)[0]" data-svugy-from="cluster.shop" data-svugy-steps="state" data-svugy-to="cluster.data">
 <title>shop → data</title>
-<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop","to":"cluster.data","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"},{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}]}</desc>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop","to":"cluster.data","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"},{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.redis)[0]","from":"cluster.shop.api","to":"cluster.data.redis","label":"reads sessions"}]}</desc>
 <path d="M228,69 L274.88,69" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="dot" fill="var(--svugy-text-muted)" height="10" href="#traveler-dot" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
 <animateMotion dur="2.4s" path="M228,69 L276,69" repeatCount="indefinite"/>
@@ -925,7 +949,7 @@
 <g data-svugy-level="cluster.data" data-svugy-view="593.471 66 181.258 204" transform="matrix(1 0 0 1 492 36)">
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.postgres">
 <title>writes</title>
-<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"}]}</desc>
 <path d="M0,114 L18,114 L18,69 L34.88,69" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.redis)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.redis">
@@ -950,7 +974,7 @@
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.postgres">
 <title>writes</title>
-<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"}]}</desc>
 <rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 4.5 22.875)" width="50.808" x="-7.404" y="83.648"/>
 <text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="30.808" transform="matrix(0.75 0 0 0.75 4.5 22.875)" x="18" y="95.32">writes</text>
 </g>
@@ -1003,7 +1027,7 @@
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.postgres">
 <title>writes</title>
-<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"}]}</desc>
 <path d="M252,69 L270,69 L270,69 L288,69" data-svugy-flow="" fill="none" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.redis)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.redis">
@@ -1013,7 +1037,7 @@
 </g>
 <g data-svugy-element="cluster.shop.api" data-svugy-steps="route call state">
 <title>api</title>
-<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment"}</desc>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment","description":"Two replicas behind the `api` Service; a pod receives traffic only while `/ready` answers.\n```yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: api\n  namespace: shop\nspec:\n  replicas: 2\n  selector:\n    matchLabels: { app: api }\n  template:\n    metadata:\n      labels: { app: api }\n    spec:\n      containers:\n        - name: api\n          image: shop/api:1.4.2\n          readinessProbe:\n            httpGet: { path: /ready, port: 8080 }\n```"}</desc>
 <path d="M180,36 L252,36 L252,102 L180,102 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="17.783" transform="matrix(1 0 0 1 216 69)" x="0" y="-2">api</text>
 <text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="49.095" transform="matrix(1 0 0 1 216 69)" x="0" y="11">Deployment</text>
@@ -1082,7 +1106,7 @@
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.postgres">
 <title>writes</title>
-<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}]}</desc>
+<desc data-svugy-details="">{"kind":"lifted","from":"cluster.shop.api","to":"cluster.data.postgres","label":"writes","edges":[{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"}]}</desc>
 <path d="M444,150 Q468,150 492,150" data-svugy-flow="" fill="none" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="document" fill="var(--svugy-text-muted)" height="10" href="#traveler-document" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
 <animateMotion dur="2.4s" path="M408,150 L426,150 L426,150 L444,150 Q468,150 492,150 L510,150 L510,105 L528,105" repeatCount="indefinite"/>
@@ -1241,7 +1265,7 @@
 </g>
 <g data-svugy-element="cluster.shop.api" data-svugy-steps="route call state">
 <title>api</title>
-<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment"}</desc>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment","description":"Two replicas behind the `api` Service; a pod receives traffic only while `/ready` answers.\n```yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: api\n  namespace: shop\nspec:\n  replicas: 2\n  selector:\n    matchLabels: { app: api }\n  template:\n    metadata:\n      labels: { app: api }\n    spec:\n      containers:\n        - name: api\n          image: shop/api:1.4.2\n          readinessProbe:\n            httpGet: { path: /ready, port: 8080 }\n```"}</desc>
 <path d="M180,36 L252,36 L252,102 L180,102 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="17.783" transform="matrix(1 0 0 1 216 69)" x="0" y="-2">api</text>
 <text fill="var(--svugy-neutral-ink)" font-size="8.5" font-weight="450" opacity="0.85" text-anchor="middle" textLength="49.095" transform="matrix(1 0 0 1 216 69)" x="0" y="11">Deployment</text>
@@ -1310,7 +1334,7 @@
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.postgres.pg-0">
 <title>writes</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}</desc>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"}</desc>
 <path d="M414,175 Q494.452,158.115 574.904,141.23" data-svugy-flow="" fill="none" marker-end="url(#arrowhead-0)" opacity="0.9" stroke="var(--svugy-text-muted)" stroke-dasharray="5 7" stroke-width="1.6"/>
 <use data-svugy-traveler="document" fill="var(--svugy-text-muted)" height="10" href="#traveler-document" stroke="var(--svugy-text-muted)" width="10" x="-5" y="-5">
 <animateMotion dur="2.4s" path="M414,175 Q495,158 576,141" repeatCount="indefinite"/>
@@ -1326,7 +1350,7 @@
 </g>
 <g data-svugy-edge="(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]" data-svugy-from="cluster.shop.api" data-svugy-steps="state" data-svugy-to="cluster.data.postgres.pg-0">
 <title>writes</title>
-<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes"}</desc>
+<desc data-svugy-details="">{"kind":"edge","edge":"(cluster.shop.api -&gt; cluster.data.postgres.pg-0)[0]","from":"cluster.shop.api","to":"cluster.data.postgres.pg-0","label":"writes","description":"One transaction per order:\n```sql\nINSERT INTO orders (id, user_id, total_cents)\nVALUES ($1, $2, $3)\nRETURNING created_at;\n```"}</desc>
 <rect fill="var(--svugy-canvas)" height="15.705" rx="7.852" stroke="var(--svugy-text-muted)" stroke-opacity="0.55" transform="matrix(0.75 0 0 0.75 123.75 39.5)" width="50.808" x="469.596" y="150.148"/>
 <text fill="var(--svugy-text)" font-size="10.5" font-weight="500" text-anchor="middle" textLength="30.808" transform="matrix(0.75 0 0 0.75 123.75 39.5)" x="495" y="161.82">writes</text>
 </g>
@@ -2067,7 +2091,7 @@
 </g>
 <g data-svugy-closed="" data-svugy-element="cluster.shop.api" data-svugy-steps="scrape">
 <title>api</title>
-<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment"}</desc>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment","description":"Two replicas behind the `api` Service; a pod receives traffic only while `/ready` answers.\n```yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: api\n  namespace: shop\nspec:\n  replicas: 2\n  selector:\n    matchLabels: { app: api }\n  template:\n    metadata:\n      labels: { app: api }\n    spec:\n      containers:\n        - name: api\n          image: shop/api:1.4.2\n          readinessProbe:\n            httpGet: { path: /ready, port: 8080 }\n```"}</desc>
 <path d="M-135.1,118.5 L-72.746,154.5 L-72.746,150 L-135.1,114 Z M-15.588,121.5 L-72.746,154.5 L-72.746,150 L-15.588,117 Z M-77.942,81 L-15.588,117 L-72.746,150 L-135.1,114 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
 <path d="M-135.1,114 L-72.746,150 L-72.746,127.5 L-135.1,91.5 Z" fill="var(--svugy-neutral-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M-15.588,117 L-72.746,150 L-72.746,127.5 L-15.588,94.5 Z" fill="var(--svugy-neutral-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
@@ -2258,7 +2282,7 @@
 </g>
 <g data-svugy-element="cluster.shop.api" data-svugy-steps="scrape">
 <title>api</title>
-<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment"}</desc>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment","description":"Two replicas behind the `api` Service; a pod receives traffic only while `/ready` answers.\n```yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: api\n  namespace: shop\nspec:\n  replicas: 2\n  selector:\n    matchLabels: { app: api }\n  template:\n    metadata:\n      labels: { app: api }\n    spec:\n      containers:\n        - name: api\n          image: shop/api:1.4.2\n          readinessProbe:\n            httpGet: { path: /ready, port: 8080 }\n```"}</desc>
 <path d="M-197.454,150 L-20.785,252 L-20.785,241.5 L-197.454,139.5 Z" fill="var(--svugy-container-blue-left)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M67.55,201 L-20.785,252 L-20.785,241.5 L67.55,190.5 Z" fill="var(--svugy-container-blue-right)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <path d="M-109.119,88.5 L67.55,190.5 L-20.785,241.5 L-197.454,139.5 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
@@ -2483,7 +2507,7 @@
 </g>
 <g data-svugy-closed="" data-svugy-element="cluster.shop.api" data-svugy-steps="scrape">
 <title>api</title>
-<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment"}</desc>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment","description":"Two replicas behind the `api` Service; a pod receives traffic only while `/ready` answers.\n```yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: api\n  namespace: shop\nspec:\n  replicas: 2\n  selector:\n    matchLabels: { app: api }\n  template:\n    metadata:\n      labels: { app: api }\n    spec:\n      containers:\n        - name: api\n          image: shop/api:1.4.2\n          readinessProbe:\n            httpGet: { path: /ready, port: 8080 }\n```"}</desc>
 <path d="M36,126 L108,126 L108,192 L36,192 Z" fill="var(--svugy-neutral-top)" fill-opacity="0.35" stroke="var(--svugy-neutral-ink)" stroke-opacity="0.3" stroke-width="0.8"/>
 <path d="M36,126 L108,126 L108,192 L36,192 Z" fill="var(--svugy-neutral-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <text fill="var(--svugy-neutral-ink)" font-size="12" font-weight="650" text-anchor="middle" textLength="17.783" transform="matrix(1 0 0 1 72 159)" x="0" y="-2">api</text>
@@ -2631,7 +2655,7 @@
 </g>
 <g data-svugy-element="cluster.shop.api" data-svugy-steps="scrape">
 <title>api</title>
-<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment"}</desc>
+<desc data-svugy-details="">{"kind":"element","path":"cluster.shop.api","label":"api","caption":"Deployment","description":"Two replicas behind the `api` Service; a pod receives traffic only while `/ready` answers.\n```yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: api\n  namespace: shop\nspec:\n  replicas: 2\n  selector:\n    matchLabels: { app: api }\n  template:\n    metadata:\n      labels: { app: api }\n    spec:\n      containers:\n        - name: api\n          image: shop/api:1.4.2\n          readinessProbe:\n            httpGet: { path: /ready, port: 8080 }\n```"}</desc>
 <path d="M36,162 L240,162 L240,264 L36,264 Z" fill="var(--svugy-container-blue-top)" stroke="var(--svugy-face-outline)" stroke-width="0.8"/>
 <g data-svugy-level="cluster.shop.api" data-svugy-view="419.326 192 216 114" transform="matrix(1 0 0 1 36 162)">
 <g data-svugy-element="cluster.shop.api.api-1" data-svugy-steps="scrape">
@@ -2734,6 +2758,368 @@
 </g>
 </g>
 <script>//<![CDATA[
+{
+const svugyHighlighter = (() => {
+const hljs = (() => {
+'use strict';
+/*!
+  Highlight.js v11.12.0 (git: f7f7d3803b)
+  (c) 2006-2026 Josh Goebel <hello@joshgoebel.com> and other contributors
+  License: BSD-3-Clause
+ */
+function e(t){return t instanceof Map?t.clear=t.delete=t.set=()=>{
+throw Error("map is read-only")}:t instanceof Set&&(t.add=t.clear=t.delete=()=>{
+throw Error("set is read-only")
+}),Object.freeze(t),Object.getOwnPropertyNames(t).forEach(n=>{
+const i=t[n],s=typeof i;"object"!==s&&"function"!==s||Object.isFrozen(i)||e(i)
+}),t}class t{constructor(e){
+void 0===e.data&&(e.data={}),this.data=e.data,this.isMatchIgnored=!1}
+ignoreMatch(){this.isMatchIgnored=!0}}function n(e){
+return e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#x27;")
+}function i(e,...t){const n=Object.create(null);for(const t in e)n[t]=e[t]
+;return t.forEach(e=>{for(const t in e)n[t]=e[t]}),n}const s=e=>!!e.scope
+;class r{constructor(e,t){
+this.buffer="",this.classPrefix=t.classPrefix,e.walk(this)}addText(e){
+this.buffer+=n(e)}openNode(e){if(!s(e))return;const t=((e,{prefix:t})=>{
+if(e.startsWith("language:"))return e.replace("language:","language-")
+;if(e.includes(".")){const n=e.split(".")
+;return[`${t}${n.shift()}`,...n.map((e,t)=>`${e}${"_".repeat(t+1)}`)].join(" ")}
+return`${t}${e}`})(e.scope,{prefix:this.classPrefix});this.span(t)}closeNode(e){
+s(e)&&(this.buffer+="</span>")}value(){return this.buffer}span(e){
+this.buffer+=`<span class="${e}">`}}const o=(e={})=>{const t={children:[]}
+;return Object.assign(t,e),t};class a{constructor(){
+this.rootNode=o(),this.stack=[this.rootNode]}get top(){
+return this.stack[this.stack.length-1]}get root(){return this.rootNode}add(e){
+this.top.children.push(e)}openNode(e){const t=o({scope:e})
+;this.add(t),this.stack.push(t)}closeNode(){
+if(this.stack.length>1)return this.stack.pop()}closeAllNodes(){
+for(;this.closeNode(););}toJSON(){return JSON.stringify(this.rootNode,null,4)}
+walk(e){return this.constructor._walk(e,this.rootNode)}static _walk(e,t){
+return"string"==typeof t?e.addText(t):t.children&&(e.openNode(t),
+t.children.forEach(t=>this._walk(e,t)),e.closeNode(t)),e}static _collapse(e){
+"string"!=typeof e&&e.children&&(e.children.every(e=>"string"==typeof e)?e.children=[e.children.join("")]:e.children.forEach(e=>{
+a._collapse(e)}))}}class c extends a{constructor(e){super(),this.options=e}
+addText(e){""!==e&&this.add(e)}startScope(e){this.openNode(e)}endScope(){
+this.closeNode()}__addSublanguage(e,t){const n=e.root
+;t&&(n.scope="language:"+t),this.add(n)}toHTML(){
+return new r(this,this.options).value()}finalize(){
+return this.closeAllNodes(),!0}}function l(e){
+return e?"string"==typeof e?e:e.source:null}function g(e){return h("(?=",e,")")}
+function u(e){return h("(?:",e,")*")}function d(e){return h("(?:",e,")?")}
+function h(...e){return e.map(e=>l(e)).join("")}function f(...e){const t=(e=>{
+const t=e[e.length-1]
+;return"object"==typeof t&&t.constructor===Object?(e.splice(e.length-1,1),t):{}
+})(e);return"("+(t.capture?"":"?:")+e.map(e=>l(e)).join("|")+")"}function p(e){
+return RegExp(e.toString()+"|").exec("").length-1}
+const b=RegExp(f(/\[(?:[^\\\]]|\\.)*\]/,/\(\?<(?![=!])[^>]+>/,/\(\?'[^']+'/,/\(\??/,/\\([1-9][0-9]*)/,/\\./))
+;function m(e,{joinWith:t}){let n=0;return e.map(e=>{n+=1;const t=n
+;let i=l(e),s="";for(;i.length>0;){const e=b.exec(i);if(!e){s+=i;break}
+s+=i.substring(0,e.index),
+i=i.substring(e.index+e[0].length),"\\"===e[0][0]&&e[1]?s+="\\"+(Number(e[1])+t):(s+=e[0],
+("("===e[0]||/^\(\?[<']/.test(e[0]))&&n++)}return s}).map(e=>`(${e})`).join(t)}
+const E="[a-zA-Z]\\w*",x="[a-zA-Z_]\\w*",_="\\b\\d+(\\.\\d+)?",y="(-?)(\\b0[xX][a-fA-F0-9]+|(\\b\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)",w="\\b(0b[01]+)",O={
+begin:"\\\\[\\s\\S]",relevance:0},k={scope:"string",begin:"'",end:"'",
+illegal:"\\n",contains:[O]},N={scope:"string",begin:'"',end:'"',illegal:"\\n",
+contains:[O]},S=(e,t,n={})=>{const s=i({scope:"comment",begin:e,end:t,
+contains:[]},n);s.contains.push({scope:"doctag",
+begin:"[ ]*(?=(TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX):)",
+end:/(TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX):/,excludeBegin:!0,relevance:0})
+;const r=f("I","a","is","so","us","to","at","if","in","it","on",/[A-Za-z]+['](d|ve|re|ll|t|s|n)/,/[A-Za-z]+[-][a-z]+/,/[A-Za-z][a-z]{2,}/)
+;return s.contains.push({begin:h(/[ ]+/,"(",r,/[.]?[:]?([.][ ]|[ ])/,"){3}")}),s
+},v=S("//","$"),M=S("/\\*","\\*/"),R=S("#","$");var A=Object.freeze({
+__proto__:null,APOS_STRING_MODE:k,BACKSLASH_ESCAPE:O,BINARY_NUMBER_MODE:{
+scope:"number",begin:w,relevance:0},BINARY_NUMBER_RE:w,COMMENT:S,
+C_BLOCK_COMMENT_MODE:M,C_LINE_COMMENT_MODE:v,C_NUMBER_MODE:{scope:"number",
+begin:y,relevance:0},C_NUMBER_RE:y,END_SAME_AS_BEGIN:e=>Object.assign(e,{
+"on:begin":(e,t)=>{t.data._beginMatch=e[1]},"on:end":(e,t)=>{
+t.data._beginMatch!==e[1]&&t.ignoreMatch()}}),HASH_COMMENT_MODE:R,IDENT_RE:E,
+MATCH_NOTHING_RE:/\b\B/,METHOD_GUARD:{begin:"\\.\\s*"+x,relevance:0},
+NUMBER_MODE:{scope:"number",begin:_,relevance:0},NUMBER_RE:_,
+PHRASAL_WORDS_MODE:{
+begin:/\b(a|an|the|are|I'm|isn't|don't|doesn't|won't|but|just|should|pretty|simply|enough|gonna|going|wtf|so|such|will|you|your|they|like|more)\b/
+},QUOTE_STRING_MODE:N,REGEXP_MODE:{scope:"regexp",begin:/\/(?=[^/\n]*\/)/,
+end:/\/[gimuy]*/,contains:[O,{begin:/\[/,end:/\]/,relevance:0,contains:[O]}]},
+RE_STARTERS_RE:"!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|-|-=|/=|/|:|;|<<|<<=|<=|<|===|==|=|>>>=|>>=|>=|>>>|>>|>|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~",
+SHEBANG:(e={})=>{const t=/^#![ ]*\//
+;return e.binary&&(e.begin=h(t,/.*\b/,e.binary,/\b.*/)),i({scope:"meta",begin:t,
+end:/$/,relevance:0,"on:begin":(e,t)=>{0!==e.index&&t.ignoreMatch()}},e)},
+TITLE_MODE:{scope:"title",begin:E,relevance:0},UNDERSCORE_IDENT_RE:x,
+UNDERSCORE_TITLE_MODE:{scope:"title",begin:x,relevance:0}});function j(e,t){
+"."===e.input[e.index-1]&&t.ignoreMatch()}function I(e,t){
+void 0!==e.className&&(e.scope=e.className,delete e.className)}function T(e,t){
+t&&e.beginKeywords&&(e.begin="\\b("+e.beginKeywords.split(" ").join("|")+")(?!\\.)(?=\\b|\\s)",
+e.__beforeBegin=j,e.keywords=e.keywords||e.beginKeywords,delete e.beginKeywords,
+void 0===e.relevance&&(e.relevance=0))}function L(e,t){
+Array.isArray(e.illegal)&&(e.illegal=f(...e.illegal))}function B(e,t){
+if(e.match){
+if(e.begin||e.end)throw Error("begin & end are not supported with match")
+;e.begin=e.match,delete e.match}}function P(e,t){
+void 0===e.relevance&&(e.relevance=1)}const D=(e,t)=>{if(!e.beforeMatch)return
+;if(e.starts)throw Error("beforeMatch cannot be used with starts")
+;const n=Object.assign({},e);Object.keys(e).forEach(t=>{delete e[t]
+}),e.keywords=n.keywords,e.begin=h(n.beforeMatch,g(n.begin)),e.starts={
+relevance:0,contains:[Object.assign(n,{endsParent:!0})]
+},e.relevance=0,delete n.beforeMatch
+},H=["of","and","for","in","not","or","if","then","parent","list","value"]
+;function C(e,t,n="keyword"){const i=Object.create(null)
+;return"string"==typeof e?s(n,e.split(" ")):Array.isArray(e)?s(n,e):Object.keys(e).forEach(n=>{
+Object.assign(i,C(e[n],t,n))}),i;function s(e,n){
+t&&(n=n.map(e=>e.toLowerCase())),n.forEach(t=>{const n=t.split("|")
+;i[n[0]]=[e,$(n[0],n[1])]})}}function $(e,t){
+return t?Number(t):(e=>H.includes(e.toLowerCase()))(e)?0:1}const U={},z=e=>{
+console.error(e)},W=(e,...t)=>{console.log("WARN: "+e,...t)},X=(e,t)=>{
+U[`${e}/${t}`]||(console.log(`Deprecated as of ${e}. ${t}`),U[`${e}/${t}`]=!0)
+},G=Error();function K(e,t,{key:n}){let i=0;const s=e[n],r={},o={}
+;for(let e=1;e<=t.length;e++)o[e+i]=s[e],r[e+i]=!0,i+=p(t[e-1])
+;e[n]=o,e[n]._emit=r,e[n]._multi=!0}function F(e){(e=>{
+e.scope&&"object"==typeof e.scope&&null!==e.scope&&(e.beginScope=e.scope,
+delete e.scope)})(e),"string"==typeof e.beginScope&&(e.beginScope={
+_wrap:e.beginScope}),"string"==typeof e.endScope&&(e.endScope={_wrap:e.endScope
+}),(e=>{if(Array.isArray(e.begin)){
+if(e.skip||e.excludeBegin||e.returnBegin)throw z("skip, excludeBegin, returnBegin not compatible with beginScope: {}"),
+G
+;if("object"!=typeof e.beginScope||null===e.beginScope)throw z("beginScope must be object"),
+G;K(e,e.begin,{key:"beginScope"}),e.begin=m(e.begin,{joinWith:""})}})(e),(e=>{
+if(Array.isArray(e.end)){
+if(e.skip||e.excludeEnd||e.returnEnd)throw z("skip, excludeEnd, returnEnd not compatible with endScope: {}"),
+G
+;if("object"!=typeof e.endScope||null===e.endScope)throw z("endScope must be object"),
+G;K(e,e.end,{key:"endScope"}),e.end=m(e.end,{joinWith:""})}})(e)}function Z(e){
+function t(t,n){
+return RegExp(l(t),"m"+(e.case_insensitive?"i":"")+(e.unicodeRegex?"u":"")+(n?"g":""))
+}class n{constructor(){
+this.matchIndexes={},this.regexes=[],this.matchAt=1,this.position=0}
+addRule(e,t){
+t.position=this.position++,this.matchIndexes[this.matchAt]=t,this.regexes.push([t,e]),
+this.matchAt+=p(e)+1}compile(){0===this.regexes.length&&(this.exec=()=>null)
+;const e=this.regexes.map(e=>e[1]);this.matcherRe=t(m(e,{joinWith:"|"
+}),!0),this.lastIndex=0}exec(e){this.matcherRe.lastIndex=this.lastIndex
+;const t=this.matcherRe.exec(e);if(!t)return null
+;const n=t.findIndex((e,t)=>t>0&&void 0!==e),i=this.matchIndexes[n]
+;return t.splice(0,n),Object.assign(t,i)}}class s{constructor(){
+this.rules=[],this.multiRegexes=[],
+this.count=0,this.lastIndex=0,this.regexIndex=0}getMatcher(e){
+if(this.multiRegexes[e])return this.multiRegexes[e];const t=new n
+;return this.rules.slice(e).forEach(([e,n])=>t.addRule(e,n)),
+t.compile(),this.multiRegexes[e]=t,t}resumingScanAtSamePosition(){
+return 0!==this.regexIndex}considerAll(){this.regexIndex=0}addRule(e,t){
+this.rules.push([e,t]),"begin"===t.type&&this.count++}exec(e){
+const t=this.getMatcher(this.regexIndex);t.lastIndex=this.lastIndex
+;let n=t.exec(e)
+;if(this.resumingScanAtSamePosition())if(n&&n.index===this.lastIndex);else{
+const t=this.getMatcher(0);t.lastIndex=this.lastIndex+1,n=t.exec(e)}
+return n&&(this.regexIndex+=n.position+1,
+this.regexIndex===this.count&&this.considerAll()),n}}
+if(e.compilerExtensions||(e.compilerExtensions=[]),
+e.contains&&e.contains.includes("self"))throw Error("ERR: contains `self` is not supported at the top-level of a language.  See documentation.")
+;return e.classNameAliases=i(e.classNameAliases||{}),function n(r,o){const a=r
+;if(r.isCompiled)return a
+;[I,B,F,D].forEach(e=>e(r,o)),e.compilerExtensions.forEach(e=>e(r,o)),
+r.__beforeBegin=null,[T,L,P].forEach(e=>e(r,o)),r.isCompiled=!0;let c=null
+;return"object"==typeof r.keywords&&r.keywords.$pattern&&(r.keywords=Object.assign({},r.keywords),
+c=r.keywords.$pattern,
+delete r.keywords.$pattern),c=c||/\w+/,r.keywords&&(r.keywords=C(r.keywords,e.case_insensitive)),
+a.keywordPatternRe=t(c,!0),
+o&&(r.begin||(r.begin=/\B|\b/),a.beginRe=t(a.begin),r.end||r.endsWithParent||(r.end=/\B|\b/),
+r.end&&(a.endRe=t(a.end)),
+a.terminatorEnd=l(a.end)||"",r.endsWithParent&&o.terminatorEnd&&(a.terminatorEnd+=(r.end?"|":"")+o.terminatorEnd)),
+r.illegal&&(a.illegalRe=t(r.illegal)),
+r.contains||(r.contains=[]),r.contains=[].concat(...r.contains.map(e=>(e=>(e.variants&&!e.cachedVariants&&(e.cachedVariants=e.variants.map(t=>i(e,{
+variants:null},t))),e.cachedVariants?e.cachedVariants:V(e)?i(e,{
+starts:e.starts?i(e.starts):null
+}):Object.isFrozen(e)?i(e):e))("self"===e?r:e))),r.contains.forEach(e=>{n(e,a)
+}),r.starts&&n(r.starts,o),a.matcher=(e=>{const t=new s
+;return e.contains.forEach(e=>t.addRule(e.begin,{rule:e,type:"begin"
+})),e.terminatorEnd&&t.addRule(e.terminatorEnd,{type:"end"
+}),e.illegal&&t.addRule(e.illegal,{type:"illegal"}),t})(a),a}(e)}function V(e){
+return!!e&&(e.endsWithParent||V(e.starts))}class q extends Error{
+constructor(e,t){super(e),this.name="HTMLInjectionError",this.html=t}}
+const J=n,Y=i,Q=Symbol("nomatch"),ee=n=>{
+const i=Object.create(null),s=Object.create(null),r=[];let o=!0
+;const a="Could not find the language '{}', did you forget to load/include a language module?",l={
+disableAutodetect:!0,name:"Plain text",contains:[]};let p={
+ignoreUnescapedHTML:!1,throwUnescapedHTML:!1,noHighlightRe:/^(no-?highlight)$/i,
+languageDetectRe:/\blang(?:uage)?-([\w-]+)\b/i,classPrefix:"hljs-",
+cssSelector:"pre code",languages:null,__emitter:c};function b(e){
+return p.noHighlightRe.test(e)}function m(e,t,n){let i="",s=""
+;"object"==typeof t?(i=e,
+n=t.ignoreIllegals,s=t.language):(X("10.7.0","highlight(lang, code, ...args) has been deprecated."),
+X("10.7.0","Please use highlight(code, options) instead.\nhttps://github.com/highlightjs/highlight.js/issues/2277"),
+s=e,i=t),void 0===n&&(n=!0);const r={code:i,language:s};S("before:highlight",r)
+;const o=r.result?r.result:E(r.language,r.code,n)
+;return o.code=r.code,S("after:highlight",o),o}function E(e,n,s,r){
+const c=Object.create(null);function l(e,t){return e.keywords[t]}function g(){
+if(!v.keywords)return void R.addText(A);let e=0;v.keywordPatternRe.lastIndex=0
+;let t=v.keywordPatternRe.exec(A),n="";for(;t;){n+=A.substring(e,t.index)
+;const i=k.case_insensitive?t[0].toLowerCase():t[0],s=l(v,i);if(s){const[e,r]=s
+;if(R.addText(n),
+n="",c[i]=(c[i]||0)+1,c[i]<=7&&(j+=r),e.startsWith("_"))n+=t[0];else{
+const n=k.classNameAliases[e]||e;d(t[0],n)}}else n+=t[0]
+;e=v.keywordPatternRe.lastIndex,t=v.keywordPatternRe.exec(A)}
+n+=A.substring(e),R.addText(n)}function u(){null!=v.subLanguage?(()=>{
+if(""===A)return;let e=null;if("string"==typeof v.subLanguage){
+if(!i[v.subLanguage])return void R.addText(A)
+;e=E(v.subLanguage,A,!0,M[v.subLanguage]),M[v.subLanguage]=e._top
+}else e=x(A,v.subLanguage.length?v.subLanguage:null)
+;v.relevance>0&&(j+=e.relevance),R.__addSublanguage(e._emitter,e.language)
+})():g(),A=""}function d(e,t){
+""!==e&&(R.startScope(t),R.addText(e),R.endScope())}function h(e,t){let n=1
+;const i=t.length-1;for(;n<=i;){if(!e._emit[n]){n++;continue}
+const i=k.classNameAliases[e[n]]||e[n],s=t[n];i?d(s,i):(A=s,g(),A=""),n++}}
+function f(e,t){
+return e.scope&&"string"==typeof e.scope&&R.openNode(k.classNameAliases[e.scope]||e.scope),
+e.beginScope&&(e.beginScope._wrap?(d(A,k.classNameAliases[e.beginScope._wrap]||e.beginScope._wrap),
+A=""):e.beginScope._multi&&(h(e.beginScope,t),A="")),v=Object.create(e,{parent:{
+value:v}}),v}function b(e,n,i){let s=((e,t)=>{const n=e&&e.exec(t)
+;return n&&0===n.index})(e.endRe,i);if(s){if(e["on:end"]){const i=new t(e)
+;e["on:end"](n,i),i.isMatchIgnored&&(s=!1)}if(s){
+for(;e.endsParent&&e.parent;)e=e.parent;return e}}
+if(e.endsWithParent)return b(e.parent,n,i)}function m(e){
+return 0===v.matcher.regexIndex?(A+=e[0],1):(L=!0,0)}function _(e){
+const t=e[0],i=n.substring(e.index),s=b(v,e,i);if(!s)return Q;const r=v
+;v.endScope&&v.endScope._wrap?(u(),
+d(t,v.endScope._wrap)):v.endScope&&v.endScope._multi?(u(),
+h(v.endScope,e)):r.skip?A+=t:(r.returnEnd||r.excludeEnd||(A+=t),
+u(),r.excludeEnd&&(A=t));do{
+v.scope&&R.closeNode(),v.skip||v.subLanguage||(j+=v.relevance),v=v.parent
+}while(v!==s.parent);return s.starts&&f(s.starts,e),r.returnEnd?0:t.length}
+let y={};function w(i,r){const a=r&&r[0];if(A+=i,null==a)return u(),0
+;if("begin"===y.type&&"end"===r.type&&y.index===r.index&&""===a){
+if(A+=n.slice(r.index,r.index+1),!o){const t=Error(`0 width match regex (${e})`)
+;throw t.languageName=e,t.badRule=y.rule,t}return 1}
+if(y=r,"begin"===r.type)return(e=>{
+const n=e[0],i=e.rule,s=new t(i),r=[i.__beforeBegin,i["on:begin"]]
+;for(const t of r)if(t&&(t(e,s),s.isMatchIgnored))return m(n)
+;return i.skip?A+=n:(i.excludeBegin&&(A+=n),
+u(),i.returnBegin||i.excludeBegin||(A=n)),f(i,e),i.returnBegin?0:n.length})(r)
+;if("illegal"===r.type&&!s){
+const e=Error('Illegal lexeme "'+a+'" for mode "'+(v.scope||"<unnamed>")+'"')
+;throw e.mode=v,e}if("end"===r.type){const e=_(r);if(e!==Q)return e}
+if("illegal"===r.type&&""===a)return r.index===n.length||(A+="\n"),1
+;if(T>1e5&&T>3*r.index)throw Error("potential infinite loop, way more iterations than matches")
+;return A+=a,a.length}const k=O(e)
+;if(!k)throw z(a.replace("{}",e)),Error('Unknown language: "'+e+'"')
+;const N=Z(k);let S="",v=r||N;const M={},R=new p.__emitter(p);(()=>{const e=[]
+;for(let t=v;t!==k;t=t.parent)t.scope&&e.unshift(t.scope)
+;e.forEach(e=>R.openNode(e))})();let A="",j=0,I=0,T=0,L=!1;try{
+if(k.__emitTokens)k.__emitTokens(n,R);else{for(v.matcher.considerAll();;){
+T++,L?L=!1:v.matcher.considerAll(),v.matcher.lastIndex=I
+;const e=v.matcher.exec(n);if(!e)break;const t=w(n.substring(I,e.index),e)
+;I=e.index+t}w(n.substring(I))}return R.finalize(),S=R.toHTML(),{language:e,
+value:S,relevance:j,illegal:!1,_emitter:R,_top:v}}catch(t){
+if(t.message&&t.message.includes("Illegal"))return{language:e,value:J(n),
+illegal:!0,relevance:0,_illegalBy:{message:t.message,index:I,
+context:n.slice(I-100,I+100),mode:t.mode,resultSoFar:S},_emitter:R};if(o)return{
+language:e,value:J(n),illegal:!1,relevance:0,errorRaised:t,_emitter:R,_top:v}
+;throw t}}function x(e,t){t=t||p.languages||Object.keys(i);const n=(e=>{
+const t={value:J(e),illegal:!1,relevance:0,_top:l,_emitter:new p.__emitter(p)}
+;return t._emitter.addText(e),t})(e),s=t.filter(O).filter(N).map(t=>E(t,e,!1))
+;s.unshift(n);const r=s.sort((e,t)=>{
+if(e.relevance!==t.relevance)return t.relevance-e.relevance
+;if(e.language&&t.language){if(O(e.language).supersetOf===t.language)return 1
+;if(O(t.language).supersetOf===e.language)return-1}return 0}),[o,a]=r,c=o
+;return c.secondBest=a,c}function _(e){let t=null;const n=(e=>{
+let t=e.className+" ";t+=e.parentNode?e.parentNode.className:""
+;const n=p.languageDetectRe.exec(t);if(n){const t=O(n[1])
+;return t||(W(a.replace("{}",n[1])),
+W("Falling back to no-highlight mode for this block.",e)),t?n[1]:"no-highlight"}
+return t.split(/\s+/).find(e=>b(e)||O(e))})(e);if(b(n))return
+;if(S("before:highlightElement",{el:e,language:n
+}),e.dataset.highlighted)return void console.log("Element previously highlighted. To highlight again, first unset `dataset.highlighted`.",e)
+;if(e.children.length>0&&(p.ignoreUnescapedHTML||(console.warn("One of your code blocks includes unescaped HTML. This is a potentially serious security risk."),
+console.warn("https://github.com/highlightjs/highlight.js/wiki/security"),
+console.warn("The element with unescaped HTML:"),
+console.warn(e)),p.throwUnescapedHTML))throw new q("One of your code blocks includes unescaped HTML.",e.innerHTML)
+;t=e;const i=t.textContent,r=n?m(i,{language:n,ignoreIllegals:!0}):x(i)
+;e.innerHTML=r.value,e.dataset.highlighted="yes",((e,t,n)=>{const i=t&&s[t]||n
+;e.classList.add("hljs"),e.classList.add("language-"+i)
+})(e,n,r.language),e.result={language:r.language,re:r.relevance,
+relevance:r.relevance},r.secondBest&&(e.secondBest={
+language:r.secondBest.language,relevance:r.secondBest.relevance
+}),S("after:highlightElement",{el:e,result:r,text:i})}let y=!1;function w(){
+if("loading"===document.readyState)return y||window.addEventListener("DOMContentLoaded",()=>{
+w()},!1),void(y=!0);document.querySelectorAll(p.cssSelector).forEach(_)}
+function O(e){return e=(e||"").toLowerCase(),i[e]||i[s[e]]}
+function k(e,{languageName:t}){"string"==typeof e&&(e=[e]),e.forEach(e=>{
+s[e.toLowerCase()]=t})}function N(e){const t=O(e);return t&&!t.disableAutodetect
+}function S(e,t){const n=e;r.forEach(e=>{e[n]&&e[n](t)})}Object.assign(n,{
+highlight:m,highlightAuto:x,highlightAll:w,highlightElement:_,
+highlightBlock:e=>(X("10.7.0","highlightBlock will be removed entirely in v12.0"),
+X("10.7.0","Please use highlightElement now."),_(e)),configure:e=>{p=Y(p,e)},
+initHighlighting:()=>{
+w(),X("10.6.0","initHighlighting() deprecated.  Use highlightAll() now.")},
+initHighlightingOnLoad:()=>{
+w(),X("10.6.0","initHighlightingOnLoad() deprecated.  Use highlightAll() now.")
+},registerLanguage:(e,t)=>{let s=null;try{s=t(n)}catch(t){
+if(z("Language definition for '{}' could not be registered.".replace("{}",e)),
+!o)throw t;z(t),s=l}
+s.name||(s.name=e),i[e]=s,s.rawDefinition=t.bind(null,n),s.aliases&&k(s.aliases,{
+languageName:e})},unregisterLanguage:e=>{delete i[e]
+;for(const t of Object.keys(s))s[t]===e&&delete s[t]},
+listLanguages:()=>Object.keys(i),getLanguage:O,registerAliases:k,
+autoDetection:N,inherit:Y,addPlugin:e=>{(e=>{
+e["before:highlightBlock"]&&!e["before:highlightElement"]&&(e["before:highlightElement"]=t=>{
+e["before:highlightBlock"](Object.assign({block:t.el},t))
+}),e["after:highlightBlock"]&&!e["after:highlightElement"]&&(e["after:highlightElement"]=t=>{
+e["after:highlightBlock"](Object.assign({block:t.el},t))})})(e),r.push(e)},
+removePlugin:e=>{const t=r.indexOf(e);-1!==t&&r.splice(t,1)}}),n.debugMode=()=>{
+o=!1},n.safeMode=()=>{o=!0},n.versionString="11.12.0",n.regex={concat:h,
+lookahead:g,either:f,optional:d,anyNumberOfTimes:u}
+;for(const t in A)"object"==typeof A[t]&&e(A[t]);return Object.assign(n,A),n
+},te=ee({});te.newInstance=()=>ee({});return te;
+})();
+/*! `yaml` grammar compiled for Highlight.js 11.12.0 */
+(()=>{var e=(()=>{"use strict";return e=>{
+const n="true false yes no null",a="[\\w#;/?:@&=+$,.~*'()[\\]]+",s={
+className:"string",relevance:0,variants:[{begin:/"/,end:/"/},{begin:/\S+/}],
+contains:[e.BACKSLASH_ESCAPE,{className:"template-variable",variants:[{
+begin:/\{\{/,end:/\}\}/},{begin:/%\{/,end:/\}/}]}]},i=e.inherit(s,{variants:[{
+begin:/'/,end:/'/,contains:[{begin:/''/,relevance:0}]},{begin:/"/,end:/"/},{
+begin:/[^\s,{}[\]]+/}]}),l={end:",",endsWithParent:!0,excludeEnd:!0,keywords:n,
+relevance:0},t={begin:/\{/,end:/\}/,contains:[l],illegal:"\\n",relevance:0},c={
+begin:"\\[",end:"\\]",contains:[l],illegal:"\\n",relevance:0},r=[{
+className:"attr",variants:[{begin:/[\w*@][\w*@ :()\./-]*:(?=[ \t]|$)/},{
+begin:/"[\w*@][\w*@ :()\./-]*":(?=[ \t]|$)/},{
+begin:/'[\w*@][\w*@ :()\./-]*':(?=[ \t]|$)/}]},{className:"meta",
+begin:"^---\\s*$",relevance:10},{className:"string",
+begin:"[\\|>]([1-9]?[+-])?[ ]*\\n( +)[^ ][^\\n]*\\n(\\2[^\\n]+\\n?)*"},{
+begin:"<%[%=-]?",end:"[%-]?%>",subLanguage:"ruby",excludeBegin:!0,excludeEnd:!0,
+relevance:0},{className:"type",begin:"!\\w+!"+a},{className:"type",
+begin:"!<"+a+">"},{className:"type",begin:"!"+a},{className:"type",begin:"!!"+a
+},{className:"meta",begin:"&"+e.UNDERSCORE_IDENT_RE+"$"},{className:"meta",
+begin:"\\*"+e.UNDERSCORE_IDENT_RE+"$"},{className:"bullet",begin:"-(?=[ ]|$)",
+relevance:0},e.HASH_COMMENT_MODE,{beginKeywords:n,keywords:{literal:n}},{
+className:"number",
+begin:"\\b[0-9]{4}(-[0-9][0-9]){0,2}([Tt \\t][0-9][0-9]?(:[0-9][0-9]){2})?(\\.[0-9]*)?([ \\t])*(Z|[-+][0-9][0-9]?(:[0-9][0-9])?)?\\b"
+},{className:"number",begin:e.C_NUMBER_RE+"\\b",relevance:0},t,c,{
+className:"string",relevance:0,begin:/'/,end:/'/,contains:[{match:/''/,
+scope:"char.escape",relevance:0}]},s],g=[...r]
+;return g.pop(),g.push(i),l.contains=g,{name:"YAML",case_insensitive:!0,
+aliases:["yml"],contains:r}}})();hljs.registerLanguage("yaml",e)})();
+/*! `sql` grammar compiled for Highlight.js 11.12.0 */
+(()=>{var e=(()=>{"use strict";return e=>{
+const r=e.regex,t=e.COMMENT("--","$"),a=["abs","acos","array_agg","asin","atan","avg","cast","ceil","ceiling","coalesce","corr","cos","cosh","count","covar_pop","covar_samp","cume_dist","dense_rank","deref","element","exp","extract","first_value","floor","json_array","json_arrayagg","json_exists","json_object","json_objectagg","json_query","json_table","json_table_primitive","json_value","lag","last_value","lead","listagg","ln","log","log10","lower","max","min","mod","nth_value","ntile","nullif","percent_rank","percentile_cont","percentile_disc","position","position_regex","power","rank","regr_avgx","regr_avgy","regr_count","regr_intercept","regr_r2","regr_slope","regr_sxx","regr_sxy","regr_syy","row_number","sin","sinh","sqrt","stddev_pop","stddev_samp","substring","substring_regex","sum","tan","tanh","translate","translate_regex","treat","trim","trim_array","unnest","upper","value_of","var_pop","var_samp","width_bucket"],n=a,s=["abs","acos","all","allocate","alter","and","any","are","array","array_agg","array_max_cardinality","as","asensitive","asin","asymmetric","at","atan","atomic","authorization","avg","begin","begin_frame","begin_partition","between","bigint","binary","blob","boolean","both","by","call","called","cardinality","cascaded","case","cast","ceil","ceiling","char","char_length","character","character_length","check","classifier","clob","close","coalesce","collate","collect","column","commit","condition","connect","constraint","contains","convert","copy","corr","corresponding","cos","cosh","count","covar_pop","covar_samp","create","cross","cube","cume_dist","current","current_catalog","current_date","current_default_transform_group","current_path","current_role","current_row","current_schema","current_time","current_timestamp","current_path","current_role","current_transform_group_for_type","current_user","cursor","cycle","date","day","deallocate","dec","decimal","decfloat","declare","default","define","delete","dense_rank","deref","describe","deterministic","disconnect","distinct","double","drop","dynamic","each","element","else","empty","end","end_frame","end_partition","end-exec","equals","escape","every","except","exec","execute","exists","exp","external","extract","false","fetch","filter","first_value","float","floor","for","foreign","frame_row","free","from","full","function","fusion","get","global","grant","group","grouping","groups","having","hold","hour","identity","in","indicator","initial","inner","inout","insensitive","insert","int","integer","intersect","intersection","interval","into","is","join","json_array","json_arrayagg","json_exists","json_object","json_objectagg","json_query","json_table","json_table_primitive","json_value","lag","language","large","last_value","lateral","lead","leading","left","like","like_regex","listagg","ln","local","localtime","localtimestamp","log","log10","lower","match","match_number","match_recognize","matches","max","member","merge","method","min","minute","mod","modifies","module","month","multiset","national","natural","nchar","nclob","new","no","none","normalize","not","nth_value","ntile","null","nullif","numeric","octet_length","occurrences_regex","of","offset","old","omit","on","one","only","open","or","order","out","outer","over","overlaps","overlay","parameter","partition","pattern","per","percent","percent_rank","percentile_cont","percentile_disc","period","portion","position","position_regex","power","precedes","precision","prepare","primary","procedure","ptf","range","rank","reads","real","recursive","ref","references","referencing","regr_avgx","regr_avgy","regr_count","regr_intercept","regr_r2","regr_slope","regr_sxx","regr_sxy","regr_syy","release","result","return","returns","revoke","right","rollback","rollup","row","row_number","rows","running","savepoint","scope","scroll","search","second","seek","select","sensitive","session_user","set","show","similar","sin","sinh","skip","smallint","some","specific","specifictype","sql","sqlexception","sqlstate","sqlwarning","sqrt","start","static","stddev_pop","stddev_samp","submultiset","subset","substring","substring_regex","succeeds","sum","symmetric","system","system_time","system_user","table","tablesample","tan","tanh","then","time","timestamp","timezone_hour","timezone_minute","to","trailing","translate","translate_regex","translation","treat","trigger","trim","trim_array","true","truncate","uescape","union","unique","unknown","unnest","update","upper","user","using","value","values","value_of","var_pop","var_samp","varbinary","varchar","varying","versioning","when","whenever","where","width_bucket","window","with","within","without","year","add","asc","collation","desc","final","first","last","view"].filter(e=>!a.includes(e)),i={
+match:r.concat(/\b/,r.either(...n),/\s*\(/),relevance:0,keywords:{built_in:n}}
+;function o(e){
+return r.concat(/\b/,r.either(...e.map(e=>e.replace(/\s+/,"\\s+"))),/\b/)}
+const c={scope:"keyword",
+match:o(["create table","insert into","primary key","foreign key","not null","alter table","add constraint","grouping sets","on overflow","character set","respect nulls","ignore nulls","nulls first","nulls last","depth first","breadth first"]),
+relevance:0};return{name:"SQL",case_insensitive:!0,illegal:/[{}]|<\//,keywords:{
+$pattern:/\b[\w\.]+/,keyword:((e,{exceptions:r,when:t}={})=>{const a=t
+;return r=r||[],e.map(e=>e.match(/\|\d+$/)||r.includes(e)?e:a(e)?e+"|0":e)})(s,{
+when:e=>e.length<3}),literal:["true","false","unknown"],
+type:["bigint","binary","blob","boolean","char","character","clob","date","dec","decfloat","decimal","float","int","integer","interval","nchar","nclob","national","numeric","real","row","smallint","time","timestamp","varchar","varying","varbinary"],
+built_in:["current_catalog","current_date","current_default_transform_group","current_path","current_role","current_schema","current_transform_group_for_type","current_user","session_user","system_time","system_user","current_time","localtime","current_timestamp","localtimestamp"]
+},contains:[{scope:"type",
+match:o(["double precision","large object","with timezone","without timezone"])
+},c,i,{scope:"variable",match:/@[a-z0-9][a-z0-9_]*/},{scope:"string",variants:[{
+begin:/'/,end:/'/,contains:[{match:/''/}]}]},{begin:/"/,end:/"/,contains:[{
+match:/""/}]},e.C_NUMBER_MODE,e.C_BLOCK_COMMENT_MODE,t,{scope:"operator",
+match:/[-+*/=%^~]|&&?|\|\|?|!=?|<(?:=>?|<|>)?|>[>=]?/,relevance:0}]}}})()
+;hljs.registerLanguage("sql",e)})();
+const languageNameByFenceTag = new Map([["yaml", "yaml"], ["yml", "yaml"], ["sql", "sql"]]);
+return { hljs, languageNameByFenceTag };
+})();
 (() => {
   'use strict';
 
@@ -2822,6 +3208,7 @@
   const CODE_BLOCK = 'code';
   const LIST_BLOCK = 'list';
   const FENCE = '```';
+  const WHITESPACE_PATTERN = /\s+/;
   const HEADING_PATTERN = /^(#{1,3})\s+(.*)$/;
   const LIST_ITEM_PATTERN = /^(\s*)([-*]|\d+\.)\s+(.*)$/;
   const ORDERED_MARKER_PATTERN = /^\d/;
@@ -2844,6 +3231,13 @@
 
   const HIGHLIGHTED_CLASS = 'svugy-highlighted';
   const HIGHLIGHT_DURATION_MS = 1200;
+
+  const SYNTAX_CLASS_PREFIX = 'hljs-';
+  const SYNTAX_SCOPE_SEPARATOR = '.';
+  const COPY_LABEL = 'copy';
+  const COPIED_LABEL = 'copied';
+  const COPY_FAILED_LABEL = 'failed';
+  const COPY_FEEDBACK_DURATION_MS = 1200;
 
   const DRAG_THRESHOLD_PX = 4;
   const ZOOM_PER_WHEEL_PIXEL = 0.002;
@@ -4012,13 +4406,19 @@
       return isAwayFromFocusedView;
     }
 
-    /** Steps out once: focuses the focused level's parent, keeping the open containers open, so every step widens the view; at the root, closes the deepest open containers; any navigation discards a pan or zoom. Tells whether it stepped out: never from the root of layer 0. */
-    exitOneStep() {
+    /** Focuses the focused level's parent, keeping the open containers open, so every step out widens the view; tells whether it did: never from the root. */
+    focusParentLevel() {
       const parentLevel = Contract.enclosingLevelOf(this.focusedLevel);
-      if (parentLevel !== null) {
-        this.focus(parentLevel);
-        return true;
+      const isAtRoot = parentLevel === null;
+      if (isAtRoot) {
+        return false;
       }
+      this.focus(parentLevel);
+      return true;
+    }
+
+    /** Shows the previous layer, closing the deepest open containers; tells whether it did: never from layer 0. */
+    closeDeepestLayer() {
       const shownLayerIndex = this.layers.indexOf(this.shownLayer);
       const isOnFirstLayer = shownLayerIndex === 0;
       if (isOnFirstLayer) {
@@ -4367,7 +4767,7 @@
       this.paintMarks();
     }
 
-    /** Undoes one step: clears the selected item and returns from it, else returns to the focused level's view, else steps out, else returns to the workflow's start. */
+    /** Undoes one step: clears the selected item and returns from it, else returns to the focused level's view, else focuses its parent level, else, while the panel is visible, steps back one slot, hiding the panel from the first, else closes the deepest layer. */
     escape() {
       const hasSelection = this.state.selection !== null;
       if (hasSelection) {
@@ -4378,12 +4778,20 @@
       if (hasReturnedToFocusedView) {
         return;
       }
-      const hasSteppedOut = this.navigator.exitOneStep();
-      if (hasSteppedOut) {
+      const hasFocusedParentLevel = this.navigator.focusParentLevel();
+      if (hasFocusedParentLevel) {
         this.paintMarks();
         return;
       }
-      this.apply((state) => state.returnToStart());
+      const isPanelVisible = this.state.panel.isVisible;
+      if (isPanelVisible) {
+        this.apply((state) => state.stepBackOneSlot());
+        return;
+      }
+      const hasClosedDeepestLayer = this.navigator.closeDeepestLayer();
+      if (hasClosedDeepestLayer) {
+        this.paintMarks();
+      }
     }
 
     /** Clears the selected item, collapsing the component card, and returns from it: its highlight and its focus go together. */
@@ -4490,14 +4898,14 @@
       this.slotIndex = Math.min(lastSlotIndex, slotIndexFromFirst);
     }
 
-    /** Shows slot 0 again, where the workflow starts, so nothing dims: the overview, or, without one, a hidden panel. */
-    returnToStart() {
-      this.slotIndex = 0;
-      const hasOverview = this.overviewSlotCount() === 1;
-      if (hasOverview) {
+    /** Moves the slot one back, or, from the first slot, hides the panel. */
+    stepBackOneSlot() {
+      const isOnFirstSlot = this.slotIndex === 0;
+      if (isOnFirstSlot) {
+        this.hidePanel();
         return;
       }
-      this.hidePanel();
+      this.moveSlotBy(-1);
     }
 
     openPanel() {
@@ -5855,11 +6263,54 @@
     }
 
     codeNodeOf(codeBlock) {
+      const codeText = codeBlock.lines.join('\n');
       const code = createXhtmlElement('code', {});
-      code.textContent = codeBlock.lines.join('\n');
+      const codeNodes = SyntaxHighlight.nodesOf(codeText, codeBlock.fenceTag);
+      code.append(...codeNodes);
       const preformatted = createXhtmlElement('pre', {});
       preformatted.appendChild(code);
-      return preformatted;
+      const block = createXhtmlElement('div', { class: 'svugy-code' });
+      const bar = SafeMarkdown.codeBarOf(codeText, codeBlock.fenceTag);
+      if (bar !== null) {
+        block.appendChild(bar);
+      }
+      block.appendChild(preformatted);
+      return block;
+    }
+
+    // the strip above the code, so the copy button never covers it: the fence tag left, the button right; null when it would hold neither
+    static codeBarOf(codeText, fenceTag) {
+      const isTagless = fenceTag === '';
+      const canCopy = navigator.clipboard !== undefined;
+      const isBarEmpty = isTagless && !canCopy;
+      if (isBarEmpty) {
+        return null;
+      }
+      const tag = createXhtmlElement('span', { class: 'svugy-code-tag' });
+      tag.textContent = fenceTag;
+      const bar = createXhtmlElement('div', { class: 'svugy-code-bar' });
+      bar.appendChild(tag);
+      if (canCopy) {
+        const copyButton = SafeMarkdown.copyButtonOf(codeText);
+        bar.appendChild(copyButton);
+      }
+      return bar;
+    }
+
+    static copyButtonOf(codeText) {
+      const button = createXhtmlElement('button', { type: 'button', class: 'svugy-code-copy', 'aria-label': 'copy code' });
+      button.textContent = COPY_LABEL;
+      let feedbackTimer = 0;
+      const showFeedback = (label) => {
+        clearTimeout(feedbackTimer);
+        button.textContent = label;
+        feedbackTimer = setTimeout(() => { button.textContent = COPY_LABEL; }, COPY_FEEDBACK_DURATION_MS);
+      };
+      button.addEventListener('click', () => {
+        const copying = navigator.clipboard.writeText(codeText);
+        copying.then(() => showFeedback(COPIED_LABEL), () => showFeedback(COPY_FAILED_LABEL));
+      });
+      return button;
     }
 
     listNodeOf(list) {
@@ -5979,6 +6430,48 @@
     [LIST_BLOCK, SafeMarkdown.prototype.listNodeOf],
   ]);
 
+  /** Turns a fenced block's code into XHTML nodes: highlight.js token spans when the document embeds the language its fence tag names, else one text node; tokens only ever become text nodes, never markup. */
+  class SyntaxHighlight {
+    static nodesOf(codeText, fenceTag) {
+      const fenceTagKey = fenceTag.toLowerCase();
+      const languageName = svugyHighlighter?.languageNameByFenceTag.get(fenceTagKey);
+      const isUnhighlighted = languageName === undefined;
+      if (isUnhighlighted) {
+        const plainNode = document.createTextNode(codeText);
+        return [plainNode];
+      }
+      const highlighting = svugyHighlighter.hljs.highlight(codeText, { language: languageName, ignoreIllegals: true });
+      const tokenTree = highlighting._emitter.rootNode;
+      return tokenTree.children.map((token) => SyntaxHighlight.nodeOf(token));
+    }
+
+    // a token is a string or a { scope, children } node; a scopeless node wraps nothing, as highlight.js renders it
+    static nodeOf(token) {
+      const isText = typeof token === 'string';
+      if (isText) {
+        return document.createTextNode(token);
+      }
+      const childNodes = token.children.map((child) => SyntaxHighlight.nodeOf(child));
+      const isScopeless = token.scope === undefined;
+      if (isScopeless) {
+        const fragment = document.createDocumentFragment();
+        fragment.append(...childNodes);
+        return fragment;
+      }
+      const scopeClass = SyntaxHighlight.classOf(token.scope);
+      const span = createXhtmlElement('span', { class: scopeClass });
+      span.append(...childNodes);
+      return span;
+    }
+
+    // scope `a.b.c` -> class `hljs-a b_ c__`: highlight.js's own scope-to-class rule, which its themes select
+    static classOf(scope) {
+      const [head, ...tail] = scope.split(SYNTAX_SCOPE_SEPARATOR);
+      const tailClasses = tail.map((piece, index) => piece + '_'.repeat(index + 1));
+      return [SYNTAX_CLASS_PREFIX + head, ...tailClasses].join(' ');
+    }
+  }
+
   /** Splits Markdown into blocks: paragraphs of lines, `#`–`###` headings, fenced code, and `-`/`*` or `1.` lists whose indented items nest one level under the item above. */
   class MarkdownBlocks {
     static of(markdown) {
@@ -6010,7 +6503,9 @@
       }
       const isFence = trimmedLine.startsWith(FENCE);
       if (isFence) {
-        const codeBlock = { kind: CODE_BLOCK, lines: [] };
+        const fenceInfo = trimmedLine.slice(FENCE.length).trim();
+        const [fenceTag] = fenceInfo.split(WHITESPACE_PATTERN);
+        const codeBlock = { kind: CODE_BLOCK, fenceTag, lines: [] };
         this.addBlock(codeBlock);
         this.openCode = codeBlock;
         return;
@@ -6271,6 +6766,6 @@
   }
   start();
 })();
-
+}
 //]]></script>
 </svg>

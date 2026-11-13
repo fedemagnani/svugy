@@ -9,8 +9,8 @@ use crate::geometry::{Camera, Isometric, Scene, Top};
 use crate::layout::{Arrangements, LevelPlans};
 use crate::metrics::{BundledFont, TextMeasure};
 use crate::render::{
-    CameraLayers, Interactive, InteractiveRenderer, LayerScene, Sketch, Standard, Theme,
-    WorkflowScenes,
+    CameraLayers, Highlighter, Interactive, InteractiveRenderer, LayerScene, Sketch, Standard,
+    Theme, WorkflowScenes,
 };
 
 /// Renders a model as the interactive SVG, the product: themed for light and dark, animated, explorable by its embedded runtime, laid out in the most readable arrangement its search finds.
@@ -90,7 +90,10 @@ impl InteractiveSvg {
                 WorkflowScenes::new(projection, cameras)
             })
             .collect();
-        let renderer = InteractiveRenderer::new(Interactive::<T>::new());
+        let descriptions = model.descriptions();
+        let highlighter = Highlighter::of_descriptions(descriptions);
+        let profile = Interactive::<T>::new().with_highlighter(highlighter);
+        let renderer = InteractiveRenderer::new(profile);
         let shown_workflow_id = shown_workflow.id();
         renderer.write_layered_document(&workflow_scenes, shown_workflow_id, shown_angle)
     }

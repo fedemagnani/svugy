@@ -1,0 +1,1 @@
+highlight.js 11.12.0 from `npm pack @highlightjs/cdn-assets@11.12.0`: `core.min.js` is `es/core.min.js` with its final `export{te as default};` rewritten to `return te;`; `languages/` and the two `github*.min.css` themes are copied verbatim from `languages/` and `styles/`.

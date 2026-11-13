@@ -2,6 +2,7 @@
 
 mod arrowhead;
 mod ground;
+mod highlight;
 mod interactive;
 mod level_view;
 mod paint;
@@ -32,6 +33,7 @@ use crate::render::writer::path_data::PathData;
 use crate::render::writer::{Attributes, SvgWriter, ViewBox};
 use arrowhead::ArrowheadMarkers;
 use ground::EndlessGround;
+pub(crate) use highlight::Highlighter;
 pub(crate) use interactive::Interactive;
 #[cfg(test)]
 pub(crate) use interactive::Runtime;

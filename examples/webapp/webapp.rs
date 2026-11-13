@@ -93,6 +93,7 @@ fn main() {
     let order = builder.add_step(&main, order_step);
     let places_order = Edge::new()
         .with_label("places an order")
+        .with_description("The request body:\n```ts\ntype PlaceOrder = {\n  items: { sku: string; quantity: number }[];\n  paymentToken: string;\n};\n```")
         .with_traveler(Traveler::Envelope);
     builder.add_edge(&order, &browser, &api, places_order);
     let reads_session = Edge::new().with_label("reads the session");

@@ -44,6 +44,16 @@ A user opens the app, signs in and buys. [The API](#api) answers every request a
 #### order: The user places an order
 [The API](#api) reads [the session](#api->cache[1]) back and saves the order in [the database](#db).
 - browser -> api: places an order (traveler=envelope)
+
+  ````description
+  The request body:
+  ```ts
+  type PlaceOrder = {
+    items: { sku: string; quantity: number }[];
+    paymentToken: string;
+  };
+  ```
+  ````
 - api -> cache: reads the session
 - api -> db: saves the order (traveler=document)
 

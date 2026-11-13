@@ -53,7 +53,9 @@ mail: Email provider {
 browser -> cdn: loads the page
 browser -> backend.api: signs in
 backend.api -> data.cache: stores the session
-browser -> backend.api: places an order
+browser -> backend.api: places an order {
+  tooltip: "The request body:\n```ts\ntype PlaceOrder = {\n  items: { sku: string; quantity: number }[];\n  paymentToken: string;\n};\n```"
+}
 backend.api -> data.cache: reads the session
 backend.api -> data.db: saves the order
 backend.api -> backend.queue: schedules a receipt {
