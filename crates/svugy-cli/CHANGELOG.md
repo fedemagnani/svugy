@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/fedemagnani/svugy/compare/svugy-cli-v0.1.6...svugy-cli-v0.2.0) - 2026-11-13
+
+### Added
+
+- workflows ([#36](https://github.com/fedemagnani/svugy/pull/36))
+- png export ([#35](https://github.com/fedemagnani/svugy/pull/35))
+
+### Other
+
+- meta-code ([#33](https://github.com/fedemagnani/svugy/pull/33))
+
 ## [0.1.6](https://github.com/fedemagnani/svugy/compare/svugy-cli-v0.1.5...svugy-cli-v0.1.6) - 2026-11-10
 
 ### Other
