@@ -1,8 +1,9 @@
-//! Render for browsers: colors as custom properties of a light and a dark palette, labels as text in the viewer's font, the runtime embedded.
+//! Render for browsers: colors as custom properties of a light and a dark palette, labels as text in the viewer's font, the runtime embedded with the highlighter its code fences need.
 
 use std::marker::PhantomData;
 
 use super::Profile;
+use super::highlight::Highlighter;
 use crate::geometry::Label;
 use crate::metrics::{FaceSet, TextAnchor};
 use crate::render::contract::RuntimeContract;
@@ -15,9 +16,10 @@ use crate::render::writer::{Attributes, SvgWriter};
 /// Match viewers who prefer the light color scheme.
 const LIGHT_SCHEME_QUERY: &str = "(prefers-color-scheme: light)";
 
-/// Renders the interactive profile in theme `T`: tokens as custom properties, dark unless the viewer prefers light, labels as viewer-font text, the runtime that navigates levels embedded.
+/// Renders the interactive profile in theme `T`: tokens as custom properties, dark unless the viewer prefers light, labels as viewer-font text, the runtime that navigates levels embedded with the highlighter its description panel needs.
 pub(crate) struct Interactive<T> {
     theme: PhantomData<T>,
+    highlighter: Highlighter,
 }
 
 /// Embeds the runtime that drives every interactive document: its script and its style sheet.
@@ -27,7 +29,14 @@ impl<T: Theme> Interactive<T> {
     /// Render the interactive profile in theme `T`.
     pub(crate) fn new() -> Self {
         let theme = PhantomData;
-        Self { theme }
+        let highlighter = Highlighter::default();
+        Self { theme, highlighter }
+    }
+
+    /// Embed `highlighter` for the description panel's code fences.
+    pub(crate) fn with_highlighter(mut self, highlighter: Highlighter) -> Self {
+        self.highlighter = highlighter;
+        self
     }
 }
 
@@ -80,10 +89,11 @@ impl<T: Theme> Profile for Interactive<T> {
 
     /// Write the style sheet first and the runtime script last, so the script starts on a fully parsed document.
     fn embed_in_runtime(&self, writer: &mut SvgWriter, write_content: impl FnOnce(&mut SvgWriter)) {
-        let style_sheet = Self::style_sheet();
+        let style_sheet = self.style_sheet();
         writer.style_element(&style_sheet);
         write_content(writer);
-        writer.script_element(Runtime::SCRIPT);
+        let runtime_script = self.runtime_script();
+        writer.script_element(&runtime_script);
     }
 }
 
@@ -98,8 +108,8 @@ impl TextAnchor {
 }
 
 impl<T: Theme> Interactive<T> {
-    /// Build the style sheet: `T`'s embedded label face if any, both of `T`'s palettes as custom properties of the root, `T`'s label font inherited from it, then the runtime's rules.
-    fn style_sheet() -> StyleSheet {
+    /// Build the style sheet: `T`'s embedded label face if any, both of `T`'s palettes as custom properties of the root, `T`'s label font inherited from it, the runtime's rules, then the highlighter's themes.
+    fn style_sheet(&self) -> StyleSheet {
         let root = CssSelector::attribute(RuntimeContract::CONTRACT);
         let font_family_property = CssIdentifier::from_static("font-family");
         let font_family_stack = CssValue::from_static(T::Faces::CSS_FONT_FAMILY_STACK);
@@ -118,7 +128,16 @@ impl<T: Theme> Interactive<T> {
         style_sheet.push_rule(&root, &dark_declarations);
         style_sheet.push_media_rule(LIGHT_SCHEME_QUERY, &root, &light_declarations);
         style_sheet.push_static(Runtime::STYLE);
+        self.highlighter
+            .push_themes(&mut style_sheet, LIGHT_SCHEME_QUERY);
         style_sheet
+    }
+
+    /// Build the runtime script in a block declaring its handle on the highlighter, so neither leaks into the host page.
+    fn runtime_script(&self) -> String {
+        let highlighter_declaration = self.highlighter.declaration();
+        let runtime = Runtime::SCRIPT;
+        format!("{{\n{highlighter_declaration}\n{runtime}}}")
     }
 }
 

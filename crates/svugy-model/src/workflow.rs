@@ -373,6 +373,16 @@ impl Workflow {
         self.description.as_deref()
     }
 
+    /// Yield every description written inside the workflow: its prose, its steps' prose, then its edges' descriptions.
+    pub fn descriptions(&self) -> impl Iterator<Item = &str> {
+        let step_descriptions = self.steps.iter().filter_map(Step::description);
+        let edge_descriptions = self.edges.values().filter_map(Edge::description);
+        self.description()
+            .into_iter()
+            .chain(step_descriptions)
+            .chain(edge_descriptions)
+    }
+
     /// Return the override of the element at `path`, if this workflow has one.
     pub fn override_of(&self, path: &ElementPath) -> Option<&ElementOverride> {
         self.overrides.get(path)

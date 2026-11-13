@@ -86,6 +86,7 @@
   const CODE_BLOCK = 'code';
   const LIST_BLOCK = 'list';
   const FENCE = '```';
+  const WHITESPACE_PATTERN = /\s+/;
   const HEADING_PATTERN = /^(#{1,3})\s+(.*)$/;
   const LIST_ITEM_PATTERN = /^(\s*)([-*]|\d+\.)\s+(.*)$/;
   const ORDERED_MARKER_PATTERN = /^\d/;
@@ -108,6 +109,13 @@
 
   const HIGHLIGHTED_CLASS = 'svugy-highlighted';
   const HIGHLIGHT_DURATION_MS = 1200;
+
+  const SYNTAX_CLASS_PREFIX = 'hljs-';
+  const SYNTAX_SCOPE_SEPARATOR = '.';
+  const COPY_LABEL = 'copy';
+  const COPIED_LABEL = 'copied';
+  const COPY_FAILED_LABEL = 'failed';
+  const COPY_FEEDBACK_DURATION_MS = 1200;
 
   const DRAG_THRESHOLD_PX = 4;
   const ZOOM_PER_WHEEL_PIXEL = 0.002;
@@ -1276,13 +1284,19 @@
       return isAwayFromFocusedView;
     }
 
-    /** Steps out once: focuses the focused level's parent, keeping the open containers open, so every step widens the view; at the root, closes the deepest open containers; any navigation discards a pan or zoom. Tells whether it stepped out: never from the root of layer 0. */
-    exitOneStep() {
+    /** Focuses the focused level's parent, keeping the open containers open, so every step out widens the view; tells whether it did: never from the root. */
+    focusParentLevel() {
       const parentLevel = Contract.enclosingLevelOf(this.focusedLevel);
-      if (parentLevel !== null) {
-        this.focus(parentLevel);
-        return true;
+      const isAtRoot = parentLevel === null;
+      if (isAtRoot) {
+        return false;
       }
+      this.focus(parentLevel);
+      return true;
+    }
+
+    /** Shows the previous layer, closing the deepest open containers; tells whether it did: never from layer 0. */
+    closeDeepestLayer() {
       const shownLayerIndex = this.layers.indexOf(this.shownLayer);
       const isOnFirstLayer = shownLayerIndex === 0;
       if (isOnFirstLayer) {
@@ -1631,7 +1645,7 @@
       this.paintMarks();
     }
 
-    /** Undoes one step: clears the selected item and returns from it, else returns to the focused level's view, else steps out, else returns to the workflow's start. */
+    /** Undoes one step: clears the selected item and returns from it, else returns to the focused level's view, else focuses its parent level, else, while the panel is visible, steps back one slot, hiding the panel from the first, else closes the deepest layer. */
     escape() {
       const hasSelection = this.state.selection !== null;
       if (hasSelection) {
@@ -1642,12 +1656,20 @@
       if (hasReturnedToFocusedView) {
         return;
       }
-      const hasSteppedOut = this.navigator.exitOneStep();
-      if (hasSteppedOut) {
+      const hasFocusedParentLevel = this.navigator.focusParentLevel();
+      if (hasFocusedParentLevel) {
         this.paintMarks();
         return;
       }
-      this.apply((state) => state.returnToStart());
+      const isPanelVisible = this.state.panel.isVisible;
+      if (isPanelVisible) {
+        this.apply((state) => state.stepBackOneSlot());
+        return;
+      }
+      const hasClosedDeepestLayer = this.navigator.closeDeepestLayer();
+      if (hasClosedDeepestLayer) {
+        this.paintMarks();
+      }
     }
 
     /** Clears the selected item, collapsing the component card, and returns from it: its highlight and its focus go together. */
@@ -1754,14 +1776,14 @@
       this.slotIndex = Math.min(lastSlotIndex, slotIndexFromFirst);
     }
 
-    /** Shows slot 0 again, where the workflow starts, so nothing dims: the overview, or, without one, a hidden panel. */
-    returnToStart() {
-      this.slotIndex = 0;
-      const hasOverview = this.overviewSlotCount() === 1;
-      if (hasOverview) {
+    /** Moves the slot one back, or, from the first slot, hides the panel. */
+    stepBackOneSlot() {
+      const isOnFirstSlot = this.slotIndex === 0;
+      if (isOnFirstSlot) {
+        this.hidePanel();
         return;
       }
-      this.hidePanel();
+      this.moveSlotBy(-1);
     }
 
     openPanel() {
@@ -3119,11 +3141,54 @@
     }
 
     codeNodeOf(codeBlock) {
+      const codeText = codeBlock.lines.join('\n');
       const code = createXhtmlElement('code', {});
-      code.textContent = codeBlock.lines.join('\n');
+      const codeNodes = SyntaxHighlight.nodesOf(codeText, codeBlock.fenceTag);
+      code.append(...codeNodes);
       const preformatted = createXhtmlElement('pre', {});
       preformatted.appendChild(code);
-      return preformatted;
+      const block = createXhtmlElement('div', { class: 'svugy-code' });
+      const bar = SafeMarkdown.codeBarOf(codeText, codeBlock.fenceTag);
+      if (bar !== null) {
+        block.appendChild(bar);
+      }
+      block.appendChild(preformatted);
+      return block;
+    }
+
+    // the strip above the code, so the copy button never covers it: the fence tag left, the button right; null when it would hold neither
+    static codeBarOf(codeText, fenceTag) {
+      const isTagless = fenceTag === '';
+      const canCopy = navigator.clipboard !== undefined;
+      const isBarEmpty = isTagless && !canCopy;
+      if (isBarEmpty) {
+        return null;
+      }
+      const tag = createXhtmlElement('span', { class: 'svugy-code-tag' });
+      tag.textContent = fenceTag;
+      const bar = createXhtmlElement('div', { class: 'svugy-code-bar' });
+      bar.appendChild(tag);
+      if (canCopy) {
+        const copyButton = SafeMarkdown.copyButtonOf(codeText);
+        bar.appendChild(copyButton);
+      }
+      return bar;
+    }
+
+    static copyButtonOf(codeText) {
+      const button = createXhtmlElement('button', { type: 'button', class: 'svugy-code-copy', 'aria-label': 'copy code' });
+      button.textContent = COPY_LABEL;
+      let feedbackTimer = 0;
+      const showFeedback = (label) => {
+        clearTimeout(feedbackTimer);
+        button.textContent = label;
+        feedbackTimer = setTimeout(() => { button.textContent = COPY_LABEL; }, COPY_FEEDBACK_DURATION_MS);
+      };
+      button.addEventListener('click', () => {
+        const copying = navigator.clipboard.writeText(codeText);
+        copying.then(() => showFeedback(COPIED_LABEL), () => showFeedback(COPY_FAILED_LABEL));
+      });
+      return button;
     }
 
     listNodeOf(list) {
@@ -3243,6 +3308,48 @@
     [LIST_BLOCK, SafeMarkdown.prototype.listNodeOf],
   ]);
 
+  /** Turns a fenced block's code into XHTML nodes: highlight.js token spans when the document embeds the language its fence tag names, else one text node; tokens only ever become text nodes, never markup. */
+  class SyntaxHighlight {
+    static nodesOf(codeText, fenceTag) {
+      const fenceTagKey = fenceTag.toLowerCase();
+      const languageName = svugyHighlighter?.languageNameByFenceTag.get(fenceTagKey);
+      const isUnhighlighted = languageName === undefined;
+      if (isUnhighlighted) {
+        const plainNode = document.createTextNode(codeText);
+        return [plainNode];
+      }
+      const highlighting = svugyHighlighter.hljs.highlight(codeText, { language: languageName, ignoreIllegals: true });
+      const tokenTree = highlighting._emitter.rootNode;
+      return tokenTree.children.map((token) => SyntaxHighlight.nodeOf(token));
+    }
+
+    // a token is a string or a { scope, children } node; a scopeless node wraps nothing, as highlight.js renders it
+    static nodeOf(token) {
+      const isText = typeof token === 'string';
+      if (isText) {
+        return document.createTextNode(token);
+      }
+      const childNodes = token.children.map((child) => SyntaxHighlight.nodeOf(child));
+      const isScopeless = token.scope === undefined;
+      if (isScopeless) {
+        const fragment = document.createDocumentFragment();
+        fragment.append(...childNodes);
+        return fragment;
+      }
+      const scopeClass = SyntaxHighlight.classOf(token.scope);
+      const span = createXhtmlElement('span', { class: scopeClass });
+      span.append(...childNodes);
+      return span;
+    }
+
+    // scope `a.b.c` -> class `hljs-a b_ c__`: highlight.js's own scope-to-class rule, which its themes select
+    static classOf(scope) {
+      const [head, ...tail] = scope.split(SYNTAX_SCOPE_SEPARATOR);
+      const tailClasses = tail.map((piece, index) => piece + '_'.repeat(index + 1));
+      return [SYNTAX_CLASS_PREFIX + head, ...tailClasses].join(' ');
+    }
+  }
+
   /** Splits Markdown into blocks: paragraphs of lines, `#`–`###` headings, fenced code, and `-`/`*` or `1.` lists whose indented items nest one level under the item above. */
   class MarkdownBlocks {
     static of(markdown) {
@@ -3274,7 +3381,9 @@
       }
       const isFence = trimmedLine.startsWith(FENCE);
       if (isFence) {
-        const codeBlock = { kind: CODE_BLOCK, lines: [] };
+        const fenceInfo = trimmedLine.slice(FENCE.length).trim();
+        const [fenceTag] = fenceInfo.split(WHITESPACE_PATTERN);
+        const codeBlock = { kind: CODE_BLOCK, fenceTag, lines: [] };
         this.addBlock(codeBlock);
         this.openCode = codeBlock;
         return;

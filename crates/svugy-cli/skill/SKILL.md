@@ -84,6 +84,7 @@ The answer travels back over [the charge request](#api->gateway).
   - `- REF -> REF[n]` lists again the n-th edge (from 0) between the pair declared in this workflow.
   - `- REF` puts a component in the step without an edge.
 - Prose under `###` and `####` is unfenced Markdown, without `- ` bullets or headings; a fence there renders as a code block. A ```` ```description ```` block goes only under a component or a declared edge.
+- Code in prose and descriptions: a ```` ```rs ```` (or `ts`, `js`, `py`, `go`, `json`, `toml`, `yaml`, `sql`, `sh`) fence is highlighted. Show the type an edge carries or the struct a container is. Code inside a description block needs a longer outer fence: ````` ````description `````.
 - Links in prose and descriptions: `[the API](#api)` a component, `#api->gateway` the edge, `#api->gateway[1]` the second one, `#checkout/charge` a step.
 
 ## Modeling

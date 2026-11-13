@@ -16,6 +16,14 @@ styles:
   ```
 
   - orders: orders (topic, caption=order.placed)
+
+    ````description
+    One JSON message per order, keyed by `order_id`:
+    ```json
+    { "order_id": "o-1042", "total": { "amount": 4200, "currency": "EUR" } }
+    ```
+    ````
+
   - captured: payments (topic, caption=payment.captured)
 - consumers: Consumers (caption=one group each)
   - fulfillment: Fulfillment (service, caption=picks · packs · ships)
@@ -34,6 +42,17 @@ One order produces two events, each on its own topic. Neither producer knows who
 #### place: Checkout publishes the order
 [Checkout](#checkout) appends `order.placed` to [orders](#orders) and answers the customer at once.
 - checkout -> orders: publishes (traveler=document)
+
+  ````description
+  The event Checkout publishes:
+  ```rs
+  struct OrderPlaced {
+      order_id: OrderId,
+      lines: Vec<OrderLine>,
+      total: Money,
+  }
+  ```
+  ````
 
 #### capture: Payments publishes the capture
 Once the card is charged, [Payments](#payments) appends `payment.captured` to [payments](#captured).

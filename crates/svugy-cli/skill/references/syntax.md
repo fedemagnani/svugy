@@ -89,23 +89,27 @@ The answer comes back on [the charge request](#api->gateway).
 
 ## Descriptions
 
-````markdown
+`````markdown
 ## Components
 - web
 - shop: Shop backend
 
-  ```description
+  ````description
   Owns the cart and the *orders* table.
   - carts expire after a day
+  ```rs
+  struct Shop { carts: Carts, orders: Orders }
   ```
+  ````
 
   - api
-````
+`````
 
 - A ```` ```description ```` block indented under a component or an edge declaration describes that item. Workflows and steps take unfenced prose instead.
 - Backtick or tilde fence, three or more; when the content holds a line of only ```, open with a longer fence: ````` ````description `````.
 - Under an item it goes on the next line or after a blank line, and before a component's children.
 - Stored verbatim: any Markdown, bullet lists included.
+- Code inside a description or prose: a ```` ```TAG ```` fence. `rs`, `rust`, `ts`, `typescript`, `js`, `javascript`, `py`, `python`, `go`, `json`, `toml`, `yaml`, `yml`, `sql`, `sh`, `bash` and `shell` are highlighted; any other tag renders as plain monospace. Every block gets a copy button. A code block inside a description block needs the longer outer fence, as above.
 - Errors: unfenced text in `## Components`, a code block with another info string under an item, a second description block, a missing closing fence, a description block in workflow or step prose, a description under an override, a bare step item, an `[n]` item or a chain.
 
 ### Links to components, edges and steps

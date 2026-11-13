@@ -1,4 +1,4 @@
-//! Name the diagram object a description link targets, and find those links in a description as the runtime's Markdown subset reads them.
+//! Name the diagram object a description link targets, and find those links and the languages its code fences name in a description as the runtime's Markdown subset reads them.
 
 use std::fmt;
 use std::ops::Range;
@@ -39,6 +39,16 @@ pub enum DescriptionTarget {
 pub struct TargetLink<'a> {
     pub target: &'a str,
     pub range: Range<usize>,
+}
+
+/// Read the language tags of a description's code fences.
+pub struct CodeFence;
+
+/// Read one line of a description as the runtime's Markdown subset does: a fence opening or closing fenced code, a line inside it, or inline text.
+enum DescriptionLine<'a> {
+    Fence { info: &'a str, is_opening: bool },
+    FencedCode,
+    InlineText { range: Range<usize> },
 }
 
 /// Match one alternative of the runtime's inline pattern at the start of a text, each range relative to that start.
@@ -158,20 +168,11 @@ impl<'a> TargetLink<'a> {
     /// Find every link `[TEXT](#TARGET)` of `description` the runtime reads as one: outside fenced code and code spans, `TEXT` holding no `]`, `TARGET` no whitespace or parenthesis.
     pub fn find_all(description: &'a str) -> Vec<Self> {
         let mut target_links = Vec::new();
-        let mut is_in_fenced_code = false;
-        let mut line_start = 0;
-        for line in description.split('\n') {
-            let line_end = line_start + line.len();
-            let is_fence = line.trim().starts_with(FENCE);
-            if is_fence {
-                is_in_fenced_code = !is_in_fenced_code;
-            }
-            let is_inline_text = !is_fence && !is_in_fenced_code;
-            if is_inline_text {
-                let line_range = line_start..line_end;
-                Self::find_in_inline_text(description, line_range, &mut target_links);
-            }
-            line_start = line_end + 1;
+        for line in DescriptionLine::read_all(description) {
+            let DescriptionLine::InlineText { range } = line else {
+                continue;
+            };
+            Self::find_in_inline_text(description, range, &mut target_links);
         }
         target_links
     }
@@ -237,6 +238,46 @@ impl<'a> TargetLink<'a> {
                 }
             }
         }
+    }
+}
+
+impl CodeFence {
+    /// Yield the language tag of every opening fence of `description` naming one, in written order: the first word after its backticks.
+    pub fn languages_in(description: &str) -> impl Iterator<Item = &str> {
+        let lines = DescriptionLine::read_all(description);
+        lines.filter_map(|line| {
+            let DescriptionLine::Fence {
+                info,
+                is_opening: true,
+            } = line
+            else {
+                return None;
+            };
+            info.split_whitespace().next()
+        })
+    }
+}
+
+impl<'a> DescriptionLine<'a> {
+    /// Read every line of `description`, each line starting with ```` ``` ```` once trimmed toggling between inline text and fenced code.
+    fn read_all(description: &'a str) -> impl Iterator<Item = Self> {
+        let mut is_in_fenced_code = false;
+        let mut line_start = 0;
+        description.split('\n').map(move |line| {
+            let line_end = line_start + line.len();
+            let range = line_start..line_end;
+            line_start = line_end + 1;
+            let trimmed_line = line.trim();
+            if let Some(info) = trimmed_line.strip_prefix(FENCE) {
+                let is_opening = !is_in_fenced_code;
+                is_in_fenced_code = is_opening;
+                return Self::Fence { info, is_opening };
+            }
+            if is_in_fenced_code {
+                return Self::FencedCode;
+            }
+            Self::InlineText { range }
+        })
     }
 }
 
@@ -348,6 +389,17 @@ mod tests {
         assert!(
             is_rest_unchanged,
             "respelling touches targets only: {respelled}"
+        );
+    }
+
+    #[test]
+    fn only_an_opening_fence_names_a_language_and_its_first_word_is_it() {
+        let description = "An orchestrator:\n```rs\nstruct Shop { orders: Orders }\n```\n  ``` sql title\nSELECT 1;\n  ```\n```\nplain\n```";
+        let languages: Vec<&str> = CodeFence::languages_in(description).collect();
+        assert_eq!(
+            languages,
+            ["rs", "sql"],
+            "closing fences and a bare opening fence name no language"
         );
     }
 

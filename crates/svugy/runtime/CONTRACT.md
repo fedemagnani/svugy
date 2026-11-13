@@ -17,7 +17,7 @@ The root is `<svg data-svugy-contract="4">`; its viewBox, width and height are t
 2. `<defs>`, shared by all workflows and cameras: arrowhead markers, traveler symbols and one `ground-grid-ANGLE` pattern per camera
 3. one canvas `<rect>` covering the canvas
 4. the workflows
-5. the runtime's `<script>`
+5. the runtime's `<script>`: a block declaring `svugyHighlighter`, then the runtime. `svugyHighlighter` is `null`, or highlight.js 11.12.0 with only the grammars the model's fence tags name, and the GitHub themes then follow the runtime's rules in the `<style>`.
 
 The runtime's CSS and JavaScript use the writer's CDATA form.
 
@@ -159,9 +159,9 @@ Every click on an element, edge or badge also selects it: I becomes the clicked 
 - element or edge: I becomes T; then, once the panel has resized, focus T's reading level, in the first layer from K on that draws that level open and an edge T as written. The reading level is a container's own level, a leaf's or a badge's enclosing level, an arc's home level. Put the `svugy-highlighted` class on T's groups in the shown layer.
 - step `WORKFLOW/STEP`: if WORKFLOW isn't W, switch to it as the workflow switch does, keeping the panel open; S becomes STEP, with the effects of a step change.
 
-**Escape or a click on empty canvas:** undo one step: if I is set, clear it and return to the layer and focused level the reader stood on before selecting it, at that level's view, consecutive selections counting as one; if the reader moved to another layer or level since, only animate back to F's view; else, if the reader zoomed or panned away from F's view, animate back to it, else focus F's parent in layer K, so each step out widens the view; at the root, show layer K − 1; at the root of layer 0, make S slot 0, hiding the panel when W has no overview, so nothing dims. The second click of a double click on empty canvas does nothing; a canvas click right after a click on a group is never a second click.
+**Escape or a click on empty canvas:** undo one step: if I is set, clear it and return to the layer and focused level the reader stood on before selecting it, at that level's view, consecutive selections counting as one; if the reader moved to another layer or level since, only animate back to F's view; else, if the reader zoomed or panned away from F's view, animate back to it, else focus F's parent in layer K, so each step out widens the view; at the root, while the panel is visible, move S one slot back, a step change with its effects, or hide the panel from the first slot; with the panel hidden, show layer K − 1. A step's effects never lower K, so the steps unwind before the layers close. The second click of a double click on empty canvas does nothing; a canvas click right after a click on a group is never a second click.
 
-Example: from the root of layer 0, click closed container A (layer 1, I = A), A's slab (F = A), then A's closed child a1 (layer 2, I = a1). Four Escapes clear I, then give the root in layer 2, the root in layer 1, the root in layer 0.
+Example: from the root of layer 0, click closed container A (layer 1, I = A), A's slab (F = A), then A's closed child a1 (layer 2, I = a1). Five Escapes clear I, then give the root in layer 2, hide the panel (it opened on the first slot), then give the root in layer 1 and the root in layer 0.
 
 The reader can also move the view without navigating; K and F stay:
 
@@ -178,7 +178,7 @@ Focusing animates the viewBox to F's `data-svugy-view`, fitted to the uncovered 
 W's steps are numbered from 1 in written order. When W has a description, slot 0 precedes them: the overview.
 
 - **First opening:** the first time the panel opens in W, S is slot 0 if W has an overview, else step 1. Afterwards S keeps the last value, across hiding and showing the panel, until W changes.
-- **Step change:** ‹ and › in the steps card, ← and → while the panel is visible and the workflow menu is closed, a step in a component card, or a step description link. ‹ is disabled on the first slot, › on the last; nothing wraps.
+- **Step change:** ‹ and › in the steps card, ← and → while the panel is visible and the workflow menu is closed, Escape or a click on empty canvas at the root (one slot back), a step in a component card, or a step description link. ‹ is disabled on the first slot, › on the last; nothing wraps.
 - **Effects,** whenever S becomes a step while the panel is visible, or the panel opens on one, except by a click in the scene, whose own navigation wins: K becomes max(K, the step's `layer`); if a group of the shown layer listing S lies outside F's level group and does not enclose it, F becomes the root (the containers enclosing F take part in every step of F's interior, so they never count); the view animates to F's view if K or F changed, else stays.
 - **Dimming:** while the panel is visible, the steps card is expanded and S is a step, every element and edge group of the shown layer whose `data-svugy-steps` lacks S is dimmed, except selected groups. Slot 0 and a hidden panel dim nothing.
 
@@ -236,7 +236,7 @@ Descriptions render a Markdown subset:
 - paragraphs, one line per source line;
 - `-` and `*` bullet lists and `1.` numbered lists; an indented item nests under the item above, one level deep; an indented line continues the open item;
 - `#`, `##` and `###` headings, drawn as `h4`, `h5` and `h6`;
-- fenced code between two ```` ``` ```` lines, preformatted, without inline formatting;
+- fenced code between two ```` ``` ```` lines, preformatted, without inline formatting, on the canvas colour, under a bar holding its fence tag and, when `navigator.clipboard` exists, a `copy` button. The first word after the opening backticks is the fence tag; `rs`/`rust`, `ts`/`typescript`, `js`/`javascript`, `py`/`python`, `go`, `json`, `toml`, `yaml`/`yml`, `sql` and `sh`/`bash`/`shell`, any case, highlight as highlight.js `hljs-*` spans in GitHub colours, dark by default and light when the viewer prefers light; any other tag, or none, stays plain text;
 - inline `**bold**`, `*em*`, `` `code` ``, and `[text](url)` links whose URL is http(s) or has no scheme and no space or control character;
 - `[text](#TARGET)` description links, drawn as a `<button type="button">` holding underlined `text`. TARGET names an element as its `data-svugy-element` path, a written edge as `FROM->TO[ORDINAL]`, FROM and TO its `data-svugy-from` and `data-svugy-to`, ORDINAL the one ending its `data-svugy-edge`, or a step as `WORKFLOW/STEP`. `[ORDINAL]` is required; the renderer adds it to an edge target stored without one when exactly one edge of the group's workflow joins the pair, and leaves it as written otherwise. The runtime resolves element and edge targets in layer D of W. On hover or keyboard focus an element or edge link's text takes T's colour (an element's top-face fill, an edge's stroke) when it has at least 3:1 contrast with `--svugy-canvas`, else `--svugy-container-blue-ink`;
 - any other link, and a TARGET naming nothing, renders as its text.

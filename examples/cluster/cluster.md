@@ -20,6 +20,31 @@ styles:
       - web-2 (pod)
       - web-3 (pod)
     - api: api (caption=Deployment)
+
+      ````description
+      Two replicas behind the `api` Service; a pod receives traffic only while `/ready` answers.
+      ```yaml
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: api
+        namespace: shop
+      spec:
+        replicas: 2
+        selector:
+          matchLabels: { app: api }
+        template:
+          metadata:
+            labels: { app: api }
+          spec:
+            containers:
+              - name: api
+                image: shop/api:1.4.2
+                readinessProbe:
+                  httpGet: { path: /ready, port: 8080 }
+      ```
+      ````
+
       - api-1 (pod)
       - api-2 (pod)
   - data: data (caption=namespace)
@@ -52,6 +77,15 @@ Pages go to [web](#web), `/api` calls from apps go straight to [api](#api).
 Sessions live in [Redis](#redis); orders go to [the primary](#pg-0), the only pod that accepts writes.
 - api -> redis: reads sessions (traveler=key)
 - api -> pg-0: writes (traveler=document)
+
+  ````description
+  One transaction per order:
+  ```sql
+  INSERT INTO orders (id, user_id, total_cents)
+  VALUES ($1, $2, $3)
+  RETURNING created_at;
+  ```
+  ````
 
 #### replicate: The replica follows the primary
 [pg-1](#pg-1) streams every write from [pg-0](#pg-0), ready to take over if it fails.
