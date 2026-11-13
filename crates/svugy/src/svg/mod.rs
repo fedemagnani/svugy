@@ -16,6 +16,12 @@ pub trait RenderSvg {
     fn render(model: &Model) -> String;
 }
 
+/// Render every disclosure layer of a model as its own SVG document, in the flavour of the implementing type.
+pub trait RenderSvgLayers {
+    /// Render each disclosure layer of `model` as this flavour's SVG document, layer 0 first, the whole model last.
+    fn render_every_layer(model: &Model) -> Vec<String>;
+}
+
 #[cfg(test)]
 mod tests {
     use svugy_model::model::Model;

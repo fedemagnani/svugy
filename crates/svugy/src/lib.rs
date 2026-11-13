@@ -11,6 +11,6 @@ mod svg;
 mod svugy_example;
 
 pub use svg::{
-    DraftInteractiveSvg, InteractiveSvg, RenderSvg, SketchDraftInteractiveSvg,
+    DraftInteractiveSvg, InteractiveSvg, RenderSvg, RenderSvgLayers, SketchDraftInteractiveSvg,
     SketchInteractiveSvg, SketchStaticSvg, StaticSvg,
 };

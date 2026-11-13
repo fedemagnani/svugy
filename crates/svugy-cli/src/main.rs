@@ -5,6 +5,7 @@ mod failure;
 mod flavor;
 mod input;
 mod output;
+mod png;
 mod report;
 mod skill;
 mod tree;
@@ -20,6 +21,7 @@ use crate::failure::Failure;
 use crate::flavor::SvgFlavor;
 use crate::input::{LoadedInput, ModelInput};
 use crate::output::{ModelFile, OutputTarget};
+use crate::png::PngExport;
 use crate::report::InputReport;
 use crate::skill::SkillCommand;
 use crate::tree::SourceTree;
@@ -40,7 +42,8 @@ Exit codes, identical for every subcommand:
   1  the input has errors: Markdown syntax, d2 syntax, malformed JSON or model
      validation; or validate finds a stale code reference; or import -o FILE.md
      meets a model Markdown cannot say
-  2  usage error: unknown flag, missing argument, INPUT not .md, .d2 or .json
+  2  usage error: unknown flag, missing argument, INPUT not .md, .d2 or .json,
+     or render --depth past INPUT's deepest layer
   3  I/O failure: a file cannot be read, written or opened, or view cannot
      listen on its port";
 
@@ -93,7 +96,7 @@ struct Cli {
 /// Name the subcommand to run.
 #[derive(Subcommand)]
 enum Command {
-    /// Render a model as an SVG, interactive unless --profile static is given, hand-drawn with --theme sketch.
+    /// Render a model as an SVG, interactive unless --profile static is given, hand-drawn with --theme sketch, or as a PNG with --png.
     Render(RenderCommand),
     /// Serve the interactive SVG in the default browser, reloading it whenever INPUT changes.
     #[command(after_long_help = LIVE_VIEW_HELP)]
@@ -109,7 +112,7 @@ enum Command {
     Example(ExampleCommand),
 }
 
-/// Render the input as an SVG in the chosen profile and theme, into a file or onto stdout, and open the file if asked.
+/// Render the input as an SVG in the chosen profile and theme, or as PNG, into a file or onto stdout, and open the file if asked.
 #[derive(Args)]
 struct RenderCommand {
     /// Diagram (.md), d2 file or JSON model to render.
@@ -118,8 +121,10 @@ struct RenderCommand {
     #[command(flatten)]
     flavor: SvgFlavor,
     #[command(flatten)]
+    png_export: PngExport,
+    #[command(flatten)]
     output: OutputTarget,
-    /// Open the written SVG in the default browser; needs -o.
+    /// Open the written file in the default browser; needs -o.
     #[arg(long, requires = "output")]
     open: bool,
 }
@@ -179,11 +184,17 @@ impl Command {
 }
 
 impl RenderCommand {
-    /// Run `render`: load the input, render it in the flavor, write the SVG and open it when `--open` asks.
+    /// Run `render`: load the input, render it as PNG when `--png` asks or else as the flavor's SVG, write it and open it when `--open` asks.
     fn run(self) -> Result<(), Failure> {
         let model = self.input.load_model_printing_diagnostics()?;
-        let svg = self.flavor.render(&model);
-        self.output.write(&svg)?;
+        let is_png_requested = self.png_export.is_requested();
+        if is_png_requested {
+            let theme = self.flavor.theme();
+            self.png_export.write(&model, theme, &self.output)?;
+        } else {
+            let svg = self.flavor.render(&model);
+            self.output.write(&svg)?;
+        }
         let is_open_requested = self.open;
         if is_open_requested {
             self.output.open_in_default_browser()?;

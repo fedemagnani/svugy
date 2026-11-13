@@ -36,7 +36,7 @@ pub struct ModelFile {
 
 impl OutputTarget {
     /// Write `contents` to the output file, or to stdout when there is none.
-    pub fn write(&self, contents: &str) -> Result<(), Failure> {
+    pub fn write(&self, contents: impl AsRef<[u8]>) -> Result<(), Failure> {
         let Some(output) = &self.output else {
             return Self::write_stdout(contents);
         };
@@ -53,9 +53,9 @@ impl OutputTarget {
     }
 
     /// Write `contents` to stdout, a closed pipe being an I/O failure rather than a panic.
-    pub fn write_stdout(contents: &str) -> Result<(), Failure> {
+    pub fn write_stdout(contents: impl AsRef<[u8]>) -> Result<(), Failure> {
         let mut stdout = io::stdout().lock();
-        let content_bytes = contents.as_bytes();
+        let content_bytes = contents.as_ref();
         stdout
             .write_all(content_bytes)
             .into_diagnostic()
@@ -64,12 +64,17 @@ impl OutputTarget {
     }
 
     /// Write `contents` to the file at `path`, an unwritable path being an I/O failure.
-    pub fn write_file(path: &Path, contents: &str) -> Result<(), Failure> {
+    pub fn write_file(path: &Path, contents: impl AsRef<[u8]>) -> Result<(), Failure> {
         let output_path = path.display();
         fs::write(path, contents)
             .into_diagnostic()
             .wrap_err_with(|| format!("cannot write {output_path}"))
             .map_err(Failure::Io)
+    }
+
+    /// Return the output file, or `None` for stdout.
+    pub fn path(&self) -> Option<&Path> {
+        self.output.as_deref()
     }
 }
 
